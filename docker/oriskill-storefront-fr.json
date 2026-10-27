@@ -1,0 +1,463 @@
+{
+ "_comment": "Contenu français Oriskill de la vitrine ModernCommerce, appliqué au démarrage par docker/oriskill-storefront.php aux widgets et diapositives jamais modifiés. Clé : pagetype|zone|type|sortorder ; chemins des réglages séparés par /.",
+ "widgets": {
+  "about|page_aside|instructors|0": {
+   "disable": true,
+   "title": "Nos formateurs",
+   "subtitle": "Les experts qui conçoivent des formations orientées résultats.",
+   "settings": {
+    "instructors/0/name": "Prénom Nom",
+    "instructors/0/role": "Responsable pédagogique",
+    "instructors/0/bio": "Conçoit des parcours qui permettent de passer rapidement de l'inscription à la pratique.",
+    "instructors/1/name": "Prénom Nom",
+    "instructors/1/role": "Formateur expert",
+    "instructors/1/bio": "Partage son expérience terrain à travers des exercices concrets et des cas réels."
+   }
+  },
+  "about|page_footer|featured|0": {
+   "title": "Formations et programmes populaires",
+   "subtitle": "Continuez à explorer le catalogue Oriskill."
+  },
+  "about|page_footer|cta|1": {
+   "settings": {
+    "heading": "Prêt à choisir votre prochaine formation ?",
+    "text": "Parcourez le catalogue ou contactez-nous pour choisir le parcours le plus adapté à votre objectif.",
+    "primarylabel": "Voir les formations",
+    "secondarylabel": "Nous contacter"
+   }
+  },
+  "about|page_hero|videohero|0": {
+   "title": "À propos d'Oriskill",
+   "settings": {
+    "heading": "Des formations pensées|pour passer à l'action",
+    "subtext": "Oriskill vous aide à trouver, acheter et commencer des formations en ligne pratiques, des packs et des programmes, simplement et en toute sécurité.",
+    "btn_primary_label": "Voir les formations",
+    "btn_secondary_label": "Nous contacter",
+    "video_title": "Oriskill, formations en ligne",
+    "infoitems/0/title": "Formations pratiques",
+    "infoitems/0/text": "Des formations ciblées, à commencer dès l'achat.",
+    "infoitems/1/title": "Packs et programmes",
+    "infoitems/1/text": "Économisez avec des parcours qui relient des compétences complémentaires.",
+    "infoitems/2/title": "Progression reconnue",
+    "infoitems/2/text": "Des certificats pour valoriser les compétences acquises.",
+    "quote_text": "Se former doit être simple : comparer, s'inscrire et commencer, sans détour.",
+    "quote_author": "Oriskill"
+   }
+  },
+  "about|page_main|content|0": {
+   "title": "Une formation qui s'adapte à votre quotidien",
+   "subtitle": "Les avantages de se former avec Oriskill.",
+   "settings": {
+    "eyebrow": "Les atouts de nos formations",
+    "body": "Oriskill réunit le choix de la formation, le paiement, l'inscription, les reçus, l'accompagnement et l'accès aux cours sur une seule plateforme.",
+    "benefits/0/title": "Apprentissage interactif",
+    "benefits/0/text": "Des formations et programmes pratiques, conçus pour des résultats concrets.",
+    "benefits/1/title": "Parcours sur mesure",
+    "benefits/1/text": "Comparez formations, packs et programmes avant d'acheter.",
+    "benefits/2/title": "Accès flexible",
+    "benefits/2/text": "Commencez dès le paiement et reprenez à tout moment depuis votre espace apprenant.",
+    "ctalabel": "Explorer le catalogue"
+   }
+  },
+  "about|page_main|learningpromise|1": {
+   "title": "Les compétences ouvrent de nouvelles perspectives",
+   "settings": {
+    "title": "Les compétences ouvrent de nouvelles perspectives",
+    "body": "Que vous découvriez un nouvel outil, changiez d'orientation professionnelle ou formiez une équipe, Oriskill rend chaque étape claire et rassurante."
+   }
+  },
+  "about|page_main|mediastorycarousel|2": {
+   "settings": {
+    "slides/0/heading": "De la découverte à l'accès",
+    "slides/0/subheading": "Comparez les formations, payez en toute sécurité et accédez immédiatement aux cours achetés.",
+    "slides/0/alt": "Équipe pédagogique préparant un programme de formation",
+    "slides/1/heading": "Des formations orientées résultats",
+    "slides/1/subheading": "Formations, packs et programmes : choisissez le niveau d'engagement qui vous convient, en toute transparence.",
+    "slides/1/alt": "Apprenant suivant une formation en ligne depuis son bureau"
+   }
+  },
+  "about|page_main|belief|3": {
+   "title": "Nos convictions",
+   "subtitle": "Apprendre est le moteur du progrès.",
+   "settings": {
+    "title": "Nos convictions",
+    "subtitle": "Apprendre est le moteur du progrès.",
+    "items/0/text": "La bonne formation transforme la curiosité en compétence concrète.",
+    "items/1/text": "Choisir, payer et être accompagné doivent former un parcours fluide.",
+    "items/2/text": "Les packs et programmes montrent un chemin, pas seulement des cours isolés.",
+    "items/3/text": "La confiance permet de mieux former, de mieux suivre et d'obtenir de meilleurs résultats.",
+    "closing": "Oriskill existe pour rendre ce chemin simple, crédible et immédiatement utile."
+   }
+  },
+  "about|page_main|leadermessage|4": {
+   "disable": true,
+   "title": "Le mot du fondateur",
+   "settings": {
+    "eyebrow": "La direction",
+    "message": "<p>Au nom de toute l'équipe, je suis heureux de vous accueillir sur Oriskill. Cette plateforme traduit notre engagement : rendre des formations de qualité accessibles à tous, où que vous soyez.</p><p>Vous y trouverez des modules à suivre à votre rythme, construits autour des compétences qui comptent vraiment dans votre métier. En les développant, vous gagnez en confiance et en efficacité. Bienvenue, et construisons ensemble la suite de votre parcours.</p>",
+    "leadername": "Prénom Nom",
+    "leaderrole": "Fondateur d'Oriskill"
+   }
+  },
+  "catalog|catalog_ingrid|cta|0": {
+   "settings": {
+    "heading": "Soyez informé des nouvelles formations et offres",
+    "text": "Inscrivez-vous pour recevoir les nouveautés, les programmes certifiants et les offres du moment.",
+    "primarylabel": "S'inscrire",
+    "secondarylabel": "Voir tous les produits"
+   }
+  },
+  "catalog|catalog_main|catalog|0": {
+   "settings": {
+    "title": "Découvrez toutes nos formations"
+   }
+  },
+  "catalog|catalog_sidebar|content|0": {
+   "title": "Besoin d'aide pour choisir ?",
+   "subtitle": "Un conseil rapide peut vous faire gagner des heures de recherche.",
+   "settings": {
+    "eyebrow": "Le conseil Oriskill",
+    "body": "Indiquez-nous votre objectif, votre niveau et votre échéance. Nous vous aiderons à choisir la formation, le pack ou le programme le plus adapté.\n\nIdéal pour les équipes, les reconversions et les apprenants qui hésitent entre plusieurs parcours.",
+    "benefits/0/title": "Visez votre objectif",
+    "benefits/0/text": "Choisissez selon le résultat attendu, pas seulement le sujet.",
+    "benefits/1/title": "Comparez les parcours",
+    "benefits/1/text": "Sachez quand un pack ou un programme est plus avantageux.",
+    "benefits/2/title": "Démarrez sereinement",
+    "benefits/2/text": "Obtenez votre accès et de l'aide avant votre première leçon.",
+    "ctalabel": "Nous contacter"
+   }
+  },
+  "catalog|home_announce|countdown|0": {
+   "title": "Offre de lancement",
+   "settings": {
+    "heading": "L'offre de lancement se termine bientôt",
+    "expiredmessage": "L'offre est terminée. Découvrez nos dernières formations.",
+    "ctalabel": "Voir les offres"
+   }
+  },
+  "catalog|home_belowhero|trustbadges|0": {
+   "settings": {
+    "title": "Achetez en toute confiance",
+    "badges/0/label": "Paiement sécurisé",
+    "badges/0/sublabel": "Transactions protégées",
+    "badges/1/label": "Accès immédiat",
+    "badges/1/sublabel": "Dès la validation du paiement",
+    "badges/2/label": "Certificats",
+    "badges/2/sublabel": "Selon les formations",
+    "badges/3/label": "Support humain",
+    "badges/3/sublabel": "Aide pour l'accès et la facturation"
+   }
+  },
+  "catalog|home_featured|categories|0": {
+   "title": "Choisissez votre domaine",
+   "subtitle": "Parcourez nos formations par objectif, thème et niveau.",
+   "settings": {
+    "title": "Choisissez votre domaine",
+    "subtitle": "Parcourez nos formations par objectif, thème et niveau."
+   }
+  },
+  "catalog|home_featured|featured|1": {
+   "title": "Les formations populaires de la semaine",
+   "subtitle": "Les formations les plus choisies en ce moment."
+  },
+  "catalog|home_featured|related|2": {
+   "title": "Construisez un parcours complet",
+   "subtitle": "Gagnez du temps avec des packs et programmes qui regroupent des compétences complémentaires."
+  },
+  "catalog|home_featured|featuregrid|3": {
+   "title": "Pensé pour toutes vos équipes",
+   "subtitle": "Tout ce qu'il faut pour former, certifier et rester à jour.",
+   "settings": {
+    "cards/0/title": "Formations structurées",
+    "cards/0/text": "Des parcours construits autour des compétences dont vos métiers ont besoin.",
+    "cards/1/title": "Certificats en ligne",
+    "cards/1/text": "Les apprenants téléchargent un certificat vérifiable dès la formation réussie.",
+    "cards/2/title": "Adapté au mobile",
+    "cards/2/text": "Un affichage léger pour se former partout, même avec une connexion limitée."
+   }
+  },
+  "catalog|home_footer|newsletter|0": {
+   "title": "Restez informé",
+   "settings": {
+    "heading": "Nouvelles formations, packs et programmes",
+    "description": "Un e-mail utile à chaque nouveau parcours, certificat ou offre de saison.",
+    "placeholder": "vous@exemple.com",
+    "buttonlabel": "S'inscrire",
+    "successmessage": "Merci pour votre inscription. Vérifiez votre boîte mail pour confirmer."
+   }
+  },
+  "catalog|home_social|testimonials|0": {
+   "disable": true,
+   "title": "Ils se sont formés avec Oriskill",
+   "subtitle": "Ce qu'en disent nos apprenants.",
+   "settings": {
+    "testimonials/0/quote": "Remplacez ce texte par un témoignage réel d'apprenant, avec son accord.",
+    "testimonials/0/author": "Prénom N.",
+    "testimonials/0/role": "Métier",
+    "testimonials/1/quote": "Remplacez ce texte par un témoignage réel d'apprenant, avec son accord.",
+    "testimonials/1/author": "Prénom N.",
+    "testimonials/1/role": "Métier",
+    "testimonials/2/quote": "Remplacez ce texte par un témoignage réel d'apprenant, avec son accord.",
+    "testimonials/2/author": "Prénom N.",
+    "testimonials/2/role": "Métier"
+   }
+  },
+  "catalog|home_social|instructors|1": {
+   "disable": true,
+   "title": "Apprenez avec des praticiens",
+   "subtitle": "Des formations conçues par des experts de terrain.",
+   "settings": {
+    "instructors/0/name": "Prénom Nom",
+    "instructors/0/role": "Formateur en intelligence artificielle",
+    "instructors/0/bio": "Présentez ici l'expérience et la spécialité du formateur.",
+    "instructors/1/name": "Prénom Nom",
+    "instructors/1/role": "Formateur",
+    "instructors/1/bio": "Présentez ici l'expérience et la spécialité du formateur.",
+    "instructors/2/name": "Prénom Nom",
+    "instructors/2/role": "Formateur",
+    "instructors/2/bio": "Présentez ici l'expérience et la spécialité du formateur."
+   }
+  },
+  "global|global_bottom|footer|0": {
+   "title": "Pied de page Oriskill",
+   "settings": {
+    "brandname": "Oriskill",
+    "description": "Des formations en ligne pratiques, des packs et des programmes, avec paiement sécurisé, accès immédiat et accompagnement.",
+    "languagelabel": "Français",
+    "subscribeplaceholder": "Adresse e-mail",
+    "compliancelabel": "Paiement et données sécurisés",
+    "columns/0/title": "Découvrir",
+    "columns/0/links": "Catalogue | /local/moderncommerce/index.php\nÀ propos | /local/moderncommerce/about.php\nFormations à la une | /local/moderncommerce/index.php#catalog",
+    "columns/1/title": "Formations",
+    "columns/1/links": "Formations | /local/moderncommerce/index.php?coursetype=Course\nPacks | /local/moderncommerce/index.php?coursetype=Bundle\nProgrammes | /local/moderncommerce/index.php?coursetype=Program",
+    "columns/2/title": "Aide",
+    "columns/2/links": "Nous contacter | /local/moderncommerce/support.php\nPolitique de remboursement | /local/moderncommerce/refund-policy.php\nEspace apprenant | /local/moderncommerce/learner/dashboard.php",
+    "columns/3/title": "Informations légales",
+    "columns/3/links": "Conditions générales | /local/moderncommerce/terms.php\nConfidentialité | /local/moderncommerce/privacy.php\nRemboursements | /local/moderncommerce/refund-policy.php",
+    "social/0/label": "LinkedIn",
+    "social/1/label": "X",
+    "social/2/label": "YouTube",
+    "social/3/label": "Instagram",
+    "copyright": "© {year} {sitename}. Tous droits réservés."
+   }
+  },
+  "global|global_top|breadcrumb|0": {
+   "settings": {
+    "subtitle": "Trouvez la bonne formation, payez en toute sécurité et commencez à apprendre en confiance.",
+    "homelabel": "Accueil"
+   }
+  },
+  "privacy|page_aside|trustbadges|0": {
+   "settings": {
+    "title": "Confiance et données",
+    "badges/0/label": "Paiement protégé",
+    "badges/0/sublabel": "Géré par le prestataire de paiement",
+    "badges/1/label": "Suivi des commandes",
+    "badges/1/sublabel": "Reçus et historique d'accès",
+    "badges/2/label": "Échanges avec le support",
+    "badges/2/sublabel": "Vos messages servent à résoudre vos demandes"
+   }
+  },
+  "privacy|page_footer|cta|0": {
+   "settings": {
+    "heading": "Une question sur vos données ?",
+    "text": "Contactez-nous pour toute question sur vos achats, vos accès ou vos échanges avec nous.",
+    "primarylabel": "Nous contacter",
+    "secondarylabel": "Lire les conditions"
+   }
+  },
+  "privacy|page_hero|content|0": {
+   "title": "Protection de vos données",
+   "subtitle": "Comment Oriskill utilise les données des acheteurs, des apprenants, des commandes et du support.",
+   "settings": {
+    "eyebrow": "Confidentialité",
+    "body": "Achat et formation étant liés, Oriskill utilise les données de commande et d'accès aux cours pour vous fournir vos formations et vous accompagner."
+   }
+  },
+  "privacy|page_main|policy|0": {
+   "title": "Protection de vos données",
+   "subtitle": "Principes de traitement des données sur Oriskill.",
+   "settings": {
+    "effectivedate": "Texte à faire valider par votre conseil juridique avant publication",
+    "sections/0/heading": "Données utilisées pour traiter les commandes",
+    "sections/0/body": "Oriskill peut utiliser les informations du compte apprenant, l'e-mail d'achat, les commandes, les factures, les références de paiement, les remboursements et les demandes de support.",
+    "sections/0/bullets": "Traiter les commandes et émettre les reçus.\nDonner accès aux formations, programmes, packs ou abonnements achetés.\nEnvoyer les e-mails liés aux achats et aux accès.",
+    "sections/1/heading": "Données d'accès aux formations",
+    "sections/1/body": "Les inscriptions, statuts d'accès, progression, notes, certificats et l'activité peuvent être utilisés pour dispenser les formations et vérifier les droits d'accès.",
+    "sections/1/bullets": "Tenir à jour l'espace apprenant.\nAfficher les accès achetés et les certificats disponibles.\nPermettre le suivi et la résolution des incidents.",
+    "sections/2/heading": "Prestataires de paiement et communication",
+    "sections/2/body": "Les paiements sont traités par les prestataires de paiement activés. Oriskill conserve les références de paiement et les commandes, jamais les numéros de carte complets.",
+    "sections/2/bullets": "Les messages au support servent à répondre à vos questions.\nLes e-mails transactionnels peuvent contenir reçus, accès, statut de remboursement et informations de compte.\nLa durée de conservation dépend des obligations légales et de la politique du site."
+   }
+  },
+  "refund-policy|page_aside|faq|0": {
+   "title": "Questions sur les remboursements",
+   "subtitle": "Les réponses utiles avant de nous contacter.",
+   "settings": {
+    "items/0/question": "Est-ce que je garde l'accès à la formation après un remboursement ?",
+    "items/0/answer": "L'accès peut être retiré ou modifié après un remboursement, selon le produit et le type de remboursement.",
+    "items/1/question": "Sous quel délai suis-je remboursé ?",
+    "items/1/answer": "Le délai dépend du prestataire de paiement et de votre banque.",
+    "items/2/question": "Quelles informations dois-je envoyer ?",
+    "items/2/answer": "Indiquez le numéro de commande, l'e-mail d'achat, le nom du produit et le motif de votre demande."
+   }
+  },
+  "refund-policy|page_footer|cta|0": {
+   "settings": {
+    "heading": "Besoin d'aide pour un remboursement ?",
+    "text": "Envoyez-nous votre numéro de commande et votre e-mail d'achat pour que nous étudiions votre demande.",
+    "primarylabel": "Nous contacter",
+    "secondarylabel": "Voir les formations"
+   }
+  },
+  "refund-policy|page_hero|content|0": {
+   "title": "Remboursements et annulations",
+   "subtitle": "Les règles applicables aux demandes de remboursement, aux abonnements et aux accès.",
+   "settings": {
+    "eyebrow": "Politique de remboursement",
+    "body": "Cette page explique comment sont traités les demandes de remboursement, les résiliations d'abonnement et les changements d'accès pour les formations en ligne."
+   }
+  },
+  "refund-policy|page_main|policy|0": {
+   "title": "Demander un remboursement",
+   "subtitle": "Règles de remboursement et d'annulation.",
+   "settings": {
+    "effectivedate": "S'applique à compter de la date d'achat",
+    "sections/0/heading": "Conditions",
+    "sections/0/body": "L'éligibilité au remboursement dépend du type de produit, du délai depuis l'achat, de l'utilisation de l'accès, de l'achèvement, de la délivrance d'un certificat et des conditions d'abonnement.",
+    "sections/0/bullets": "Un contenu numérique peut ne plus être remboursable une fois l'accès largement utilisé.\nL'utilisation d'une clé, la délivrance d'un certificat ou l'achèvement peuvent limiter le remboursement.\nLa résiliation d'un abonnement arrête les prélèvements futurs selon les conditions de la formule.",
+    "sections/1/heading": "Après un remboursement",
+    "sections/1/body": "L'accès à une formation, un programme, un pack ou un abonnement peut être modifié après un remboursement total ou partiel.",
+    "sections/1/bullets": "L'inscription peut être retirée.\nL'accès inclus dans un pack ou un programme peut changer.\nL'accès au certificat peut être retiré avec l'accès à la formation.",
+    "sections/2/heading": "Comment faire une demande",
+    "sections/2/body": "Contactez-nous en indiquant votre numéro de commande, votre e-mail d'achat, le nom du produit et le motif de votre demande.",
+    "sections/2/bullets": "Le délai de remboursement dépend du prestataire de paiement et de votre banque.\nNous pouvons vous demander des informations complémentaires.\nConservez votre reçu de commande."
+   }
+  },
+  "support|page_aside|contactcards|0": {
+   "title": "Trouvez de l'aide rapidement",
+   "subtitle": "Choisissez la situation la plus proche de la vôtre.",
+   "settings": {
+    "cards/0/title": "Problème de paiement",
+    "cards/0/text": "Paiement refusé, paiement en double, confirmation ou erreur lors du paiement.",
+    "cards/0/linklabel": "Utiliser le formulaire",
+    "cards/1/title": "Problème d'accès",
+    "cards/1/text": "Vous avez payé mais ne pouvez pas ouvrir une formation, un pack, un programme ou un abonnement.",
+    "cards/1/linklabel": "Utiliser le formulaire",
+    "cards/2/title": "Facture ou reçu",
+    "cards/2/text": "Besoin d'une preuve d'achat, d'informations de facturation ou fiscales.",
+    "cards/2/linklabel": "Utiliser le formulaire",
+    "cards/3/title": "Remboursement ou résiliation",
+    "cards/3/text": "Questions sur les conditions, le renouvellement d'un abonnement ou l'accès après remboursement.",
+    "cards/3/linklabel": "Lire la politique de remboursement"
+   }
+  },
+  "support|page_footer|faq|0": {
+   "title": "Avant de nous contacter",
+   "subtitle": "Ces informations nous aident à vous répondre plus vite.",
+   "settings": {
+    "items/0/question": "Que dois-je indiquer ?",
+    "items/0/answer": "Votre numéro de commande, votre e-mail d'achat, le nom du produit et une courte description du problème.",
+    "items/1/question": "Le support peut-il me donner accès à une formation ?",
+    "items/1/answer": "Nous vérifions les commandes payées et confirmons si l'accès doit être disponible.",
+    "items/2/question": "Où trouver les conditions et la politique de remboursement ?",
+    "items/2/answer": "Consultez les pages Conditions générales et Politique de remboursement d'Oriskill."
+   }
+  },
+  "support|page_footer|cta|1": {
+   "settings": {
+    "heading": "Vous hésitez encore ?",
+    "text": "Revenez au catalogue pour comparer formations, packs et programmes avant d'acheter.",
+    "primarylabel": "Voir le catalogue",
+    "secondarylabel": "Lire la politique de remboursement"
+   }
+  },
+  "support|page_hero|content|0": {
+   "title": "Une question sur votre achat ?",
+   "subtitle": "Commandes, accès, factures, remboursements, abonnements et clés d'inscription.",
+   "settings": {
+    "eyebrow": "Support",
+    "body": "Expliquez-nous la situation en indiquant si possible votre numéro de commande ou votre e-mail d'achat. Plus votre premier message est précis, plus nous pouvons vous aider vite.",
+    "ctalabel": "Envoyer une demande"
+   }
+  },
+  "support|page_main|supportform|0": {
+   "title": "Comment pouvons-nous vous aider ?",
+   "subtitle": "Une question sur une commande, un accès, un paiement, un remboursement ou un abonnement ?",
+   "settings": {
+    "heading": "Comment pouvons-nous vous aider ?",
+    "description": "Indiquez le nom du produit, le numéro de commande, l'e-mail d'achat et ce que vous attendiez.",
+    "buttonlabel": "Envoyer la demande",
+    "emailbuttonlabel": "Écrire au support",
+    "messagelabel": "Message",
+    "messageplaceholder": "Décrivez la situation et la formation, le programme, le pack ou la commande concernés."
+   }
+  },
+  "terms|page_aside|faq|0": {
+   "title": "Avant d'acheter",
+   "subtitle": "Les questions fréquentes.",
+   "settings": {
+    "items/0/question": "Quand mon accès commence-t-il ?",
+    "items/0/answer": "L'accès commence généralement dès la validation du paiement et de l'inscription.",
+    "items/1/question": "Le contenu des formations peut-il évoluer ?",
+    "items/1/answer": "Nos formateurs peuvent améliorer les leçons, les ressources et la structure des programmes au fil du temps.",
+    "items/2/question": "Où obtenir de l'aide ?",
+    "items/2/answer": "Utilisez la page Support en indiquant votre numéro de commande ou votre e-mail d'achat."
+   }
+  },
+  "terms|page_footer|cta|0": {
+   "settings": {
+    "heading": "Une question avant d'acheter ?",
+    "text": "Contactez-nous pour toute question sur l'accès, les abonnements, les remboursements ou les certificats.",
+    "primarylabel": "Nous contacter",
+    "secondarylabel": "Voir les formations"
+   }
+  },
+  "terms|page_hero|content|0": {
+   "title": "Conditions d'achat et d'accès aux formations",
+   "subtitle": "Ce qu'il faut savoir avant d'acheter une formation, un pack, un programme ou un abonnement.",
+   "settings": {
+    "eyebrow": "Conditions générales",
+    "body": "Ces conditions expliquent comment sont gérés les achats, les comptes apprenants, l'accès aux formations, les abonnements, les coupons, les certificats et le support."
+   }
+  },
+  "terms|page_main|policy|0": {
+   "title": "Conditions d'achat des formations",
+   "subtitle": "Principes applicables aux achats de formations en ligne.",
+   "settings": {
+    "effectivedate": "En vigueur à compter de la date d'achat",
+    "sections/0/heading": "Achats et accès au compte",
+    "sections/0/body": "Les formations, programmes, packs et abonnements sont des contenus numériques rattachés au compte apprenant utilisé lors de l'achat.",
+    "sections/0/bullets": "L'accès est ouvert après validation du paiement.\nCertains produits peuvent comporter une durée limitée, des prérequis, des conditions de certificat ou d'abonnement.\nVous êtes responsable de la sécurité de vos identifiants.",
+    "sections/1/heading": "Paiements, coupons et abonnements",
+    "sections/1/body": "Les prix, remises, taxes, frais et devises sont ceux affichés lors du paiement.",
+    "sections/1/bullets": "Les coupons et promotions peuvent évoluer jusqu'à la validation du paiement.\nLes abonnements sont renouvelés selon la périodicité indiquée lors de l'achat.\nLes références de paiement et les commandes sont conservées pour le support et les obligations comptables.",
+    "sections/2/heading": "Contenus et règles d'utilisation",
+    "sections/2/body": "Le contenu des formations, la structure des programmes et les ressources incluses peuvent être améliorés au fil du temps.",
+    "sections/2/bullets": "Le partage d'un accès payant en dehors du compte acheteur n'est pas autorisé.\nLa délivrance des certificats peut dépendre des conditions d'achèvement de la formation.\nToute demande au support doit indiquer le numéro de commande et l'e-mail d'achat."
+   }
+  }
+ },
+ "slides": {
+  "catalog|home_hero|slider|0": [
+   {
+    "sortorder": 0,
+    "heading": "Développez des compétences utiles dès cette semaine",
+    "subheading": "Des formations en ligne pratiques, des packs et des programmes, avec paiement sécurisé et accès immédiat.",
+    "ctalabel": "Voir le catalogue"
+   },
+   {
+    "sortorder": 1,
+    "heading": "Suivez un parcours complet",
+    "subheading": "Des formations complémentaires réunies en un parcours, du niveau débutant à la maîtrise.",
+    "ctalabel": "Voir les packs"
+   },
+   {
+    "sortorder": 2,
+    "heading": "Faites reconnaître vos progrès",
+    "subheading": "Choisissez des formations certifiantes et retrouvez tous vos achats dans votre espace apprenant.",
+    "ctalabel": "Voir les programmes"
+   }
+  ]
+ }
+}

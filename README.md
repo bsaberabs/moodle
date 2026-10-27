@@ -1,4 +1,6 @@
-# Moodle avec Docker + CI/CD GitHub Actions
+# Oriskill — plateforme de formation (Moodle avec Docker + CI/CD GitHub Actions)
+
+Site de production : https://oriskill.com
 
 Moodle 5.3 (PHP 8.4 / Apache) + MySQL 8.4, avec un pipeline qui teste,
 publie l'image sur GitHub Container Registry (GHCR) et déploie sur un serveur via SSH.
