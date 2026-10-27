@@ -1,0 +1,535 @@
+/**
+ * This file is part of Moodle and is licensed under the
+ * GNU General Public License, version 3 or later.
+ *
+ * You may redistribute and modify it under the terms of the GPL.
+ * See the plugin root LICENSE file for complete terms.
+ *
+ * Compiled Modern Commerce styles.
+ *
+ * @package    local_moderncommerce
+ * @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+.mc-admin-help-page {
+  --mch-page: var(--mc-page-bg, #f3f6fa);
+  --mch-surface: var(--mc-surface, #fff);
+  --mch-surface-alt: var(--mc-surface-alt, #f7f9fc);
+  --mch-border: var(--mc-border, #d9e2ee);
+  --mch-border-strong: var(--mc-border-strong, #b9c7d8);
+  --mch-ink: var(--mc-text, #111827);
+  --mch-muted: var(--mc-text-muted, #52637a);
+  --mch-subtle: var(--mc-text-subtle, #718096);
+  --mch-primary: var(--mc-primary, #155fa8);
+  --mch-primary-strong: var(--mc-primary-hover, #0e4f91);
+  --mch-primary-soft: var(--mc-primary-light, #e8f2ff);
+  --mch-navy: var(--mc-secondary, #101b2f);
+  --mch-radius: var(--mc-radius, 8px);
+  --mch-radius-lg: var(--mc-radius-lg, 12px);
+  background: var(--mch-page);
+}
+
+.mc-admin-help-page #page,
+.mc-admin-help-page #topofscroll,
+.mc-admin-help-page #page-content,
+.mc-admin-help-page #region-main,
+.mc-admin-help-page #region-main-box,
+.mc-admin-help-page #region-main > .card,
+.mc-admin-help-page #region-main .card-body {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.mc-admin-help-page #page-wrapper {
+  background: var(--mch-page);
+}
+
+.mc-admin-help-page .mc-react-mount[data-region=mc-admin-help] {
+  min-height: 100vh;
+}
+
+.mch-app {
+  min-height: 100vh;
+  background: var(--mch-page);
+  color: var(--mch-ink);
+}
+
+.mch-sidebar {
+  display: grid;
+  align-content: start;
+  gap: 0.85rem;
+  background: var(--mch-navy);
+  color: #fff;
+  padding: 1rem;
+}
+
+.mch-brand {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.5rem 0.25rem 0.25rem;
+}
+
+.mch-brand__mark {
+  display: inline-flex;
+  width: 2.5rem;
+  height: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--mch-radius);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.mch-brand strong,
+.mch-brand small {
+  display: block;
+}
+
+.mch-brand strong {
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+.mch-brand small {
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 0.8125rem;
+}
+
+.mch-nav-search {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.mch-nav-search__control {
+  display: flex;
+  min-height: 2.5rem;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: var(--mch-radius);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.mch-nav-search__control > i {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.mch-nav-search__control input {
+  min-width: 0;
+  flex: 1 1 auto;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  font-size: 0.875rem;
+  outline: 0;
+}
+
+.mch-nav-search__control input::placeholder {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.mch-nav-search__clear {
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.mch-nav__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0 0.25rem;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.mch-nav__summary strong {
+  display: inline-flex;
+  min-width: 1.75rem;
+  min-height: 1.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 0.75rem;
+}
+
+.mch-nav {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.mch-nav__group {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.mch-nav__group h2 {
+  display: flex;
+  gap: 0.45rem;
+  align-items: center;
+  margin: 0.4rem 0.25rem 0.2rem;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.mch-nav__item {
+  display: grid;
+  grid-template-columns: 1.35rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  min-height: 2.55rem;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid transparent;
+  border-radius: var(--mch-radius);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.84);
+  font: inherit;
+  font-size: 0.875rem;
+  line-height: 1.25;
+  text-align: left;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.mch-nav__item i {
+  display: inline-flex;
+  width: 1.35rem;
+  height: 1.35rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.4rem;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 0.85rem;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.mch-nav__item span {
+  min-width: 0;
+}
+
+.mch-nav__item:hover,
+.mch-nav__item:focus-visible {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  outline: none;
+}
+
+.mch-nav__item:hover i,
+.mch-nav__item:focus-visible i {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+.mch-nav__item.is-active {
+  border-color: rgba(255, 255, 255, 0.24);
+  background: #fff;
+  color: var(--mch-navy);
+}
+
+.mch-nav__item.is-active i {
+  background: var(--mch-primary-soft);
+  color: var(--mch-primary-strong);
+}
+
+.mch-nav-empty {
+  display: grid;
+  gap: 0.5rem;
+  padding: 1.25rem 0.75rem;
+  color: rgba(255, 255, 255, 0.76);
+  text-align: center;
+}
+
+.mch-nav-empty i {
+  color: #fff;
+  font-size: 1.25rem;
+}
+
+.mch-nav-empty p {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.mch-main {
+  display: grid;
+  min-width: 0;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.mch-hero,
+.mch-reader {
+  border: 1px solid var(--mch-border);
+  border-radius: var(--mch-radius-lg);
+  background: var(--mch-surface);
+}
+
+.mch-hero {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+}
+
+.mch-hero__copy {
+  width: 100%;
+  min-width: 0;
+}
+
+.mch-hero__eyebrow,
+.mch-reader__meta {
+  display: inline-flex;
+  color: var(--mch-primary-strong);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.mch-hero h1,
+.mch-reader__bar h2 {
+  margin: 0.2rem 0 0.45rem;
+  color: var(--mch-ink);
+  font-size: 1.55rem;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+
+.mch-hero p,
+.mch-reader__bar p {
+  margin: 0;
+  color: var(--mch-muted);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.mch-hero__actions,
+.mch-reader__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.mch-btn {
+  display: inline-flex;
+  min-height: 2.35rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--mch-border);
+  border-radius: var(--mch-radius);
+  background: var(--mch-surface);
+  color: var(--mch-ink);
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-decoration: none;
+  transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease;
+}
+
+.mch-btn:hover,
+.mch-btn:focus-visible {
+  border-color: var(--mch-primary);
+  background: var(--mch-primary-soft);
+  color: var(--mch-primary-strong);
+  outline: none;
+  text-decoration: none;
+}
+
+.mch-btn--soft {
+  background: var(--mch-surface-alt);
+}
+
+.mch-reader {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.mch-reader__bar {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  border-bottom: 1px solid var(--mch-border);
+  background: var(--mch-surface-alt);
+}
+
+.mch-prose {
+  width: 100%;
+  min-width: 0;
+  padding: 1rem;
+  box-sizing: border-box;
+  color: var(--mch-ink);
+  font-size: 0.96rem;
+  line-height: 1.65;
+}
+
+.mch-prose > :first-child {
+  margin-top: 0;
+}
+
+.mch-prose > :last-child {
+  margin-bottom: 0;
+}
+
+.mch-prose h1,
+.mch-prose h2,
+.mch-prose h3,
+.mch-prose h4 {
+  color: var(--mch-ink);
+  line-height: 1.25;
+  text-wrap: balance;
+}
+
+.mch-prose h1 {
+  margin: 0 0 1rem;
+  font-size: 1.65rem;
+}
+
+.mch-prose h2 {
+  margin: 1.75rem 0 0.75rem;
+  font-size: 1.25rem;
+}
+
+.mch-prose h3 {
+  margin: 1.25rem 0 0.5rem;
+  font-size: 1.05rem;
+}
+
+.mch-prose p,
+.mch-prose li {
+  color: var(--mch-ink);
+}
+
+.mch-prose a {
+  color: var(--mch-primary-strong);
+  font-weight: 700;
+}
+
+.mch-prose code {
+  border-radius: 0.35rem;
+  background: var(--mch-primary-soft);
+  color: var(--mch-primary-strong);
+  font-size: 0.875em;
+}
+
+.mch-prose pre {
+  overflow-x: auto;
+  padding: 1rem;
+  border: 1px solid var(--mch-border);
+  border-radius: var(--mch-radius);
+  background: #0f172a;
+  color: #eef2ff;
+}
+
+.mch-prose pre code {
+  background: transparent;
+  color: inherit;
+}
+
+.mch-prose table {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.mch-prose th,
+.mch-prose td {
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--mch-border);
+  overflow-wrap: anywhere;
+  vertical-align: top;
+}
+
+.mch-prose td code,
+.mch-prose td a {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.mch-prose th {
+  background: var(--mch-surface-alt);
+  color: var(--mch-ink);
+}
+
+@media (min-width: 768px) {
+  .mch-main {
+    padding: 1.25rem;
+  }
+  .mch-hero,
+  .mch-reader__bar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+  }
+  .mch-prose {
+    padding: 1.25rem;
+  }
+}
+@media (max-width: 767.98px) {
+  .mch-prose table {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    table-layout: auto;
+  }
+  .mch-prose th,
+  .mch-prose td {
+    min-width: 10rem;
+  }
+  .mch-prose th:first-child,
+  .mch-prose td:first-child {
+    min-width: 8rem;
+  }
+}
+@media (min-width: 992px) {
+  .mch-app {
+    display: grid;
+    grid-template-columns: 18rem minmax(0, 1fr);
+  }
+  .mch-sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+  .mch-main {
+    gap: 1.25rem;
+    padding: 1.5rem;
+  }
+  .mch-prose {
+    padding: 1.5rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mch-btn,
+  .mch-nav-search__control,
+  .mch-nav__item {
+    transition: none;
+  }
+}
+/*
+ * Modern Commerce admin help center bundle.
+ *
+ * Loaded only for /local/moderncommerce/admin/help/ so normal admin screens
+ * do not pay for documentation-reader layout styles.
+ */

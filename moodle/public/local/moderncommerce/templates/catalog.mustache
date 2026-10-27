@@ -1,0 +1,348 @@
+{{!
+    This file is part of Moodle and is licensed under the
+    GNU General Public License, version 3 or later.
+
+    You may redistribute and modify it under the terms of the GPL.
+    See the plugin root LICENSE file for complete terms.
+}}
+{{!
+    @template local_moderncommerce/catalog
+
+    Course Catalog with filters and grid layout.
+
+    Context variables required:
+    * title - Section title
+    * courses - Array of course objects
+    * categories - Array of category filter options
+    * coursetypes - Array of course type filter options
+    * levels - Array of level filter options
+    * ratings - Array of rating filter options
+
+    @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+
+    Example context (json):
+    {
+        "title": "All Courses",
+        "courses": [],
+        "categories": [],
+        "coursetypes": [],
+        "levels": [],
+        "ratings": []
+    }
+}}
+
+<section class="mc-catalog-section {{#sidebarright}} mc-sidebar-right{{/sidebarright}}" {{#section_style}}style="{{section_style}}"{{/section_style}} data-courses='{{courses_json}}' data-perpage="{{perpage}}">
+
+    {{! Main Content }}
+    <div class="container mc-catalog-container">
+        <div class="mc-catalog-layout">
+
+            {{! Mobile Filter Toggle }}
+            <div class="mc-catalog-mobile-header">
+                <h2 class="mc-catalog-title-mobile">{{courseslabel}}</h2>
+                        <button type="button" class="mc-button mc-catalog-filter-toggle" data-mc-button="soft"
+                                id="mc-filter-toggle">
+                    <i class="bi bi-funnel"></i>
+                    <span>{{filtertitle}}</span>
+                </button>
+            </div>
+
+            {{! Sidebar Filters }}
+            <aside class="mc-catalog-sidebar" id="mc-catalog-sidebar">
+                <div class="mc-catalog-sidebar-inner">
+                    <div class="mc-catalog-sidebar-header">
+                        <h3>{{filtertitle}}</h3>
+                        <button type="button" class="mc-button mc-catalog-sidebar-close" data-mc-button="ghost"
+                                data-mc-button-size="icon" id="mc-sidebar-close" aria-label="{{filtertitle}}">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+
+                    <div class="mc-catalog-filters">
+
+                        {{! Course Type Filter }}
+                        <div class="mc-filter-section" data-filter-section="coursetype">
+                            <button class="mc-button mc-filter-section-header" data-mc-button="ghost">
+                                <span>{{coursetypetitle}}</span>
+                                <i class="bi bi-chevron-down"></i>
+                            </button>
+                            <div class="mc-filter-section-content">
+                                {{#coursetypes}}
+                                <label class="mc-filter-checkbox">
+                                    <input type="checkbox" name="coursetype" value="{{value}}" />
+                                    <span class="mc-filter-checkbox-mark"></span>
+                                    <span class="mc-filter-checkbox-label">{{label}}</span>
+                                </label>
+                                {{/coursetypes}}
+                            </div>
+                        </div>
+
+                        {{! Topic/Category Filter }}
+                        <div class="mc-filter-section" data-filter-section="category">
+                            <button class="mc-button mc-filter-section-header" data-mc-button="ghost">
+                                <span>{{topictitle}}</span>
+                                <i class="bi bi-chevron-down"></i>
+                            </button>
+                            <div class="mc-filter-section-content">
+                                {{#categories}}
+                                <label class="mc-filter-checkbox">
+                                    <input type="checkbox" name="category" value="{{id}}" />
+                                    <span class="mc-filter-checkbox-mark"></span>
+                                    <span class="mc-filter-checkbox-label">{{name}}</span>
+                                </label>
+                                {{/categories}}
+                            </div>
+                        </div>
+
+                        {{! Ratings Filter }}
+                        <div class="mc-filter-section" data-filter-section="rating">
+                            <button class="mc-button mc-filter-section-header" data-mc-button="ghost">
+                                <span>{{ratingstitle}}</span>
+                                <i class="bi bi-chevron-down"></i>
+                            </button>
+                            <div class="mc-filter-section-content">
+                                {{#ratings}}
+                                <label class="mc-filter-radio">
+                                    <input type="radio" name="rating" value="{{value}}" />
+                                    <span class="mc-filter-radio-mark"></span>
+                                    <span class="mc-filter-rating-stars">
+                                        <i class="bi bi-star-fill"></i>
+                                        <i class="bi bi-star-fill"></i>
+                                        <i class="bi bi-star-fill"></i>
+                                        <i class="bi bi-star-fill"></i>
+                                        <i class="bi {{#isHalf}}bi-star-half{{/isHalf}}{{^isHalf}}bi-star-fill{{/isHalf}}"></i>
+                                    </span>
+                                    <span class="mc-filter-rating-label">{{label}}</span>
+                                </label>
+                                {{/ratings}}
+                            </div>
+                        </div>
+
+                        {{! Level Filter }}
+                        <div class="mc-filter-section" data-filter-section="level">
+                            <button class="mc-button mc-filter-section-header" data-mc-button="ghost">
+                                <span>{{leveltitle}}</span>
+                                <i class="bi bi-chevron-down"></i>
+                            </button>
+                            <div class="mc-filter-section-content">
+                                {{#levels}}
+                                <label class="mc-filter-checkbox">
+                                    <input type="checkbox" name="level" value="{{value}}" />
+                                    <span class="mc-filter-checkbox-mark"></span>
+                                    <span class="mc-filter-checkbox-label">{{label}}</span>
+                                </label>
+                                {{/levels}}
+                            </div>
+                        </div>
+
+                        {{! Price Range Filter }}
+                        <div class="mc-filter-section" data-filter-section="price">
+                            <button class="mc-button mc-filter-section-header" data-mc-button="ghost">
+                                <span>{{pricetitle}}</span>
+                                <i class="bi bi-chevron-down"></i>
+                            </button>
+                            <div class="mc-filter-section-content">
+                                <div class="mc-filter-price-range">
+                                    <input
+                                        type="range"
+                                        id="mc-price-range"
+                                        min="0"
+                                        max="{{maxprice}}"
+                                        step="10"
+                                        value="{{maxprice}}"
+                                    />
+                                    <div class="mc-filter-price-labels">
+                                        <span>{{{minpricedisplay}}}</span>
+                                        <span class="mc-filter-price-value" id="mc-price-value">{{{maxpricedisplay}}}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="mc-catalog-sidebar-footer">
+                        <button class="mc-button btn-mc-primary mc-show-results-btn" data-mc-button="primary"
+                                id="mc-show-results">
+                            {{showresults}} <span id="mc-results-count">({{totalcourses}})</span>
+                        </button>
+                    </div>
+                </div>
+            </aside>
+
+            {{! Mobile Backdrop }}
+            <div class="mc-catalog-backdrop" id="mc-catalog-backdrop"></div>
+
+            {{! Results Grid }}
+            <main class="mc-catalog-main">
+                <div class="mc-catalog-main-header">
+                    <h2 class="mc-catalog-title">
+                        {{title}}
+                        <span class="mc-catalog-count">(<span id="mc-filtered-count">{{totalcourses}}</span> {{results}})</span>
+                    </h2>
+
+                    <div class="mc-catalog-controls">
+                        <div class="mc-catalog-perpage">
+                            <span class="mc-catalog-perpage-label">{{showlabel}}</span>
+                            <div class="mc-catalog-perpage-select-wrap">
+                                <select id="mc-catalog-perpage" class="mc-catalog-perpage-select">
+                                    <option value="12">12</option>
+                                    <option value="15">15</option>
+                                    <option value="18">18</option>
+                                    <option value="24">24</option>
+                                    <option value="36">36</option>
+                                </select>
+                                <i class="bi bi-chevron-down"></i>
+                            </div>
+                        </div>
+
+                        <div class="mc-catalog-sort">
+                            <span class="mc-catalog-sort-label">{{sortby}}</span>
+                            <div class="mc-catalog-sort-select-wrap">
+                                <select id="mc-catalog-sort" class="mc-catalog-sort-select">
+                                    <option value="popular">{{mostpopular}}</option>
+                                    <option value="newest">{{newest}}</option>
+                                    <option value="pricelow">{{pricelowtohigh}}</option>
+                                    <option value="pricehigh">{{pricehightolow}}</option>
+                                </select>
+                                <i class="bi bi-chevron-down"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{! Course Grid }}
+                <div class="mc-catalog-grid" id="mc-catalog-grid">
+                    {{#courses}}
+                    <article class="mc-course-card"
+                        data-id="{{id}}"
+                        data-itemtype="{{itemtype}}"
+                        data-category="{{categoryid}}"
+                        data-coursetype="{{coursetype}}"
+                        data-level="{{level}}"
+                        data-rating="{{rating}}"
+                        data-price="{{pricevalue}}"
+                        data-title="{{title}}"
+                        data-timecreated="{{timecreated}}">
+
+                        {{! Image Section }}
+                        <div class="mc-course-card-image">
+                            <img src="{{thumb}}" alt="{{alt}}" loading="lazy" />
+                            <div class="mc-course-card-badges">
+                                {{#bestseller}}
+                                <span class="mc-badge mc-badge-bestseller">{{bestsellerlabel}}</span>
+                                {{/bestseller}}
+                                {{#isbundle}}
+                                <span class="mc-badge mc-badge-bundle">
+                                    <i class="bi bi-box-seam"></i> {{bundlelabel}}
+                                </span>
+                                {{/isbundle}}
+                                {{#isprogram}}
+                                <span class="mc-badge mc-badge-program">
+                                    <i class="bi bi-layers"></i> {{programlabel}}
+                                </span>
+                                {{/isprogram}}
+                            </div>
+                        </div>
+
+                        {{! Content Section }}
+                        <div class="mc-course-card-body">
+                            <div class="mc-course-card-meta">
+                                <span class="mc-course-card-category">{{category}}</span>
+                                <span class="mc-course-card-duration">
+                                    <i class="bi bi-clock"></i> {{{courseduration}}}
+                                </span>
+                            </div>
+
+                            <h3 class="mc-course-card-title">{{title}}</h3>
+
+                            {{#instructor}}
+                            <p class="mc-course-card-instructor">{{instructor}}</p>
+                            {{/instructor}}
+
+                            <div class="mc-course-card-rating">
+                                {{{reviewhtml}}}
+                            </div>
+                        </div>
+
+                        {{! Footer Section }}
+                        <div class="mc-course-card-footer">
+                            <div class="mc-course-card-price">
+                                {{{courseprice}}}
+                                {{#hasoriginalprice}}
+                                <span class="mc-course-card-original-price">{{{displayoriginalprice}}}</span>
+                                {{/hasoriginalprice}}
+                            </div>
+                            <button type="button" class="mc-button btn-mc-primary mc-course-card-btn mc-add-to-cart-btn"
+                                    data-mc-button="primary" title="{{addtocart}}" aria-label="{{addtocart}}">
+                                <i class="bi bi-cart"></i>
+                            </button>
+                        </div>
+
+                        <a href="{{detailsurl}}" class="stretched-link mc-course-card-link" aria-label="{{viewdetailslabel}} {{title}}"></a>
+                    </article>
+                    {{/courses}}
+                </div>
+
+                {{! No Results Message }}
+                <div class="mc-catalog-no-results" id="mc-no-results">
+                    <div class="mc-no-results-icon">
+                        <i class="bi bi-search"></i>
+                    </div>
+                    <h3>{{nocourses}}</h3>
+                    <p>{{noresultshelp}}</p>
+                    <button class="mc-button mc-clear-filters-btn" data-mc-button="soft" id="mc-clear-filters">
+                        {{clearfilters}}
+                    </button>
+                </div>
+
+                {{! Pagination }}
+                <div class="mc-catalog-pagination" id="mc-pagination">
+                    <nav class="mc-pagination-nav">
+                        <button class="mc-button mc-pagination-btn mc-pagination-prev" data-mc-button="light"
+                                id="mc-page-prev" disabled>
+                            <i class="bi bi-chevron-left"></i> {{previous}}
+                        </button>
+                        <div class="mc-pagination-pages" id="mc-pagination-pages">
+                            {{! Page buttons will be generated dynamically by JS }}
+                        </div>
+                        <button class="mc-button mc-pagination-btn mc-pagination-next" data-mc-button="light"
+                                id="mc-page-next">
+                            {{next}} <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </nav>
+                    <div class="mc-pagination-info">
+                        <span id="mc-page-info">{{page}} 1 {{of}} 1</span>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+</section>
+
+{{#js}}
+require(['local_moderncommerce/catalog'], function(catalog) {
+    catalog.init({
+        currencySymbol: '{{currencysymbol}}',
+        currencyPosition: '{{currencyposition}}',
+        currencyDecimals: parseInt('{{currencydecimals}}', 10) || 0,
+        currencyThousand: '{{currencythousand}}',
+        currencyDecimal: '{{currencydecimal}}',
+        maxPrice: parseInt('{{maxprice}}', 10) || 300,
+        pageLabel: '{{page}}',
+        ofLabel: '{{of}}',
+        sesskey: '{{sesskey}}',
+        isLoggedIn: {{#isloggedin}}true{{/isloggedin}}{{^isloggedin}}false{{/isloggedin}},
+        loginUrl: '{{loginurl}}',
+        registerUrl: '{{registerurl}}',
+        loginRequiredTitle: '{{loginrequiredtitle}}',
+        loginRequiredMessage: '{{loginrequiredmessage}}',
+        loginBtn: '{{loginbtn}}',
+        registerBtn: '{{registerbtn}}',
+        closeLabel: '{{closelabel}}',
+        failedToAddToCart: '{{failedtoaddtocart}}'
+    });
+});
+{{/js}}

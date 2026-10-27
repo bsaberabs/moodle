@@ -1,0 +1,82 @@
+{{!
+    This file is part of Moodle and is licensed under the
+    GNU General Public License, version 3 or later.
+
+    You may redistribute and modify it under the terms of the GPL.
+    See the plugin root LICENSE file for complete terms.
+}}
+{{!
+    @template local_moderncommerce/learner_shell
+
+    Learner account shell. Horizontal top nav, clean white surface.
+    Separate from admin shell — simpler, task-focused.
+
+    Context variables:
+    * title        - Page title
+    * subtitle     - Optional subtitle
+    * contenthtml  - Main page content (trusted)
+    * user         - {fullname, initials}
+    * catalogurl   - URL to catalog
+    * dashboardurl - URL to learner dashboard
+    * coursesurl   - URL to my courses
+    * ordersurl    - URL to my orders
+    * nav.*active  - Active state booleans
+    * config.wwwroot
+
+
+    @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+}}
+<div class="mc-learner-shell">
+
+    <header class="mc-learner-topnav" role="banner">
+        <a href="{{catalogurl}}" class="mc-learner-brand" aria-label="{{#str}}pluginname, local_moderncommerce{{/str}}">
+            <span class="mc-learner-brand__mark" aria-hidden="true">
+                <i class="bi bi-mortarboard"></i>
+            </span>
+            <span>{{#str}}pluginname, local_moderncommerce{{/str}}</span>
+        </a>
+
+        {{#hasnavigation}}
+        <nav class="mc-learner-nav-links" role="navigation"
+             aria-label="{{#str}}learnernavigation, local_moderncommerce{{/str}}">
+            {{#navigation}}
+            <a href="{{url}}"
+               class="mc-learner-nav-link {{#active}}active{{/active}}"
+               {{#active}}aria-current="page"{{/active}}>
+                <i class="bi {{icon}}" aria-hidden="true"></i>
+                <span>{{label}}</span>
+            </a>
+            {{/navigation}}
+            {{#catalogurl}}
+            <a href="{{catalogurl}}" class="mc-learner-nav-link">
+                <i class="bi bi-grid" aria-hidden="true"></i>
+                <span>{{#str}}browsecourses, local_moderncommerce{{/str}}</span>
+            </a>
+            {{/catalogurl}}
+        </nav>
+        {{/hasnavigation}}
+
+        {{#user.fullname}}
+        <div class="mc-learner-user-chip">
+            <div class="mc-learner-avatar" aria-hidden="true" title="{{user.fullname}}">
+                {{user.initials}}
+            </div>
+            <span>{{user.fullname}}</span>
+        </div>
+        {{/user.fullname}}
+    </header>
+
+    <main class="mc-learner-content" role="main">
+        {{#title}}
+        <div class="d-flex align-items-start justify-content-between gap-3 mb-4 flex-wrap">
+            <div>
+                <h1 class="mc-page-title">{{title}}</h1>
+                {{#subtitle}}<p class="mc-page-subtitle mt-1">{{subtitle}}</p>{{/subtitle}}
+            </div>
+        </div>
+        {{/title}}
+        {{{contenthtml}}}
+    </main>
+
+</div>

@@ -1,0 +1,378 @@
+{{!
+    This file is part of Moodle and is licensed under the
+    GNU General Public License, version 3 or later.
+
+    You may redistribute and modify it under the terms of the GPL.
+    See the plugin root LICENSE file for complete terms.
+}}
+{{!
+    @template local_moderncommerce/checkout
+
+    Checkout page. Two-column layout: payment/billing left, order summary right.
+    Payment methods rendered as selectable option rows. Billing fields shown/hidden
+    based on selected payment method via JavaScript.
+
+    Context variables required:
+    * sesskey           - Session key
+    * checkouturl       - Form action URL
+    * carturl           - Back to cart URL
+    * user              - {firstname, lastname, email, phone, address, city, state, zipcode}
+    * hasbillingfields  - bool
+    * billingfields     - Array of billing field config objects
+    * countries         - Array: {code, name, selected}
+    * paymentmethods    - Array: {id, name, description, icon, checked}
+    * haspaymentmethods - bool
+    * nopaymentmethods  - bool
+    * items             - Array: {name, linetotal, price, quantity, iscourse, isbundle, isadjusted}
+    * hasitems          - bool
+    * hascoupon         - bool
+    * coupon            - {code, discount}
+    * subtotal          - Formatted string
+    * hasdiscount       - bool
+    * discount          - Formatted string
+    * hastax            - bool
+    * tax               - Formatted string
+    * total             - Formatted string
+
+
+    @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+}}
+<div class="mc-checkout-page py-4">
+    <div class="container-fluid px-md-4 px-lg-5">
+
+        {{! Back to cart }}
+        <div class="mb-4">
+            <a href="{{carturl}}" class="mc-button mc-btn-soft" data-mc-button="soft">
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>
+                {{#str}}backto, local_moderncommerce{{/str}} {{#str}}cart, local_moderncommerce{{/str}}
+            </a>
+        </div>
+
+        <form method="post" action="{{checkouturl}}" id="checkout-form">
+            <input type="hidden" name="sesskey" value="{{sesskey}}">
+            <input type="hidden" name="firstname" value="{{user.firstname}}">
+            <input type="hidden" name="lastname" value="{{user.lastname}}">
+            <input type="hidden" name="email" value="{{user.email}}">
+
+            <div class="mc-checkout-layout">
+
+                {{! Left: Payment + Billing }}
+                <div>
+                    {{! Payment method }}
+                    <div class="mc-form-section mb-3">
+                        <div class="mc-form-section__header">
+                            <h2 class="mc-form-section__title">
+                                <i class="bi bi-credit-card me-2" aria-hidden="true"></i>
+                                {{#str}}paymentmethod, local_moderncommerce{{/str}}
+                            </h2>
+                        </div>
+                        <div class="mc-form-section__body">
+                            {{#nopaymentmethods}}
+                            <div class="alert alert-danger mb-0 d-flex gap-2">
+                                <i class="bi bi-exclamation-triangle mt-1" aria-hidden="true"></i>
+                                {{#str}}nopaymentmethodsenabled, local_moderncommerce{{/str}}
+                            </div>
+                            {{/nopaymentmethods}}
+
+                            {{#haspaymentmethods}}
+                            <div role="radiogroup" aria-label="{{#str}}paymentmethod, local_moderncommerce{{/str}}">
+                                {{#paymentmethods}}
+                                <label class="mc-payment-option {{#checked}}mc-payment-option--selected{{/checked}}"
+                                       for="payment-{{id}}">
+                                    <input class="visually-hidden"
+                                           type="radio"
+                                           name="paymentmethod"
+                                           id="payment-{{id}}"
+                                           value="{{id}}"
+                                           {{#checked}}checked{{/checked}}>
+                                    <div class="mc-payment-option__icon" aria-hidden="true">
+                                        <i class="fa {{icon}}"></i>
+                                    </div>
+                                    <span>
+                                        <span class="mc-payment-option__name">{{name}}</span>
+                                        <span class="mc-payment-option__desc">{{description}}</span>
+                                    </span>
+                                </label>
+                                {{/paymentmethods}}
+                            </div>
+                            {{/haspaymentmethods}}
+                        </div>
+                    </div>
+
+                    {{! Billing fields (shown/hidden by JS) }}
+                    {{#hasbillingfields}}
+                    <div class="mc-form-section mc-billing-card mb-3">
+                        <div class="mc-form-section__header">
+                            <h2 class="mc-form-section__title">
+                                <i class="bi bi-person me-2" aria-hidden="true"></i>
+                                {{#str}}billinginfo, local_moderncommerce{{/str}}
+                            </h2>
+                        </div>
+                        <div class="mc-form-section__body">
+                            <div class="row g-3">
+                                {{#billingfields}}
+                                {{#isphone}}
+                                <div class="col-12">
+                                    <label for="phone" class="mc-field-label">
+                                        {{label}}{{#required}}<span class="mc-required" aria-hidden="true">*</span>{{/required}}
+                                    </label>
+                                    <input type="tel" class="mc-form-control" id="phone" name="phone"
+                                           value="{{user.phone}}" {{#required}}required{{/required}}>
+                                </div>
+                                {{/isphone}}
+                                {{#isaddress}}
+                                <div class="col-12">
+                                    <label for="address" class="mc-field-label">
+                                        {{label}}{{#required}}<span class="mc-required" aria-hidden="true">*</span>{{/required}}
+                                    </label>
+                                    <input type="text" class="mc-form-control" id="address" name="address"
+                                           value="{{user.address}}" {{#required}}required{{/required}}>
+                                </div>
+                                {{/isaddress}}
+                                {{#iscity}}
+                                <div class="col-md-6">
+                                    <label for="city" class="mc-field-label">
+                                        {{label}}{{#required}}<span class="mc-required" aria-hidden="true">*</span>{{/required}}
+                                    </label>
+                                    <input type="text" class="mc-form-control" id="city" name="city"
+                                           value="{{user.city}}" {{#required}}required{{/required}}>
+                                </div>
+                                {{/iscity}}
+                                {{#isstate}}
+                                <div class="col-md-6">
+                                    <label for="state" class="mc-field-label">
+                                        {{label}}{{#required}}<span class="mc-required" aria-hidden="true">*</span>{{/required}}
+                                    </label>
+                                    <input type="text" class="mc-form-control" id="state" name="state"
+                                           value="{{user.state}}" {{#required}}required{{/required}}>
+                                </div>
+                                {{/isstate}}
+                                {{#iscountry}}
+                                <div class="col-md-6">
+                                    <label for="country" class="mc-field-label">
+                                        {{label}}{{#required}}<span class="mc-required" aria-hidden="true">*</span>{{/required}}
+                                    </label>
+                                    <select class="mc-select" id="country" name="country" {{#required}}required{{/required}}>
+                                        {{#countries}}
+                                        <option value="{{code}}"{{#selected}} selected{{/selected}}>{{name}}</option>
+                                        {{/countries}}
+                                    </select>
+                                </div>
+                                {{/iscountry}}
+                                {{#iszipcode}}
+                                <div class="col-md-6">
+                                    <label for="zipcode" class="mc-field-label">
+                                        {{label}}{{#required}}<span class="mc-required" aria-hidden="true">*</span>{{/required}}
+                                    </label>
+                                    <input type="text" class="mc-form-control" id="zipcode" name="zipcode"
+                                           value="{{user.zipcode}}" {{#required}}required{{/required}}>
+                                </div>
+                                {{/iszipcode}}
+                                {{/billingfields}}
+                            </div>
+                        </div>
+                    </div>
+                    {{/hasbillingfields}}
+
+                    {{! Place order button (inside form, left column) }}
+                    {{#haspaymentmethods}}
+                    <button type="submit" class="mc-button btn-mc-primary d-flex w-100 justify-content-center"
+                            data-mc-button="primary" data-mc-loading-submit data-mc-loading-label="{{#str}}processing, local_moderncommerce{{/str}}">
+                        <i class="bi bi-lock me-2" aria-hidden="true"></i>
+                        {{#str}}placeorder, local_moderncommerce{{/str}}
+                    </button>
+                    <div class="mc-trust-note mt-2">
+                        <i class="bi bi-shield-check" aria-hidden="true"></i>
+                        {{#str}}securepayment, local_moderncommerce{{/str}}
+                    </div>
+                    {{/haspaymentmethods}}
+                </div>
+
+                {{! Right: Order summary (sticky on desktop) }}
+                <div>
+                    <div class="mc-order-summary">
+                        <div class="mc-order-summary__header">{{#str}}ordersummary, local_moderncommerce{{/str}}</div>
+                        <div class="mc-order-summary__body">
+                            {{! Line items }}
+                            {{#items}}
+                            <div class="mc-order-row">
+                                <span class="mc-flex-truncate">
+                                    {{#iscourse}}<span class="mc-badge mc-badge--primary me-1">{{#str}}course, local_moderncommerce{{/str}}</span>{{/iscourse}}
+                                    {{#isbundle}}<span class="mc-badge mc-badge--success me-1">{{#str}}bundle, local_moderncommerce{{/str}}</span>{{/isbundle}}
+                                    {{name}}
+                                </span>
+                                <span class="mc-order-row__value">{{linetotal}}</span>
+                            </div>
+                            {{/items}}
+
+                            <hr class="my-2">
+
+                            <div class="mc-order-row">
+                                <span>{{#str}}subtotal, local_moderncommerce{{/str}}</span>
+                                <span class="mc-order-row__value mc-subtotal">{{subtotal}}</span>
+                            </div>
+                            <div class="mc-discount-row {{^hasdiscount}}d-none{{/hasdiscount}}">
+                                <div class="mc-order-row mc-order-row--discount">
+                                    <span>{{#str}}discount, local_moderncommerce{{/str}}</span>
+                                    <span class="mc-order-row__value mc-discount">{{#hasdiscount}}-{{discount}}{{/hasdiscount}}</span>
+                                </div>
+                            </div>
+                            {{#hastax}}
+                            <div class="mc-order-row">
+                                <span>{{#str}}tax, local_moderncommerce{{/str}}</span>
+                                <span class="mc-order-row__value">{{tax}}</span>
+                            </div>
+                            {{/hastax}}
+                            <div class="mc-order-row mc-order-row--total">
+                                <span>{{#str}}carttotal, local_moderncommerce{{/str}}</span>
+                                <span class="mc-total">{{total}}</span>
+                            </div>
+
+                            {{! Coupon }}
+                            <div class="mc-coupon-section mt-3">
+                                <label for="couponcode-input" class="mc-filter-label">{{#str}}couponcode, local_moderncommerce{{/str}}</label>
+                                {{#hascoupon}}
+                                <div class="d-flex gap-2">
+                                    <input type="text" class="mc-form-control" id="couponcode-input"
+                                           name="couponcode_input" value="{{coupon.code}}" disabled>
+                                    <button class="mc-button mc-btn-soft mc-btn-soft--danger mc-remove-coupon-btn" type="button" data-mc-button="danger">
+                                        {{#str}}remove, local_moderncommerce{{/str}}
+                                    </button>
+                                </div>
+                                {{/hascoupon}}
+                                {{^hascoupon}}
+                                <div class="d-flex gap-2">
+                                    <input type="text" class="mc-form-control" id="couponcode-input"
+                                           name="couponcode_input"
+                                           placeholder="{{#str}}entercoupon, local_moderncommerce{{/str}}">
+                                    <button class="mc-button mc-btn-soft mc-apply-coupon-btn" type="button" data-mc-button="soft">
+                                        {{#str}}apply, local_moderncommerce{{/str}}
+                                    </button>
+                                </div>
+                                {{/hascoupon}}
+                                <div class="mc-coupon-message mt-1" aria-live="polite"></div>
+                            </div>
+                        </div>
+                        <div class="mc-order-summary__footer">
+                            <div class="mc-trust-note justify-content-center">
+                                <i class="bi bi-shield-check" aria-hidden="true"></i>
+                                {{#str}}securecheckout, local_moderncommerce{{/str}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </form>
+
+    </div>
+</div>
+
+{{#js}}
+require(['jquery'], function($) {
+    var noBillingMethods = ['manual', 'enrollkey'];
+
+    function toggleBillingCard() {
+        var selectedMethod = $('input[name="paymentmethod"]:checked').val();
+        var $billingCard = $('.mc-billing-card');
+        var $billingInputs = $billingCard.find('input, select');
+
+        if (noBillingMethods.indexOf(selectedMethod) !== -1) {
+            $billingCard.slideUp(300);
+            $billingInputs.each(function() {
+                var $input = $(this);
+                if ($input.prop('required')) {
+                    $input.data('was-required', true).prop('required', false);
+                }
+            });
+        } else {
+            $billingCard.slideDown(300);
+            $billingInputs.each(function() {
+                var $input = $(this);
+                if ($input.data('was-required')) {
+                    $input.prop('required', true);
+                }
+            });
+        }
+    }
+
+    toggleBillingCard();
+
+    $('input[name="paymentmethod"]').on('change', function() {
+        $('.mc-payment-option').removeClass('mc-payment-option--selected');
+        $(this).closest('.mc-payment-option').addClass('mc-payment-option--selected');
+        toggleBillingCard();
+    });
+
+    require(['core/ajax'], function(Ajax) {
+    $(document).on('click', '.mc-apply-coupon-btn', function() {
+        var code = $('#couponcode-input').val().trim();
+        var $message = $('.mc-coupon-message');
+        var $btn = $(this);
+
+        if (!code) {
+            $message.html('<span class="text-danger">{{#str}}entercouponcode, local_moderncommerce{{/str}}</span>');
+            return;
+        }
+
+        $btn.data('mc-original-html', $btn.html())
+            .prop('disabled', true)
+            .attr('aria-busy', 'true')
+            .attr('data-mc-button-state', 'loading')
+            .text('{{#str}}validating, local_moderncommerce{{/str}}');
+        $message.html('<span class="text-muted">{{#str}}validating, local_moderncommerce{{/str}}</span>');
+
+        Ajax.call([{
+            methodname: 'local_moderncommerce_update_cart',
+            args: { couponcode: code, action: 'applycoupon' }
+        }])[0].done(function(response) {
+            response.success = true;
+            if (response.success) {
+                $message.html('<span class="text-success">' + response.message + '</span>');
+                $('.mc-discount-row').removeClass('d-none');
+                $('.mc-discount').text('-' + response.totals.discount);
+                $('.mc-total').text(response.totals.total);
+                $('#couponcode-input').prop('disabled', true);
+                $btn.text('{{#str}}remove, local_moderncommerce{{/str}}')
+                    .removeClass('mc-apply-coupon-btn')
+                    .addClass('mc-btn-soft--danger mc-remove-coupon-btn');
+            } else {
+                $message.html('<span class="text-danger">' + response.error + '</span>');
+                $btn.prop('disabled', false)
+                    .removeAttr('aria-busy')
+                    .removeAttr('data-mc-button-state')
+                    .html($btn.data('mc-original-html'));
+            }
+        }).fail(function(error) {
+            var message = error && error.message ? error.message : '{{#str}}error, local_moderncommerce{{/str}}';
+            $message.html('<span class="text-danger">' + message + '</span>');
+            $btn.prop('disabled', false)
+                .removeAttr('aria-busy')
+                .removeAttr('data-mc-button-state')
+                .html($btn.data('mc-original-html'));
+        });
+    });
+
+    $(document).on('submit', '#checkout-form', function() {
+        var $btn = $(this).find('[data-mc-loading-submit]');
+        if (!$btn.length) {
+            return;
+        }
+        $btn.prop('disabled', true)
+            .attr('aria-busy', 'true')
+            .attr('data-mc-button-state', 'loading')
+            .text($btn.attr('data-mc-loading-label') || '{{#str}}processing, local_moderncommerce{{/str}}');
+    });
+
+    $(document).on('click', '.mc-remove-coupon-btn', function() {
+        Ajax.call([{
+            methodname: 'local_moderncommerce_update_cart',
+            args: { action: 'removecoupon' }
+        }])[0].done(function() {
+            location.reload();
+        });
+    });
+    });
+});
+{{/js}}

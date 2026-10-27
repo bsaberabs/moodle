@@ -1,0 +1,50 @@
+{{!
+    This file is part of Moodle and is licensed under the
+    GNU General Public License, version 3 or later.
+
+    You may redistribute and modify it under the terms of the GPL.
+    See the plugin root LICENSE file for complete terms.
+}}
+{{!
+    @template local_moderncommerce/components/price_display
+
+    Price display component. Handles regular, sale, and free states.
+    Never hardcodes currency symbols — uses configured currencysymbol/
+    currencybefore/currencyafter variables.
+
+    Context variables:
+    * displayprice     - Formatted current price string (with currency)
+    * displaysaleprice - Formatted sale price string (optional)
+    * hassale          - bool
+    * isfree           - bool
+    * currencybefore   - Currency before amount (e.g. "$")
+    * currencyafter    - Currency after amount (e.g. "€")
+    * price            - Raw price value
+    * saleprice        - Raw sale price value (optional)
+
+
+    @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+}}
+<span class="mc-price {{#isfree}}mc-price--free{{/isfree}}">
+    {{#hassale}}
+    <span class="mc-price__main">
+        {{currencybefore}}{{saleprice}}{{currencyafter}}
+    </span>
+    <span class="mc-price__original" aria-label="{{#str}}regularprice, local_moderncommerce{{/str}}">
+        {{currencybefore}}{{price}}{{currencyafter}}
+    </span>
+    <span class="mc-price__sale">{{#str}}onsale, local_moderncommerce{{/str}}</span>
+    {{/hassale}}
+    {{^hassale}}
+    {{#isfree}}
+    <span class="mc-price__main">{{#str}}free, local_moderncommerce{{/str}}</span>
+    {{/isfree}}
+    {{^isfree}}
+    <span class="mc-price__main">
+        {{#displayprice}}{{displayprice}}{{/displayprice}}
+        {{^displayprice}}{{currencybefore}}{{price}}{{currencyafter}}{{/displayprice}}
+    </span>
+    {{/isfree}}
+    {{/hassale}}
+</span>

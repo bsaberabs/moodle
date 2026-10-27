@@ -1,0 +1,47 @@
+{{!
+    This file is part of Moodle and is licensed under the
+    GNU General Public License, version 3 or later.
+
+    You may redistribute and modify it under the terms of the GPL.
+    See the plugin root LICENSE file for complete terms.
+}}
+{{!
+    @template local_moderncommerce/components/toast
+
+    A single floating toast — the mc-toast design-system component. Lives inside a
+    .mc-toast-region (see local_moderncommerce/floating_notifications, which builds
+    the region at the admin-configured screen position and manages auto-dismiss).
+
+    This template mirrors the DOM the toast manager builds at runtime; it exists so
+    toasts can also be rendered server-side and for the living style guide. The
+    region carries aria-live; an individual toast uses role="alert" only for the
+    danger variant so errors are announced assertively.
+
+    Context variables:
+    * type        - Variant key: success | warning | danger | info | primary | neutral.
+                    Defaults to info.
+    * icon        - Bootstrap icon class without state, e.g. "bi-check-circle".
+    * title       - Optional bold lead line.
+    * message     - Body text. Ignored when a {{$body
+
+    @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+}} block is supplied by a parent.
+    * role        - ARIA role override. Defaults to "status" (use "alert" for errors).
+    * dismissible - Show a manual close button. Defaults to off.
+    * showprogress- Render the auto-dismiss countdown bar. Defaults to off.
+    * delay       - Auto-dismiss duration in milliseconds, used by the countdown bar.
+}}
+<div class="mc-toast mc-toast--{{^type}}info{{/type}}{{type}}" role="{{^role}}status{{/role}}{{role}}">
+    {{#icon}}<i class="bi {{icon}} mc-toast__icon" aria-hidden="true"></i>{{/icon}}
+    <div class="mc-toast__body">
+        {{#title}}<p class="mc-toast__title">{{title}}</p>{{/title}}
+        <p class="mc-toast__message">{{$body}}{{message}}{{/body}}</p>
+    </div>
+    {{#dismissible}}
+    <button type="button" class="mc-toast__close" data-mc-toast-close aria-label="{{#str}}dismissnotification, local_moderncommerce{{/str}}">
+        <i class="bi bi-x-lg" aria-hidden="true"></i>
+    </button>
+    {{/dismissible}}
+    {{#showprogress}}<span class="mc-toast__progress" style="animation-duration: {{delay}}ms;"></span>{{/showprogress}}
+</div>

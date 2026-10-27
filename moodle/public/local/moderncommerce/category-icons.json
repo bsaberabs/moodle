@@ -1,0 +1,849 @@
+[
+  {
+    "id": "leadership_fundamentals",
+    "label": "Leadership Fundamentals",
+    "domain": "Leadership & Management",
+    "icon": "bi-people"
+  },
+  {
+    "id": "strategic_thinking",
+    "label": "Strategic Thinking",
+    "domain": "Leadership & Management",
+    "icon": "bi-compass"
+  },
+  {
+    "id": "decision_making",
+    "label": "Decision Making",
+    "domain": "Leadership & Management",
+    "icon": "bi-diagram-3"
+  },
+  {
+    "id": "change_management",
+    "label": "Change Management",
+    "domain": "Leadership & Management",
+    "icon": "bi-arrow-repeat"
+  },
+  {
+    "id": "team_building",
+    "label": "Team Building",
+    "domain": "Leadership & Management",
+    "icon": "bi-people-fill"
+  },
+  {
+    "id": "delegation",
+    "label": "Delegation",
+    "domain": "Leadership & Management",
+    "icon": "bi-diagram-2"
+  },
+  {
+    "id": "performance_management",
+    "label": "Performance Management",
+    "domain": "Leadership & Management",
+    "icon": "bi-graph-up-arrow"
+  },
+  {
+    "id": "conflict_resolution",
+    "label": "Conflict Resolution",
+    "domain": "Leadership & Management",
+    "icon": "bi-shield-check"
+  },
+  {
+    "id": "coaching_mentoring",
+    "label": "Coaching & Mentoring",
+    "domain": "Leadership & Management",
+    "icon": "bi-person-badge"
+  },
+  {
+    "id": "executive_presence",
+    "label": "Executive Presence",
+    "domain": "Leadership & Management",
+    "icon": "bi-award"
+  },
+
+  {
+    "id": "business_fundamentals",
+    "label": "Business Fundamentals",
+    "domain": "Business & Corporate Skills",
+    "icon": "bi-briefcase"
+  },
+  {
+    "id": "corporate_ethics",
+    "label": "Corporate Ethics",
+    "domain": "Business & Corporate Skills",
+    "icon": "bi-shield-lock"
+  },
+  {
+    "id": "organizational_culture",
+    "label": "Organizational Culture",
+    "domain": "Business & Corporate Skills",
+    "icon": "bi-building"
+  },
+  {
+    "id": "stakeholder_management",
+    "label": "Stakeholder Management",
+    "domain": "Business & Corporate Skills",
+    "icon": "bi-people-circle"
+  },
+  {
+    "id": "business_strategy",
+    "label": "Business Strategy",
+    "domain": "Business & Corporate Skills",
+    "icon": "bi-map"
+  },
+  {
+    "id": "negotiation",
+    "label": "Negotiation",
+    "domain": "Business & Corporate Skills",
+    "icon": "bi-hand-index-thumb"
+  },
+  {
+    "id": "process_improvement",
+    "label": "Process Improvement",
+    "domain": "Business & Corporate Skills",
+    "icon": "bi-sliders"
+  },
+  {
+    "id": "business_analysis",
+    "label": "Business Analysis",
+    "domain": "Business & Corporate Skills",
+    "icon": "bi-search"
+  },
+  {
+    "id": "entrepreneurship",
+    "label": "Entrepreneurship",
+    "domain": "Business & Corporate Skills",
+    "icon": "bi-lightbulb"
+  },
+  {
+    "id": "corporate_governance",
+    "label": "Corporate Governance",
+    "domain": "Business & Corporate Skills",
+    "icon": "bi-bank"
+  },
+
+  {
+    "id": "digital_literacy",
+    "label": "Digital Literacy",
+    "domain": "Digital Skills & Technology",
+    "icon": "bi-laptop"
+  },
+  {
+    "id": "productivity_tools",
+    "label": "Productivity Tools",
+    "domain": "Digital Skills & Technology",
+    "icon": "bi-tools"
+  },
+  {
+    "id": "data_analysis",
+    "label": "Data Analysis",
+    "domain": "Digital Skills & Technology",
+    "icon": "bi-bar-chart"
+  },
+  {
+    "id": "ai_automation",
+    "label": "AI & Automation",
+    "domain": "Digital Skills & Technology",
+    "icon": "bi-cpu"
+  },
+  {
+    "id": "cybersecurity",
+    "label": "Cybersecurity",
+    "domain": "Digital Skills & Technology",
+    "icon": "bi-shield-lock-fill"
+  },
+  {
+    "id": "cloud_computing",
+    "label": "Cloud Computing",
+    "domain": "Digital Skills & Technology",
+    "icon": "bi-cloud"
+  },
+  {
+    "id": "lms_elearning",
+    "label": "LMS & eLearning Systems",
+    "domain": "Digital Skills & Technology",
+    "icon": "bi-mortarboard"
+  },
+  {
+    "id": "ux_ui_design",
+    "label": "UX/UI Design",
+    "domain": "Digital Skills & Technology",
+    "icon": "bi-layout-text-window"
+  },
+  {
+    "id": "coding_basics",
+    "label": "Coding Basics",
+    "domain": "Digital Skills & Technology",
+    "icon": "bi-code-slash"
+  },
+  {
+    "id": "systems_integration",
+    "label": "Systems Integration",
+    "domain": "Digital Skills & Technology",
+    "icon": "bi-plug"
+  },
+
+  {
+    "id": "instructional_design",
+    "label": "Instructional Design",
+    "domain": "Learning Design & Training",
+    "icon": "bi-journal-text"
+  },
+  {
+    "id": "adult_learning",
+    "label": "Adult Learning Principles",
+    "domain": "Learning Design & Training",
+    "icon": "bi-person-lines-fill"
+  },
+  {
+    "id": "curriculum_design",
+    "label": "Curriculum Design",
+    "domain": "Learning Design & Training",
+    "icon": "bi-diagram-3-fill"
+  },
+  {
+    "id": "learning_evaluation",
+    "label": "Learning Evaluation",
+    "domain": "Learning Design & Training",
+    "icon": "bi-clipboard-check"
+  },
+  {
+    "id": "assessment_quizzing",
+    "label": "Assessment & Quizzing",
+    "domain": "Learning Design & Training",
+    "icon": "bi-ui-checks"
+  },
+  {
+    "id": "microlearning",
+    "label": "Microlearning",
+    "domain": "Learning Design & Training",
+    "icon": "bi-lightning"
+  },
+  {
+    "id": "gamification",
+    "label": "Gamification",
+    "domain": "Learning Design & Training",
+    "icon": "bi-trophy"
+  },
+  {
+    "id": "content_authoring",
+    "label": "Content Authoring",
+    "domain": "Learning Design & Training",
+    "icon": "bi-pencil-square"
+  },
+  {
+    "id": "blended_learning",
+    "label": "Blended Learning",
+    "domain": "Learning Design & Training",
+    "icon": "bi-layers"
+  },
+  {
+    "id": "learning_analytics",
+    "label": "Learning Analytics",
+    "domain": "Learning Design & Training",
+    "icon": "bi-graph-up"
+  },
+
+  {
+    "id": "compliance_training",
+    "label": "Compliance Training",
+    "domain": "Compliance, Risk & Regulation",
+    "icon": "bi-shield-exclamation"
+  },
+  {
+    "id": "risk_management",
+    "label": "Risk Management",
+    "domain": "Compliance, Risk & Regulation",
+    "icon": "bi-exclamation-triangle"
+  },
+  {
+    "id": "aml_kyc",
+    "label": "AML / KYC",
+    "domain": "Compliance, Risk & Regulation",
+    "icon": "bi-person-check"
+  },
+  {
+    "id": "data_privacy",
+    "label": "Data Privacy",
+    "domain": "Compliance, Risk & Regulation",
+    "icon": "bi-lock"
+  },
+  {
+    "id": "health_safety",
+    "label": "Health & Safety",
+    "domain": "Compliance, Risk & Regulation",
+    "icon": "bi-heart-pulse"
+  },
+  {
+    "id": "information_security",
+    "label": "Information Security",
+    "domain": "Compliance, Risk & Regulation",
+    "icon": "bi-key"
+  },
+  {
+    "id": "regulatory_updates",
+    "label": "Regulatory Updates",
+    "domain": "Compliance, Risk & Regulation",
+    "icon": "bi-file-earmark-text"
+  },
+  {
+    "id": "audit_controls",
+    "label": "Audit & Controls",
+    "domain": "Compliance, Risk & Regulation",
+    "icon": "bi-clipboard-data"
+  },
+  {
+    "id": "incident_reporting",
+    "label": "Incident Reporting",
+    "domain": "Compliance, Risk & Regulation",
+    "icon": "bi-bug"
+  },
+
+  {
+    "id": "sales_fundamentals",
+    "label": "Sales Fundamentals",
+    "domain": "Sales, Marketing & Customer Skills",
+    "icon": "bi-cash-stack"
+  },
+  {
+    "id": "customer_service",
+    "label": "Customer Service",
+    "domain": "Sales, Marketing & Customer Skills",
+    "icon": "bi-headset"
+  },
+  {
+    "id": "crm_tools",
+    "label": "CRM Tools",
+    "domain": "Sales, Marketing & Customer Skills",
+    "icon": "bi-person-workspace"
+  },
+  {
+    "id": "marketing_strategy",
+    "label": "Marketing Strategy",
+    "domain": "Sales, Marketing & Customer Skills",
+    "icon": "bi-megaphone"
+  },
+  {
+    "id": "branding",
+    "label": "Branding",
+    "domain": "Sales, Marketing & Customer Skills",
+    "icon": "bi-palette"
+  },
+  {
+    "id": "digital_marketing",
+    "label": "Digital Marketing",
+    "domain": "Sales, Marketing & Customer Skills",
+    "icon": "bi-globe"
+  },
+  {
+    "id": "communication_skills",
+    "label": "Communication Skills",
+    "domain": "Sales, Marketing & Customer Skills",
+    "icon": "bi-chat-dots"
+  },
+  {
+    "id": "presentation_skills",
+    "label": "Presentation Skills",
+    "domain": "Sales, Marketing & Customer Skills",
+    "icon": "bi-easel"
+  },
+  {
+    "id": "customer_experience",
+    "label": "Customer Experience",
+    "domain": "Sales, Marketing & Customer Skills",
+    "icon": "bi-emoji-smile"
+  },
+  {
+    "id": "sales_negotiation_closing",
+    "label": "Negotiation & Closing",
+    "domain": "Sales, Marketing & Customer Skills",
+    "icon": "bi-handshake"
+  },
+
+  {
+    "id": "time_management",
+    "label": "Time Management",
+    "domain": "Personal Development & Productivity",
+    "icon": "bi-clock"
+  },
+  {
+    "id": "personal_productivity",
+    "label": "Personal Productivity",
+    "domain": "Personal Development & Productivity",
+    "icon": "bi-lightning-charge"
+  },
+  {
+    "id": "emotional_intelligence",
+    "label": "Emotional Intelligence",
+    "domain": "Personal Development & Productivity",
+    "icon": "bi-heart"
+  },
+  {
+    "id": "stress_management",
+    "label": "Stress Management",
+    "domain": "Personal Development & Productivity",
+    "icon": "bi-activity"
+  },
+  {
+    "id": "career_development",
+    "label": "Career Development",
+    "domain": "Personal Development & Productivity",
+    "icon": "bi-signpost"
+  },
+  {
+    "id": "goal_setting",
+    "label": "Goal Setting",
+    "domain": "Personal Development & Productivity",
+    "icon": "bi-bullseye"
+  },
+  {
+    "id": "work_life_balance",
+    "label": "Work-Life Balance",
+    "domain": "Personal Development & Productivity",
+    "icon": "bi-sun"
+  },
+  {
+    "id": "written_communication",
+    "label": "Written Communication",
+    "domain": "Personal Development & Productivity",
+    "icon": "bi-chat-left-text"
+  },
+  {
+    "id": "adaptability",
+    "label": "Adaptability",
+    "domain": "Personal Development & Productivity",
+    "icon": "bi-arrow-left-right"
+  },
+  {
+    "id": "critical_thinking",
+    "label": "Critical Thinking",
+    "domain": "Personal Development & Productivity",
+    "icon": "bi-puzzle"
+  },
+
+  {
+    "id": "financial_literacy",
+    "label": "Financial Literacy",
+    "domain": "Finance, Operations & Project Management",
+    "icon": "bi-currency-dollar"
+  },
+  {
+    "id": "budgeting",
+    "label": "Budgeting",
+    "domain": "Finance, Operations & Project Management",
+    "icon": "bi-wallet2"
+  },
+  {
+    "id": "accounting_basics",
+    "label": "Accounting Basics",
+    "domain": "Finance, Operations & Project Management",
+    "icon": "bi-calculator"
+  },
+  {
+    "id": "procurement",
+    "label": "Procurement",
+    "domain": "Finance, Operations & Project Management",
+    "icon": "bi-cart"
+  },
+  {
+    "id": "operations_management",
+    "label": "Operations Management",
+    "domain": "Finance, Operations & Project Management",
+    "icon": "bi-gear"
+  },
+  {
+    "id": "supply_chain",
+    "label": "Supply Chain",
+    "domain": "Finance, Operations & Project Management",
+    "icon": "bi-truck"
+  },
+  {
+    "id": "project_management",
+    "label": "Project Management",
+    "domain": "Finance, Operations & Project Management",
+    "icon": "bi-kanban"
+  },
+  {
+    "id": "agile_scrum",
+    "label": "Agile & Scrum",
+    "domain": "Finance, Operations & Project Management",
+    "icon": "bi-lightning-fill"
+  },
+  {
+    "id": "business_reporting",
+    "label": "Business Reporting",
+    "domain": "Finance, Operations & Project Management",
+    "icon": "bi-file-earmark-bar-graph"
+  },
+  {
+    "id": "kpi_tracking",
+    "label": "KPI Tracking",
+    "domain": "Finance, Operations & Project Management",
+    "icon": "bi-speedometer"
+  },
+
+  {
+    "id": "talent_management",
+    "label": "Talent Management",
+    "domain": "HR & Talent",
+    "icon": "bi-person-check-fill"
+  },
+  {
+    "id": "recruitment_hiring",
+    "label": "Recruitment & Hiring",
+    "domain": "HR & Talent",
+    "icon": "bi-person-plus"
+  },
+  {
+    "id": "onboarding",
+    "label": "Onboarding",
+    "domain": "HR & Talent",
+    "icon": "bi-door-open"
+  },
+  {
+    "id": "employee_engagement",
+    "label": "Employee Engagement",
+    "domain": "HR & Talent",
+    "icon": "bi-emoji-laughing"
+  },
+  {
+    "id": "compensation_benefits",
+    "label": "Compensation & Benefits",
+    "domain": "HR & Talent",
+    "icon": "bi-cash-coin"
+  },
+  {
+    "id": "learning_development_hr",
+    "label": "Learning & Development (HR)",
+    "domain": "HR & Talent",
+    "icon": "bi-mortarboard-fill"
+  },
+  {
+    "id": "performance_reviews",
+    "label": "Performance Reviews",
+    "domain": "HR & Talent",
+    "icon": "bi-clipboard2-check"
+  },
+  {
+    "id": "succession_planning",
+    "label": "Succession Planning",
+    "domain": "HR & Talent",
+    "icon": "bi-diagram-2-fill"
+  },
+  {
+    "id": "workplace_policy",
+    "label": "Workplace Policy",
+    "domain": "HR & Talent",
+    "icon": "bi-file-earmark-ruled"
+  },
+  {
+    "id": "workplace_relations",
+    "label": "Employee Relations",
+    "domain": "HR & Talent",
+    "icon": "bi-chat-square-heart"
+  },
+
+  {
+    "id": "clinical_basics",
+    "label": "Clinical Fundamentals",
+    "domain": "Healthcare & Nursing",
+    "icon": "bi-hospital"
+  },
+  {
+    "id": "patient_safety",
+    "label": "Patient Safety",
+    "domain": "Healthcare & Nursing",
+    "icon": "bi-shield-plus"
+  },
+  {
+    "id": "infection_prevention",
+    "label": "Infection Prevention",
+    "domain": "Healthcare & Nursing",
+    "icon": "bi-virus"
+  },
+  {
+    "id": "medication_safety",
+    "label": "Medication Safety",
+    "domain": "Healthcare & Nursing",
+    "icon": "bi-capsule"
+  },
+  {
+    "id": "triage_emergency",
+    "label": "Emergency & Triage",
+    "domain": "Healthcare & Nursing",
+    "icon": "bi-bandaid"
+  },
+  {
+    "id": "mental_health",
+    "label": "Mental Health",
+    "domain": "Healthcare & Nursing",
+    "icon": "bi-emoji-neutral"
+  },
+  {
+    "id": "care_planning",
+    "label": "Care Planning",
+    "domain": "Healthcare & Nursing",
+    "icon": "bi-clipboard2-pulse"
+  },
+  {
+    "id": "telehealth",
+    "label": "Telehealth",
+    "domain": "Healthcare & Nursing",
+    "icon": "bi-camera-video"
+  },
+  {
+    "id": "hipaa_privacy",
+    "label": "HIPAA & Patient Privacy",
+    "domain": "Healthcare & Nursing",
+    "icon": "bi-file-lock"
+  },
+  {
+    "id": "quality_improvement_health",
+    "label": "Quality Improvement (Healthcare)",
+    "domain": "Healthcare & Nursing",
+    "icon": "bi-graph-up-arrow"
+  },
+
+  {
+    "id": "teaching_methods",
+    "label": "Teaching Methods",
+    "domain": "Education & Teaching",
+    "icon": "bi-easel2"
+  },
+  {
+    "id": "classroom_management",
+    "label": "Classroom Management",
+    "domain": "Education & Teaching",
+    "icon": "bi-diagram-3"
+  },
+  {
+    "id": "student_assessment",
+    "label": "Student Assessment",
+    "domain": "Education & Teaching",
+    "icon": "bi-clipboard-check"
+  },
+  {
+    "id": "lesson_planning",
+    "label": "Lesson Planning",
+    "domain": "Education & Teaching",
+    "icon": "bi-journal"
+  },
+  {
+    "id": "special_education",
+    "label": "Special Education",
+    "domain": "Education & Teaching",
+    "icon": "bi-universal-access"
+  },
+  {
+    "id": "learning_support",
+    "label": "Learning Support",
+    "domain": "Education & Teaching",
+    "icon": "bi-life-preserver"
+  },
+  {
+    "id": "education_technology",
+    "label": "Education Technology",
+    "domain": "Education & Teaching",
+    "icon": "bi-tablet"
+  },
+  {
+    "id": "academic_integrity",
+    "label": "Academic Integrity",
+    "domain": "Education & Teaching",
+    "icon": "bi-patch-check"
+  },
+  {
+    "id": "inclusive_education",
+    "label": "Inclusive Education",
+    "domain": "Education & Teaching",
+    "icon": "bi-people"
+  },
+  {
+    "id": "parent_communication",
+    "label": "Parent Communication",
+    "domain": "Education & Teaching",
+    "icon": "bi-chat-left-dots"
+  },
+
+  {
+    "id": "sustainability_basics",
+    "label": "Sustainability Basics",
+    "domain": "Sustainability & ESG",
+    "icon": "bi-tree"
+  },
+  {
+    "id": "esg_reporting",
+    "label": "ESG Reporting",
+    "domain": "Sustainability & ESG",
+    "icon": "bi-file-earmark-check"
+  },
+  {
+    "id": "climate_risk",
+    "label": "Climate Risk",
+    "domain": "Sustainability & ESG",
+    "icon": "bi-cloud-lightning"
+  },
+  {
+    "id": "carbon_accounting",
+    "label": "Carbon Accounting",
+    "domain": "Sustainability & ESG",
+    "icon": "bi-calculator"
+  },
+  {
+    "id": "energy_efficiency",
+    "label": "Energy Efficiency",
+    "domain": "Sustainability & ESG",
+    "icon": "bi-lightbulb-fill"
+  },
+  {
+    "id": "waste_management",
+    "label": "Waste Management",
+    "domain": "Sustainability & ESG",
+    "icon": "bi-trash"
+  },
+  {
+    "id": "circular_economy",
+    "label": "Circular Economy",
+    "domain": "Sustainability & ESG",
+    "icon": "bi-arrow-clockwise"
+  },
+  {
+    "id": "responsible_sourcing",
+    "label": "Responsible Sourcing",
+    "domain": "Sustainability & ESG",
+    "icon": "bi-bag-check"
+  },
+  {
+    "id": "dei_inclusion",
+    "label": "DEI & Inclusion",
+    "domain": "Sustainability & ESG",
+    "icon": "bi-people"
+  },
+  {
+    "id": "ethics_transparency",
+    "label": "Ethics & Transparency",
+    "domain": "Sustainability & ESG",
+    "icon": "bi-eye"
+  },
+
+  {
+    "id": "product_management",
+    "label": "Product Management",
+    "domain": "Product & Innovation",
+    "icon": "bi-box-seam"
+  },
+  {
+    "id": "roadmapping",
+    "label": "Product Roadmapping",
+    "domain": "Product & Innovation",
+    "icon": "bi-map"
+  },
+  {
+    "id": "customer_discovery",
+    "label": "Customer Discovery",
+    "domain": "Product & Innovation",
+    "icon": "bi-search-heart"
+  },
+  {
+    "id": "design_thinking",
+    "label": "Design Thinking",
+    "domain": "Product & Innovation",
+    "icon": "bi-bezier2"
+  },
+  {
+    "id": "innovation_management",
+    "label": "Innovation Management",
+    "domain": "Product & Innovation",
+    "icon": "bi-lightbulb"
+  },
+  {
+    "id": "experimentation_ab_testing",
+    "label": "Experimentation & A/B Testing",
+    "domain": "Product & Innovation",
+    "icon": "bi-ui-radios"
+  },
+  {
+    "id": "product_analytics",
+    "label": "Product Analytics",
+    "domain": "Product & Innovation",
+    "icon": "bi-graph-up"
+  },
+  {
+    "id": "go_to_market",
+    "label": "Go-to-Market",
+    "domain": "Product & Innovation",
+    "icon": "bi-rocket-takeoff"
+  },
+  {
+    "id": "pricing_packaging",
+    "label": "Pricing & Packaging",
+    "domain": "Product & Innovation",
+    "icon": "bi-tags"
+  },
+  {
+    "id": "product_quality",
+    "label": "Product Quality",
+    "domain": "Product & Innovation",
+    "icon": "bi-patch-check-fill"
+  },
+
+  {
+    "id": "customer_success_fundamentals",
+    "label": "Customer Success Fundamentals",
+    "domain": "Customer Success & Support",
+    "icon": "bi-emoji-smile-fill"
+  },
+  {
+    "id": "support_operations",
+    "label": "Support Operations",
+    "domain": "Customer Success & Support",
+    "icon": "bi-life-preserver"
+  },
+  {
+    "id": "knowledge_base",
+    "label": "Knowledge Base Management",
+    "domain": "Customer Success & Support",
+    "icon": "bi-journal-bookmark"
+  },
+  {
+    "id": "ticketing_systems",
+    "label": "Ticketing Systems",
+    "domain": "Customer Success & Support",
+    "icon": "bi-inbox"
+  },
+  {
+    "id": "customer_onboarding",
+    "label": "Customer Onboarding",
+    "domain": "Customer Success & Support",
+    "icon": "bi-person-gear"
+  },
+  {
+    "id": "renewals_retention",
+    "label": "Renewals & Retention",
+    "domain": "Customer Success & Support",
+    "icon": "bi-arrow-counterclockwise"
+  },
+  {
+    "id": "qbr_business_reviews",
+    "label": "QBRs & Business Reviews",
+    "domain": "Customer Success & Support",
+    "icon": "bi-clipboard2-data"
+  },
+  {
+    "id": "customer_health_scoring",
+    "label": "Customer Health Scoring",
+    "domain": "Customer Success & Support",
+    "icon": "bi-heart-pulse-fill"
+  },
+  {
+    "id": "escalation_management",
+    "label": "Escalation Management",
+    "domain": "Customer Success & Support",
+    "icon": "bi-exclamation-octagon"
+  },
+  {
+    "id": "voice_of_customer",
+    "label": "Voice of Customer",
+    "domain": "Customer Success & Support",
+    "icon": "bi-chat-quote"
+  }
+]

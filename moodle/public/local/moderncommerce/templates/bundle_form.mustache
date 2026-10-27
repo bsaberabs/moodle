@@ -1,0 +1,197 @@
+{{!
+    @template local_moderncommerce/bundle_form
+
+    Bundle form page template with card-based design.
+
+    Context variables:
+    - bundleid: Bundle ID (0 for new)
+    - isedit: Boolean, true if editing existing bundle
+    - bundle.name: Bundle name
+    - bundle.typestr: Bundle or Program text
+    - bundle.isprogram: Boolean
+    - bundle.imageurl: Bundle image URL
+    - bundle.currentenrollment: Current enrollment count
+    - bundle.timecreated: Formatted creation date
+    - formhtml: The rendered Moodle form HTML
+    - backurl: URL to bundles list
+    - advancedfeaturesurl: URL to advanced features page
+    - currency_symbol: Currency symbol
+
+
+    @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+}}
+<div class="container-fluid bundle-form-shell py-4" data-bundleid="{{bundleid}}">
+    <div class="row g-4">
+        <!-- LEFT: Bundle overview card -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex align-items-start justify-content-between gap-2">
+                        <div>
+                            <h2 class="h6 mb-0">
+                                {{#isedit}}
+                                    {{#str}}bundleoverview, local_moderncommerce{{/str}}
+                                {{/isedit}}
+                                {{^isedit}}
+                                    {{#str}}newbundle, local_moderncommerce{{/str}}
+                                {{/isedit}}
+                            </h2>
+                            <div class="text-muted small mt-1">
+                                {{#isedit}}
+                                    {{#str}}basicinfo, local_moderncommerce{{/str}}
+                                {{/isedit}}
+                                {{^isedit}}
+                                    {{#str}}createbundlehelp, local_moderncommerce{{/str}}
+                                {{/isedit}}
+                            </div>
+                        </div>
+                        <a href="{{backurl}}" class="mc-button btn-sm mc-btn-soft" title="{{#str}}back{{/str}}" data-mc-button="soft" data-mc-button-size="sm">
+                            <i class="bi bi-arrow-left"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    {{#isedit}}
+                        <!-- Bundle image preview -->
+                        <div class="mb-3">
+                            <div class="ratio ratio-16x9 rounded-3 overflow-hidden border">
+                                <img src="{{bundle.imageurl}}" alt="{{bundle.name}}" class="w-100 h-100 object-fit-cover">
+                            </div>
+                        </div>
+
+                        <!-- Bundle name display -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">{{#str}}bundlename, local_moderncommerce{{/str}}</label>
+                            <div class="form-control bg-light">{{bundle.name}}</div>
+                        </div>
+
+                        <!-- Type badge -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">{{#str}}type, local_moderncommerce{{/str}}</label>
+                            <div>
+                                {{#bundle.isprogram}}
+                                    <span class="badge bg-info fs-6">{{bundle.typestr}}</span>
+                                {{/bundle.isprogram}}
+                                {{^bundle.isprogram}}
+                                    <span class="badge bg-secondary fs-6">{{bundle.typestr}}</span>
+                                {{/bundle.isprogram}}
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Stats -->
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <div class="text-center p-3 bg-light rounded-3">
+                                    <div class="h4 mb-0">{{bundle.currentenrollment}}</div>
+                                    <div class="text-muted small">{{#str}}enrollments, local_moderncommerce{{/str}}</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-center p-3 bg-light rounded-3">
+                                    <div class="h4 mb-0">{{bundle.coursescount}}</div>
+                                    <div class="text-muted small">{{#str}}courses{{/str}}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Meta info -->
+                        <div class="small text-muted">
+                            <div class="mb-1">
+                                <i class="bi bi-calendar3 me-1"></i>
+                                {{#str}}created, local_moderncommerce{{/str}}: {{bundle.timecreated}}
+                            </div>
+                            {{#bundle.timemodified}}
+                            <div>
+                                <i class="bi bi-pencil me-1"></i>
+                                {{#str}}modified, local_moderncommerce{{/str}}: {{bundle.timemodified}}
+                            </div>
+                            {{/bundle.timemodified}}
+                        </div>
+
+                        <hr>
+
+                        <!-- Quick actions -->
+                        <div class="d-grid gap-2">
+                            <a href="{{advancedfeaturesurl}}" class="mc-button mc-btn-soft" data-mc-button="soft">
+                                <i class="bi bi-sliders me-1"></i>
+                                {{#str}}advancedbundlefeatures, local_moderncommerce{{/str}}
+                            </a>
+                            <a href="{{viewurl}}" class="mc-button mc-btn-soft" target="_blank" data-mc-button="soft">
+                                <i class="bi bi-eye me-1"></i>
+                                {{#str}}viewbundle, local_moderncommerce{{/str}}
+                            </a>
+                        </div>
+                    {{/isedit}}
+
+                    {{^isedit}}
+                        <!-- New bundle info -->
+                        <div class="text-center py-4">
+                            <div class="mb-3">
+                                <i class="bi bi-layers text-primary bundle-form-shell__empty-icon"></i>
+                            </div>
+                            <h5>{{#str}}createbundle, local_moderncommerce{{/str}}</h5>
+                            <p class="text-muted small mb-0">
+                                {{#str}}createbundledesc, local_moderncommerce{{/str}}
+                            </p>
+                        </div>
+
+                        <hr>
+
+                        <!-- Tips -->
+                        <div class="alert alert-light border mb-0">
+                            <div class="fw-semibold mb-2">
+                                <i class="bi bi-lightbulb me-1"></i>
+                                {{#str}}tips, local_moderncommerce{{/str}}
+                            </div>
+                            <ul class="small text-muted mb-0 ps-3">
+                                <li>{{#str}}bundletip1, local_moderncommerce{{/str}}</li>
+                                <li>{{#str}}bundletip2, local_moderncommerce{{/str}}</li>
+                                <li>{{#str}}bundletip3, local_moderncommerce{{/str}}</li>
+                            </ul>
+                        </div>
+                    {{/isedit}}
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Form area -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h2 class="h6 mb-0">
+                                {{#isedit}}
+                                    {{#str}}editbundle, local_moderncommerce{{/str}}
+                                {{/isedit}}
+                                {{^isedit}}
+                                    {{#str}}bundledetails, local_moderncommerce{{/str}}
+                                {{/isedit}}
+                            </h2>
+                            <div class="text-muted small mt-1">
+                                {{#str}}fillbundledetails, local_moderncommerce{{/str}}
+                            </div>
+                        </div>
+                        <span class="badge text-bg-secondary">
+                            {{#isedit}}
+                                {{#str}}editing, local_moderncommerce{{/str}}
+                            {{/isedit}}
+                            {{^isedit}}
+                                {{#str}}new, local_moderncommerce{{/str}}
+                            {{/isedit}}
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {{{formhtml}}}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

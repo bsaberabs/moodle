@@ -1,0 +1,95 @@
+{{!
+    This file is part of Moodle and is licensed under the
+    GNU General Public License, version 3 or later.
+
+    You may redistribute and modify it under the terms of the GPL.
+    See the plugin root LICENSE file for complete terms.
+}}
+{{!
+    @template local_moderncommerce/admin/addons
+
+    Add-on catalog for the Modern Commerce admin area.
+
+    Context variables:
+    * addons - Add-on rows.
+    * installedsummary - Installed add-on summary text.
+    * premiumsummary - Premium add-on summary text.
+
+    @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com | www.agunfoninteractivity.com
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+}}
+<div class="mc-addons">
+    <div class="mc-alert mc-alert--info" role="status">
+        <i class="bi bi-info-circle mc-alert__icon" aria-hidden="true"></i>
+        <div class="mc-alert__body">
+            <p class="mc-alert__title">{{#str}}addonsintrotitle, local_moderncommerce{{/str}}</p>
+            {{#str}}addonsintrobody, local_moderncommerce{{/str}}
+        </div>
+    </div>
+
+    <div class="mc-addons-summary" aria-label="{{#str}}addonssummary, local_moderncommerce{{/str}}">
+        <div class="mc-addons-summary__item">
+            <span class="mc-addons-summary__label">{{#str}}addonsstatus, local_moderncommerce{{/str}}</span>
+            <p class="mc-addons-summary__value">{{installedsummary}}</p>
+        </div>
+        <div class="mc-addons-summary__item">
+            <span class="mc-addons-summary__label">{{#str}}addonstier, local_moderncommerce{{/str}}</span>
+            <p class="mc-addons-summary__value">{{premiumsummary}}</p>
+        </div>
+    </div>
+
+    {{> local_moderncommerce/components/tier_comparison }}
+
+    <div class="mc-addons-grid">
+        {{#addons}}
+            <section class="mc-card mc-addon-card">
+                <div class="mc-card-header">
+                    <div class="mc-addon-card__heading">
+                        <span class="mc-addon-card__icon">
+                            <i class="bi {{icon}}" aria-hidden="true"></i>
+                        </span>
+                        <div>
+                            <h2 class="mc-card-title">{{name}}</h2>
+                            <p class="mc-addon-card__description">{{description}}</p>
+                        </div>
+                    </div>
+                    <span class="mc-badge mc-badge--{{statusclass}}">{{statuslabel}}</span>
+                </div>
+                <div class="mc-card-body">
+                    <dl class="mc-addon-card__meta">
+                        <div>
+                            <dt>{{#str}}addonstier, local_moderncommerce{{/str}}</dt>
+                            <dd><span class="mc-badge mc-badge--{{tierclass}}">{{tierlabel}}</span></dd>
+                        </div>
+                        <div>
+                            <dt>{{#str}}addonsrequirement, local_moderncommerce{{/str}}</dt>
+                            <dd><span class="mc-badge mc-badge--{{requirementclass}}">{{requirementlabel}}</span></dd>
+                        </div>
+                        <div>
+                            <dt>{{#str}}addonscomponent, local_moderncommerce{{/str}}</dt>
+                            <dd><span class="mc-addon-card__component">{{component}}</span></dd>
+                        </div>
+                        {{#hasdependency}}
+                            <div class="mc-addon-card__dependency">
+                                <dt>{{#str}}addonsdependency, local_moderncommerce{{/str}}</dt>
+                                <dd>{{dependency}}</dd>
+                            </div>
+                        {{/hasdependency}}
+                    </dl>
+                </div>
+                <div class="mc-card-footer">
+                    {{#installed}}
+                        <a class="mc-button mc-btn-soft" href="{{openurl}}" data-mc-button="soft">
+                            <i class="bi bi-box-arrow-in-right mc-icon me-1" aria-hidden="true"></i>
+                            {{#str}}addonsopen, local_moderncommerce{{/str}}
+                        </a>
+                    {{/installed}}
+                    <a class="mc-button btn-mc-primary" href="{{geturl}}" target="_blank" rel="noopener noreferrer" data-mc-button="primary">
+                        <i class="bi bi-download mc-icon me-1" aria-hidden="true"></i>
+                        {{#str}}addonsget, local_moderncommerce{{/str}}
+                    </a>
+                </div>
+            </section>
+        {{/addons}}
+    </div>
+</div>

@@ -1,0 +1,90 @@
+{{!
+    This file is part of Moodle and is licensed under the
+    GNU General Public License, version 3 or later.
+
+    You may redistribute and modify it under the terms of the GPL.
+    See the plugin root LICENSE file for complete terms.
+
+    Course sections accordion template
+
+    @template local_moderncommerce/section
+
+    Context variables required for this template:
+    * sections - Array of section objects with:
+      - id: Section ID
+      - name: Section name
+      - sectionnum: Section number
+      - subsections: Array of subsection objects (optional)
+        - id: Subsection ID
+        - name: Subsection name
+        - sectionnum: Subsection number
+
+    @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+
+    Example context (json):
+    {
+        "sections": [
+            {
+                "id": "section-1",
+                "name": "Part 01: How To Learn Web Designing Step By Step",
+                "sectionnum": 1,
+                "first": true,
+                "subsections": [
+                    {
+                        "name": "Web Designing Beginner",
+                        "sectionnum": 1,
+                        "icon": "file-text"
+                    }
+                ]
+            }
+        ]
+    }
+}}
+<div class="card mb-4 mc-course-section-accordion">
+    <div class="card-body">
+        <h5 class="card-title mb-3">{{#str}}coursecontent, local_moderncommerce{{/str}}</h5>
+
+        <div class="accordion" id="courseAccordion">
+            {{#sections}}
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="heading-{{id}}">
+                    <button class="mc-button accordion-button {{^first}}collapsed{{/first}}" type="button" data-mc-button="light" data-mc-button-block data-bs-toggle="collapse" data-bs-target="#collapse-{{id}}" aria-expanded="{{#first}}true{{/first}}{{^first}}false{{/first}}" aria-controls="collapse-{{id}}">
+                        <i class="bi bi-book text-primary me-2"></i>
+                        <strong>{{name}}</strong>
+                    </button>
+                </h2>
+                <div id="collapse-{{id}}" class="accordion-collapse collapse {{#first}}show{{/first}}" aria-labelledby="heading-{{id}}" data-bs-parent="#courseAccordion">
+                    <div class="accordion-body">
+                        {{#hassubsections}}
+                        <ul class="list-unstyled mb-0">
+                            {{#subsections}}
+                            <li class="d-flex align-items-center mb-2 py-2 px-3 rounded subsection-item">
+                                <div class="subsection-icon me-3">
+                                    <i class="bi bi-{{icon}} text-muted"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <span class="subsection-name">{{name}}</span>
+                                </div>
+                                <div class="subsection-status ms-3">
+                                    {{#completed}}
+                                    <i class="bi bi-check-circle text-success"></i>
+                                    {{/completed}}
+                                    {{#locked}}
+                                    <i class="bi bi-lock text-muted"></i>
+                                    {{/locked}}
+                                </div>
+                            </li>
+                            {{/subsections}}
+                        </ul>
+                        {{/hassubsections}}
+                        {{^hassubsections}}
+                        <p class="text-muted mb-0">{{#str}}nosections, local_moderncommerce{{/str}}</p>
+                        {{/hassubsections}}
+                    </div>
+                </div>
+            </div>
+            {{/sections}}
+        </div>
+    </div>
+</div>

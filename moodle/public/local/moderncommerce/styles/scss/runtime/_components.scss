@@ -1,0 +1,687 @@
+// This file is part of Moodle and is licensed under the
+// GNU General Public License, version 3 or later.
+//
+// You may redistribute and modify it under the terms of the GPL.
+// See the plugin root LICENSE file for complete terms.
+//
+// Modern Commerce styles.
+//
+// @package    local_moderncommerce
+// @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+// @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+// Extracted from ../styles.css during the SCSS source consolidation phase.
+
+/* ============================================================
+   METRIC / KPI TILES
+   ============================================================ */
+
+.mc-metric-tile {
+    --mc-metric-border: var(--mc-border);
+
+    background: var(--mc-surface);
+    border: 1px solid var(--mc-metric-border);
+    border-radius: var(--mc-radius);
+    padding: 1.125rem 1.25rem;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.mc-metric-tile--primary { --mc-metric-border: var(--mc-primary-border); }
+.mc-metric-tile--success { --mc-metric-border: var(--mc-success-border); }
+.mc-metric-tile--warning { --mc-metric-border: var(--mc-warning-border); }
+.mc-metric-tile--danger  { --mc-metric-border: var(--mc-danger-border); }
+.mc-metric-tile--info    { --mc-metric-border: var(--mc-info-border); }
+
+.mc-metric-tile__body {
+    min-width: 0;
+}
+
+.mc-metric-tile__label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--mc-text-muted);
+    margin-bottom: 0.25rem;
+}
+
+.mc-metric-tile__value {
+    font-size: 1.625rem;
+    font-weight: 700;
+    color: var(--mc-text);
+    line-height: 1;
+    margin-bottom: 0.375rem;
+    overflow-wrap: anywhere;
+}
+
+.mc-metric-tile__delta {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.125rem 0.375rem;
+    border-radius: var(--mc-radius-pill);
+}
+
+.mc-metric-tile__delta--up   { background: var(--mc-success-bg); color: var(--mc-success); }
+.mc-metric-tile__delta--down { background: var(--mc-danger-bg); color: var(--mc-danger); }
+.mc-metric-tile__delta--flat { background: var(--mc-neutral-bg); color: var(--mc-text-muted); }
+
+.mc-metric-tile__icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--mc-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.0625rem;
+    flex-shrink: 0;
+}
+
+.mc-metric-tile--primary .mc-metric-tile__icon { background: var(--mc-primary-light); color: var(--mc-primary); }
+.mc-metric-tile--success .mc-metric-tile__icon { background: var(--mc-success-bg); color: var(--mc-success); }
+.mc-metric-tile--warning .mc-metric-tile__icon { background: var(--mc-warning-bg); color: var(--mc-warning); }
+.mc-metric-tile--danger  .mc-metric-tile__icon { background: var(--mc-danger-bg); color: var(--mc-danger); }
+.mc-metric-tile--info    .mc-metric-tile__icon { background: var(--mc-info-bg); color: var(--mc-info); }
+
+/* Legacy metric-card alias */
+.metric-card {
+    --mc-metric-border: var(--mc-border);
+
+    background: var(--mc-surface);
+    border: 1px solid var(--mc-metric-border);
+    border-radius: var(--mc-radius);
+    padding: 1.125rem 1.25rem;
+}
+
+.metric-card.border-left-primary { --mc-metric-border: var(--mc-primary-border); }
+.metric-card.border-left-success { --mc-metric-border: var(--mc-success-border); }
+.metric-card.border-left-warning { --mc-metric-border: var(--mc-warning-border); }
+.metric-card.border-left-danger  { --mc-metric-border: var(--mc-danger-border); }
+
+.metric-label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--mc-text-muted);
+    margin-bottom: 0.25rem;
+}
+
+.metric-value {
+    font-size: 1.625rem;
+    font-weight: 700;
+    color: var(--mc-text);
+    line-height: 1.1;
+    margin-bottom: 0.375rem;
+}
+
+.metric-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.metric-delta {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.75rem;
+    color: var(--mc-text-muted);
+}
+
+.metric-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--mc-radius);
+    background: var(--mc-primary-light);
+    color: var(--mc-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.0625rem;
+    flex-shrink: 0;
+}
+
+.metric-icon-success { background: var(--mc-success-bg); color: var(--mc-success); }
+.metric-icon-warning { background: var(--mc-warning-bg); color: var(--mc-warning); }
+.metric-icon-danger { background: var(--mc-danger-bg); color: var(--mc-danger); }
+.metric-icon-info { background: var(--mc-info-bg); color: var(--mc-info); }
+
+
+/* ============================================================
+   PANEL / CARD
+   ============================================================ */
+
+.mc-card {
+    background: var(--mc-surface);
+    border: 1px solid var(--mc-border);
+    border-radius: var(--mc-radius);
+}
+
+.mc-card-header {
+    padding: 0.875rem 1.25rem;
+    border-bottom: 1px solid var(--mc-border-subtle);
+    background: var(--mc-surface-alt);
+    border-radius: var(--mc-radius) var(--mc-radius) 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.mc-card-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--mc-text);
+    margin: 0;
+}
+
+.mc-card-body {
+    padding: 1.25rem;
+}
+
+.mc-card-footer {
+    padding: 0.75rem 1.25rem;
+    border-top: 1px solid var(--mc-border-subtle);
+    background: var(--mc-surface-alt);
+}
+
+.mc-card-danger {
+    border-color: var(--mc-danger);
+}
+
+
+/* ============================================================
+   STATUS BADGES
+   ============================================================ */
+
+/* Legacy pill status chip (small, inline). New UI should use .mc-pill. */
+.pill { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.125rem 0.375rem; border-radius: var(--mc-radius-pill); font-size: 0.6875rem; font-weight: 600; }
+.pill-success { background: var(--mc-success-bg); color: var(--mc-success-text); }
+.pill-danger  { background: var(--mc-danger-bg); color: var(--mc-danger-text); }
+.pill-warning { background: var(--mc-warning-bg); color: var(--mc-warning-text); }
+.pill-info    { background: var(--mc-info-bg); color: var(--mc-info-text); }
+
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+
+.btn-mc-primary {
+    background: var(--mc-primary);
+    border: 1px solid var(--mc-primary);
+    color: #fff;
+    border-radius: var(--mc-radius);
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: 0.4375rem 0.875rem;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.btn-mc-primary:hover {
+    background: var(--mc-primary-hover);
+    border-color: var(--mc-primary-hover);
+    color: #fff;
+    text-decoration: none;
+}
+
+.btn-mc-secondary {
+    background: var(--mc-surface);
+    border: 1px solid var(--mc-border);
+    color: var(--mc-text);
+    border-radius: var(--mc-radius);
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.4375rem 0.875rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.btn-mc-secondary:hover {
+    background: var(--mc-surface-alt);
+    text-decoration: none;
+    color: var(--mc-text);
+}
+
+.btn-mc-danger {
+    background: var(--mc-danger-bg);
+    border: 1px solid var(--mc-danger-border);
+    color: var(--mc-danger);
+    border-radius: var(--mc-radius);
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: 0.4375rem 0.875rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.btn-mc-danger:hover {
+    background: var(--mc-danger);
+    color: #fff;
+    text-decoration: none;
+}
+
+
+/* ============================================================
+   ADMIN TABLES
+   ============================================================ */
+
+.mc-table-wrapper {
+    width: 100%;
+    border: 0;
+    border-radius: 0;
+    overflow-x: auto;
+    background: transparent;
+    box-shadow: none;
+}
+
+.mc-table {
+    width: 100%;
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--mc-text);
+    border: 1px solid var(--mc-border);
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+.mc-table > :not(caption) > * > * {
+    border: 1px solid var(--mc-border);
+    background-color: transparent;
+    box-shadow: none;
+}
+
+.mc-table th {
+    background: transparent;
+    color: var(--mc-text);
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 36px;
+    text-transform: none;
+    letter-spacing: 0;
+    padding: 0.75rem;
+    white-space: nowrap;
+}
+
+.mc-table td {
+    padding: 15px 0.75rem;
+    color: var(--mc-text-muted);
+    vertical-align: middle;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.mc-table tbody tr:last-child td {
+    border-bottom: 1px solid var(--mc-border);
+}
+
+.mc-table tbody tr:hover td {
+    background: var(--mc-primary-light);
+    color: var(--mc-primary);
+}
+
+.path-local-moderncommerce table.table:not(.mc-table):not(.mc-table-design),
+.path-local-moderncommerce .mc-table-wrapper > table:not(.table):not(.mc-table):not(.mc-table-design) {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    margin-bottom: 0;
+    border: 1px solid var(--mc-border);
+    border-collapse: collapse;
+    border-spacing: 0;
+    color: var(--mc-text);
+}
+
+.path-local-moderncommerce table.table:not(.mc-table):not(.mc-table-design) > :not(caption) > * > *,
+.path-local-moderncommerce .mc-table-wrapper > table:not(.table):not(.mc-table):not(.mc-table-design) > :not(caption) > * > * {
+    padding: 0.75rem;
+    border: 1px solid var(--mc-border);
+    background-color: transparent;
+    box-shadow: none;
+}
+
+.path-local-moderncommerce table.table:not(.mc-table):not(.mc-table-design) th,
+.path-local-moderncommerce .mc-table-wrapper > table:not(.table):not(.mc-table):not(.mc-table-design) th {
+    color: var(--mc-text);
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 36px;
+    text-transform: none;
+    letter-spacing: 0;
+    white-space: nowrap;
+}
+
+.path-local-moderncommerce table.table:not(.mc-table):not(.mc-table-design) td,
+.path-local-moderncommerce .mc-table-wrapper > table:not(.table):not(.mc-table):not(.mc-table-design) td {
+    padding-top: 15px;
+    padding-bottom: 15px;
+    color: var(--mc-text-muted);
+    vertical-align: middle;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.path-local-moderncommerce table.table:not(.mc-table):not(.mc-table-design) tbody tr:hover,
+.path-local-moderncommerce .mc-table-wrapper > table:not(.table):not(.mc-table):not(.mc-table-design) tbody tr:hover {
+    background-color: var(--mc-primary-light);
+}
+
+.path-local-moderncommerce table.table:not(.mc-table):not(.mc-table-design) tbody tr:hover td,
+.path-local-moderncommerce .mc-table-wrapper > table:not(.table):not(.mc-table):not(.mc-table-design) tbody tr:hover td {
+    color: var(--mc-primary);
+}
+
+/* Table utility */
+.mc-cell-muted { color: var(--mc-text-muted); font-size: 0.75rem; }
+.mc-cell-nowrap { white-space: nowrap; }
+.mc-cell-mono { font-family: var(--mc-font-mono); font-size: 0.75rem; }
+
+
+/* ============================================================
+   FILTER TOOLBAR
+   ============================================================ */
+
+.mc-toolbar {
+    background: var(--mc-surface);
+    border: 1px solid var(--mc-border);
+    border-radius: var(--mc-radius);
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+}
+
+.mc-filter-label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--mc-text-muted);
+    margin-bottom: 0.25rem;
+    display: block;
+}
+
+
+/* ============================================================
+   EMPTY STATE
+   ============================================================ */
+
+.mc-empty {
+    background: var(--mc-surface);
+    border: 1px solid var(--mc-border);
+    border-radius: var(--mc-radius);
+    padding: 3rem 2rem;
+    text-align: center;
+}
+
+.mc-empty__icon {
+    font-size: 2.25rem;
+    color: var(--mc-text-subtle);
+    margin-bottom: 0.875rem;
+    display: block;
+}
+
+.mc-empty__title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--mc-text);
+    margin-bottom: 0.375rem;
+}
+
+.mc-empty__desc {
+    font-size: 0.875rem;
+    color: var(--mc-text-muted);
+    margin-bottom: 1.25rem;
+    max-width: 360px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+
+/* ============================================================
+   PRICE DISPLAY
+   ============================================================ */
+
+.mc-price {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.375rem;
+}
+
+.mc-price__main {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--mc-text);
+}
+
+.mc-price__original {
+    font-size: 0.875rem;
+    color: var(--mc-text-subtle);
+    text-decoration: line-through;
+}
+
+.mc-price__sale {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    background: var(--mc-danger-bg);
+    color: var(--mc-danger);
+    padding: 0.125rem 0.375rem;
+    border-radius: var(--mc-radius-sm);
+}
+
+.mc-price--free .mc-price__main {
+    color: var(--mc-success);
+}
+
+
+/* ============================================================
+   FORM SECTIONS
+   ============================================================ */
+
+.mc-form-section {
+    background: var(--mc-surface);
+    border: 1px solid var(--mc-border);
+    border-radius: var(--mc-radius);
+    margin-bottom: 1rem;
+    overflow: hidden;
+}
+
+.mc-form-section__header {
+    padding: 0.875rem 1.25rem;
+    border-bottom: 1px solid var(--mc-border-subtle);
+    background: var(--mc-surface-alt);
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+}
+
+.mc-form-section__title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--mc-text);
+    margin: 0;
+}
+
+.mc-form-section__body {
+    padding: 1.25rem;
+}
+
+.mc-field-label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--mc-text);
+    margin-bottom: 0.3125rem;
+    display: block;
+}
+
+.mc-field-help {
+    font-size: 0.75rem;
+    color: var(--mc-text-muted);
+    margin-top: 0.25rem;
+}
+
+.mc-required {
+    color: var(--mc-danger);
+    margin-left: 0.125rem;
+}
+
+
+/* ============================================================
+   COURSE CARDS (Storefront)
+   ============================================================ */
+
+.mc-course-card {
+    background: var(--mc-surface);
+    border: 1px solid var(--mc-border);
+    border-radius: var(--mc-radius);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: border-color 0.15s ease;
+    text-decoration: none;
+    color: var(--mc-text);
+}
+
+.mc-course-card:hover {
+    border-color: var(--mc-primary-border);
+    text-decoration: none;
+    color: var(--mc-text);
+}
+
+.mc-course-card__image-wrap {
+    position: relative;
+    aspect-ratio: 16/9;
+    background: var(--mc-surface-alt);
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.mc-course-card__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.mc-course-card__badge {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.1875rem 0.5rem;
+    border-radius: var(--mc-radius-sm);
+    background: var(--mc-primary);
+    color: #fff;
+}
+
+.mc-course-card__badge--sale {
+    background: var(--mc-danger);
+}
+
+.mc-course-card__body {
+    padding: 0.875rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.mc-course-card__type {
+    font-size: 0.625rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--mc-primary);
+}
+
+.mc-course-card__title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--mc-text);
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.mc-course-card__meta {
+    font-size: 0.75rem;
+    color: var(--mc-text-muted);
+}
+
+.mc-course-card__footer {
+    padding: 0.75rem 0.875rem;
+    border-top: 1px solid var(--mc-border-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+/* Mini course card */
+.mc-course-mini {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem 0;
+    border-bottom: 1px solid var(--mc-border-subtle);
+    text-decoration: none;
+    color: var(--mc-text);
+}
+
+.mc-course-mini:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.mc-course-mini:hover {
+    text-decoration: none;
+    color: var(--mc-text);
+}
+
+.mc-course-mini__thumb {
+    width: 48px;
+    height: 36px;
+    border-radius: var(--mc-radius-sm);
+    object-fit: cover;
+    background: var(--mc-surface-alt);
+    flex-shrink: 0;
+    border: 1px solid var(--mc-border);
+}
+
+.mc-course-mini__title {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--mc-text);
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mc-course-mini__price {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--mc-text);
+    flex-shrink: 0;
+}

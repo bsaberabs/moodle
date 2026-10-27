@@ -1,0 +1,70 @@
+// This file is part of Moodle and is licensed under the
+// GNU General Public License, version 3 or later.
+//
+// You may redistribute and modify it under the terms of the GPL.
+// See the plugin root LICENSE file for complete terms.
+//
+// Modern Commerce styles.
+//
+// @package    local_moderncommerce
+// @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+// @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+// Shared SCSS helpers for Modern Commerce components.
+
+@mixin focus-ring($prefix: "mc") {
+    outline: 2px solid var(--#{$prefix}-focus-outline);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px var(--#{$prefix}-focus-ring);
+}
+
+@mixin panel($prefix: "mc") {
+    background: var(--#{$prefix}-surface);
+    border: 1px solid var(--#{$prefix}-border);
+    border-radius: var(--#{$prefix}-radius);
+}
+
+@mixin inline-control {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    text-decoration: none;
+}
+
+@mixin button-base($prefix: "mc", $weight: 600) {
+    @include inline-control;
+
+    border-radius: var(--#{$prefix}-radius);
+    font-size: 0.875rem;
+    font-weight: $weight;
+    padding: 0.4375rem 0.875rem;
+    cursor: pointer;
+    transition: background var(--mc-transition-fast), border-color var(--mc-transition-fast),
+        color var(--mc-transition-fast), transform var(--mc-transition-fast);
+
+    // Press feedback: a subtle scale confirms the button heard the click.
+    &:active {
+        transform: scale(0.97);
+    }
+}
+
+@mixin table-base($prefix: "mc") {
+    width: 100%;
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--#{$prefix}-text);
+}
+
+@mixin field-control($prefix: "mc") {
+    width: 100%;
+    min-height: 2.5rem;
+    font-size: 0.875rem;
+    color: var(--#{$prefix}-text);
+    background-color: var(--#{$prefix}-surface);
+    border: 1px solid var(--#{$prefix}-border);
+    border-radius: var(--#{$prefix}-radius);
+    padding: 0.5625rem 0.75rem;
+    line-height: 1.4;
+    transition: border-color var(--mc-transition-fast), box-shadow var(--mc-transition-fast);
+    box-shadow: none;
+}

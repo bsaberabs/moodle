@@ -1,0 +1,24 @@
+{{!
+    This file is part of Moodle and is licensed under the
+    GNU General Public License, version 3 or later.
+
+    You may redistribute and modify it under the terms of the GPL.
+    See the plugin root LICENSE file for complete terms.
+}}
+{{!
+    @template local_moderncommerce/components/loading_spinner
+
+    Inline loading indicator. Used for async content areas.
+
+    Context variables:
+    * label - Accessible loading label (optional)
+    * small - bool (renders smaller spinner)
+
+
+    @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+}}
+<div class="d-flex align-items-center gap-2 py-3 text-muted justify-content-center" aria-live="polite">
+    <span class="spinner-border {{#small}}spinner-border-sm{{/small}}" role="status" aria-hidden="true"></span>
+    <span>{{#label}}{{label}}{{/label}}{{^label}}{{#str}}loading, moodle{{/str}}{{/label}}</span>
+</div>

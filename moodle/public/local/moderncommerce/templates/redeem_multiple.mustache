@@ -1,0 +1,118 @@
+{{!
+    This file is part of Moodle and is licensed under the
+    GNU General Public License, version 3 or later.
+
+    You may redistribute and modify it under the terms of the GPL.
+    See the plugin root LICENSE file for complete terms.
+}}
+{{!
+    @template local_moderncommerce/redeem_multiple
+
+    Multiple course enrollment key redemption. One key field per order item.
+    Shows per-item status (redeemed / error / pending).
+
+    Context variables:
+    * redeemurl    - Form action URL
+    * sesskey      - Session key
+    * orderid      - Order ID
+    * items        - Array: {id, name, keycode, status, statusclass, isredeemed, haserror, errormessage}
+    * hasitems     - bool
+    * allredeemed  - bool
+    * coursesurl   - URL to my courses
+    * catalogurl   - Back to catalog URL
+
+
+    @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+}}
+<div class="mc-redeem-page py-5">
+    <div class="container">
+
+        {{#allredeemed}}
+        <div class="mc-redeem-card">
+            <span class="mc-redeem-card__icon"><i class="bi bi-check-circle-fill text-success" aria-hidden="true"></i></span>
+            <h1 class="mc-redeem-card__title">{{#str}}allkeysredeemed, local_moderncommerce{{/str}}</h1>
+            <p class="mc-redeem-card__desc">{{#str}}allkeysredeemedmsg, local_moderncommerce{{/str}}</p>
+            <a href="{{coursesurl}}" class="mc-button btn-mc-primary" data-mc-button="primary">
+                <i class="bi bi-play-circle me-1" aria-hidden="true"></i>
+                {{#str}}gotomycourses, local_moderncommerce{{/str}}
+            </a>
+        </div>
+        {{/allredeemed}}
+
+        {{^allredeemed}}
+        <div class="mc-card mc-redeem-form-card">
+            <div class="mc-card-header">
+                <div>
+                    <h1 class="mc-card-title">{{#str}}redeemmultiplekeys, local_moderncommerce{{/str}}</h1>
+                    <p class="mc-cell-muted mb-0">{{#str}}entermultiplekeysdescription, local_moderncommerce{{/str}}</p>
+                </div>
+            </div>
+            <div class="mc-card-body">
+                {{#hasitems}}
+                <form method="post" action="{{redeemurl}}">
+                    <input type="hidden" name="sesskey" value="{{sesskey}}">
+                    <input type="hidden" name="orderid" value="{{orderid}}">
+                    <div class="d-flex flex-column gap-3">
+                        {{#items}}
+                        <div class="mc-form-section p-3">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                {{#isredeemed}}<i class="bi bi-check-circle-fill text-success" aria-hidden="true"></i>{{/isredeemed}}
+                                {{^isredeemed}}<i class="bi bi-key text-muted" aria-hidden="true"></i>{{/isredeemed}}
+                                <span class="fw-semibold">{{name}}</span>
+                                {{#isredeemed}}<span class="mc-badge mc-badge--success ms-auto">{{#str}}keyredeemed, local_moderncommerce{{/str}}</span>{{/isredeemed}}
+                            </div>
+                            {{#haserror}}
+                            <div class="alert alert-danger py-1 mb-2 mc-cell-muted d-flex gap-2">
+                                <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+                                {{errormessage}}
+                            </div>
+                            {{/haserror}}
+                            {{^isredeemed}}
+                            <div>
+                                <label for="keycode-{{id}}" class="mc-filter-label">{{#str}}keycode, local_moderncommerce{{/str}}</label>
+                                <input type="text"
+                                       class="form-control form-control-sm mc-key-input"
+                                       id="keycode-{{id}}"
+                                       name="keycodes[{{id}}]"
+                                       value="{{keycode}}"
+                                       placeholder="{{#str}}enterkey, local_moderncommerce{{/str}}"
+                                       autocomplete="off">
+                            </div>
+                            {{/isredeemed}}
+                        </div>
+                        {{/items}}
+                    </div>
+                    <div class="mt-4">
+                        <button type="submit" class="mc-button btn-mc-primary w-100 d-flex justify-content-center"
+                                data-mc-button="primary" data-mc-loading-submit data-mc-loading-label="{{#str}}loading, local_moderncommerce{{/str}}">
+                            <i class="bi bi-key me-1" aria-hidden="true"></i>
+                            {{#str}}redeemallkeys, local_moderncommerce{{/str}}
+                        </button>
+                    </div>
+                </form>
+                {{/hasitems}}
+                {{^hasitems}}
+                <p class="text-muted">{{#str}}noorderitems, local_moderncommerce{{/str}}</p>
+                {{/hasitems}}
+            </div>
+        </div>
+        {{/allredeemed}}
+
+    </div>
+</div>
+
+<script>
+(function() {
+    document.addEventListener('submit', function(event) {
+        var button = event.target.querySelector('[data-mc-loading-submit]');
+        if (!button) {
+            return;
+        }
+        button.setAttribute('aria-busy', 'true');
+        button.setAttribute('data-mc-button-state', 'loading');
+        button.disabled = true;
+        button.textContent = button.getAttribute('data-mc-loading-label') || 'Loading...';
+    });
+})();
+</script>

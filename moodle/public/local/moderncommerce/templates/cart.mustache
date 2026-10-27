@@ -1,0 +1,191 @@
+{{!
+    This file is part of Moodle and is licensed under the
+    GNU General Public License, version 3 or later.
+
+    You may redistribute and modify it under the terms of the GPL.
+    See the plugin root LICENSE file for complete terms.
+}}
+{{!
+    @template local_moderncommerce/cart
+
+    Shopping cart. Two-column layout on desktop, stacked on mobile.
+    Order summary stays sticky. Destructive actions visually quieter than checkout.
+
+    Context variables required:
+    * isempty      - bool
+    * itemcount    - int
+    * items        - Array: {id, type, name, shortname, imageurl, hasimage, price, linetotal, removeurl}
+    * hasitems     - bool
+    * subtotal     - Formatted string
+    * hastax       - bool
+    * tax          - Formatted string
+    * hasdiscount  - bool
+    * discount     - Formatted string
+    * total        - Formatted string
+    * catalogurl   - URL to catalog
+    * checkouturl  - URL to checkout
+    * clearcarturl - URL to clear cart
+    * sesskey      - Session key
+    * hascoupon    - bool
+    * coupon       - {code, discount}
+    * applycouponurl - URL to apply coupon
+    * removecouponurl - URL to remove coupon
+    * str          - Legacy str object (kept for backward compat)
+
+
+    @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+}}
+<div class="mc-cart-page py-4">
+    <div class="container-fluid px-md-4 px-lg-5">
+
+        {{#isempty}}
+        {{! Empty cart }}
+        <div class="mc-empty mc-empty--centered">
+            <span class="mc-empty__icon"><i class="bi bi-cart" aria-hidden="true"></i></span>
+            <p class="mc-empty__title">{{#str}}emptycart, local_moderncommerce{{/str}}</p>
+            <p class="mc-empty__desc">{{#str}}emptycartmessage, local_moderncommerce{{/str}}</p>
+            <a href="{{catalogurl}}" class="mc-button btn-mc-primary" data-mc-button="primary">
+                {{#str}}browsecatalog, local_moderncommerce{{/str}}
+            </a>
+        </div>
+        {{/isempty}}
+
+        {{#hasitems}}
+        <div class="mc-cart-layout">
+            {{! Cart items column }}
+            <div>
+                <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
+                    <h1 class="mc-page-title mb-0">
+                        {{#str}}shoppingcart, local_moderncommerce{{/str}}
+                        <span class="mc-badge mc-badge--neutral ms-1">{{itemcount}}</span>
+                    </h1>
+                    <a href="{{clearcarturl}}"
+                       class="mc-button mc-btn-soft"
+                       data-confirm="{{#str}}clearcartconfirm, local_moderncommerce{{/str}}" data-mc-button="soft">
+                        {{#str}}clearcart, local_moderncommerce{{/str}}
+                    </a>
+                </div>
+
+                <div class="mc-cart-items">
+                    {{#items}}
+                    <div class="mc-cart-item">
+                        {{#hasimage}}
+                        <img src="{{imageurl}}" alt="" class="mc-cart-item__thumb" width="64" height="48" loading="lazy">
+                        {{/hasimage}}
+                        {{^hasimage}}
+                        <div class="mc-cart-item__thumb" aria-hidden="true"></div>
+                        {{/hasimage}}
+                        <div class="mc-cart-item__body">
+                            <div class="mc-cart-item__title">{{name}}</div>
+                            <div class="mc-cart-item__meta">
+                                {{#type}}<span class="mc-badge mc-badge--neutral">{{type}}</span>{{/type}}
+                                {{#shortname}}<span class="mc-cell-muted">{{shortname}}</span>{{/shortname}}
+                            </div>
+                        </div>
+                        <div class="mc-cart-item__price">{{linetotal}}</div>
+                        <a href="{{removeurl}}"
+                           class="mc-cart-item__remove"
+                           title="{{#str}}removefromcart, local_moderncommerce{{/str}}"
+                           aria-label="{{#str}}removefromcart, local_moderncommerce{{/str}} {{name}}"
+                           data-confirm="{{#str}}removeconfirm, local_moderncommerce{{/str}}">
+                            <i class="bi bi-x-lg" aria-hidden="true"></i>
+                        </a>
+                    </div>
+                    {{/items}}
+                </div>
+
+                <div class="mt-3">
+                    <a href="{{catalogurl}}" class="mc-button mc-btn-soft" data-mc-button="soft">
+                        <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>
+                        {{#str}}continueshopping, local_moderncommerce{{/str}}
+                    </a>
+                </div>
+            </div>
+
+            {{! Order summary column }}
+            <div>
+                <div class="mc-order-summary">
+                    <div class="mc-order-summary__header">{{#str}}ordersummary, local_moderncommerce{{/str}}</div>
+                    <div class="mc-order-summary__body">
+                        <div class="mc-order-row">
+                            <span>{{#str}}cartsubtotal, local_moderncommerce{{/str}}</span>
+                            <span class="mc-order-row__value">{{subtotal}}</span>
+                        </div>
+                        {{#hasdiscount}}
+                        <div class="mc-order-row mc-order-row--discount">
+                            <span>{{#str}}discount, local_moderncommerce{{/str}}</span>
+                            <span class="mc-order-row__value">-{{discount}}</span>
+                        </div>
+                        {{/hasdiscount}}
+                        {{#hastax}}
+                        <div class="mc-order-row">
+                            <span>{{#str}}tax, local_moderncommerce{{/str}}</span>
+                            <span class="mc-order-row__value">{{tax}}</span>
+                        </div>
+                        {{/hastax}}
+                        <div class="mc-order-row mc-order-row--total">
+                            <span>{{#str}}carttotal, local_moderncommerce{{/str}}</span>
+                            <span>{{total}}</span>
+                        </div>
+
+                        {{! Coupon }}
+                        {{#hascoupon}}
+                        <div class="d-flex align-items-center gap-2 mt-2 pt-2 border-top">
+                            <span class="mc-badge mc-badge--success flex-grow-1">
+                                <i class="bi bi-ticket-perforated me-1" aria-hidden="true"></i>
+                                {{coupon.code}}
+                            </span>
+                            <a href="{{removecouponurl}}" class="mc-button mc-btn-soft mc-btn-soft--danger" data-mc-button="danger">
+                                {{#str}}removecoupon, local_moderncommerce{{/str}}
+                            </a>
+                        </div>
+                        {{/hascoupon}}
+
+                        {{^hascoupon}}
+                        <form method="post" action="{{applycouponurl}}" class="mc-coupon-input mt-3">
+                            <input type="hidden" name="sesskey" value="{{sesskey}}">
+                            <input type="text"
+                                   class="mc-form-control"
+                                   name="couponcode"
+                                   placeholder="{{#str}}couponcode, local_moderncommerce{{/str}}"
+                                   aria-label="{{#str}}couponcode, local_moderncommerce{{/str}}">
+                            <button type="submit" class="mc-button mc-btn-soft flex-shrink-0" data-mc-button="soft"
+                                    data-mc-loading-submit data-mc-loading-label="{{#str}}loading, local_moderncommerce{{/str}}">
+                                {{#str}}applycoupon, local_moderncommerce{{/str}}
+                            </button>
+                        </form>
+                        {{/hascoupon}}
+
+                        <a href="{{checkouturl}}" class="mc-button btn-mc-primary w-100 d-flex justify-content-center mt-3" data-mc-button="primary">
+                            <i class="bi bi-lock me-1" aria-hidden="true"></i>
+                            {{#str}}proceedtocheckout, local_moderncommerce{{/str}}
+                        </a>
+
+                        <div class="mc-trust-note mt-2">
+                            <i class="bi bi-shield-check" aria-hidden="true"></i>
+                            {{#str}}securepayment, local_moderncommerce{{/str}}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    document.addEventListener('submit', function(event) {
+        var button = event.target.querySelector('[data-mc-loading-submit]');
+        if (!button) {
+            return;
+        }
+        button.setAttribute('aria-busy', 'true');
+        button.setAttribute('data-mc-button-state', 'loading');
+        button.disabled = true;
+        button.textContent = button.getAttribute('data-mc-loading-label') || 'Loading...';
+    });
+})();
+</script>
+        </div>
+        {{/hasitems}}
+
+    </div>
+</div>

@@ -1,0 +1,209 @@
+{{!
+    This file is part of Moodle and is licensed under the
+    GNU General Public License, version 3 or later.
+
+    You may redistribute and modify it under the terms of the GPL.
+    See the plugin root LICENSE file for complete terms.
+}}
+{{!
+    @template local_moderncommerce/dashboard_content
+
+    Admin commerce dashboard content.
+    Injected into shell.mustache via contenthtml.
+
+    Context variables:
+    * currencysymbol   - Currency symbol string
+    * metrics          - Array of metric tiles: {label, value, delta, deltaup, deltadown, variant, icon}
+    * hasmetrics       - bool
+    * recentorders     - Array of recent orders: {ordernumber, customer, items, total, status, statusclass, date, viewurl}
+    * hasrecentorders  - bool
+    * viewallordersurl - URL to orders list
+    * topcoursess      - Array of top courses: {name, sales, revenue}
+    * hastopcoursess   - bool
+    * quickactions     - Array of action links: {url, label, icon}
+    * hasquickactions  - bool
+    * alertmessage     - Optional setup alert message
+    * hasalert         - bool
+
+
+    @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+}}
+
+{{! Setup alert }}
+{{#hasalert}}
+<div class="alert alert-warning d-flex align-items-center gap-2 mb-4">
+    <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+    <div>{{alertmessage}}</div>
+</div>
+{{/hasalert}}
+
+{{! Metric tiles }}
+{{#hasmetrics}}
+<div class="row g-3 mb-4">
+    {{#metrics}}
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="mc-metric-tile mc-metric-tile--{{variant}}">
+            <div class="mc-metric-tile__body">
+                <div class="mc-metric-tile__label">{{label}}</div>
+                <div class="mc-metric-tile__value">{{value}}</div>
+                {{#delta}}
+                <span class="mc-metric-tile__delta mc-metric-tile__delta--{{#deltaup}}up{{/deltaup}}{{#deltadown}}down{{/deltadown}}{{^deltaup}}{{^deltadown}}flat{{/deltadown}}{{/deltaup}}">
+                    {{#deltaup}}<i class="bi bi-arrow-up-short" aria-hidden="true"></i>{{/deltaup}}
+                    {{#deltadown}}<i class="bi bi-arrow-down-short" aria-hidden="true"></i>{{/deltadown}}
+                    {{delta}}
+                </span>
+                {{/delta}}
+            </div>
+            <div class="mc-metric-tile__icon">
+                <i class="bi {{icon}}" aria-hidden="true"></i>
+            </div>
+        </div>
+    </div>
+    {{/metrics}}
+</div>
+{{/hasmetrics}}
+
+{{! Default metrics if no data passed }}
+{{^hasmetrics}}
+<div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="mc-metric-tile mc-metric-tile--primary">
+            <div class="mc-metric-tile__body">
+                <div class="mc-metric-tile__label">{{#str}}totalrevenue, local_moderncommerce{{/str}}</div>
+                <div class="mc-metric-tile__value">{{currencysymbol}}&mdash;</div>
+            </div>
+            <div class="mc-metric-tile__icon">
+                <i class="bi bi-currency-dollar" aria-hidden="true"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="mc-metric-tile mc-metric-tile--success">
+            <div class="mc-metric-tile__body">
+                <div class="mc-metric-tile__label">{{#str}}totalorders, local_moderncommerce{{/str}}</div>
+                <div class="mc-metric-tile__value">&mdash;</div>
+            </div>
+            <div class="mc-metric-tile__icon">
+                <i class="bi bi-bag" aria-hidden="true"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="mc-metric-tile mc-metric-tile--warning">
+            <div class="mc-metric-tile__body">
+                <div class="mc-metric-tile__label">{{#str}}pendingorders, local_moderncommerce{{/str}}</div>
+                <div class="mc-metric-tile__value">&mdash;</div>
+            </div>
+            <div class="mc-metric-tile__icon">
+                <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="mc-metric-tile mc-metric-tile--info">
+            <div class="mc-metric-tile__body">
+                <div class="mc-metric-tile__label">{{#str}}averageordervalue, local_moderncommerce{{/str}}</div>
+                <div class="mc-metric-tile__value">{{currencysymbol}}&mdash;</div>
+            </div>
+            <div class="mc-metric-tile__icon">
+                <i class="bi bi-bar-chart" aria-hidden="true"></i>
+            </div>
+        </div>
+    </div>
+</div>
+{{/hasmetrics}}
+
+<div class="row g-3">
+    {{! Recent Orders }}
+    <div class="col-12 col-xl-7">
+        <div class="mc-card h-100">
+            <div class="mc-card-header">
+                <h2 class="mc-card-title">{{#str}}recentorders, local_moderncommerce{{/str}}</h2>
+                {{#viewallordersurl}}
+                <a href="{{viewallordersurl}}" class="mc-button btn-sm mc-btn-soft" data-mc-button="soft" data-mc-button-size="sm">
+                    {{#str}}viewallorders, local_moderncommerce{{/str}}
+                </a>
+                {{/viewallordersurl}}
+            </div>
+            {{#hasrecentorders}}
+            <div class="mc-table-wrapper mc-table-wrapper--flush">
+                <table class="table mc-table mb-0" aria-label="{{#str}}recentorders, local_moderncommerce{{/str}}">
+                    <thead>
+                        <tr>
+                            <th scope="col">{{#str}}ordernumber, local_moderncommerce{{/str}}</th>
+                            <th scope="col">{{#str}}customer, local_moderncommerce{{/str}}</th>
+                            <th scope="col" class="text-end">{{#str}}total, local_moderncommerce{{/str}}</th>
+                            <th scope="col">{{#str}}status, local_moderncommerce{{/str}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#recentorders}}
+                        <tr>
+                            <td>
+                                {{#viewurl}}<a href="{{viewurl}}" class="fw-semibold text-decoration-none">{{/viewurl}}
+                                #{{ordernumber}}
+                                {{#viewurl}}</a>{{/viewurl}}
+                            </td>
+                            <td class="mc-cell-muted">{{customer}}</td>
+                            <td class="text-end fw-semibold">{{total}}</td>
+                            <td>
+                                <span class="mc-badge mc-badge--{{statusclass}}">{{status}}</span>
+                            </td>
+                        </tr>
+                        {{/recentorders}}
+                    </tbody>
+                </table>
+            </div>
+            {{/hasrecentorders}}
+            {{^hasrecentorders}}
+            <div class="mc-card-body">
+                <p class="text-muted mb-0">{{#str}}noordersmatching, local_moderncommerce{{/str}}</p>
+            </div>
+            {{/hasrecentorders}}
+        </div>
+    </div>
+
+    {{! Top Courses + Quick Actions }}
+    <div class="col-12 col-xl-5">
+        <div class="mc-card mb-3">
+            <div class="mc-card-header">
+                <h2 class="mc-card-title">{{#str}}topsellingcourses, local_moderncommerce{{/str}}</h2>
+            </div>
+            <div class="mc-card-body p-0">
+                {{#hastopcoursess}}
+                <ul class="list-group list-group-flush">
+                    {{#topcoursess}}
+                    <li class="list-group-item d-flex align-items-center justify-content-between gap-2 py-2">
+                        <span class="mc-cell-muted mc-flex-truncate">{{name}}</span>
+                        <span class="fw-semibold mc-nowrap">{{currencysymbol}}{{revenue}}</span>
+                        <span class="mc-badge mc-badge--neutral mc-nowrap">{{sales}} {{#str}}sales, local_moderncommerce{{/str}}</span>
+                    </li>
+                    {{/topcoursess}}
+                </ul>
+                {{/hastopcoursess}}
+                {{^hastopcoursess}}
+                <div class="mc-card-body">
+                    <p class="text-muted mb-0">{{#str}}nosalesyet, local_moderncommerce{{/str}}</p>
+                </div>
+                {{/hastopcoursess}}
+            </div>
+        </div>
+
+        {{#hasquickactions}}
+        <div class="mc-card">
+            <div class="mc-card-header">
+                <h2 class="mc-card-title">{{#str}}quickactions, local_moderncommerce{{/str}}</h2>
+            </div>
+            <div class="mc-card-body d-flex flex-wrap gap-2">
+                {{#quickactions}}
+                <a href="{{url}}" class="mc-button btn-sm mc-btn-soft" data-mc-button="soft" data-mc-button-size="sm">
+                    <i class="bi {{icon}} me-1" aria-hidden="true"></i>
+                    {{label}}
+                </a>
+                {{/quickactions}}
+            </div>
+        </div>
+        {{/hasquickactions}}
+    </div>
+</div>

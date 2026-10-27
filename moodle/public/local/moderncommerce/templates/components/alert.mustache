@@ -1,0 +1,46 @@
+{{!
+    This file is part of Moodle and is licensed under the
+    GNU General Public License, version 3 or later.
+
+    You may redistribute and modify it under the terms of the GPL.
+    See the plugin root LICENSE file for complete terms.
+}}
+{{!
+    @template local_moderncommerce/components/alert
+
+    Inline status alert — the mc-alert design-system component (Modern Commerce
+    design system, component #37). Use it for in-page notices: form-submission
+    results, setup warnings, processing hints. For floating, auto-dismissing
+    notifications use local_moderncommerce/components/toast instead.
+
+    Variant tints the surface, border, icon, and title; the body text stays
+    readable. Colour never carries meaning alone — always pass an icon.
+
+    Context variables:
+    * type     - Variant key: success | warning | danger | info | primary | neutral.
+                 Defaults to info.
+    * icon     - Bootstrap icon class without state, e.g. "bi-check-circle". Optional.
+    * title    - Optional bold lead line.
+    * message  - Body text. Ignored when a {{$body
+
+    @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+}} block is supplied by a parent.
+    * role     - ARIA role override. Defaults to "status" (use "alert" for errors).
+
+    Example (context):
+    {
+        "type": "success",
+        "icon": "bi-check-circle",
+        "title": "Payment received",
+        "message": "Order #1042 marked paid."
+    }
+
+}}
+<div class="mc-alert mc-alert--{{^type}}info{{/type}}{{type}}" role="{{^role}}status{{/role}}{{role}}">
+    {{#icon}}<i class="bi {{icon}} mc-alert__icon" aria-hidden="true"></i>{{/icon}}
+    <div class="mc-alert__body">
+        {{#title}}<p class="mc-alert__title">{{title}}</p>{{/title}}
+        {{$body}}{{message}}{{/body}}
+    </div>
+</div>

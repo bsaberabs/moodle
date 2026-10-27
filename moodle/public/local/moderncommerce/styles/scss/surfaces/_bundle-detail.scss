@@ -1,0 +1,570 @@
+// This file is part of Moodle and is licensed under the
+// GNU General Public License, version 3 or later.
+//
+// You may redistribute and modify it under the terms of the GPL.
+// See the plugin root LICENSE file for complete terms.
+//
+// Modern Commerce styles.
+//
+// @package    local_moderncommerce
+// @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+// @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+
+/*
+ * Public Modern Commerce bundle / program detail page.
+ *
+ * Sibling surface to _course-detail.scss and deliberately shares its hero,
+ * card and sidebar language so buyers moving between a course and a bundle
+ * see one storefront. Consumed by js/esm/src/bundle_details.tsx.
+ */
+
+body.mc-public-bundle-page #region-main,
+body.mc-public-bundle-page #region-main-box,
+body.mc-public-bundle-page #page-content,
+body.mc-public-bundle-page .main-inner {
+    width: 100% !important;
+    max-width: none !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+body.mc-public-bundle-page #page.drawers .main-inner,
+body.mc-public-bundle-page.limitedwidth #page.drawers .main-inner,
+body.mc-public-bundle-page.pagelayout-standard #page.drawers .main-inner,
+body.mc-public-bundle-page .main-inner {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+body.mc-public-bundle-page .local-moderncommerce-bundle-details {
+    width: 100%;
+}
+
+.mc-bundle-details {
+    min-height: 100vh;
+    padding: 1.25rem 0 3rem;
+    background: var(--mc-page-bg);
+    color: var(--mc-text);
+    font-family: var(--mc-font);
+}
+
+.mc-bundle-container {
+    width: min(100%, 1240px);
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.mc-bundle-breadcrumb {
+    margin-bottom: 1rem;
+}
+
+.mc-bundle-breadcrumb .mc-btn-soft {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-height: 38px;
+    padding-inline: 0.875rem;
+    text-decoration: none;
+}
+
+/* ------------------------------------------------------------
+   Hero
+   ------------------------------------------------------------ */
+
+.mc-bundle-hero {
+    display: grid;
+    grid-template-columns: 1fr;
+    overflow: hidden;
+    margin-top: 1rem;
+    border: 1px solid var(--mc-border);
+    border-radius: var(--mc-radius-lg);
+    background: var(--mc-surface);
+}
+
+.mc-bundle-hero__copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 1.25rem;
+}
+
+.mc-bundle-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.875rem;
+}
+
+/*
+ * The catalog defines .mc-badge-bundle/.mc-badge-program against --mc-blue,
+ * a token scoped to .mc-catalog-section. Off the catalog that token is unset,
+ * so the badge collapses to white-on-white. Restate it in page tokens here.
+ */
+.mc-bundle-badges .mc-badge-bundle,
+.mc-bundle-badges .mc-badge-program {
+    border: 1px solid var(--mc-primary-border);
+    background: var(--mc-primary-light);
+    color: var(--mc-primary);
+}
+
+.mc-bundle-hero h1 {
+    max-width: 780px;
+    margin: 0;
+    color: var(--mc-text);
+    font-size: 2rem;
+    font-weight: 750;
+    line-height: 1.12;
+    letter-spacing: 0;
+    text-wrap: balance;
+}
+
+.mc-bundle-hero p {
+    max-width: 72ch;
+    margin: 0.875rem 0 0;
+    color: var(--mc-text-muted);
+    font-size: 0.98rem;
+    line-height: 1.6;
+    text-wrap: pretty;
+}
+
+.mc-bundle-stats {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.625rem;
+    margin-top: 1.25rem;
+}
+
+.mc-bundle-stat {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+    padding: 0.75rem;
+    border: 1px solid var(--mc-border-subtle);
+    border-radius: var(--mc-radius);
+    background: var(--mc-surface-alt);
+}
+
+.mc-bundle-stat > span:last-child {
+    min-width: 0;
+}
+
+.mc-bundle-stat__icon {
+    width: 2.25rem;
+    height: 2.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    border-radius: var(--mc-radius-sm);
+    background: var(--mc-primary-light);
+    color: var(--mc-primary);
+}
+
+.mc-bundle-stat__label {
+    display: block;
+    color: var(--mc-text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+.mc-bundle-stat strong {
+    display: block;
+    margin-top: 0.125rem;
+    overflow: hidden;
+    color: var(--mc-text);
+    font-size: 0.95rem;
+    line-height: 1.25;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mc-bundle-hero__media {
+    position: relative;
+    min-height: 220px;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    background: var(--mc-surface-alt);
+}
+
+.mc-bundle-hero__media img,
+.mc-bundle-media-fallback {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+}
+
+.mc-bundle-media-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--mc-primary);
+    font-size: 4rem;
+}
+
+/* ------------------------------------------------------------
+   Layout
+   ------------------------------------------------------------ */
+
+.mc-bundle-layout {
+    display: grid;
+    grid-template-areas:
+        "sidebar"
+        "main";
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+    margin-top: 1rem;
+}
+
+.mc-bundle-main {
+    grid-area: main;
+    min-width: 0;
+    display: grid;
+    gap: 1rem;
+}
+
+.mc-bundle-panel,
+.mc-bundle-purchase {
+    overflow: hidden;
+    border: 1px solid var(--mc-border);
+    border-radius: var(--mc-radius-lg);
+    background: var(--mc-surface);
+}
+
+/* ------------------------------------------------------------
+   Included courses panel
+   ------------------------------------------------------------ */
+
+.mc-bundle-panel__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--mc-border-subtle);
+}
+
+.mc-bundle-panel__header h2 {
+    margin: 0.25rem 0 0;
+    color: var(--mc-text);
+    font-size: 1.125rem;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+.mc-bundle-panel__eyebrow,
+.mc-bundle-purchase__type {
+    display: block;
+    color: var(--mc-text-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+.mc-bundle-course-count {
+    min-width: 2rem;
+    height: 2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: var(--mc-radius-pill);
+    background: var(--mc-primary-light);
+    color: var(--mc-primary);
+    font-size: 0.875rem;
+    font-weight: 700;
+}
+
+.mc-bundle-course-list {
+    display: grid;
+    gap: 0;
+}
+
+.mc-bundle-course {
+    display: grid;
+    grid-template-columns: 68px minmax(0, 1fr);
+    align-items: center;
+    gap: 0.5rem 0.875rem;
+    padding: 0.875rem 1.25rem;
+    border-bottom: 1px solid var(--mc-border-subtle);
+    color: inherit;
+    text-decoration: none;
+    transition: background var(--mc-transition-fast);
+}
+
+.mc-bundle-course:last-child {
+    border-bottom: 0;
+}
+
+.mc-bundle-course:hover,
+.mc-bundle-course:focus-visible {
+    background: var(--mc-surface-alt);
+    color: inherit;
+    text-decoration: none;
+}
+
+.mc-bundle-course:focus-visible {
+    outline: 2px solid var(--mc-focus-outline);
+    outline-offset: -2px;
+}
+
+.mc-bundle-course__thumb {
+    width: 68px;
+    height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 1px solid var(--mc-border-subtle);
+    border-radius: var(--mc-radius);
+    background: var(--mc-surface-alt);
+    color: var(--mc-primary);
+    font-size: 1.25rem;
+    object-fit: cover;
+}
+
+.mc-bundle-course__body {
+    min-width: 0;
+    display: grid;
+    gap: 0.25rem;
+}
+
+.mc-bundle-course__title {
+    color: var(--mc-text);
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.mc-bundle-course__summary {
+    display: -webkit-box;
+    overflow: hidden;
+    color: var(--mc-text-muted);
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.mc-bundle-course__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.75rem;
+    color: var(--mc-text-muted);
+    font-size: 0.75rem;
+}
+
+.mc-bundle-course__meta > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.mc-bundle-course__side {
+    grid-column: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.625rem;
+    color: var(--mc-text-subtle);
+    white-space: nowrap;
+}
+
+.mc-bundle-course__price {
+    color: var(--mc-text);
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+/* ------------------------------------------------------------
+   Purchase sidebar
+   ------------------------------------------------------------ */
+
+.mc-bundle-purchase {
+    grid-area: sidebar;
+    min-width: 0;
+}
+
+.mc-bundle-purchase__header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--mc-border-subtle);
+    background: var(--mc-surface-alt);
+}
+
+.mc-bundle-purchase__header h2 {
+    margin: 0.25rem 0 0;
+    color: var(--mc-text);
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.mc-bundle-purchase__body {
+    padding: 1.25rem;
+}
+
+.mc-bundle-price {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin-bottom: 0.875rem;
+}
+
+.mc-bundle-price__current {
+    color: var(--mc-text);
+    font-size: 1.8rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.mc-bundle-price__original {
+    color: var(--mc-text-subtle);
+    font-size: 0.9375rem;
+    text-decoration: line-through;
+}
+
+.mc-bundle-purchase .mc-order-row {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--mc-border-subtle);
+    font-size: 0.875rem;
+}
+
+.mc-bundle-purchase .mc-order-row:last-of-type {
+    border-bottom: 0;
+}
+
+.mc-bundle-purchase .mc-button {
+    width: 100%;
+    min-height: 44px;
+    align-items: center;
+    gap: 0.375rem;
+    text-decoration: none;
+}
+
+.mc-bundle-trust {
+    display: grid;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--mc-border-subtle);
+}
+
+.mc-bundle-trust span {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    color: var(--mc-text-muted);
+    font-size: 0.75rem;
+    line-height: 1.4;
+}
+
+.mc-bundle-trust i {
+    flex-shrink: 0;
+    margin-top: 0.0625rem;
+    color: var(--mc-primary);
+}
+
+/* ------------------------------------------------------------
+   States
+   ------------------------------------------------------------ */
+
+.mc-empty--compact {
+    padding: 2rem 1.25rem;
+    text-align: center;
+}
+
+/* ------------------------------------------------------------
+   Responsive
+   ------------------------------------------------------------ */
+
+@media (min-width: 640px) {
+    .mc-bundle-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .mc-bundle-course {
+        grid-template-columns: 88px minmax(0, 1fr) auto;
+    }
+
+    .mc-bundle-course__thumb {
+        width: 88px;
+        height: 58px;
+    }
+
+    .mc-bundle-course__side {
+        grid-column: 3;
+        grid-row: 1;
+        justify-content: flex-end;
+    }
+}
+
+@media (min-width: 768px) {
+    .mc-bundle-container {
+        padding: 0 1.5rem;
+    }
+
+    .mc-bundle-hero__copy {
+        padding: 1.5rem;
+    }
+}
+
+@media (min-width: 992px) {
+    .mc-bundle-details {
+        padding-top: 1.5rem;
+    }
+
+    .mc-bundle-hero {
+        grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.9fr);
+    }
+
+    .mc-bundle-hero h1 {
+        font-size: 2.5rem;
+    }
+
+    .mc-bundle-layout {
+        grid-template-columns: minmax(0, 1fr) 360px;
+        grid-template-areas: "main sidebar";
+        gap: 1.25rem;
+        margin-top: 1.25rem;
+    }
+
+    .mc-bundle-purchase {
+        position: sticky;
+        top: 1rem;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .mc-bundle-details {
+        padding-top: 0.75rem;
+    }
+
+    .mc-bundle-container {
+        padding: 0 0.75rem;
+    }
+
+    .mc-bundle-hero h1 {
+        font-size: 1.6rem;
+    }
+
+    .mc-bundle-panel__header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0.625rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mc-bundle-course {
+        transition: none;
+    }
+}

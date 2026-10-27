@@ -1,0 +1,173 @@
+{{!
+    @template local_moderncommerce/mycourses
+
+    My Courses/Purchased Courses page template - Bootstrap 5 design.
+
+    Context variables required:
+    * hascourses (bool) - Whether user has any purchased courses
+    * courses (array) - Array of purchased course objects
+    * courses.id (int) - Course ID
+    * courses.fullname (string) - Course full name
+    * courses.shortname (string) - Course short name
+    * courses.summary (string) - Course summary
+    * courses.imageurl (string) - Course image URL
+    * courses.courseurl (string) - URL to access the course
+    * courses.progress (int) - Progress percentage (0-100)
+    * courses.hasprogress (bool) - Whether progress is available
+    * courses.purchasedate (string) - Formatted purchase date
+    * courses.ordernumber (string) - Order number
+    * courses.iscompleted (bool) - Whether course is completed
+    * courses.isinprogress (bool) - Whether course is in progress
+    * courses.isnotstarted (bool) - Whether course hasn't been started
+    * catalogurl (string) - URL to course catalog
+    * hasfilters (bool) - Whether filters are available
+    * filters (array) - Filter options
+    * activefilter (string) - Currently active filter
+
+
+    @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+}}
+<div class="mc-mycourses-page py-4">
+    <div class="container-fluid px-lg-5">
+        {{! Action Button }}
+        <div class="d-flex justify-content-end mb-4">
+            <a href="{{catalogurl}}" class="mc-button mc-btn-soft" data-mc-button="soft">
+                <i class="bi bi-plus-lg me-1"></i>{{#str}}browsemorecourses, local_moderncommerce{{/str}}
+            </a>
+        </div>
+
+        {{#hascourses}}
+        {{! Filter Tabs }}
+        <div class="mc-course-filters mb-4">
+            <ul class="nav nav-pills" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link {{#allactive}}active{{/allactive}}" href="?filter=all">
+                        <i class="bi bi-grid-3x3-gap me-1"></i>{{#str}}all{{/str}}
+                        <span class="badge bg-secondary ms-1">{{totalcount}}</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{#inprogressactive}}active{{/inprogressactive}}" href="?filter=inprogress">
+                        <i class="bi bi-play-circle me-1"></i>{{#str}}inprogress, local_moderncommerce{{/str}}
+                        <span class="badge bg-primary ms-1">{{inprogresscount}}</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{#completedactive}}active{{/completedactive}}" href="?filter=completed">
+                        <i class="bi bi-check-circle me-1"></i>{{#str}}completed, local_moderncommerce{{/str}}
+                        <span class="badge bg-success ms-1">{{completedcount}}</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{#notstartedactive}}active{{/notstartedactive}}" href="?filter=notstarted">
+                        <i class="bi bi-clock me-1"></i>{{#str}}notstarted, local_moderncommerce{{/str}}
+                        <span class="badge bg-warning text-dark ms-1">{{notstartedcount}}</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        {{! Courses Grid }}
+        <div class="row g-4 mc-courses-grid">
+            {{#courses}}
+            <div class="col-sm-6 col-lg-4 col-xl-3">
+                <div class="card h-100 border-0 shadow-sm mc-course-card">
+                    {{! Course Image }}
+                    <div class="position-relative">
+                        <a href="{{courseurl}}" class="d-block">
+                            <img src="{{imageurl}}" class="card-img-top mc-course-image" alt="{{fullname}}">
+                        </a>
+                        {{! Status Badge }}
+                        {{#iscompleted}}
+                        <span class="position-absolute top-0 end-0 m-2 badge bg-success">
+                            <i class="bi bi-check-lg me-1"></i>{{#str}}completed, local_moderncommerce{{/str}}
+                        </span>
+                        {{/iscompleted}}
+                        {{#isinprogress}}
+                        <span class="position-absolute top-0 end-0 m-2 badge bg-primary">
+                            <i class="bi bi-play-fill me-1"></i>{{#str}}inprogress, local_moderncommerce{{/str}}
+                        </span>
+                        {{/isinprogress}}
+                        {{#isnotstarted}}
+                        <span class="position-absolute top-0 end-0 m-2 badge bg-warning text-dark">
+                            <i class="bi bi-clock me-1"></i>{{#str}}notstarted, local_moderncommerce{{/str}}
+                        </span>
+                        {{/isnotstarted}}
+                    </div>
+
+                    <div class="card-body d-flex flex-column">
+                        {{! Course Title }}
+                        <h5 class="card-title mb-2">
+                            <a href="{{courseurl}}" class="text-decoration-none text-dark stretched-link">
+                                {{fullname}}
+                            </a>
+                        </h5>
+
+                        {{! Course Summary - truncated }}
+                        {{#summary}}
+                        <p class="card-text text-muted small flex-grow-1 mb-3 mc-course-summary">
+                            {{{summary}}}
+                        </p>
+                        {{/summary}}
+
+                        {{! Progress Bar }}
+                        {{#hasprogress}}
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <small class="text-muted">{{#str}}progress, local_moderncommerce{{/str}}</small>
+                                <small class="fw-bold {{#iscompleted}}text-success{{/iscompleted}}{{^iscompleted}}text-primary{{/iscompleted}}">{{progress}}%</small>
+                            </div>
+                            <div class="progress mc-course-progress">
+                                <div class="progress-bar {{#iscompleted}}bg-success{{/iscompleted}}{{^iscompleted}}bg-primary{{/iscompleted}}"
+                                     role="progressbar"
+                                     style="width: {{progress}}%;"
+                                     aria-valuenow="{{progress}}"
+                                     aria-valuemin="0"
+                                     aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                        {{/hasprogress}}
+
+                        {{! Purchase Info }}
+                        <div class="mt-auto pt-2 border-top">
+                            <small class="text-muted d-block">
+                                <i class="bi bi-calendar-event me-1"></i>{{#str}}purchasedon, local_moderncommerce{{/str}}: {{purchasedate}}
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="card-footer bg-transparent border-top-0 pt-0">
+                        <a href="{{courseurl}}" class="mc-button btn-mc-primary w-100" data-mc-button="primary">
+                            {{#iscompleted}}
+                            <i class="bi bi-arrow-repeat me-1"></i>{{#str}}reviewcourse, local_moderncommerce{{/str}}
+                            {{/iscompleted}}
+                            {{#isinprogress}}
+                            <i class="bi bi-play-fill me-1"></i>{{#str}}continuelearning, local_moderncommerce{{/str}}
+                            {{/isinprogress}}
+                            {{#isnotstarted}}
+                            <i class="bi bi-rocket-takeoff me-1"></i>{{#str}}startlearning, local_moderncommerce{{/str}}
+                            {{/isnotstarted}}
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {{/courses}}
+        </div>
+        {{/hascourses}}
+
+        {{^hascourses}}
+        {{! Empty State }}
+        <div class="mc-empty-state text-center py-5">
+            <div class="mc-empty-icon mb-4">
+                <i class="bi bi-journal-bookmark display-1 text-muted"></i>
+            </div>
+            <h3 class="h4 mb-3">{{#str}}nocourses, local_moderncommerce{{/str}}</h3>
+            <p class="text-muted mb-4">{{#str}}nocoursesdesc, local_moderncommerce{{/str}}</p>
+            <a href="{{catalogurl}}" class="mc-button btn-mc-primary btn-lg" data-mc-button="primary" data-mc-button-size="lg">
+                <i class="bi bi-cart me-2"></i>{{#str}}browsecourses, local_moderncommerce{{/str}}
+            </a>
+        </div>
+        {{/hascourses}}
+    </div>
+</div>

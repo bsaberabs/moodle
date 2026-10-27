@@ -1,0 +1,109 @@
+// This file is part of Moodle and is licensed under the
+// GNU General Public License, version 3 or later.
+//
+// You may redistribute and modify it under the terms of the GPL.
+// See the plugin root LICENSE file for complete terms.
+//
+// Modern Commerce styles.
+//
+// @package    local_moderncommerce
+// @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+// @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+// Extracted from ../styles.css during the SCSS source consolidation phase.
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 991px) {
+    .mc-sidebar {
+        transform: translateX(-100%);
+        width: var(--mc-sidebar-width) !important;
+    }
+
+    .mc-sidebar.mc-sidebar--open {
+        transform: translateX(0);
+    }
+
+    .mc-main {
+        margin-left: 0 !important;
+    }
+
+    .mc-catalog-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .mc-catalog-mobile-header {
+        display: flex;
+    }
+
+    .mc-catalog-sidebar {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 500;
+        border-radius: 0;
+        overflow-y: auto;
+    }
+
+    .mc-catalog-sidebar--open {
+        display: block;
+    }
+
+    .mc-catalog-sidebar-close {
+        display: block;
+    }
+
+    .mc-cart-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .mc-checkout-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 767px) {
+    .mc-topbar {
+        padding: 0 1rem;
+    }
+
+    .mc-content {
+        padding: 1rem;
+    }
+
+    .mc-learner-content {
+        padding: 1rem;
+    }
+
+    .mc-metric-tile {
+        padding: 0.875rem 1rem;
+    }
+
+    .mc-catalog-grid {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    }
+
+    .mc-order-summary {
+        position: static;
+    }
+
+    /* Touch targets: bump interactive controls to >=44px on touch/mobile
+       while keeping desktop density (design-system doc section 13). */
+    :is(.path-local-moderncommerce, .local-moderncommerce-storefront, .mc-shell, .mc-learner-shell, .mc-react-mount)
+    :is(.mc-form-control, .mc-select, .mc-search-input, .btn-mc-primary, .btn-mc-secondary,
+        .btn-mc-danger, .mc-btn-primary, .mc-btn-soft, .mc-btn-ghost) {
+        // Accessibility guard: legacy theme selectors use multiple :not()
+        // clauses and otherwise beat this mobile touch-target floor.
+        min-height: 44px !important;
+    }
+
+    :is(.path-local-moderncommerce, .local-moderncommerce-storefront, .mc-shell, .mc-learner-shell, .mc-react-mount)
+    .mc-btn-icon {
+        min-width: 44px !important;
+        min-height: 44px !important;
+    }
+}

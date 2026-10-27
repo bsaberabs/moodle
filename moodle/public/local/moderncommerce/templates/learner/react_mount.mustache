@@ -1,0 +1,30 @@
+{{!
+    This file is part of Moodle and is licensed under the
+    GNU General Public License, version 3 or later.
+
+    You may redistribute and modify it under the terms of the GPL.
+    See the plugin root LICENSE file for complete terms.
+}}
+{{!
+    @template local_moderncommerce/learner/react_mount
+
+    Generic React mount for learner pages.
+
+    Context variables:
+    * region - data-region value
+    * reactconfig - JSON config for Moodle's Mustache React helper.
+    * icon - Bootstrap icon class for the loading fallback.
+
+
+    @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+}}
+<div class="mc-learner-react" data-region="{{region}}">
+    {{#react}}
+    {{{reactconfig}}}
+    <div class="mc-empty mc-empty--centered">
+        <span class="mc-empty__icon"><i class="bi {{icon}}" aria-hidden="true"></i></span>
+        <p class="mc-empty__title">{{#str}}loading, local_moderncommerce{{/str}}</p>
+    </div>
+    {{/react}}
+</div>

@@ -1,0 +1,50 @@
+name: Bug report
+description: Report a reproducible problem in ModernCommerce
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: Do not report security vulnerabilities here. Email support@agunfoninteractivity.com instead.
+  - type: input
+    id: version
+    attributes:
+      label: ModernCommerce version
+      placeholder: 1.0.0
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Moodle, PHP, database, and browser versions
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Problem
+      description: Explain what happened and what you expected.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      description: Provide the smallest reliable sequence that reproduces the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      render: shell
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I removed credentials, payment details, and personal data from this report.
+          required: true
+        - label: I searched for an existing report of this problem.
+          required: true

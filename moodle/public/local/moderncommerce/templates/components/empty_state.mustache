@@ -1,0 +1,37 @@
+{{!
+    This file is part of Moodle and is licensed under the
+    GNU General Public License, version 3 or later.
+
+    You may redistribute and modify it under the terms of the GPL.
+    See the plugin root LICENSE file for complete terms.
+}}
+{{!
+    @template local_moderncommerce/components/empty_state
+
+    Reusable empty state component. Icon, title, description, optional CTA.
+
+    Context variables:
+    * icon        - Bootstrap icon class (e.g. "bi-inbox"). Default: bi-inbox
+    * title       - Title string
+    * description - Description string (optional)
+    * actionurl   - CTA link URL (optional)
+    * actionlabel - CTA link label (optional)
+
+
+    @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+}}
+<div class="mc-empty">
+    <span class="mc-empty__icon">
+        <i class="bi {{#icon}}{{icon}}{{/icon}}{{^icon}}bi-inbox{{/icon}}" aria-hidden="true"></i>
+    </span>
+    {{#title}}
+    <p class="mc-empty__title">{{title}}</p>
+    {{/title}}
+    {{#description}}
+    <p class="mc-empty__desc">{{description}}</p>
+    {{/description}}
+    {{#actionurl}}
+    <a href="{{actionurl}}" class="mc-button btn-mc-primary" data-mc-button="primary">{{actionlabel}}</a>
+    {{/actionurl}}
+</div>

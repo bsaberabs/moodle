@@ -1,0 +1,123 @@
+{{!
+    This file is part of Moodle and is licensed under the
+    GNU General Public License, version 3 or later.
+
+    You may redistribute and modify it under the terms of the GPL.
+    See the plugin root LICENSE file for complete terms.
+}}
+{{!
+    @template local_moderncommerce/learner/courses
+
+    Learner my courses page. List of enrolled/purchased courses with
+    search, filter, sort, progress state, and resume/start actions.
+
+    Context variables:
+    * courses         - Array: {name, imageurl, hasimage, progress, progresslabel, courseurl, status, statusclass, enrolleddate, lastaccess}
+    * hascourses      - bool
+    * searchterm      - Current search string
+    * categoryoptions - Filter options [{value, label, selected}]
+    * sortoptions     - Sort options [{value, label, selected}]
+    * filterurl       - Form action URL
+    * pagination      - Pagination HTML (trusted)
+    * catalogurl      - URL to browse more courses
+
+
+    @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+}}
+<div id="mc-learner-courses-container" data-region="learner-courses">
+
+    {{! Filter toolbar }}
+    <div class="mc-toolbar mb-4">
+        <form method="get" action="{{filterurl}}" class="row g-2 align-items-end">
+            <div class="col-sm-4 col-md-3">
+                <label for="mc-lc-search" class="mc-filter-label">{{#str}}search, local_moderncommerce{{/str}}</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="bi bi-search" aria-hidden="true"></i>
+                    </span>
+                    <input type="text"
+                           class="form-control form-control-sm border-start-0"
+                           id="mc-lc-search"
+                           name="search"
+                           value="{{searchterm}}"
+                           placeholder="{{#str}}searchcourses, local_moderncommerce{{/str}}">
+                </div>
+            </div>
+            {{#categoryoptions}}
+            <div class="col-sm-auto">
+                <label for="mc-lc-cat" class="mc-filter-label">{{#str}}category, local_moderncommerce{{/str}}</label>
+                <select class="form-select form-select-sm" id="mc-lc-cat" name="category">
+                    {{#categoryoptions}}
+                    <option value="{{value}}"{{#selected}} selected{{/selected}}>{{label}}</option>
+                    {{/categoryoptions}}
+                </select>
+            </div>
+            {{/categoryoptions}}
+            <div class="col-sm-auto">
+                <label for="mc-lc-sort" class="mc-filter-label">{{#str}}sortby, local_moderncommerce{{/str}}</label>
+                <select class="form-select form-select-sm" id="mc-lc-sort" name="sort">
+                    {{#sortoptions}}
+                    <option value="{{value}}"{{#selected}} selected{{/selected}}>{{label}}</option>
+                    {{/sortoptions}}
+                </select>
+            </div>
+            <div class="col-sm-auto">
+                <button type="submit" class="mc-button btn-sm btn-mc-secondary" data-mc-button="secondary" data-mc-button-size="sm">
+                    <i class="bi bi-funnel me-1" aria-hidden="true"></i>
+                    {{#str}}filter, local_moderncommerce{{/str}}
+                </button>
+            </div>
+        </form>
+    </div>
+
+    {{! Course list }}
+    {{#hascourses}}
+    <div class="d-flex flex-column gap-2">
+        {{#courses}}
+        <a href="{{courseurl}}" class="mc-learner-course-card">
+            {{#hasimage}}
+            <img src="{{imageurl}}" alt="" class="mc-learner-course-card__thumb" width="72" height="54" loading="lazy">
+            {{/hasimage}}
+            {{^hasimage}}
+            <div class="mc-learner-course-card__thumb" aria-hidden="true"></div>
+            {{/hasimage}}
+            <div class="mc-learner-course-card__body">
+                <div class="mc-learner-course-card__title">{{name}}</div>
+                <div class="mc-learner-course-card__meta">
+                    <span class="mc-badge mc-badge--{{statusclass}}">{{status}}</span>
+                    {{#enrolleddate}}<span class="ms-2">{{#str}}purchased, local_moderncommerce{{/str}} {{enrolleddate}}</span>{{/enrolleddate}}
+                </div>
+                {{#progress}}
+                <div class="mc-progress-bar-wrap">
+                    <div class="mc-progress-bar-fill {{#iscompleted}}mc-progress-bar-fill--complete mc-progress-bar-fill--complete{{/iscompleted}}"
+                         role="progressbar"
+                         aria-valuenow="{{progress}}"
+                         aria-valuemin="0"
+                         aria-valuemax="100"
+                         aria-label="{{progresslabel}}"></div>
+                </div>
+                {{/progress}}
+            </div>
+            <div class="flex-shrink-0 text-end">
+                <span class="mc-button btn-sm mc-btn-soft">
+                    {{#str}}continue, local_moderncommerce{{/str}}
+                    <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
+                </span>
+            </div>
+        </a>
+        {{/courses}}
+    </div>
+    {{#pagination}}{{{pagination}}}{{/pagination}}
+    {{/hascourses}}
+
+    {{^hascourses}}
+    <div class="mc-empty">
+        <span class="mc-empty__icon"><i class="bi bi-play-circle" aria-hidden="true"></i></span>
+        <p class="mc-empty__title">{{#str}}nocoursesenrolled, local_moderncommerce{{/str}}</p>
+        <p class="mc-empty__desc">{{#str}}browsecoursestoenroll, local_moderncommerce{{/str}}</p>
+        <a href="{{catalogurl}}" class="mc-button btn-mc-primary" data-mc-button="primary">{{#str}}browsecourses, local_moderncommerce{{/str}}</a>
+    </div>
+    {{/hascourses}}
+
+</div>

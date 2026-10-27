@@ -1,0 +1,42 @@
+# Moodle-specific files
+config.php
+moodledata/
+*_dataroot/
+internaldocs/
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependencies
+node_modules/
+# vendor/ est versionné : l'image Docker est construite depuis git (SDK PayPal)
+
+# Release packages
+releases/
+site/
+videos/
+
+# Temporary files
+*.tmp
+*.bak
+*.cache
+.phpunit.result.cache
+
+# Environment files
+.env
+.env.local

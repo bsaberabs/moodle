@@ -1,0 +1,1543 @@
+{{!
+    This file is part of Moodle and is licensed under the
+    GNU General Public License, version 3 or later.
+
+    You may redistribute and modify it under the terms of the GPL.
+    See the plugin root LICENSE file for complete terms.
+}}
+{{!
+    @template local_moderncommerce/admin/components
+
+    Component testing ground for Modern Commerce UI adoption.
+
+
+    @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+}}
+<div class="mc-component-upgrades{{#usecomponenttypography}} mc-component-upgrades--typography{{/usecomponenttypography}}">
+    <section class="mc-stat-strip" aria-labelledby="mc-stat-strip-title">
+        <h5 id="mc-stat-strip-title" class="sr-only">Metric tile component</h5>
+        <article class="mc-stat-tile mc-stat-tile--primary">
+            <i class="bi bi-database mc-stat-tile__icon" aria-hidden="true"></i>
+            <div class="mc-stat-tile__body">
+                <span class="mc-stat-tile__label">Earnings</span>
+                <strong class="mc-stat-tile__value">6659</strong>
+            </div>
+            <i class="bi bi-database-fill mc-stat-tile__watermark" aria-hidden="true"></i>
+        </article>
+        <article class="mc-stat-tile mc-stat-tile--muted">
+            <i class="bi bi-bag mc-stat-tile__icon" aria-hidden="true"></i>
+            <div class="mc-stat-tile__body">
+                <span class="mc-stat-tile__label">Products</span>
+                <strong class="mc-stat-tile__value">9856</strong>
+            </div>
+            <i class="bi bi-bag-fill mc-stat-tile__watermark" aria-hidden="true"></i>
+        </article>
+        <article class="mc-stat-tile mc-stat-tile--primary">
+            <i class="bi bi-chat mc-stat-tile__icon" aria-hidden="true"></i>
+            <div class="mc-stat-tile__body">
+                <span class="mc-stat-tile__label">Messages</span>
+                <strong class="mc-stat-tile__value">893</strong>
+            </div>
+            <i class="bi bi-chat mc-stat-tile__watermark" aria-hidden="true"></i>
+        </article>
+        <article class="mc-stat-tile mc-stat-tile--primary">
+            <i class="bi bi-person-plus mc-stat-tile__icon" aria-hidden="true"></i>
+            <div class="mc-stat-tile__body">
+                <span class="mc-stat-tile__label">New Users</span>
+                <strong class="mc-stat-tile__value">4531</strong>
+            </div>
+            <i class="bi bi-person-plus-fill mc-stat-tile__watermark" aria-hidden="true"></i>
+        </article>
+    </section>
+
+    <section class="mc-button-system mc-typography-component" aria-labelledby="mc-toast-system-title">
+        <div class="mc-typography-hero">
+            <span class="mc-typography-eyebrow">Component 00</span>
+            <h2 id="mc-toast-system-title" class="mc-typography-display">Notifications</h2>
+            <p class="mc-typography-lead">Modern Commerce toast notifications use the shared toast component and the admin-configured screen position.</p>
+        </div>
+
+        <div class="mc-button-system__grid">
+            <section class="mc-typography-card">
+                <div class="mc-typography-card__header">
+                    <h5>Toast Preview</h5>
+                    <span>Static component markup</span>
+                </div>
+                <div class="mc-typography-card__body">
+                    {{#toastpreview}}
+                        {{> local_moderncommerce/components/toast }}
+                    {{/toastpreview}}
+                </div>
+            </section>
+
+            <section class="mc-typography-card">
+                <div class="mc-typography-card__header">
+                    <h5>Live Trigger</h5>
+                    <span>Runtime floating toast</span>
+                </div>
+                <div class="mc-typography-card__body">
+                    <div class="mc-button-system__row">
+                        <button type="button" class="mc-button" data-mc-button="primary" id="mc-components-toast-trigger"
+                                aria-describedby="mc-components-toast-status">
+                            <i class="bi bi-bell" aria-hidden="true"></i>
+                            <span>Show toast</span>
+                        </button>
+                        <span class="mc-type-caption" id="mc-components-toast-status" aria-live="polite"></span>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </section>
+
+    <section class="mc-button-system mc-typography-component" aria-labelledby="mc-button-system-title">
+        <div class="mc-typography-hero">
+            <span class="mc-typography-eyebrow">Component 01</span>
+            <h2 id="mc-button-system-title" class="mc-typography-display">Buttons</h2>
+            <p class="mc-typography-lead">Modern Commerce buttons use the <code>mc-button</code> primitive, design-system tokens, and a <code>data-mc-button</code> variant attribute.</p>
+        </div>
+
+        <div class="mc-button-system__panel">
+            <div class="mc-button-system__toolbar" aria-label="Button variants">
+                <button type="button" class="mc-button mc-button--primary" data-mc-button="primary">Primary</button>
+                <button type="button" class="mc-button mc-button--secondary" data-mc-button="secondary">Secondary</button>
+                <button type="button" class="mc-button mc-button--success" data-mc-button="success">Success</button>
+                <button type="button" class="mc-button mc-button--danger" data-mc-button="danger">Danger</button>
+                <button type="button" class="mc-button mc-button--warning" data-mc-button="warning">Warning</button>
+                <button type="button" class="mc-button mc-button--info" data-mc-button="info">Info</button>
+                <button type="button" class="mc-button mc-button--light" data-mc-button="light">Light</button>
+                <button type="button" class="mc-button mc-button--dark" data-mc-button="dark">Dark</button>
+            </div>
+        </div>
+
+        <div class="mc-button-system__grid">
+            <section class="mc-typography-card">
+                <div class="mc-typography-card__header">
+                    <h5>States</h5>
+                    <span>Normal, hover, active, disabled, loading</span>
+                </div>
+                <div class="mc-typography-card__body">
+                    <div class="mc-button-system__row">
+                        <button type="button" class="mc-button" data-mc-button="primary">Normal</button>
+                        <button type="button" class="mc-button" data-mc-button="primary" data-mc-button-state="hover">Hover</button>
+                        <button type="button" class="mc-button is-active" data-mc-button="primary" aria-pressed="true">Active</button>
+                        <button type="button" class="mc-button" data-mc-button="primary" disabled>Disabled</button>
+                        <button type="button" class="mc-button" data-mc-button="primary" data-mc-button-state="loading" aria-busy="true">Saving...</button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mc-typography-card">
+                <div class="mc-typography-card__header">
+                    <h5>Sizes</h5>
+                    <span>Small, default, large, icon</span>
+                </div>
+                <div class="mc-typography-card__body">
+                    <div class="mc-button-system__row">
+                        <button type="button" class="mc-button" data-mc-button="secondary" data-mc-button-size="sm">Small</button>
+                        <button type="button" class="mc-button" data-mc-button="secondary">Default</button>
+                        <button type="button" class="mc-button" data-mc-button="secondary" data-mc-button-size="lg">Large</button>
+                        <button type="button" class="mc-button" data-mc-button="secondary" data-mc-button-size="icon" aria-label="Settings">
+                            <i class="bi bi-gear" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mc-typography-card">
+                <div class="mc-typography-card__header">
+                    <h5>Links</h5>
+                    <span>Anchors can use the same primitive</span>
+                </div>
+                <div class="mc-typography-card__body">
+                    <div class="mc-button-system__row">
+                        <a href="#" class="mc-button" data-mc-button="primary">View course</a>
+                        <a href="#" class="mc-button" data-mc-button="soft">Soft link</a>
+                        <a href="#" class="mc-button" data-mc-button="ghost">Ghost link</a>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </section>
+
+    <section class="mc-component-section mc-typography-component" aria-labelledby="mc-feedback-system-title">
+        <div class="mc-typography-hero">
+            <span class="mc-typography-eyebrow">Component 02</span>
+            <h2 id="mc-feedback-system-title" class="mc-typography-display">Status and Feedback</h2>
+            <p class="mc-typography-lead">Inline feedback, semantic badges, empty states, loading, prices, and progress indicators share the same status palette and tokenized spacing.</p>
+        </div>
+
+        <div class="mc-typography-grid mc-typography-grid--three">
+            <section class="mc-typography-card">
+                <div class="mc-typography-card__header">
+                    <h5>Alerts</h5>
+                    <span>Persistent in-page feedback</span>
+                </div>
+                <div class="mc-typography-card__body">
+                    <div class="mc-component-demo-stack">
+                        {{#alertpreviews}}
+                            {{> local_moderncommerce/components/alert }}
+                        {{/alertpreviews}}
+                    </div>
+                </div>
+            </section>
+
+            <section class="mc-typography-card">
+                <div class="mc-typography-card__header">
+                    <h5>Badge System</h5>
+                    <span>Brand, status, and tint levels</span>
+                </div>
+                <div class="mc-typography-card__body">
+                    <div class="mc-component-demo-stack">
+                        <div class="mc-component-badge-row" aria-label="Brand badge variants">
+                            {{#brandbadges}}
+                                {{> local_moderncommerce/components/badge }}
+                            {{/brandbadges}}
+                        </div>
+                        <div class="mc-component-badge-row" aria-label="Status badge variants">
+                            {{#statusbadges}}
+                                {{> local_moderncommerce/components/badge }}
+                            {{/statusbadges}}
+                        </div>
+                        <div class="mc-component-badge-row" aria-label="Badge tint levels">
+                            {{#tintbadges}}
+                                {{> local_moderncommerce/components/badge }}
+                            {{/tintbadges}}
+                        </div>
+                        <div class="mc-component-progress-group">
+                            <div class="mc-component-progress-row">
+                                <span>Course completion</span>
+                                <strong>68%</strong>
+                            </div>
+                            <div class="mc-progress-bar-wrap" role="progressbar" aria-label="Course completion" aria-valuenow="68" aria-valuemin="0" aria-valuemax="100">
+                                <div class="mc-progress-bar-fill mc-component-progress-fill--68"></div>
+                            </div>
+                        </div>
+                        <div class="mc-component-price-row" aria-label="Price display variants">
+                            {{#pricepreviews}}
+                                {{> local_moderncommerce/components/price_display }}
+                            {{/pricepreviews}}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mc-typography-card">
+                <div class="mc-typography-card__header">
+                    <h5>Empty and Loading</h5>
+                    <span>Quiet states for async admin screens</span>
+                </div>
+                <div class="mc-typography-card__body">
+                    <div class="mc-component-demo-stack">
+                        {{#emptystate}}
+                            {{> local_moderncommerce/components/empty_state }}
+                        {{/emptystate}}
+                        {{#loadingpreview}}
+                            {{> local_moderncommerce/components/loading_spinner }}
+                        {{/loadingpreview}}
+                    </div>
+                </div>
+            </section>
+        </div>
+    </section>
+
+    <section class="mc-component-section mc-typography-component" aria-labelledby="mc-form-system-title">
+        <div class="mc-typography-hero">
+            <span class="mc-typography-eyebrow">Component 03</span>
+            <h2 id="mc-form-system-title" class="mc-typography-display">Forms and Selection</h2>
+            <p class="mc-typography-lead">Admin form controls keep visible labels, compact field spacing, and familiar controls for binary and grouped choices.</p>
+        </div>
+
+        <div class="mc-typography-grid">
+            <section class="mc-typography-card">
+                <div class="mc-typography-card__header">
+                    <h5>Field Set</h5>
+                    <span>Inputs, selects, text areas, and helper text</span>
+                </div>
+                <div class="mc-typography-card__body">
+                    <form class="mc-component-form" action="#" method="get" aria-label="Course product form demo">
+                        <div class="mc-component-field-grid">
+                            <label class="mc-component-field" for="mc-component-course-name">
+                                <span class="mc-field-label">Course title</span>
+                                <input class="mc-form-control" id="mc-component-course-name" type="text" value="Advanced Sales Strategy">
+                            </label>
+                            <label class="mc-component-field" for="mc-component-course-type">
+                                <span class="mc-field-label">Product type</span>
+                                <select class="mc-select" id="mc-component-course-type">
+                                    <option>Single course</option>
+                                    <option>Bundle</option>
+                                    <option>Subscription plan</option>
+                                </select>
+                            </label>
+                            <label class="mc-component-field" for="mc-component-course-price">
+                                <span class="mc-field-label">Base price</span>
+                                <input class="mc-form-control" id="mc-component-course-price" type="text" value="$129.00" inputmode="decimal">
+                                <span class="mc-field-help">Use the configured commerce currency symbol.</span>
+                            </label>
+                            <label class="mc-component-field" for="mc-component-course-status">
+                                <span class="mc-field-label">Status</span>
+                                <select class="mc-select" id="mc-component-course-status">
+                                    <option>Published</option>
+                                    <option>Draft</option>
+                                    <option>Archived</option>
+                                </select>
+                            </label>
+                            <label class="mc-component-field mc-component-field--wide" for="mc-component-course-notes">
+                                <span class="mc-field-label">Admin note</span>
+                                <textarea class="mc-textarea" id="mc-component-course-notes" rows="3">Pricing change approved for the June promotion.</textarea>
+                            </label>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <section class="mc-typography-card">
+                <div class="mc-typography-card__header">
+                    <h5>Choices</h5>
+                    <span>Checkboxes, radio buttons, and switches</span>
+                </div>
+                <div class="mc-typography-card__body">
+                    <div class="mc-component-choice-stack">
+                        <label class="mc-switch">
+                            <input type="checkbox" checked>
+                            <span class="mc-switch__track" aria-hidden="true"></span>
+                            <span class="mc-switch__thumb" aria-hidden="true"></span>
+                            <span class="mc-switch__label">Visible in catalog</span>
+                        </label>
+                        <label class="mc-checkbox">
+                            <input type="checkbox" checked>
+                            <span>Send purchase confirmation email</span>
+                        </label>
+                        <label class="mc-checkbox">
+                            <input type="checkbox">
+                            <span>Require manual enrolment approval</span>
+                        </label>
+                        <div class="mc-component-radio-group" role="radiogroup" aria-label="Checkout recovery timing">
+                            <label class="mc-radio">
+                                <input type="radio" name="mc-component-recovery" checked>
+                                <span>After 1 hour</span>
+                            </label>
+                            <label class="mc-radio">
+                                <input type="radio" name="mc-component-recovery">
+                                <span>After 24 hours</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </section>
+
+    <section class="mc-component-section mc-typography-component" aria-labelledby="mc-overlay-system-title">
+        <div class="mc-typography-hero">
+            <span class="mc-typography-eyebrow">Component 04</span>
+            <h2 id="mc-overlay-system-title" class="mc-typography-display">Overlays and Actions</h2>
+            <p class="mc-typography-lead">Dialogs and drawers reserve focused workflows for confirmation, edits, and setup without adding page-specific overlay styles.</p>
+        </div>
+
+        <div class="mc-typography-grid">
+            <section class="mc-typography-card">
+                <div class="mc-typography-card__header">
+                    <h5>Confirmation Dialog</h5>
+                    <span>Live modal using the shared modal shell</span>
+                </div>
+                <div class="mc-typography-card__body">
+                    <div class="mc-component-demo-stack">
+                        <button type="button" class="mc-button" data-mc-button="danger" id="mc-components-modal-trigger"
+                                aria-haspopup="dialog" aria-controls="mc-components-modal">
+                            <i class="bi bi-trash" aria-hidden="true"></i>
+                            <span>Open delete dialog</span>
+                        </button>
+                        <div class="mc-component-modal-preview" aria-hidden="true">
+                            <div class="mc-component-modal-preview__header"></div>
+                            <div class="mc-component-modal-preview__body">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                            <div class="mc-component-modal-preview__footer"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mc-typography-card">
+                <div class="mc-typography-card__header">
+                    <h5>Drawer Anatomy</h5>
+                    <span>Side panel structure used by admin editors</span>
+                </div>
+                <div class="mc-typography-card__body">
+                    <div class="mc-component-demo-stack">
+                        <button type="button" class="mc-button" data-mc-button="primary" id="mc-components-drawer-trigger"
+                                aria-haspopup="dialog" aria-controls="mc-components-drawer" aria-expanded="false">
+                            <i class="bi bi-layout-sidebar-inset-reverse" aria-hidden="true"></i>
+                            <span>Open drawer</span>
+                        </button>
+                        <div class="mc-component-drawer-preview" aria-hidden="true">
+                            <div class="mc-component-drawer-preview__header">
+                                <span></span>
+                                <i class="bi bi-x-lg"></i>
+                            </div>
+                            <div class="mc-component-drawer-preview__body">
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                                <span></span>
+                            </div>
+                            <div class="mc-component-drawer-preview__footer">
+                                <span></span>
+                                <span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div class="mc-modal-backdrop" id="mc-components-modal" hidden>
+            <section class="mc-modal mc-modal--sm" role="dialog" aria-modal="true" aria-labelledby="mc-components-modal-title">
+                <div class="mc-modal__header">
+                    <h2 class="mc-modal__title" id="mc-components-modal-title">Archive course?</h2>
+                    <button type="button" class="mc-modal__close" data-mc-demo-modal-close aria-label="Close dialog">
+                        <i class="bi bi-x-lg" aria-hidden="true"></i>
+                    </button>
+                </div>
+                <div class="mc-modal__body">
+                    <div class="mc-modal__confirm">
+                        <span class="mc-modal__icon mc-modal__icon--danger" aria-hidden="true">
+                            <i class="bi bi-archive"></i>
+                        </span>
+                        <p class="mc-modal__message">This keeps learner records intact, but removes the course from new purchases.</p>
+                    </div>
+                </div>
+                <div class="mc-modal__footer">
+                    <button type="button" class="mc-button mc-btn-soft" data-mc-button="soft" data-mc-demo-modal-close>Cancel</button>
+                    <button type="button" class="mc-button" data-mc-button="danger" data-mc-demo-modal-close>Archive course</button>
+                </div>
+            </section>
+        </div>
+
+        <div id="mc-components-drawer" hidden>
+            <div class="mc-drawer-backdrop" data-mc-demo-drawer-close aria-hidden="true"></div>
+            <aside class="mc-drawer mc-drawer--open" role="dialog" aria-modal="true" aria-labelledby="mc-components-drawer-title">
+                <div class="mc-drawer__header">
+                    <div>
+                        <h2 class="mc-drawer__title" id="mc-components-drawer-title">Edit subscription plan</h2>
+                        <div class="mc-drawer__subtitle">Shared <code>McDrawer</code> overlay shell</div>
+                    </div>
+                    <button type="button" class="mc-button mc-drawer__close" data-mc-demo-drawer-close aria-label="Close drawer">
+                        <i class="bi bi-x-lg" aria-hidden="true"></i>
+                    </button>
+                </div>
+                <div class="mc-drawer__body">
+                    <form class="mc-component-form" action="#" method="get" aria-label="Drawer form demo">
+                        <div class="mc-form-section">
+                            <div class="mc-form-section__header">
+                                <h4 class="mc-form-section__title">Plan details</h4>
+                            </div>
+                            <div class="mc-form-section__body">
+                                <div class="mc-product-form__grid">
+                                    <label class="mc-product-form__wide" for="mc-component-drawer-plan-name">
+                                        <span>Plan name</span>
+                                        <input class="mc-form-control" id="mc-component-drawer-plan-name" type="text" value="Professional membership">
+                                    </label>
+                                    <label for="mc-component-drawer-cycle">
+                                        <span>Billing cycle</span>
+                                        <select class="mc-select" id="mc-component-drawer-cycle">
+                                            <option>Monthly</option>
+                                            <option selected>Yearly</option>
+                                        </select>
+                                    </label>
+                                    <label for="mc-component-drawer-price">
+                                        <span>Price</span>
+                                        <input class="mc-form-control" id="mc-component-drawer-price" type="number" min="0" step="0.01" value="199.00">
+                                    </label>
+                                    <label class="mc-product-form__wide" for="mc-component-drawer-description">
+                                        <span>Description</span>
+                                        <textarea class="mc-textarea" id="mc-component-drawer-description" rows="3">Annual access to all current business courses and certificates.</textarea>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="mc-drawer__footer">
+                    <button type="button" class="mc-button" data-mc-button="primary" data-mc-demo-drawer-close>Save plan</button>
+                    <button type="button" class="mc-button" data-mc-button="secondary" data-mc-demo-drawer-close>Cancel</button>
+                </div>
+            </aside>
+        </div>
+    </section>
+
+    <section class="mc-component-section mc-typography-component" aria-labelledby="mc-table-system-title">
+        <div class="mc-typography-hero">
+            <span class="mc-typography-eyebrow">Component 05</span>
+            <h2 id="mc-table-system-title" class="mc-typography-display">Data Tables</h2>
+            <p class="mc-typography-lead">Admin tables keep filters in the header, scrollable table frames in the body, and result summaries with pagination in the footer.</p>
+        </div>
+
+        <section class="mc-card mc-card--table-design" aria-labelledby="mc-table-filter-title">
+            <h3 id="mc-table-filter-title" class="sr-only">Table filter controls</h3>
+            <div class="mc-card-header mc-table-design-controls">
+                <div class="mc-table-design-controls__filters">
+                    <div class="mc-toolbar mc-product-toolbar mc-table-design-toolbar mc-table-filter" role="search" aria-label="Table filter controls">
+                        <div class="mc-product-toolbar__search">
+                            <label class="mc-filter-label" for="mc-component-table-filter-search">Search</label>
+                            <input class="mc-form-control" id="mc-component-table-filter-search" type="search" placeholder="Search Bundles" value="">
+                        </div>
+                        <div class="mc-product-toolbar__field">
+                            <label class="mc-filter-label" for="mc-component-table-filter-type">Type</label>
+                            <select class="mc-select" id="mc-component-table-filter-type">
+                                <option selected>All Types</option>
+                                <option>Course</option>
+                                <option>Bundle</option>
+                                <option>Program</option>
+                            </select>
+                        </div>
+                        <div class="mc-product-toolbar__field">
+                            <label class="mc-filter-label" for="mc-component-table-filter-status">Status</label>
+                            <select class="mc-select" id="mc-component-table-filter-status">
+                                <option selected>All Statuses</option>
+                                <option>Published</option>
+                                <option>Draft</option>
+                                <option>Archived</option>
+                            </select>
+                        </div>
+                        <div class="mc-product-toolbar__field">
+                            <label class="mc-filter-label" for="mc-component-table-filter-date-range">Date Range</label>
+                            <select class="mc-select" id="mc-component-table-filter-date-range">
+                                <option selected>All Dates</option>
+                                <option>Today</option>
+                                <option>Last 7 Days</option>
+                                <option>Last 30 Days</option>
+                                <option>This Month</option>
+                            </select>
+                        </div>
+                        <div class="mc-product-toolbar__field mc-product-toolbar__field--small mc-table-design-page-size">
+                            <label class="mc-filter-label" for="mc-component-table-filter-perpage">Per Page</label>
+                            <select class="mc-select" id="mc-component-table-filter-perpage">
+                                <option selected>10</option>
+                                <option>25</option>
+                                <option>50</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="mc-card mc-card--table-design mc-product-listing-filter-card" aria-label="Product listing filter controls">
+            <div class="mc-card-header mc-table-design-controls mc-product-listing-header">
+                <div class="mc-toolbar mc-product-toolbar mc-table-design-toolbar mc-table-filter mc-table-filter--product-listing" role="search" aria-label="Product listing filter controls">
+                    <div class="mc-product-toolbar__search">
+                        <label class="mc-filter-label" for="mc-component-product-listing-search">Search</label>
+                        <div class="mc-table-filter-search">
+                            <i class="bi bi-search mc-product-listing-search__icon" aria-hidden="true"></i>
+                            <input id="mc-component-product-listing-search" class="mc-form-control" type="search" placeholder="Search product name." value="">
+                        </div>
+                    </div>
+                    <label class="mc-product-toolbar__field">
+                        <span class="mc-filter-label">Category</span>
+                        <select class="mc-select" aria-label="Category">
+                            <option selected>All Categories</option>
+                            <option>Audio</option>
+                            <option>Fitness</option>
+                            <option>Furniture</option>
+                        </select>
+                    </label>
+                    <label class="mc-product-toolbar__field">
+                        <span class="mc-filter-label">Status</span>
+                        <select class="mc-select" aria-label="Status">
+                            <option selected>All Statuses</option>
+                            <option>Published</option>
+                            <option>Pending</option>
+                            <option>Out of stock</option>
+                        </select>
+                    </label>
+                    <label class="mc-product-toolbar__field">
+                        <span class="mc-filter-label">Price Range</span>
+                        <select class="mc-select" aria-label="Price range">
+                            <option selected>All Prices</option>
+                            <option>$0 - $50</option>
+                            <option>$50 - $150</option>
+                            <option>$150+</option>
+                        </select>
+                    </label>
+                    <label class="mc-product-toolbar__field">
+                        <span class="mc-filter-label">Date Range</span>
+                        <select class="mc-select" aria-label="Date range">
+                            <option selected>All Dates</option>
+                            <option>Today</option>
+                            <option>Last 7 Days</option>
+                            <option>Last 30 Days</option>
+                            <option>This Month</option>
+                        </select>
+                    </label>
+                    <label class="mc-product-toolbar__field mc-product-toolbar__field--small mc-table-design-page-size">
+                        <span class="mc-filter-label">Per Page</span>
+                        <select class="mc-select" aria-label="Rows per page">
+                            <option selected>10</option>
+                            <option>25</option>
+                            <option>50</option>
+                        </select>
+                    </label>
+                    <div class="mc-product-listing-actions mc-product-listing-view-actions mc-table-filter__actions">
+                        <button type="button" class="mc-button mc-product-listing-view" data-mc-button="light" data-mc-button-size="icon" aria-label="Grid view" title="Grid view">
+                            <i class="bi bi-grid" aria-hidden="true"></i>
+                        </button>
+                        <button type="button" class="mc-button mc-product-listing-view mc-product-listing-view--active" data-mc-button="primary" data-mc-button-size="icon" aria-label="List view" title="List view">
+                            <i class="bi bi-list-task" aria-hidden="true"></i>
+                        </button>
+                        <button type="button" class="mc-button mc-product-listing-add" data-mc-button="primary">
+                            <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                            <span>Add Product</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="mc-card mc-card--table-design mc-product-listing-card mc-datatable-card" aria-labelledby="mc-product-listing-card-title">
+        <div class="mc-card-header mc-product-listing-card__header">
+            <h3 id="mc-product-listing-card-title" class="mc-card-title mb-0">Product listing</h3>
+            <button type="button" class="mc-button mc-product-listing-add" data-mc-button="primary">
+                <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                <span>Add Product</span>
+            </button>
+        </div>
+
+        <div class="mc-card-body mc-product-listing-body">
+            <div class="mc-toolbar mc-product-toolbar mc-table-design-toolbar mc-table-filter mc-table-filter--product-listing mc-table-filter--datatable" role="search" aria-label="Product table controls">
+                <div class="mc-product-toolbar__search">
+                    <label class="mc-filter-label" for="mc-product-listing-search">Search</label>
+                    <div class="mc-table-filter-search">
+                        <i class="bi bi-search mc-product-listing-search__icon" aria-hidden="true"></i>
+                        <input id="mc-product-listing-search" class="mc-form-control" type="search" placeholder="Search product name." value="">
+                    </div>
+                </div>
+                <label class="mc-product-toolbar__field">
+                    <span class="mc-filter-label">Category</span>
+                    <select class="mc-select" aria-label="Category">
+                        <option selected>All Categories</option>
+                        <option>Audio</option>
+                        <option>Fitness</option>
+                        <option>Furniture</option>
+                    </select>
+                </label>
+                <label class="mc-product-toolbar__field">
+                    <span class="mc-filter-label">Status</span>
+                    <select class="mc-select" aria-label="Status">
+                        <option selected>All Statuses</option>
+                        <option>Published</option>
+                        <option>Pending</option>
+                        <option>Out of stock</option>
+                    </select>
+                </label>
+                <label class="mc-product-toolbar__field">
+                    <span class="mc-filter-label">Price Range</span>
+                    <select class="mc-select" aria-label="Price range">
+                        <option selected>All Prices</option>
+                        <option>$0 - $50</option>
+                        <option>$50 - $150</option>
+                        <option>$150+</option>
+                    </select>
+                </label>
+                <label class="mc-product-toolbar__field">
+                    <span class="mc-filter-label">Date Range</span>
+                    <select class="mc-select" aria-label="Date range">
+                        <option selected>All Dates</option>
+                        <option>Today</option>
+                        <option>Last 7 Days</option>
+                        <option>Last 30 Days</option>
+                        <option>This Month</option>
+                    </select>
+                </label>
+                <label class="mc-product-toolbar__field mc-product-toolbar__field--small mc-table-design-page-size">
+                    <span class="mc-filter-label">Per Page</span>
+                    <select class="mc-select" aria-label="Rows per page">
+                        <option selected>10</option>
+                        <option>25</option>
+                        <option>50</option>
+                    </select>
+                </label>
+                <div class="mc-product-listing-actions mc-product-listing-view-actions mc-table-filter__actions">
+                    <button type="button" class="mc-button mc-product-listing-view" data-mc-button="light" data-mc-button-size="icon" aria-label="Grid view" title="Grid view">
+                        <i class="bi bi-grid" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" class="mc-button mc-product-listing-view mc-product-listing-view--active" data-mc-button="primary" data-mc-button-size="icon" aria-label="List view" title="List view">
+                        <i class="bi bi-list-task" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </div>
+
+        <div class="mc-table-frame">
+            <div class="mc-table-wrapper mc-product-listing-table-wrap">
+                <table class="table mc-table mc-product-listing-table" aria-labelledby="mc-product-listing-table-title">
+                <caption id="mc-product-listing-table-title" class="sr-only">Product listing design</caption>
+                <thead>
+                    <tr>
+                        <th scope="col" class="mc-product-listing-check">
+                            <input type="checkbox" aria-label="Select all products">
+                        </th>
+                        <th scope="col">Product</th>
+                        <th scope="col">Code</th>
+                        <th scope="col">Category</th>
+                        <th scope="col">Stock</th>
+                        <th scope="col">Price</th>
+                        <th scope="col">Orders</th>
+                        <th scope="col">Rating</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Published</th>
+                        <th scope="col" class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><input type="checkbox" aria-label="Select Wireless Earbuds"></td>
+                        <td>
+                            <div class="mc-product-listing-product">
+                                <span class="mc-product-listing-thumb mc-product-listing-thumb--audio" aria-hidden="true"><i class="bi bi-earbuds"></i></span>
+                                <div>
+                                    <a href="#">Wireless Earbuds</a>
+                                    <span>by: My Furniture</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>WB-10245</td>
+                        <td>Electronics</td>
+                        <td>56</td>
+                        <td>$59.99</td>
+                        <td>124</td>
+                        <td>
+                            <span class="mc-product-listing-rating" aria-label="5 stars and 87 reviews">
+                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                                <span>(87)</span>
+                            </span>
+                        </td>
+                        <td><span class="mc-badge mc-badge--success mc-badge--tone-soft"><span class="mc-badge__dot" aria-hidden="true"></span><span class="mc-badge__label">Published</span></span></td>
+                        <td>18 Apr, 2025 <span>12:24 PM</span></td>
+                        <td>
+                            <div class="mc-product-listing-row-actions">
+                                <div class="mc-table-design__action-menu-wrap">
+                                    <button type="button" class="mc-button mc-table-design__action mc-table-design__action--menu" data-mc-button="light" data-mc-button-size="icon" aria-label="Open actions for Wireless Earbuds" aria-haspopup="menu" title="Actions">
+                                        <i class="bi bi-three-dots" aria-hidden="true"></i>
+                                    </button>
+                                    <div class="mc-table-design__action-menu" role="menu" aria-label="Wireless Earbuds actions">
+                                        <button type="button" class="mc-table-design__action-menu-item" role="menuitem"><i class="bi bi-eye" aria-hidden="true"></i><span>View</span></button>
+                                        <button type="button" class="mc-table-design__action-menu-item" role="menuitem"><i class="bi bi-pencil" aria-hidden="true"></i><span>Edit</span></button>
+                                        <button type="button" class="mc-table-design__action-menu-item mc-table-design__action-menu-item--danger" role="menuitem"><i class="bi bi-trash" aria-hidden="true"></i><span>Delete</span></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" aria-label="Select Smart LED Desk Lamp"></td>
+                        <td>
+                            <div class="mc-product-listing-product">
+                                <span class="mc-product-listing-thumb mc-product-listing-thumb--lamp" aria-hidden="true"><i class="bi bi-lamp"></i></span>
+                                <div>
+                                    <a href="#">Smart LED Desk Lamp</a>
+                                    <span>by: BrightLite</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>SL-89012</td>
+                        <td>Home &amp; Office</td>
+                        <td>32</td>
+                        <td>$39.49</td>
+                        <td>78</td>
+                        <td>
+                            <span class="mc-product-listing-rating" aria-label="4 stars and 54 reviews">
+                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i>
+                                <span>(54)</span>
+                            </span>
+                        </td>
+                        <td><span class="mc-badge mc-badge--warning mc-badge--tone-soft"><span class="mc-badge__dot" aria-hidden="true"></span><span class="mc-badge__label">Pending</span></span></td>
+                        <td>22 Apr, 2025 <span>09:45 AM</span></td>
+                        <td>
+                            <div class="mc-product-listing-row-actions">
+                                <div class="mc-table-design__action-menu-wrap">
+                                    <button type="button" class="mc-button mc-table-design__action mc-table-design__action--menu" data-mc-button="light" data-mc-button-size="icon" aria-label="Open actions for Smart LED Desk Lamp" aria-haspopup="menu" title="Actions">
+                                        <i class="bi bi-three-dots" aria-hidden="true"></i>
+                                    </button>
+                                    <div class="mc-table-design__action-menu" role="menu" aria-label="Smart LED Desk Lamp actions">
+                                        <button type="button" class="mc-table-design__action-menu-item" role="menuitem"><i class="bi bi-eye" aria-hidden="true"></i><span>View</span></button>
+                                        <button type="button" class="mc-table-design__action-menu-item" role="menuitem"><i class="bi bi-pencil" aria-hidden="true"></i><span>Edit</span></button>
+                                        <button type="button" class="mc-table-design__action-menu-item mc-table-design__action-menu-item--danger" role="menuitem"><i class="bi bi-trash" aria-hidden="true"></i><span>Delete</span></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" aria-label="Select Men's Running Shoes"></td>
+                        <td>
+                            <div class="mc-product-listing-product">
+                                <span class="mc-product-listing-thumb mc-product-listing-thumb--fashion" aria-hidden="true"><i class="bi bi-bag"></i></span>
+                                <div>
+                                    <a href="#">Men's Running Shoes</a>
+                                    <span>by: ActiveWear Co.</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>RS-20450</td>
+                        <td>Fashion</td>
+                        <td>120</td>
+                        <td>$89.0</td>
+                        <td>231</td>
+                        <td>
+                            <span class="mc-product-listing-rating" aria-label="5 stars and 142 reviews">
+                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                                <span>(142)</span>
+                            </span>
+                        </td>
+                        <td><span class="mc-badge mc-badge--success mc-badge--tone-soft"><span class="mc-badge__dot" aria-hidden="true"></span><span class="mc-badge__label">Published</span></span></td>
+                        <td>24 Apr, 2025 <span>03:10 PM</span></td>
+                        <td>
+                            <div class="mc-product-listing-row-actions">
+                                <div class="mc-table-design__action-menu-wrap">
+                                    <button type="button" class="mc-button mc-table-design__action mc-table-design__action--menu" data-mc-button="light" data-mc-button-size="icon" aria-label="Open actions for Men's Running Shoes" aria-haspopup="menu" title="Actions">
+                                        <i class="bi bi-three-dots" aria-hidden="true"></i>
+                                    </button>
+                                    <div class="mc-table-design__action-menu" role="menu" aria-label="Men's Running Shoes actions">
+                                        <button type="button" class="mc-table-design__action-menu-item" role="menuitem"><i class="bi bi-eye" aria-hidden="true"></i><span>View</span></button>
+                                        <button type="button" class="mc-table-design__action-menu-item" role="menuitem"><i class="bi bi-pencil" aria-hidden="true"></i><span>Edit</span></button>
+                                        <button type="button" class="mc-table-design__action-menu-item mc-table-design__action-menu-item--danger" role="menuitem"><i class="bi bi-trash" aria-hidden="true"></i><span>Delete</span></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" aria-label="Select Fitness Tracker Watch"></td>
+                        <td>
+                            <div class="mc-product-listing-product">
+                                <span class="mc-product-listing-thumb mc-product-listing-thumb--fitness" aria-hidden="true"><i class="bi bi-smartwatch"></i></span>
+                                <div>
+                                    <a href="#">Fitness Tracker Watch</a>
+                                    <span>by: FitPulse</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>FT-67123</td>
+                        <td>Fitness</td>
+                        <td>78</td>
+                        <td>$49.95</td>
+                        <td>198</td>
+                        <td>
+                            <span class="mc-product-listing-rating" aria-label="4 stars and 89 reviews">
+                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i>
+                                <span>(89)</span>
+                            </span>
+                        </td>
+                        <td><span class="mc-badge mc-badge--success mc-badge--tone-soft"><span class="mc-badge__dot" aria-hidden="true"></span><span class="mc-badge__label">Published</span></span></td>
+                        <td>23 Apr, 2025 <span>10:12 AM</span></td>
+                        <td>
+                            <div class="mc-product-listing-row-actions">
+                                <div class="mc-table-design__action-menu-wrap">
+                                    <button type="button" class="mc-button mc-table-design__action mc-table-design__action--menu" data-mc-button="light" data-mc-button-size="icon" aria-label="Open actions for Fitness Tracker Watch" aria-haspopup="menu" title="Actions">
+                                        <i class="bi bi-three-dots" aria-hidden="true"></i>
+                                    </button>
+                                    <div class="mc-table-design__action-menu" role="menu" aria-label="Fitness Tracker Watch actions">
+                                        <button type="button" class="mc-table-design__action-menu-item" role="menuitem"><i class="bi bi-eye" aria-hidden="true"></i><span>View</span></button>
+                                        <button type="button" class="mc-table-design__action-menu-item" role="menuitem"><i class="bi bi-pencil" aria-hidden="true"></i><span>Edit</span></button>
+                                        <button type="button" class="mc-table-design__action-menu-item mc-table-design__action-menu-item--danger" role="menuitem"><i class="bi bi-trash" aria-hidden="true"></i><span>Delete</span></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" aria-label="Select Gaming Mouse RGB"></td>
+                        <td>
+                            <div class="mc-product-listing-product">
+                                <span class="mc-product-listing-thumb mc-product-listing-thumb--gaming" aria-hidden="true"><i class="bi bi-mouse"></i></span>
+                                <div>
+                                    <a href="#">Gaming Mouse RGB</a>
+                                    <span>by: HyperClick</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>GM-72109</td>
+                        <td>Gaming</td>
+                        <td>120</td>
+                        <td>$29.99</td>
+                        <td>243</td>
+                        <td>
+                            <span class="mc-product-listing-rating" aria-label="3 stars and 102 reviews">
+                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i><i class="bi bi-star"></i>
+                                <span>(102)</span>
+                            </span>
+                        </td>
+                        <td><span class="mc-badge mc-badge--success mc-badge--tone-soft"><span class="mc-badge__dot" aria-hidden="true"></span><span class="mc-badge__label">Published</span></span></td>
+                        <td>19 Apr, 2025 <span>05:56 PM</span></td>
+                        <td>
+                            <div class="mc-product-listing-row-actions">
+                                <div class="mc-table-design__action-menu-wrap">
+                                    <button type="button" class="mc-button mc-table-design__action mc-table-design__action--menu" data-mc-button="light" data-mc-button-size="icon" aria-label="Open actions for Gaming Mouse RGB" aria-haspopup="menu" title="Actions">
+                                        <i class="bi bi-three-dots" aria-hidden="true"></i>
+                                    </button>
+                                    <div class="mc-table-design__action-menu" role="menu" aria-label="Gaming Mouse RGB actions">
+                                        <button type="button" class="mc-table-design__action-menu-item" role="menuitem"><i class="bi bi-eye" aria-hidden="true"></i><span>View</span></button>
+                                        <button type="button" class="mc-table-design__action-menu-item" role="menuitem"><i class="bi bi-pencil" aria-hidden="true"></i><span>Edit</span></button>
+                                        <button type="button" class="mc-table-design__action-menu-item mc-table-design__action-menu-item--danger" role="menuitem"><i class="bi bi-trash" aria-hidden="true"></i><span>Delete</span></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" aria-label="Select Modern Lounge Chair"></td>
+                        <td>
+                            <div class="mc-product-listing-product">
+                                <span class="mc-product-listing-thumb mc-product-listing-thumb--furniture" aria-hidden="true"><i class="bi bi-house"></i></span>
+                                <div>
+                                    <a href="#">Modern Lounge Chair</a>
+                                    <span>by: UrbanLiving</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>FC-31220</td>
+                        <td>Furniture</td>
+                        <td>24</td>
+                        <td>$199.0</td>
+                        <td>38</td>
+                        <td>
+                            <span class="mc-product-listing-rating" aria-label="5 stars and 27 reviews">
+                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                                <span>(27)</span>
+                            </span>
+                        </td>
+                        <td><span class="mc-badge mc-badge--danger mc-badge--tone-soft"><span class="mc-badge__dot" aria-hidden="true"></span><span class="mc-badge__label">Out Of Stock</span></span></td>
+                        <td>18 Apr, 2025 <span>11:30 AM</span></td>
+                        <td>
+                            <div class="mc-product-listing-row-actions">
+                                <div class="mc-table-design__action-menu-wrap">
+                                    <button type="button" class="mc-button mc-table-design__action mc-table-design__action--menu" data-mc-button="light" data-mc-button-size="icon" aria-label="Open actions for Modern Lounge Chair" aria-haspopup="menu" title="Actions">
+                                        <i class="bi bi-three-dots" aria-hidden="true"></i>
+                                    </button>
+                                    <div class="mc-table-design__action-menu" role="menu" aria-label="Modern Lounge Chair actions">
+                                        <button type="button" class="mc-table-design__action-menu-item" role="menuitem"><i class="bi bi-eye" aria-hidden="true"></i><span>View</span></button>
+                                        <button type="button" class="mc-table-design__action-menu-item" role="menuitem"><i class="bi bi-pencil" aria-hidden="true"></i><span>Edit</span></button>
+                                        <button type="button" class="mc-table-design__action-menu-item mc-table-design__action-menu-item--danger" role="menuitem"><i class="bi bi-trash" aria-hidden="true"></i><span>Delete</span></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" aria-label="Select Plush Toy Bear"></td>
+                        <td>
+                            <div class="mc-product-listing-product">
+                                <span class="mc-product-listing-thumb mc-product-listing-thumb--toys" aria-hidden="true"><i class="bi bi-gift"></i></span>
+                                <div>
+                                    <a href="#">Plush Toy Bear</a>
+                                    <span>by: Softies</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>TY-00788</td>
+                        <td>Toys</td>
+                        <td>150</td>
+                        <td>$15.99</td>
+                        <td>305</td>
+                        <td>
+                            <span class="mc-product-listing-rating" aria-label="4 stars and 120 reviews">
+                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i>
+                                <span>(120)</span>
+                            </span>
+                        </td>
+                        <td><span class="mc-badge mc-badge--success mc-badge--tone-soft"><span class="mc-badge__dot" aria-hidden="true"></span><span class="mc-badge__label">Published</span></span></td>
+                        <td>17 Apr, 2025 <span>04:21 PM</span></td>
+                        <td>
+                            <div class="mc-product-listing-row-actions">
+                                <div class="mc-table-design__action-menu-wrap">
+                                    <button type="button" class="mc-button mc-table-design__action mc-table-design__action--menu" data-mc-button="light" data-mc-button-size="icon" aria-label="Open actions for Plush Toy Bear" aria-haspopup="menu" title="Actions">
+                                        <i class="bi bi-three-dots" aria-hidden="true"></i>
+                                    </button>
+                                    <div class="mc-table-design__action-menu" role="menu" aria-label="Plush Toy Bear actions">
+                                        <button type="button" class="mc-table-design__action-menu-item" role="menuitem"><i class="bi bi-eye" aria-hidden="true"></i><span>View</span></button>
+                                        <button type="button" class="mc-table-design__action-menu-item" role="menuitem"><i class="bi bi-pencil" aria-hidden="true"></i><span>Edit</span></button>
+                                        <button type="button" class="mc-table-design__action-menu-item mc-table-design__action-menu-item--danger" role="menuitem"><i class="bi bi-trash" aria-hidden="true"></i><span>Delete</span></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" aria-label="Select 55 Ultra HD Smart TV"></td>
+                        <td>
+                            <div class="mc-product-listing-product">
+                                <span class="mc-product-listing-thumb mc-product-listing-thumb--tv" aria-hidden="true"><i class="bi bi-tv"></i></span>
+                                <div>
+                                    <a href="#">55&quot; Ultra HD Smart TV</a>
+                                    <span>by: ViewMaster</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>TV-5588</td>
+                        <td>Electronics</td>
+                        <td>64</td>
+                        <td>$499.0</td>
+                        <td>142</td>
+                        <td>
+                            <span class="mc-product-listing-rating" aria-label="4 stars and 88 reviews">
+                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i>
+                                <span>(88)</span>
+                            </span>
+                        </td>
+                        <td><span class="mc-badge mc-badge--success mc-badge--tone-soft"><span class="mc-badge__dot" aria-hidden="true"></span><span class="mc-badge__label">Published</span></span></td>
+                        <td>25 Apr, 2025 <span>10:10 AM</span></td>
+                        <td>
+                            <div class="mc-product-listing-row-actions">
+                                <div class="mc-table-design__action-menu-wrap">
+                                    <button type="button" class="mc-button mc-table-design__action mc-table-design__action--menu" data-mc-button="light" data-mc-button-size="icon" aria-label="Open actions for 55&quot; Ultra HD Smart TV" aria-haspopup="menu" title="Actions">
+                                        <i class="bi bi-three-dots" aria-hidden="true"></i>
+                                    </button>
+                                    <div class="mc-table-design__action-menu" role="menu" aria-label="55&quot; Ultra HD Smart TV actions">
+                                        <button type="button" class="mc-table-design__action-menu-item" role="menuitem"><i class="bi bi-eye" aria-hidden="true"></i><span>View</span></button>
+                                        <button type="button" class="mc-table-design__action-menu-item" role="menuitem"><i class="bi bi-pencil" aria-hidden="true"></i><span>Edit</span></button>
+                                        <button type="button" class="mc-table-design__action-menu-item mc-table-design__action-menu-item--danger" role="menuitem"><i class="bi bi-trash" aria-hidden="true"></i><span>Delete</span></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            </div>
+        </div>
+        </div>
+
+        <div class="mc-card-footer mc-table-design-footer mc-product-listing-footer">
+            <div class="mc-product-admin__summary mc-table-design-footer-summary">
+                <span>Showing 1-10 / 10 products</span>
+            </div>
+            <nav class="mc-product-pagination" aria-label="Product listing pagination">
+                <button type="button" class="mc-button mc-pagination-btn" data-mc-button="light" aria-label="Previous page"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+                <button type="button" class="mc-button mc-pagination-btn is-active" data-mc-button="primary" aria-current="page">1</button>
+                <button type="button" class="mc-button mc-pagination-btn" data-mc-button="light">2</button>
+                <button type="button" class="mc-button mc-pagination-btn" data-mc-button="light" aria-label="Next page"><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+            </nav>
+        </div>
+        </section>
+    </section>
+
+    <section class="card mc-card--table-design mc-recent-orders-card" aria-labelledby="mc-plain-design-title">
+        <div class="card-body mc-table-frame mc-recent-orders-card__body">
+            <h5 id="mc-plain-design-title">Plain Design</h5>
+            <table class="table mc-table-design mc-table-design--bordered mc-recent-orders-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Name</th>
+                            <th scope="col">Date</th>
+                            <th scope="col">Quantity</th>
+                            <th scope="col">Value</th>
+                            <th scope="col">Rate</th>
+                            <th scope="col">Status</th>
+                            <th scope="col" class="mc-recent-orders-action-cell">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <div class="mc-recent-orders-media">
+                                    <span class="mc-recent-orders-product-icon mc-recent-orders-product-icon--shoes" aria-hidden="true"><i class="bi bi-bag"></i></span>
+                                    <div class="mc-recent-orders-media-body">
+                                        <a class="mc-recent-orders-link" href="#"><span>Yellow New Nike shoes</span></a>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><p>16 August</p></td>
+                            <td><p>54146</p></td>
+                            <td>
+                                <span class="mc-recent-orders-graph mc-recent-orders-graph--one" role="img" aria-label="Order value trend">
+                                    <span></span><span></span><span></span><span></span><span></span>
+                                </span>
+                            </td>
+                            <td><p>$210326</p></td>
+                            <td><p>Done</p></td>
+                            <td>
+                                <div class="mc-recent-orders-actions" aria-label="Yellow New Nike shoes actions">
+                                    <button type="button" class="mc-button mc-recent-orders-action mc-recent-orders-action--view" data-mc-button="light" data-mc-button-size="icon" aria-label="View order">
+                                        <i class="bi bi-eye" aria-hidden="true"></i>
+                                    </button>
+                                    <button type="button" class="mc-button mc-recent-orders-action mc-recent-orders-action--edit" data-mc-button="light" data-mc-button-size="icon" aria-label="Edit order">
+                                        <i class="bi bi-pencil" aria-hidden="true"></i>
+                                    </button>
+                                    <button type="button" class="mc-button mc-recent-orders-action mc-recent-orders-action--delete" data-mc-button="danger" data-mc-button-size="icon" aria-label="Delete order">
+                                        <i class="bi bi-trash" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="mc-recent-orders-media">
+                                    <span class="mc-recent-orders-product-icon mc-recent-orders-product-icon--headphones" aria-hidden="true"><i class="bi bi-headphones"></i></span>
+                                    <div class="mc-recent-orders-media-body">
+                                        <a class="mc-recent-orders-link" href="#"><span>Sony Brand New Headphone</span></a>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><p>2 October</p></td>
+                            <td><p>32015</p></td>
+                            <td>
+                                <span class="mc-recent-orders-graph mc-recent-orders-graph--two" role="img" aria-label="Order value trend">
+                                    <span></span><span></span><span></span><span></span><span></span>
+                                </span>
+                            </td>
+                            <td><p>$548526</p></td>
+                            <td><p>Done</p></td>
+                            <td>
+                                <div class="mc-recent-orders-actions" aria-label="Sony Brand New Headphone actions">
+                                    <button type="button" class="mc-button mc-recent-orders-action mc-recent-orders-action--view" data-mc-button="light" data-mc-button-size="icon" aria-label="View order">
+                                        <i class="bi bi-eye" aria-hidden="true"></i>
+                                    </button>
+                                    <button type="button" class="mc-button mc-recent-orders-action mc-recent-orders-action--edit" data-mc-button="light" data-mc-button-size="icon" aria-label="Edit order">
+                                        <i class="bi bi-pencil" aria-hidden="true"></i>
+                                    </button>
+                                    <button type="button" class="mc-button mc-recent-orders-action mc-recent-orders-action--delete" data-mc-button="danger" data-mc-button-size="icon" aria-label="Delete order">
+                                        <i class="bi bi-trash" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="mc-recent-orders-media">
+                                    <span class="mc-recent-orders-product-icon mc-recent-orders-product-icon--plant" aria-hidden="true"><i class="bi bi-flower1"></i></span>
+                                    <div class="mc-recent-orders-media-body">
+                                        <a class="mc-recent-orders-link" href="#"><span>Beautiful Golden Tree plant</span></a>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><p>21 March</p></td>
+                            <td><p>12548</p></td>
+                            <td>
+                                <span class="mc-recent-orders-graph mc-recent-orders-graph--three" role="img" aria-label="Order value trend">
+                                    <span></span><span></span><span></span><span></span><span></span>
+                                </span>
+                            </td>
+                            <td><p>$589565</p></td>
+                            <td><p>Done</p></td>
+                            <td>
+                                <div class="mc-recent-orders-actions" aria-label="Beautiful Golden Tree plant actions">
+                                    <button type="button" class="mc-button mc-recent-orders-action mc-recent-orders-action--view" data-mc-button="light" data-mc-button-size="icon" aria-label="View order">
+                                        <i class="bi bi-eye" aria-hidden="true"></i>
+                                    </button>
+                                    <button type="button" class="mc-button mc-recent-orders-action mc-recent-orders-action--edit" data-mc-button="light" data-mc-button-size="icon" aria-label="Edit order">
+                                        <i class="bi bi-pencil" aria-hidden="true"></i>
+                                    </button>
+                                    <button type="button" class="mc-button mc-recent-orders-action mc-recent-orders-action--delete" data-mc-button="danger" data-mc-button-size="icon" aria-label="Delete order">
+                                        <i class="bi bi-trash" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="mc-recent-orders-media">
+                                    <span class="mc-recent-orders-product-icon mc-recent-orders-product-icon--bag" aria-hidden="true"><i class="bi bi-handbag"></i></span>
+                                    <div class="mc-recent-orders-media-body">
+                                        <a class="mc-recent-orders-link" href="#"><span>Marco M Kely Handbeg</span></a>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><p>31 December</p></td>
+                            <td><p>15495</p></td>
+                            <td>
+                                <span class="mc-recent-orders-graph mc-recent-orders-graph--four" role="img" aria-label="Order value trend">
+                                    <span></span><span></span><span></span><span></span><span></span>
+                                </span>
+                            </td>
+                            <td><p>$125424</p></td>
+                            <td><p>Done</p></td>
+                            <td>
+                                <div class="mc-recent-orders-actions" aria-label="Marco M Kely Handbeg actions">
+                                    <button type="button" class="mc-button mc-recent-orders-action mc-recent-orders-action--view" data-mc-button="light" data-mc-button-size="icon" aria-label="View order">
+                                        <i class="bi bi-eye" aria-hidden="true"></i>
+                                    </button>
+                                    <button type="button" class="mc-button mc-recent-orders-action mc-recent-orders-action--edit" data-mc-button="light" data-mc-button-size="icon" aria-label="Edit order">
+                                        <i class="bi bi-pencil" aria-hidden="true"></i>
+                                    </button>
+                                    <button type="button" class="mc-button mc-recent-orders-action mc-recent-orders-action--delete" data-mc-button="danger" data-mc-button-size="icon" aria-label="Delete order">
+                                        <i class="bi bi-trash" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="mc-recent-orders-media">
+                                    <span class="mc-recent-orders-product-icon mc-recent-orders-product-icon--shirt" aria-hidden="true"><i class="bi bi-tag"></i></span>
+                                    <div class="mc-recent-orders-media-body">
+                                        <a class="mc-recent-orders-link" href="#"><span>Being Human Branded T-Shirt</span></a>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><p>26 January</p></td>
+                            <td><p>56625</p></td>
+                            <td>
+                                <span class="mc-recent-orders-graph mc-recent-orders-graph--five" role="img" aria-label="Order value trend">
+                                    <span></span><span></span><span></span><span></span><span></span>
+                                </span>
+                            </td>
+                            <td><p>$112103</p></td>
+                            <td><p>Done</p></td>
+                            <td>
+                                <div class="mc-recent-orders-actions" aria-label="Being Human Branded T-Shirt actions">
+                                    <button type="button" class="mc-button mc-recent-orders-action mc-recent-orders-action--view" data-mc-button="light" data-mc-button-size="icon" aria-label="View order">
+                                        <i class="bi bi-eye" aria-hidden="true"></i>
+                                    </button>
+                                    <button type="button" class="mc-button mc-recent-orders-action mc-recent-orders-action--edit" data-mc-button="light" data-mc-button-size="icon" aria-label="Edit order">
+                                        <i class="bi bi-pencil" aria-hidden="true"></i>
+                                    </button>
+                                    <button type="button" class="mc-button mc-recent-orders-action mc-recent-orders-action--delete" data-mc-button="danger" data-mc-button-size="icon" aria-label="Delete order">
+                                        <i class="bi bi-trash" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="card mc-card--table-design mc-recent-orders-card" aria-labelledby="mc-bordered-design-title">
+        <div class="card-body mc-table-frame mc-recent-orders-card__body">
+            <h5 id="mc-bordered-design-title">Bordered Design</h5>
+            <table class="table mc-table-design mc-table-design--bordered mc-recent-orders-table mc-recent-orders-table--bordered">
+                    <thead>
+                        <tr>
+                            <th scope="col">Name</th>
+                            <th scope="col">Date</th>
+                            <th scope="col">Quantity</th>
+                            <th scope="col">Value</th>
+                            <th scope="col">Rate</th>
+                            <th scope="col">Status</th>
+                            <th scope="col" class="mc-recent-orders-action-cell">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <div class="mc-recent-orders-media">
+                                    <span class="mc-recent-orders-product-icon mc-recent-orders-product-icon--shoes" aria-hidden="true"><i class="bi bi-bag"></i></span>
+                                    <div class="mc-recent-orders-media-body">
+                                        <a class="mc-recent-orders-link" href="#"><span>Yellow New Nike shoes</span></a>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><p>16 August</p></td>
+                            <td><p>54146</p></td>
+                            <td>
+                                <span class="mc-recent-orders-graph mc-recent-orders-graph--one" role="img" aria-label="Order value trend">
+                                    <span></span><span></span><span></span><span></span><span></span>
+                                </span>
+                            </td>
+                            <td><p>$210326</p></td>
+                            <td><p>Done</p></td>
+                            <td>
+                                <div class="mc-recent-orders-actions" aria-label="Yellow New Nike shoes actions">
+                                    <button type="button" class="mc-button mc-recent-orders-action mc-recent-orders-action--view" data-mc-button="light" data-mc-button-size="icon" aria-label="View order">
+                                        <i class="bi bi-eye" aria-hidden="true"></i>
+                                    </button>
+                                    <button type="button" class="mc-button mc-recent-orders-action mc-recent-orders-action--edit" data-mc-button="light" data-mc-button-size="icon" aria-label="Edit order">
+                                        <i class="bi bi-pencil" aria-hidden="true"></i>
+                                    </button>
+                                    <button type="button" class="mc-button mc-recent-orders-action mc-recent-orders-action--delete" data-mc-button="danger" data-mc-button-size="icon" aria-label="Delete order">
+                                        <i class="bi bi-trash" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="mc-recent-orders-media">
+                                    <span class="mc-recent-orders-product-icon mc-recent-orders-product-icon--headphones" aria-hidden="true"><i class="bi bi-headphones"></i></span>
+                                    <div class="mc-recent-orders-media-body">
+                                        <a class="mc-recent-orders-link" href="#"><span>Sony Brand New Headphone</span></a>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><p>2 October</p></td>
+                            <td><p>32015</p></td>
+                            <td>
+                                <span class="mc-recent-orders-graph mc-recent-orders-graph--two" role="img" aria-label="Order value trend">
+                                    <span></span><span></span><span></span><span></span><span></span>
+                                </span>
+                            </td>
+                            <td><p>$548526</p></td>
+                            <td><p>Done</p></td>
+                            <td>
+                                <div class="mc-recent-orders-actions" aria-label="Sony Brand New Headphone actions">
+                                    <button type="button" class="mc-button mc-recent-orders-action mc-recent-orders-action--view" data-mc-button="light" data-mc-button-size="icon" aria-label="View order">
+                                        <i class="bi bi-eye" aria-hidden="true"></i>
+                                    </button>
+                                    <button type="button" class="mc-button mc-recent-orders-action mc-recent-orders-action--edit" data-mc-button="light" data-mc-button-size="icon" aria-label="Edit order">
+                                        <i class="bi bi-pencil" aria-hidden="true"></i>
+                                    </button>
+                                    <button type="button" class="mc-button mc-recent-orders-action mc-recent-orders-action--delete" data-mc-button="danger" data-mc-button-size="icon" aria-label="Delete order">
+                                        <i class="bi bi-trash" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="mc-recent-orders-media">
+                                    <span class="mc-recent-orders-product-icon mc-recent-orders-product-icon--plant" aria-hidden="true"><i class="bi bi-flower1"></i></span>
+                                    <div class="mc-recent-orders-media-body">
+                                        <a class="mc-recent-orders-link" href="#"><span>Beautiful Golden Tree plant</span></a>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><p>21 March</p></td>
+                            <td><p>12548</p></td>
+                            <td>
+                                <span class="mc-recent-orders-graph mc-recent-orders-graph--three" role="img" aria-label="Order value trend">
+                                    <span></span><span></span><span></span><span></span><span></span>
+                                </span>
+                            </td>
+                            <td><p>$589565</p></td>
+                            <td><p>Done</p></td>
+                            <td>
+                                <div class="mc-recent-orders-actions" aria-label="Beautiful Golden Tree plant actions">
+                                    <button type="button" class="mc-button mc-recent-orders-action mc-recent-orders-action--view" data-mc-button="light" data-mc-button-size="icon" aria-label="View order">
+                                        <i class="bi bi-eye" aria-hidden="true"></i>
+                                    </button>
+                                    <button type="button" class="mc-button mc-recent-orders-action mc-recent-orders-action--edit" data-mc-button="light" data-mc-button-size="icon" aria-label="Edit order">
+                                        <i class="bi bi-pencil" aria-hidden="true"></i>
+                                    </button>
+                                    <button type="button" class="mc-button mc-recent-orders-action mc-recent-orders-action--delete" data-mc-button="danger" data-mc-button-size="icon" aria-label="Delete order">
+                                        <i class="bi bi-trash" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="mc-recent-orders-media">
+                                    <span class="mc-recent-orders-product-icon mc-recent-orders-product-icon--bag" aria-hidden="true"><i class="bi bi-handbag"></i></span>
+                                    <div class="mc-recent-orders-media-body">
+                                        <a class="mc-recent-orders-link" href="#"><span>Marco M Kely Handbeg</span></a>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><p>31 December</p></td>
+                            <td><p>15495</p></td>
+                            <td>
+                                <span class="mc-recent-orders-graph mc-recent-orders-graph--four" role="img" aria-label="Order value trend">
+                                    <span></span><span></span><span></span><span></span><span></span>
+                                </span>
+                            </td>
+                            <td><p>$125424</p></td>
+                            <td><p>Done</p></td>
+                            <td>
+                                <div class="mc-recent-orders-actions" aria-label="Marco M Kely Handbeg actions">
+                                    <button type="button" class="mc-button mc-recent-orders-action mc-recent-orders-action--view" data-mc-button="light" data-mc-button-size="icon" aria-label="View order">
+                                        <i class="bi bi-eye" aria-hidden="true"></i>
+                                    </button>
+                                    <button type="button" class="mc-button mc-recent-orders-action mc-recent-orders-action--edit" data-mc-button="light" data-mc-button-size="icon" aria-label="Edit order">
+                                        <i class="bi bi-pencil" aria-hidden="true"></i>
+                                    </button>
+                                    <button type="button" class="mc-button mc-recent-orders-action mc-recent-orders-action--delete" data-mc-button="danger" data-mc-button-size="icon" aria-label="Delete order">
+                                        <i class="bi bi-trash" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="mc-recent-orders-media">
+                                    <span class="mc-recent-orders-product-icon mc-recent-orders-product-icon--shirt" aria-hidden="true"><i class="bi bi-tag"></i></span>
+                                    <div class="mc-recent-orders-media-body">
+                                        <a class="mc-recent-orders-link" href="#"><span>Being Human Branded T-Shirt</span></a>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><p>26 January</p></td>
+                            <td><p>56625</p></td>
+                            <td>
+                                <span class="mc-recent-orders-graph mc-recent-orders-graph--five" role="img" aria-label="Order value trend">
+                                    <span></span><span></span><span></span><span></span><span></span>
+                                </span>
+                            </td>
+                            <td><p>$112103</p></td>
+                            <td><p>Done</p></td>
+                            <td>
+                                <div class="mc-recent-orders-actions" aria-label="Being Human Branded T-Shirt actions">
+                                    <button type="button" class="mc-button mc-recent-orders-action mc-recent-orders-action--view" data-mc-button="light" data-mc-button-size="icon" aria-label="View order">
+                                        <i class="bi bi-eye" aria-hidden="true"></i>
+                                    </button>
+                                    <button type="button" class="mc-button mc-recent-orders-action mc-recent-orders-action--edit" data-mc-button="light" data-mc-button-size="icon" aria-label="Edit order">
+                                        <i class="bi bi-pencil" aria-hidden="true"></i>
+                                    </button>
+                                    <button type="button" class="mc-button mc-recent-orders-action mc-recent-orders-action--delete" data-mc-button="danger" data-mc-button-size="icon" aria-label="Delete order">
+                                        <i class="bi bi-trash" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+            </table>
+        </div>
+    </section>
+
+    <div class="mc-typography-component">
+        <section class="mc-typography-hero" aria-labelledby="mc-typography-system-title">
+            <div>
+                <p class="mc-typography-eyebrow">Component 06</p>
+                <h2 id="mc-typography-system-title" class="mc-typography-display">Confident course commerce that reads clearly at every level.</h2>
+                <p class="mc-typography-lead">Use this scale for storefront widgets, public policy pages, admin consoles, learner pages, checkout, and email-facing commerce content. The font comes from <code>--mc-font</code>, so the active theme remains the source of truth.</p>
+            </div>
+            <div class="mc-typography-token-card">
+                <p class="mc-typography-token">Core rules</p>
+                <dl>
+                    <div>
+                        <dt>One font source</dt>
+                        <dd><code>--mc-font</code> and <code>--mc-font-heading</code></dd>
+                    </div>
+                    <div>
+                        <dt>Corporate weights</dt>
+                        <dd>400 body, 600 labels, 700 headings, 800 display</dd>
+                    </div>
+                    <div>
+                        <dt>Stable sizing</dt>
+                        <dd>Fixed rem tokens with mobile overrides, no viewport-scaled text</dd>
+                    </div>
+                </dl>
+            </div>
+        </section>
+
+        <section class="mc-typography-card" aria-labelledby="mc-type-scale-title">
+            <div class="mc-typography-card__header">
+                <h5 id="mc-type-scale-title">Type Scale</h5>
+                <span>Use these tokens for all Modern Commerce headings and text.</span>
+            </div>
+            <div class="mc-typography-card__body">
+                <div class="mc-type-scale">
+                    <div class="mc-type-scale__row">
+                        <div class="mc-type-scale__meta"><code>--mc-fs-display</code> · 2.75rem · 800</div>
+                        <p class="mc-type-scale__sample mc-type-scale__sample--display">Launch a high-value course programme</p>
+                    </div>
+                    <div class="mc-type-scale__row">
+                        <div class="mc-type-scale__meta"><code>--mc-fs-h1</code> · 2.25rem · 700</div>
+                        <p class="mc-type-scale__sample mc-type-scale__sample--h1">Professional certificates for growing teams</p>
+                    </div>
+                    <div class="mc-type-scale__row">
+                        <div class="mc-type-scale__meta"><code>--mc-fs-h2</code> · 1.75rem · 700</div>
+                        <p class="mc-type-scale__sample mc-type-scale__sample--h2">Featured business courses</p>
+                    </div>
+                    <div class="mc-type-scale__row">
+                        <div class="mc-type-scale__meta"><code>--mc-fs-h3</code> · 1.25rem · 700</div>
+                        <p class="mc-type-scale__sample mc-type-scale__sample--h3">Advanced Sales Strategy</p>
+                    </div>
+                    <div class="mc-type-scale__row">
+                        <div class="mc-type-scale__meta"><code>--mc-fs-h4</code> · 1.125rem · 700</div>
+                        <p class="mc-type-scale__sample mc-type-scale__sample--h4">Course purchase support</p>
+                    </div>
+                    <div class="mc-type-scale__row">
+                        <div class="mc-type-scale__meta"><code>--mc-fs-h5</code> · 1rem · 700</div>
+                        <p class="mc-type-scale__sample mc-type-scale__sample--h5">Order summary</p>
+                    </div>
+                    <div class="mc-type-scale__row">
+                        <div class="mc-type-scale__meta"><code>--mc-fs-h6</code> · .875rem · 700</div>
+                        <p class="mc-type-scale__sample mc-type-scale__sample--h6">Payment method</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="mc-typography-grid">
+            <section class="mc-typography-card">
+                <div class="mc-typography-card__header">
+                    <h5>Paragraphs and Lists</h5>
+                    <span>Commerce copy should be readable, direct, and evenly spaced.</span>
+                </div>
+                <div class="mc-typography-card__body">
+                    <div class="mc-typography-example">
+                        <span class="mc-typography-label">Programme page</span>
+                        <h3>Sell practical skills with clear outcomes</h3>
+                        <p>Promote courses with concise value statements, trusted learner outcomes, and payment information that is easy to scan before checkout.</p>
+                        <ul>
+                            <li>Explain who the course is for.</li>
+                            <li>Show what the learner will be able to do.</li>
+                            <li>Make the next purchase action obvious.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section class="mc-typography-card">
+                <div class="mc-typography-card__header">
+                    <h5>Admin UI Text</h5>
+                    <span>Operational pages stay compact, clear, and table-friendly.</span>
+                </div>
+                <div class="mc-typography-card__body">
+                    <div class="mc-typography-admin-row">
+                        <div>
+                            <strong>Course pricing updated</strong>
+                            <span>Certificate bundle now has an active sale price.</span>
+                        </div>
+                        <span class="mc-typography-pill">Published</span>
+                    </div>
+                    <div class="mc-typography-admin-row">
+                        <div>
+                            <strong>Refund request reviewed</strong>
+                            <span>Buyer received the policy confirmation email.</span>
+                        </div>
+                        <span class="mc-typography-pill">Resolved</span>
+                    </div>
+                    <div class="mc-typography-admin-row">
+                        <div>
+                            <strong>Checkout reminder queued</strong>
+                            <span>Abandoned cart message will send in 24 hours.</span>
+                        </div>
+                        <span class="mc-typography-pill">Scheduled</span>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div class="mc-typography-grid mc-typography-grid--three">
+            <section class="mc-typography-card">
+                <div class="mc-typography-card__header">
+                    <h5>Body Tokens</h5>
+                </div>
+                <div class="mc-typography-card__body">
+                    <p class="mc-type-lead">Lead text introduces a page, programme, or section with one confident sentence.</p>
+                    <p class="mc-type-body">Body text explains the offer, checkout terms, learner expectations, support rules, and policy details.</p>
+                    <p class="mc-type-meta">Meta text supports tables, order rows, course dates, and secondary labels.</p>
+                    <p class="mc-type-caption">Caption text is reserved for helper copy, legal notes, and small UI details.</p>
+                </div>
+            </section>
+
+            <section class="mc-typography-card">
+                <div class="mc-typography-card__header">
+                    <h5>Labels and Controls</h5>
+                </div>
+                <div class="mc-typography-card__body">
+                    <span class="mc-typography-label">Course category</span>
+                    <button type="button" class="mc-button" data-mc-button="primary">Add course to cart</button>
+                    <button type="button" class="mc-button mt-2" data-mc-button="secondary">View learner receipt</button>
+                    <p class="mc-type-caption mt-3">Buttons use UI text size, semibold weight, and the shared line-height token.</p>
+                </div>
+            </section>
+
+            <section class="mc-typography-card">
+                <div class="mc-typography-card__header">
+                    <h5>Quote Pattern</h5>
+                </div>
+                <div class="mc-typography-card__body">
+                    <blockquote class="mc-typography-quote">
+                        <p>Our learners buy courses when the offer is clear, credible, and easy to act on.</p>
+                        <footer>Course Commerce Design Principle</footer>
+                    </blockquote>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>

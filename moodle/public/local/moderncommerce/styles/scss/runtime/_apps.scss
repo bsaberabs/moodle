@@ -1,0 +1,411 @@
+// This file is part of Moodle and is licensed under the
+// GNU General Public License, version 3 or later.
+//
+// You may redistribute and modify it under the terms of the GPL.
+// See the plugin root LICENSE file for complete terms.
+//
+// Modern Commerce styles.
+//
+// @package    local_moderncommerce
+// @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+// @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+// Extracted from ../styles.css during the SCSS source consolidation phase.
+
+/* Buyer key redemption app. */
+.mc-redeem {
+    max-width: 560px;
+    margin: 1.5rem auto;
+}
+
+.mc-redeem__icon {
+    font-size: 3rem;
+    line-height: 1;
+}
+
+.mc-redeem__form {
+    margin-top: 1rem;
+}
+
+.mc-redeem__courses {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: left;
+}
+
+.mc-redeem__course {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--mc-border, #e5e7eb);
+    border-radius: 6px;
+}
+
+.mc-redeem__preview-list {
+    list-style: none;
+    padding: 0;
+    margin: 6px 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.mc-redeem__preview-list li {
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    border: 1px solid var(--mc-border, #e5e7eb);
+    border-radius: 6px;
+}
+
+/* Admin email notifications app. */
+.mc-email-icon {
+    font-size: 1.75rem;
+    line-height: 1;
+}
+
+.mc-code-textarea {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.85rem;
+}
+
+.mc-email-body-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.mc-email-body-editor__tabs.mc-tabs.nav-tabs {
+    margin-bottom: 0;
+}
+
+.mc-email-body-editor__panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    outline: none;
+}
+
+.mc-email-body-editor__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    align-items: center;
+    padding: 0.5rem;
+    border: 1px solid var(--mc-border);
+    border-radius: var(--mc-radius);
+    background: var(--mc-surface-alt);
+}
+
+.mc-email-body-editor__tool {
+    width: 2rem;
+    min-width: 2rem;
+    height: 2rem;
+    padding: 0;
+    justify-content: center;
+    color: var(--mc-text);
+    background: var(--mc-surface);
+    border: 1px solid var(--mc-border);
+}
+
+.mc-email-body-editor__tool:hover,
+.mc-email-body-editor__tool:focus {
+    color: var(--mc-primary);
+    border-color: var(--mc-primary);
+}
+
+.mc-email-body-editor__visual {
+    min-height: 18rem;
+    max-height: 34rem;
+    padding: 0.875rem 1rem;
+    overflow: auto;
+    line-height: 1.6;
+}
+
+.mc-email-body-editor__visual:empty::before {
+    content: attr(aria-label);
+    color: var(--mc-muted);
+}
+
+.mc-email-body-editor__visual :where(p, ul, ol, blockquote) {
+    margin-bottom: 0.75rem;
+}
+
+.mc-email-body-editor__visual :where(p, ul, ol, blockquote):last-child {
+    margin-bottom: 0;
+}
+
+.mc-email-body-editor__html {
+    min-height: 18rem;
+}
+
+.mc-template-preview__content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+}
+
+.mc-template-preview__subject,
+.mc-template-preview__body {
+    width: 100%;
+    border: 1px solid var(--mc-border);
+    border-radius: var(--mc-radius);
+    background: var(--mc-surface-alt);
+    color: var(--mc-text);
+}
+
+.mc-template-preview__subject {
+    min-height: 2.5rem;
+    padding: 0.625rem 0.75rem;
+    line-height: var(--mc-lh-ui);
+}
+
+.mc-template-preview__body {
+    min-height: 10rem;
+    max-height: 28rem;
+    padding: 1rem;
+    overflow: auto;
+}
+
+.mc-template-preview__body :where(p, ul, ol, blockquote) {
+    margin-bottom: 0.75rem;
+}
+
+.mc-template-preview__body :where(p, ul, ol, blockquote):last-child {
+    margin-bottom: 0;
+}
+
+.mc-placeholder-chip {
+    cursor: pointer;
+    border: none;
+}
+
+// Contact submissions conversation thread.
+.mc-contact-thread {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.mc-contact-message {
+    max-width: 85%;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--mc-border);
+    border-radius: var(--mc-radius-lg);
+    background: var(--mc-surface);
+}
+
+.mc-contact-message--client {
+    align-self: flex-start;
+    background: var(--mc-surface-alt);
+}
+
+.mc-contact-message--admin {
+    align-self: flex-end;
+    background: var(--mc-primary-light);
+    border-color: var(--mc-primary-border);
+}
+
+.mc-contact-message__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.35rem;
+}
+
+.mc-contact-message__body {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    color: var(--mc-text);
+}
+
+.mc-contact-row--unread td {
+    font-weight: 600;
+}
+
+.mc-contact-row--unread td:first-child {
+    box-shadow: inset 3px 0 0 0 var(--mc-warning);
+}
+
+// Subscription plan access screen.
+.mc-plan-access__tile {
+    min-width: 120px;
+}
+
+.mc-plan-access__features {
+    display: flex;
+    flex-direction: column;
+}
+
+.mc-plan-access__feature {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--mc-border-subtle);
+    cursor: pointer;
+
+    &:last-child {
+        border-bottom: 0;
+    }
+}
+
+.mc-plan-access__feature-icon {
+    width: 1.1rem;
+    text-align: center;
+    color: var(--mc-text-muted);
+}
+
+.mc-plan-access__rules {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.mc-plan-access__rule {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--mc-border);
+    border-radius: var(--mc-radius);
+    background: var(--mc-surface);
+}
+
+.mc-plan-access__rule-main {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    min-width: 0;
+}
+
+.mc-plan-access__rule-name {
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.mc-plan-access__add {
+    border-top: 1px solid var(--mc-border-subtle);
+    padding-top: 1rem;
+}
+
+.mc-course-picker__empty {
+    padding: 0.5rem 0.75rem;
+}
+
+// Notifications channel settings (admin/notifications.php).
+.mc-channel-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+}
+
+.mc-settings-block__title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.3;
+    margin: 0 0 0.2rem;
+    color: var(--mc-text);
+}
+
+.mc-settings-block__desc {
+    color: var(--mc-text-muted);
+    font-size: 0.8rem;
+    margin: 0 0 0.85rem;
+    max-width: 60ch;
+}
+
+.mc-settings-block__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    max-width: 320px;
+    margin: 0;
+}
+
+.mc-field-hint {
+    color: var(--mc-text-muted);
+    font-size: 0.72rem;
+    line-height: 1.4;
+}
+
+.mc-channel-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+}
+
+.mc-channel-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    padding: 1.1rem 1.15rem 1.25rem;
+    border: 1px solid var(--mc-border);
+    border-radius: var(--mc-radius);
+    background: var(--mc-surface);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.mc-channel-card--active {
+    border-color: var(--mc-primary-border);
+    box-shadow: inset 4px 0 0 var(--mc-primary);
+}
+
+.mc-channel-card__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.mc-channel-card__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-width: 0;
+}
+
+.mc-channel-card__icon {
+    font-size: 1.35rem;
+    line-height: 1;
+    color: var(--mc-text-muted);
+    flex-shrink: 0;
+    transition: color 0.15s ease;
+}
+
+.mc-channel-card--active .mc-channel-card__icon {
+    color: var(--mc-primary);
+}
+
+.mc-channel-card__name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--mc-text);
+    overflow-wrap: anywhere;
+}
+
+.mc-channel-card__desc {
+    color: var(--mc-text-muted);
+    font-size: 0.8rem;
+    line-height: 1.45;
+    margin: -0.35rem 0 0;
+}
+
+.mc-channel-card__fields {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.mc-channel-card__fields label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    margin: 0;
+}

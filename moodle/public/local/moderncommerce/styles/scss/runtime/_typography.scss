@@ -1,0 +1,214 @@
+// This file is part of Moodle and is licensed under the
+// GNU General Public License, version 3 or later.
+//
+// You may redistribute and modify it under the terms of the GPL.
+// See the plugin root LICENSE file for complete terms.
+//
+// Modern Commerce styles.
+//
+// @package    local_moderncommerce
+// @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+// @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+/*
+ * Modern Commerce typography normalization.
+ *
+ * This partial imports last so older component rules can keep their layout
+ * dimensions while text sizing, weight, color, and line-height come from the
+ * shared --mc-* typography tokens.
+ */
+
+.path-local-moderncommerce {
+    --mc-heading-color: var(--mc-type-heading-color);
+    --mc-body-color: var(--mc-type-body-color);
+    --mc-meta-color: var(--mc-type-subtle-color);
+}
+
+.path-local-moderncommerce :where(.mc-shell, .mc-learner-shell, .local-moderncommerce-admin-shell) {
+    color: var(--mc-text);
+    font-family: var(--mc-font);
+    font-size: var(--mc-fs-body);
+    line-height: var(--mc-lh-body);
+}
+
+.path-local-moderncommerce :where(
+    .mc-page-title,
+    .mc-drawer__title,
+    .mc-card-title,
+    .mc-table-card__header h5,
+    .mc-product-listing-card h5,
+    .mc-recent-orders-card h5,
+    .mc-settings-panel__title,
+    .mc-dashboard h1,
+    .mc-dashboard h2,
+    .mc-dashboard h3,
+    .mc-bundle-hero h1,
+    .mc-course-hero h1,
+    .mc-bundle-section h2,
+    .mc-course-section h2
+) {
+    color: var(--mc-heading-color);
+    font-family: var(--mc-font-heading);
+    font-size: var(--mc-fs-h3);
+    font-weight: var(--mc-fw-heading);
+    letter-spacing: 0;
+    line-height: var(--mc-lh-heading);
+}
+
+.path-local-moderncommerce :where(.mc-page-title, .mc-dashboard h1, .mc-bundle-hero h1, .mc-course-hero h1) {
+    font-size: var(--mc-fs-h1);
+    font-weight: var(--mc-fw-display);
+    line-height: var(--mc-lh-tight);
+}
+
+.path-local-moderncommerce :where(.mc-bundle-section h2, .mc-course-section h2, .mc-settings-panel__title) {
+    font-size: var(--mc-fs-h2);
+}
+
+.path-local-moderncommerce :where(
+    .mc-page-subtitle,
+    .mc-drawer__subtitle,
+    .mc-card-description,
+    .mc-empty__description,
+    .mc-alert__body,
+    .mc-bundle-hero p,
+    .mc-course-hero p,
+    .mc-course-card-instructor
+) {
+    color: var(--mc-body-color);
+    font-size: var(--mc-fs-body);
+    font-weight: var(--mc-fw-body);
+    line-height: var(--mc-lh-body);
+}
+
+.path-local-moderncommerce :where(
+    .mc-table,
+    .mc-table p,
+    .mc-product-listing-table,
+    .mc-recent-orders-table,
+    .mc-invoice-items,
+    .mc-form-control,
+    .mc-select,
+    .mc-settings-field,
+    .mc-filter-checkbox,
+    .mc-catalog-results-count
+) {
+    font-size: var(--mc-fs-ui);
+    line-height: var(--mc-lh-ui);
+}
+
+.path-local-moderncommerce :where(
+    .mc-table th,
+    .mc-product-listing-table th,
+    .mc-invoice-items th,
+    .mc-gateway-section h5,
+    .mc-gateway-field > span,
+    .mc-settings-nav__item,
+    .mc-form-label,
+    .mc-filter-section-header,
+    .mc-nav-section,
+    .mc-badge,
+    .pill
+) {
+    font-size: var(--mc-fs-caption);
+    font-weight: var(--mc-fw-semibold);
+    letter-spacing: var(--mc-tracking-eyebrow);
+    line-height: var(--mc-lh-ui);
+}
+
+.path-local-moderncommerce :where(
+    .mc-table td,
+    .mc-product-listing-table td,
+    .mc-invoice-items td,
+    .mc-cell-muted,
+    .mc-timeline-item__meta,
+    .mc-product-listing-product span,
+    .mc-course-card-duration,
+    .mc-course-card-category,
+    .mc-course-card-original-price
+) {
+    color: var(--mc-body-color);
+    font-size: var(--mc-fs-meta);
+    line-height: var(--mc-lh-ui);
+}
+
+.path-local-moderncommerce :where(
+    .mc-metric-tile__label,
+    .metric-label,
+    .mc-stat-tile__label,
+    .mc-product-listing-status,
+    .mc-price__sale
+) {
+    font-size: var(--mc-fs-caption);
+    font-weight: var(--mc-fw-semibold);
+    letter-spacing: var(--mc-tracking-eyebrow);
+    line-height: var(--mc-lh-ui);
+}
+
+.path-local-moderncommerce :where(.mc-metric-tile__value, .metric-value, .mc-stat-tile__value) {
+    font-size: var(--mc-fs-h2);
+    font-weight: var(--mc-fw-display);
+    letter-spacing: 0;
+    line-height: var(--mc-lh-tight);
+}
+
+.path-local-moderncommerce :where(.mc-metric-tile__value, .metric-value) {
+    color: var(--mc-heading-color);
+}
+
+.path-local-moderncommerce .mc-stat-tile .mc-stat-tile__label {
+    color: var(--mc-stat-tile-label-color, inherit);
+}
+
+.path-local-moderncommerce .mc-stat-tile .mc-stat-tile__value {
+    color: var(--mc-stat-tile-value-color, inherit);
+}
+
+.path-local-moderncommerce :where(
+    .btn-mc-primary,
+    .btn-mc-secondary,
+    .btn-mc-danger,
+    .mc-btn-soft,
+    .mc-btn-ghost,
+    .mc-product-listing-filter,
+    .mc-product-listing-add,
+    .mc-product-listing-perpage,
+    .mc-learner-nav-link,
+    .mc-nav .nav-link
+) {
+    font-size: var(--mc-fs-ui);
+    font-weight: var(--mc-fw-semibold);
+    letter-spacing: 0;
+    line-height: var(--mc-lh-ui);
+}
+
+.path-local-moderncommerce :where(
+    .mc-course-card-title,
+    .mc-product-listing-product a,
+    .mc-timeline-item__label,
+    .mc-price__main,
+    .mc-footer__brandname
+) {
+    color: var(--mc-heading-color);
+    font-size: var(--mc-fs-h5);
+    font-weight: var(--mc-fw-heading);
+    letter-spacing: 0;
+    line-height: var(--mc-lh-heading);
+}
+
+.path-local-moderncommerce :where(.mc-course-card-details, .mc-product-listing-rating, .metric-delta) {
+    font-size: var(--mc-fs-caption);
+    font-weight: var(--mc-fw-semibold);
+    line-height: var(--mc-lh-ui);
+}
+
+.path-local-moderncommerce :where(.mc-sidebar-brand__name, .mc-learner-brand) {
+    font-size: var(--mc-fs-ui);
+    font-weight: var(--mc-fw-heading);
+    letter-spacing: 0;
+    line-height: var(--mc-lh-ui);
+}
+
+.path-local-moderncommerce :where(.mc-key-code, code, kbd, samp) {
+    font-family: var(--mc-font-mono);
+    font-size: var(--mc-fs-caption);
+}

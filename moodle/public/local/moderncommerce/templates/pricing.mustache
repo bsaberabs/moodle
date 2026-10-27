@@ -1,0 +1,74 @@
+{{!
+    This file is part of Moodle and is licensed under the
+    GNU General Public License, version 3 or later.
+
+    You may redistribute and modify it under the terms of the GPL.
+    See the plugin root LICENSE file for complete terms.
+}}
+{{!
+    @template local_moderncommerce/pricing
+
+    Public Modern Commerce pricing / value page.
+
+    Context variables:
+    * browseurl - URL to the public catalogue.
+    * addonsurl - URL to the premium add-ons catalogue.
+    * comparison - Free-vs-Premium feature data (see components/tier_comparison).
+
+    @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com | www.agunfoninteractivity.com
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+}}
+<div class="mc-pricing">
+    <section class="mc-pricing__hero">
+        <p class="mc-pricing__eyebrow">{{#str}}pricing_eyebrow, local_moderncommerce{{/str}}</p>
+        <h1 class="mc-pricing__title">{{#str}}pricing_herotitle, local_moderncommerce{{/str}}</h1>
+        <p class="mc-pricing__subtitle">{{#str}}pricing_herosubtitle, local_moderncommerce{{/str}}</p>
+        {{#price}}<p class="mc-pricing__price">{{price}}</p>{{/price}}
+        <p class="mc-pricing__offer">
+            <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+            {{#str}}pricing_offer, local_moderncommerce{{/str}}
+        </p>
+        <div class="mc-pricing__cta">
+            <a class="mc-button mc-pricing__btn mc-pricing__btn--primary" data-mc-button="primary" href="{{geturl}}" target="_blank" rel="noopener noreferrer">
+                <i class="bi bi-bag-check" aria-hidden="true"></i>
+                {{#str}}pricing_ctaget, local_moderncommerce{{/str}}
+            </a>
+            <a class="mc-button mc-pricing__btn mc-pricing__btn--ghost" data-mc-button="soft" href="{{demourl}}">
+                <i class="bi bi-grid" aria-hidden="true"></i>
+                {{#str}}pricing_ctademo, local_moderncommerce{{/str}}
+            </a>
+        </div>
+        <p class="mc-pricing__reassure">{{#str}}pricing_reassure, local_moderncommerce{{/str}}</p>
+    </section>
+
+    <div class="mc-pricing__pillars">
+        <div class="mc-pricing__pillar">
+            <span class="mc-pricing__pillaricon"><i class="bi bi-bag-check" aria-hidden="true"></i></span>
+            <h2 class="mc-pricing__pillartitle">{{#str}}pricing_pillar1title, local_moderncommerce{{/str}}</h2>
+            <p class="mc-pricing__pillarbody">{{#str}}pricing_pillar1body, local_moderncommerce{{/str}}</p>
+        </div>
+        <div class="mc-pricing__pillar">
+            <span class="mc-pricing__pillaricon"><i class="bi bi-credit-card" aria-hidden="true"></i></span>
+            <h2 class="mc-pricing__pillartitle">{{#str}}pricing_pillar2title, local_moderncommerce{{/str}}</h2>
+            <p class="mc-pricing__pillarbody">{{#str}}pricing_pillar2body, local_moderncommerce{{/str}}</p>
+        </div>
+        <div class="mc-pricing__pillar">
+            <span class="mc-pricing__pillaricon"><i class="bi bi-mortarboard" aria-hidden="true"></i></span>
+            <h2 class="mc-pricing__pillartitle">{{#str}}pricing_pillar3title, local_moderncommerce{{/str}}</h2>
+            <p class="mc-pricing__pillarbody">{{#str}}pricing_pillar3body, local_moderncommerce{{/str}}</p>
+        </div>
+    </div>
+
+    {{> local_moderncommerce/components/tier_comparison }}
+
+    <section class="mc-pricing__premium">
+        <div>
+            <h2 class="mc-pricing__premiumtitle">{{#str}}pricing_premiumtitle, local_moderncommerce{{/str}}</h2>
+            <p class="mc-pricing__premiumbody">{{#str}}pricing_premiumbody, local_moderncommerce{{/str}}</p>
+        </div>
+        <a class="mc-button mc-pricing__btn mc-pricing__btn--primary" data-mc-button="primary" href="{{addonsurl}}" target="_blank" rel="noopener noreferrer">
+            <i class="bi bi-stars" aria-hidden="true"></i>
+            {{#str}}pricing_ctaaddons, local_moderncommerce{{/str}}
+        </a>
+    </section>
+</div>

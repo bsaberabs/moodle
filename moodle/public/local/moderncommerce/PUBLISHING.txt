@@ -1,0 +1,327 @@
+MODERNCOMMERCE PUBLISHING RUNBOOK
+================================
+
+Purpose
+-------
+
+This runbook defines how Agunfon Interactivity LLC, USA develops, validates,
+versions, packages, publishes, and maintains official ModernCommerce releases.
+
+Canonical locations
+-------------------
+
+Public source:
+https://github.com/adebareshowemimo/moodle-local_moderncommerce
+
+Project website:
+https://moderncommerce.dev
+
+Commercial services:
+https://moderncommerce.dev/support
+
+Moodle component:
+local_moderncommerce
+
+Required installation directory:
+local/moderncommerce
+
+Source ownership model
+----------------------
+
+The public repository is the canonical source for the free ModernCommerce
+core. Core fixes and features must be developed in, or contributed back to,
+this repository.
+
+Private repositories are reserved for premium add-ons, hosted-service
+infrastructure, deployment tooling, and customer-specific work. Do not copy
+credentials, customer data, internal documents, commercial contracts, or
+private deployment configuration into the public repository.
+
+Do not maintain separate public and private versions of the core. When a
+customer project reveals a reusable core improvement, implement or port that
+improvement into the public repository through the normal contribution flow.
+
+Branch and review workflow
+--------------------------
+
+1. Synchronize local main:
+
+   git switch main
+   git pull --ff-only origin main
+
+2. Create a focused branch:
+
+   git switch -c codex/short-description
+
+3. Implement the change. Preserve the component name, PHP namespace, web
+   service names, language component, and installation directory.
+
+4. Add or update tests for material behavior changes.
+
+5. Run the validation checklist in this document.
+
+6. Commit and push the branch:
+
+   git add <intentional-files>
+   git commit -m "Describe the change"
+   git push -u origin codex/short-description
+
+7. Open a pull request into main. Merge only after review and successful CI.
+
+8. Delete the merged feature branch when it is no longer needed.
+
+Never commit directly to a release tag. Never rewrite or move a published tag.
+
+Version policy
+--------------
+
+ModernCommerce uses semantic versions for public releases:
+
+1.0.1  Bug fixes, security fixes, and small compatibility corrections.
+1.1.0  New backward-compatible features.
+2.0.0  Breaking API, configuration, database, or behavior changes.
+
+version.php contains two independent values:
+
+$plugin->release is the public semantic version, for example "1.0.1".
+$plugin->version is Moodle's monotonically increasing build number.
+
+Use YYYYMMDDNN for the Moodle build number:
+
+2026080100  First release build created on 1 August 2026.
+2026080101  Second release build created on the same day.
+
+Never decrease or reuse $plugin->version. Existing Moodle installations use
+this number to determine whether an upgrade must run.
+
+Database and service changes
+----------------------------
+
+When db/install.xml changes, also add the equivalent upgrade path to
+db/upgrade.php for existing installations. A fresh-install schema alone is
+not sufficient.
+
+Changes to scheduled tasks, capabilities, event observers, messages, hooks,
+external services, settings, or other Moodle metadata require a higher
+$plugin->version so Moodle refreshes the definitions during upgrade.
+
+Upgrade steps must be idempotent, preserve existing commercial records, and
+finish with the correct upgrade savepoint.
+
+Pre-release validation
+----------------------
+
+Start from a clean branch containing the intended release commit. Confirm:
+
+   git status --short --branch
+   git diff --check
+
+The working tree must be clean before tagging or packaging.
+
+Run repository checks from the plugin root:
+
+   composer install
+   composer validate --strict --no-check-publish
+   composer audit --no-interaction
+   composer run mc:check-fast
+   node styles/tools/build-design-system.mjs --check
+
+The fast check includes Moodle PHPCS, PHP syntax validation, string auditing,
+Composer auditing, and optimized-autoloader validation.
+
+For a release containing functional PHP, database, payment, subscription,
+privacy, or external-service changes, also validate inside a supported Moodle
+checkout:
+
+   php public/admin/tool/phpunit/cli/util.php --diag
+   vendor/bin/phpunit -c phpunit.xml --testsuite local_moderncommerce_testsuite --no-coverage
+   php public/admin/cli/upgrade.php --non-interactive --allow-unstable
+   php public/admin/cli/purge_caches.php
+
+When frontend source changes, rebuild the relevant assets from the Moodle
+checkout root and commit the generated files:
+
+   grunt amd --root=public/local/moderncommerce
+   grunt react --root=public/local/moderncommerce
+
+Smoke-test both a fresh installation and an upgrade from the latest published
+version. At minimum verify catalog, cart, checkout, order fulfillment, learner
+access, cron, and the affected payment gateways in test mode.
+
+Optional add-on checks
+----------------------
+
+ModernCommerce must work when premium add-ons are absent. Before release:
+
+1. Confirm unavailable add-ons are hidden or display an add-on-required state.
+2. Confirm the core does not call a missing add-on web service.
+3. Install each supported add-on and confirm its navigation and services load.
+4. Confirm add-on capability and context checks are enforced.
+
+Release preparation
+-------------------
+
+1. Choose the semantic release number.
+2. Update $plugin->release and $plugin->version in version.php.
+3. Add required db/upgrade.php steps.
+4. Review every changed file and the output of:
+
+   git diff --stat
+   git diff --check
+
+5. Search the public tree for secrets, private URLs, customer information, and
+   proprietary-license text.
+6. Run the complete validation checklist.
+7. Commit the release metadata:
+
+   git add version.php db/upgrade.php
+   git commit -m "Release ModernCommerce X.Y.Z"
+
+   Add only files that actually changed. Omit db/upgrade.php when it was not
+   required.
+
+8. Push main and wait for GitHub Actions to pass:
+
+   git push origin main
+
+Creating the tag
+----------------
+
+After CI succeeds on the exact release commit:
+
+   git tag -a vX.Y.Z -m "ModernCommerce X.Y.Z"
+   git push origin vX.Y.Z
+
+Verify that the tag points at the intended commit:
+
+   git rev-parse HEAD
+   git rev-list -n 1 vX.Y.Z
+
+The two commit hashes must match.
+
+Building the installation ZIP
+-----------------------------
+
+From the clean, tagged standalone repository:
+
+   powershell -NoProfile -ExecutionPolicy Bypass `
+     -File scripts/git-package.ps1 `
+     -Version X.Y.Z `
+     -Force
+
+Expected output:
+
+releases/moderncommerce-vX.Y.Z.zip
+
+The archive must contain exactly one top-level moderncommerce/ directory and
+must include moderncommerce/version.php and moderncommerce/vendor/autoload.php.
+The release package excludes the Git repository, development configuration,
+the ignored documentation folder, and other non-deployment files.
+
+Record a checksum for the final artifact:
+
+   Get-FileHash releases/moderncommerce-vX.Y.Z.zip -Algorithm SHA256
+
+Publishing the GitHub release
+-----------------------------
+
+Create the release and attach the verified ZIP:
+
+   gh release create vX.Y.Z `
+     releases/moderncommerce-vX.Y.Z.zip `
+     --repo adebareshowemimo/moodle-local_moderncommerce `
+     --title "ModernCommerce X.Y.Z" `
+     --notes "Release notes"
+
+Verify the public release:
+
+   gh release view vX.Y.Z `
+     --repo adebareshowemimo/moodle-local_moderncommerce
+
+Release notes must describe:
+
+- The user-visible changes.
+- Security fixes without unsafe exploit detail.
+- Compatibility or requirement changes.
+- Database or configuration migrations.
+- Deprecations and breaking changes.
+- Known issues.
+- The ZIP SHA-256 checksum.
+
+Moodle Plugins Directory publication
+------------------------------------
+
+Upload the exact ZIP attached to the GitHub release. Do not rebuild a second
+artifact for Moodle.
+
+Before submitting, confirm that the Moodle release name, version.php values,
+Git tag, GitHub release, ZIP filename, and release notes all identify the same
+X.Y.Z version.
+
+After publication, install the directory ZIP on a clean supported Moodle site
+and upgrade one test site from the preceding public version.
+
+Post-release checks
+-------------------
+
+1. Confirm the GitHub release and asset are publicly downloadable.
+2. Confirm GitHub Actions is green for the release commit.
+3. Verify the SHA-256 checksum of the downloaded asset.
+4. Confirm the Moodle Plugins Directory entry links to the public repository.
+5. Update moderncommerce.dev release and support announcements.
+6. Monitor public issues, payment/webhook regressions, and upgrade reports.
+7. Keep the release commit and tag immutable.
+
+Hotfix workflow
+---------------
+
+For an urgent production defect, branch from the latest supported release or
+main, apply the smallest safe fix, add a regression test, and publish the next
+patch version. Do not replace an existing ZIP or move an existing tag.
+
+Example:
+
+v1.0.0 contains the defect.
+v1.0.1 contains the correction.
+
+For a security issue, coordinate privately through
+support@agunfoninteractivity.com. Publish details only after a fixed release is
+available. Rotate any exposed credential immediately; removing it from a later
+commit does not remove it from Git history.
+
+Failed or withdrawn releases
+----------------------------
+
+Do not silently replace published artifacts. If a release is defective:
+
+1. Mark the GitHub release as withdrawn or clearly document the problem.
+2. Remove it from recommended downloads where possible.
+3. Publish a new patch version with a new build number and tag.
+4. Explain the upgrade path in the new release notes.
+
+Release record
+--------------
+
+For every release, retain this information in the GitHub release:
+
+Version:
+Moodle build number:
+Release commit:
+Tag:
+GitHub Actions URL:
+ZIP filename:
+ZIP SHA-256:
+Moodle Plugins Directory version URL:
+Published by:
+Publication date:
+Fresh-install result:
+Upgrade-test result:
+Known issues:
+
+Definition of done
+------------------
+
+A ModernCommerce release is complete only when the source commit is on public
+main, CI is green, the immutable tag exists, the verified ZIP is attached to a
+GitHub release, the same ZIP is published to Moodle when applicable, and the
+post-release installation checks pass.

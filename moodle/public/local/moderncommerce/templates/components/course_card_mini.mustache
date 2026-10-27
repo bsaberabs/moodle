@@ -1,0 +1,36 @@
+{{!
+    This file is part of Moodle and is licensed under the
+    GNU General Public License, version 3 or later.
+
+    You may redistribute and modify it under the terms of the GPL.
+    See the plugin root LICENSE file for complete terms.
+}}
+{{!
+    @template local_moderncommerce/components/course_card_mini
+
+    Compact horizontal course row for bundle details and order summaries.
+
+    Context variables:
+    * name     - Course name
+    * imageurl - Course image URL
+    * hasimage - bool
+    * price    - Formatted price string (optional)
+    * url      - Course URL (optional)
+    * hasurl   - bool
+
+
+    @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+}}
+{{#hasurl}}<a href="{{url}}" class="mc-course-mini">{{/hasurl}}
+{{^hasurl}}<div class="mc-course-mini">{{/hasurl}}
+    {{#hasimage}}
+    <img src="{{imageurl}}" alt="" class="mc-course-mini__thumb" width="48" height="36" loading="lazy">
+    {{/hasimage}}
+    {{^hasimage}}
+    <div class="mc-course-mini__thumb" aria-hidden="true"></div>
+    {{/hasimage}}
+    <span class="mc-course-mini__title">{{name}}</span>
+    {{#price}}<span class="mc-course-mini__price">{{price}}</span>{{/price}}
+{{#hasurl}}</a>{{/hasurl}}
+{{^hasurl}}</div>{{/hasurl}}

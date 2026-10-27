@@ -1,0 +1,363 @@
+// This file is part of Moodle and is licensed under the
+// GNU General Public License, version 3 or later.
+//
+// You may redistribute and modify it under the terms of the GPL.
+// See the plugin root LICENSE file for complete terms.
+//
+// Modern Commerce styles.
+//
+// @package    local_moderncommerce
+// @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+// @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+// Extracted from ../styles.css during the SCSS source consolidation phase.
+
+/* ============================================================
+   MOODLE LAYOUT OVERRIDES
+   ============================================================ */
+
+.path-local-moderncommerce #page.drawers {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.path-local-moderncommerce #page.drawers div[role="main"] {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.path-local-moderncommerce #page.drawers .main-inner {
+    padding: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+.path-local-moderncommerce #page-content.pb-3 {
+    padding-bottom: 0 !important;
+}
+
+body.path-local-moderncommerce.mc-learner-layout-wide {
+    --mc-learner-page-padding: 1.75rem;
+}
+
+body.path-local-moderncommerce.mc-learner-layout-wide #page.drawers .main-inner,
+body.path-local-moderncommerce.mc-learner-layout-wide.limitedwidth #page.drawers .main-inner,
+body.path-local-moderncommerce.mc-learner-layout-wide.pagelayout-standard #page.drawers .main-inner {
+    width: 100% !important;
+    max-width: none !important;
+    margin-inline: auto !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+}
+
+body.path-local-moderncommerce.mc-learner-layout-wide #region-main,
+body.path-local-moderncommerce.mc-learner-layout-wide #region-main-box,
+body.path-local-moderncommerce.mc-learner-layout-wide #page-content {
+    max-width: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border: 0 !important;
+}
+
+body.path-local-moderncommerce.mc-learner-layout-wide .mc-learner-content {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: var(--mc-learner-page-padding);
+}
+
+body.path-local-moderncommerce.mc-learner-layout-wide .mc-learner-topnav {
+    padding-inline: var(--mc-learner-page-padding);
+}
+
+@media (max-width: 768px) {
+    body.path-local-moderncommerce.mc-learner-layout-wide {
+        --mc-learner-page-padding: 1rem;
+    }
+}
+
+
+/* ============================================================
+   ADMIN SHELL - LAYOUT
+   ============================================================ */
+
+.mc-shell {
+    display: flex;
+    min-height: 100vh;
+    background: var(--mc-page-bg);
+    font-family: var(--mc-font);
+    color: var(--mc-text);
+}
+
+
+/* ============================================================
+   ADMIN SIDEBAR
+   ============================================================ */
+
+.mc-sidebar {
+    width: var(--mc-sidebar-width);
+    background: var(--mc-sidebar-bg);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 200;
+    transition: width 0.2s ease;
+    overflow: hidden;
+}
+
+.mc-sidebar--collapsed {
+    width: var(--mc-sidebar-collapsed-width);
+}
+
+/* Brand logo row */
+.mc-sidebar-brand {
+    height: var(--mc-topbar-height);
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0 1rem;
+    border-bottom: 1px solid var(--mc-sidebar-border);
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.mc-sidebar-brand__logo {
+    width: 28px;
+    height: 28px;
+    background: var(--mc-primary);
+    border-radius: var(--mc-radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: #fff;
+    font-size: 0.875rem;
+}
+
+.mc-sidebar-brand__name {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mc-sidebar-brand__toggle {
+    margin-left: auto;
+    width: 24px;
+    height: 24px;
+    background: rgba(255,255,255,0.07);
+    border: none;
+    border-radius: var(--mc-radius-sm);
+    color: var(--mc-sidebar-text);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.15s ease;
+}
+
+.mc-sidebar-brand__toggle:hover {
+    background: rgba(255,255,255,0.13);
+    color: #fff;
+}
+
+/* Nav scroll area */
+.mc-sidebar-nav {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 1rem 0;
+    scrollbar-width: thin;
+    scrollbar-color: #334155 transparent;
+}
+
+.mc-sidebar-nav::-webkit-scrollbar { width: 3px; }
+.mc-sidebar-nav::-webkit-scrollbar-thumb { background: #334155; border-radius: 9999px; }
+
+/* Section label */
+.mc-nav-section {
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--mc-sidebar-section-label);
+    padding: 0.75rem 1rem 0.375rem;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+/* Nav links */
+.mc-nav {
+    padding: 0 0.625rem;
+    margin-bottom: 0.5rem;
+}
+
+.mc-nav .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.4375rem 0.5rem;
+    border-radius: var(--mc-radius-sm);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--mc-sidebar-text);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.mc-nav .nav-link:hover {
+    background: rgba(255,255,255,0.07);
+    color: var(--mc-sidebar-text-hover);
+}
+
+.mc-nav .nav-link.active {
+    background: var(--mc-sidebar-active-bg);
+    color: var(--mc-primary-border);
+}
+
+.mc-icon {
+    font-size: 0.9375rem;
+    flex-shrink: 0;
+}
+
+/* Sidebar footer */
+.mc-sidebar-footer {
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--mc-sidebar-border);
+    background: var(--mc-sidebar-footer-bg);
+    flex-shrink: 0;
+}
+
+.mc-sidebar-footer-text {
+    font-size: 0.6875rem;
+    color: var(--mc-sidebar-section-label);
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.mc-sidebar-footer-text::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #34d399;
+    flex-shrink: 0;
+}
+
+/* Collapsed state */
+.mc-sidebar--collapsed .mc-sidebar-brand__name,
+.mc-sidebar--collapsed .mc-nav-section,
+.mc-sidebar--collapsed .mc-nav .nav-link span:not(.mc-icon),
+.mc-sidebar--collapsed .mc-sidebar-footer-text span {
+    display: none;
+}
+
+.mc-sidebar--collapsed .mc-nav .nav-link {
+    justify-content: center;
+    padding: 0.4375rem;
+}
+
+.mc-sidebar--collapsed .mc-sidebar-brand {
+    justify-content: center;
+}
+
+.mc-sidebar--collapsed .mc-sidebar-brand__toggle {
+    display: none;
+}
+
+
+/* ============================================================
+   ADMIN MAIN AREA
+   ============================================================ */
+
+.mc-main {
+    flex: 1;
+    margin-left: var(--mc-sidebar-width);
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    transition: margin-left 0.2s ease;
+}
+
+.mc-sidebar--collapsed ~ .mc-main {
+    margin-left: var(--mc-sidebar-collapsed-width);
+}
+
+
+/* ============================================================
+   TOPBAR
+   ============================================================ */
+
+.mc-topbar {
+    height: var(--mc-topbar-height);
+    background: var(--mc-surface);
+    border-bottom: 1px solid var(--mc-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    flex-shrink: 0;
+    gap: 1rem;
+}
+
+.mc-page-title {
+    font-size: 1.0625rem;
+    font-weight: 600;
+    color: var(--mc-text);
+    margin: 0;
+}
+
+.mc-page-subtitle {
+    font-size: 0.8125rem;
+    color: var(--mc-text-muted);
+    margin: 0;
+}
+
+.mc-topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+}
+
+.mc-topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+/* Mobile hamburger */
+.mc-btn-soft {
+    background: var(--mc-surface-alt);
+    border: 1px solid var(--mc-border);
+    color: var(--mc-text-muted);
+    border-radius: var(--mc-radius-sm);
+    padding: 0.375rem 0.5rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.mc-btn-soft:hover {
+    background: var(--mc-primary-light);
+    border-color: var(--mc-primary-border);
+    color: var(--mc-primary);
+}
+
+/* Content area */
+.mc-content {
+    padding: 1.5rem;
+    flex: 1;
+}

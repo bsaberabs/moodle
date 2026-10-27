@@ -1,0 +1,80 @@
+{{!
+    This file is part of Moodle and is licensed under the
+    GNU General Public License, version 3 or later.
+
+    You may redistribute and modify it under the terms of the GPL.
+    See the plugin root LICENSE file for complete terms.
+}}
+{{!
+    @template local_moderncommerce/orders
+
+    Buyer/learner orders list page (non-learner-shell version).
+    Status filter, order cards/table, pagination.
+
+    Context variables:
+    * orders        - Array: {ordernumber, date, relativedate, itemcount, total, status, statusclass, viewurl, continueurl, hascontinue, invoiceurl, hasinvoice}
+    * hasorders     - bool
+    * statusoptions - [{value, label, selected}]
+    * filterurl     - Form action URL
+    * pagination    - Pagination HTML (trusted)
+    * catalogurl    - URL to catalog
+
+
+    @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+}}
+<div id="mc-orders-list" data-region="orders">
+
+    <div class="mc-toolbar mb-3">
+        <form method="get" action="{{filterurl}}" class="d-flex gap-2 align-items-end flex-wrap">
+            <div>
+                <label for="mc-ord-status" class="mc-filter-label">{{#str}}filterbystatus, local_moderncommerce{{/str}}</label>
+                <select class="form-select form-select-sm" id="mc-ord-status" name="status" onchange="this.form.submit()">
+                    {{#statusoptions}}
+                    <option value="{{value}}"{{#selected}} selected{{/selected}}>{{label}}</option>
+                    {{/statusoptions}}
+                </select>
+            </div>
+        </form>
+    </div>
+
+    {{#hasorders}}
+    <div class="d-flex flex-column gap-2">
+        {{#orders}}
+        <div class="mc-card">
+            <div class="mc-card-body">
+                <div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
+                    <div>
+                        <div class="fw-semibold mb-1">
+                            <a href="{{viewurl}}" class="text-decoration-none">#{{ordernumber}}</a>
+                        </div>
+                        <div class="mc-cell-muted">{{date}}{{#relativedate}} &middot; {{relativedate}}{{/relativedate}}</div>
+                        <div class="mc-cell-muted">{{itemcount}} {{#str}}items, local_moderncommerce{{/str}}</div>
+                    </div>
+                    <div class="text-end">
+                        <div class="fw-bold mb-1">{{total}}</div>
+                        <span class="mc-badge mc-badge--{{statusclass}}">{{status}}</span>
+                    </div>
+                </div>
+                <div class="d-flex gap-2 mt-3 flex-wrap">
+                    <a href="{{viewurl}}" class="mc-button btn-sm mc-btn-soft" data-mc-button="soft" data-mc-button-size="sm">{{#str}}viewdetails, local_moderncommerce{{/str}}</a>
+                    {{#hascontinue}}<a href="{{continueurl}}" class="mc-button btn-sm btn-mc-primary" data-mc-button="primary" data-mc-button-size="sm"><i class="bi bi-credit-card me-1" aria-hidden="true"></i>{{#str}}continuepayment, local_moderncommerce{{/str}}</a>{{/hascontinue}}
+                    {{#hasinvoice}}<a href="{{invoiceurl}}" class="mc-button btn-sm mc-btn-soft" data-mc-button="soft" data-mc-button-size="sm"><i class="bi bi-download me-1" aria-hidden="true"></i>{{#str}}downloadinvoice, local_moderncommerce{{/str}}</a>{{/hasinvoice}}
+                </div>
+            </div>
+        </div>
+        {{/orders}}
+    </div>
+    {{#pagination}}{{{pagination}}}{{/pagination}}
+    {{/hasorders}}
+
+    {{^hasorders}}
+    <div class="mc-empty">
+        <span class="mc-empty__icon"><i class="bi bi-receipt" aria-hidden="true"></i></span>
+        <p class="mc-empty__title">{{#str}}noorders, local_moderncommerce{{/str}}</p>
+        <p class="mc-empty__desc">{{#str}}noordersyet, local_moderncommerce{{/str}}</p>
+        <a href="{{catalogurl}}" class="mc-button btn-mc-primary" data-mc-button="primary">{{#str}}browsecatalog, local_moderncommerce{{/str}}</a>
+    </div>
+    {{/hasorders}}
+
+</div>

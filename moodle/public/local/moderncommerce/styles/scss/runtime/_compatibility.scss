@@ -1,0 +1,625 @@
+// This file is part of Moodle and is licensed under the
+// GNU General Public License, version 3 or later.
+//
+// You may redistribute and modify it under the terms of the GPL.
+// See the plugin root LICENSE file for complete terms.
+//
+// Modern Commerce styles.
+//
+// @package    local_moderncommerce
+// @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+// @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+// Extracted from ../styles.css during the SCSS source consolidation phase.
+
+/* ============================================================
+   MOODLE COMPATIBILITY HELPERS
+   ============================================================ */
+
+// Moodle mform still emits Bootstrap button classes. Keep the exception here
+// so Modern Commerce templates do not reintroduce Bootstrap button styling.
+.bundle-form-shell .mform .btn-primary {
+    padding: 0.5rem 1.5rem;
+}
+
+.local-moderncommerce-navbar-cart {
+    position: relative;
+}
+
+.navbar .local-moderncommerce-navbar-cart .mui-cart__badge {
+    padding: 2px;
+    border-radius: 2px;
+    font-size: 11px;
+    line-height: 11px;
+    position: absolute;
+    top: 15px;
+    right: 0;
+}
+
+.navbar .local-moderncommerce-navbar-cart .mui-cart__panel {
+    min-width: 19rem;
+    max-width: min(22rem, calc(100vw - 1rem));
+    padding: 0.5rem;
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    border-radius: 0.5rem;
+    box-shadow: 0 1rem 2rem rgba(15, 23, 42, 0.18);
+}
+
+.local-moderncommerce-cart-dropdown {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.local-moderncommerce-cart-dropdown .local-moderncommerce-cart-dropdown__item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 1rem;
+    align-items: start;
+    min-width: 0;
+    padding: 0.55rem 0.65rem;
+    margin: 0;
+    border-radius: 0.375rem;
+}
+
+.local-moderncommerce-cart-dropdown__item + .local-moderncommerce-cart-dropdown__item {
+    border-top: 1px solid rgba(15, 23, 42, 0.08);
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+.local-moderncommerce-cart-dropdown__name {
+    min-width: 0;
+    color: #1f2937;
+    font-size: 0.875rem;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.local-moderncommerce-cart-dropdown__price {
+    color: #111827;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.35;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.local-moderncommerce-cart-dropdown .local-moderncommerce-cart-dropdown__more,
+.local-moderncommerce-cart-dropdown .local-moderncommerce-cart-dropdown__empty {
+    padding: 0.65rem;
+    margin: 0;
+    color: #6b7280;
+    font-size: 0.8125rem;
+}
+
+.local-moderncommerce-cart-dropdown .local-moderncommerce-cart-dropdown__footer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    padding: 0.65rem 0.65rem 0.25rem;
+    margin: 0.35rem 0 0;
+    border-top: 1px solid rgba(15, 23, 42, 0.1);
+}
+
+.local-moderncommerce-cart-dropdown__button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2rem;
+    width: 100%;
+    margin: 0;
+    white-space: nowrap;
+}
+
+.local-moderncommerce-cart-dropdown--empty .local-moderncommerce-cart-dropdown__footer {
+    grid-template-columns: 1fr;
+}
+
+.mc-card.mc-card-danger { border-color: var(--mc-danger-border); }
+.summary-card.border-left-primary { border-color: var(--mc-primary-border) !important; }
+.summary-card.border-left-success { border-color: var(--mc-success-border) !important; }
+.summary-card.border-left-info    { border-color: var(--mc-info-border) !important; }
+.summary-card.border-left-warning { border-color: var(--mc-warning-border) !important; }
+
+/* Redeem card variant: full-width for multi-bundle redemption */
+.mc-redeem-card--wide {
+    max-width: 100%;
+}
+
+/* Redeem form card (constrained width, centred) */
+.mc-redeem-form-card {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Centered empty state (e.g. empty cart) */
+.mc-empty--centered {
+    max-width: 480px;
+    margin: 3rem auto;
+    text-align: center;
+}
+
+/* Table utilities */
+.mc-table-wrapper--flush {
+    border: none;
+    border-radius: 0;
+}
+
+.mc-flex-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    flex: 1;
+}
+
+/* Learner avatar initials circle */
+.mc-learner-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--mc-primary-light);
+    color: var(--mc-primary);
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 1px solid var(--mc-primary-border);
+}
+
+/* Table helper utilities */
+.mc-table-sm-text { font-size: 0.75rem; }
+
+/* Product and pricing React admin app. */
+.mc-product-admin {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.mc-product-admin__head {
+    align-items: flex-start;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+}
+
+.mc-product-admin__actions {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+.mc-product-admin__title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.3;
+    margin: 0;
+}
+
+.mc-product-admin__currency,
+.mc-product-admin__summary,
+.mc-product-table__description,
+.mc-product-table__flags {
+    color: var(--mc-text-muted);
+    font-size: 0.78rem;
+}
+
+.mc-product-admin__summary {
+    align-items: center;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    min-height: 1.5rem;
+}
+
+.mc-product-admin__loading {
+    color: var(--mc-text-muted);
+    padding: 1.25rem;
+    text-align: center;
+}
+
+.mc-product-form {
+    background: #fff;
+    border: 1px solid var(--mc-border);
+    border-radius: 8px;
+    box-shadow: var(--mc-shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+}
+
+.mc-product-form__head,
+.mc-product-form__footer {
+    align-items: center;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+}
+
+.mc-product-form__head h3,
+.mc-product-form__section h4 {
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.3;
+    margin: 0;
+}
+
+.mc-product-form__section {
+    border-top: 1px solid var(--mc-border-light);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding-top: 1rem;
+}
+
+.mc-product-form__section:first-of-type {
+    border-top: 0;
+    padding-top: 0;
+}
+
+.mc-product-form__grid {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+// Legacy layout for labels that WRAP their own control. The shared <Field>
+// primitive emits .mc-field-label as a sibling of the control instead, so it is
+// excluded here: a column flex container would push the required asterisk onto
+// its own line, and flex blockifies the span so display:inline cannot fix it.
+.mc-product-form__grid label:not(.mc-field-label):not(.mc-switch),
+.mc-product-form__checks label:not(.mc-field-label):not(.mc-switch) {
+    color: var(--mc-text);
+    display: flex;
+    flex-direction: column;
+    font-size: 0.78rem;
+    font-weight: 600;
+    gap: 0.35rem;
+    margin: 0;
+}
+
+.mc-product-form__wide {
+    grid-column: span 2;
+}
+
+.mc-product-form__checks {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.mc-product-form__checks label {
+    align-items: center;
+    flex-direction: row;
+    gap: 0.625rem;
+}
+
+// Program pass-policy course selector: one readable, keyboard-friendly row per course.
+.mc-product-form__checks.mc-mustpass-list {
+    align-items: stretch;
+    background: var(--mc-surface);
+    border: 1px solid var(--mc-border);
+    border-radius: var(--mc-radius);
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 0;
+    max-height: 24rem;
+    overflow-y: auto;
+    padding: 0.25rem;
+}
+
+.mc-product-form__checks label.mc-mustpass-course {
+    align-items: center;
+    border-radius: var(--mc-radius-sm);
+    cursor: pointer;
+    display: flex;
+    flex-direction: row;
+    font-size: 0.875rem;
+    font-weight: 500;
+    gap: 0.75rem;
+    min-height: 2.75rem;
+    padding: 0.625rem 0.75rem;
+    transition: background-color 120ms ease, color 120ms ease;
+    width: 100%;
+}
+
+.mc-product-form__checks label.mc-mustpass-course:hover {
+    background: var(--mc-surface-alt);
+}
+
+.mc-mustpass-course__checkbox {
+    appearance: none;
+    background: var(--mc-surface);
+    border: 2px solid var(--mc-border-strong);
+    border-radius: 0.35rem;
+    cursor: pointer;
+    display: grid;
+    flex: 0 0 1.25rem;
+    height: 1.25rem;
+    margin: 0;
+    place-content: center;
+    transition: background-color 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+    width: 1.25rem;
+}
+
+.mc-mustpass-course__checkbox::before {
+    border-bottom: 2px solid var(--mc-text-inverse);
+    border-left: 2px solid var(--mc-text-inverse);
+    content: "";
+    height: 0.3rem;
+    transform: translateY(-0.08rem) rotate(-45deg) scale(0);
+    transition: transform 120ms ease;
+    width: 0.58rem;
+}
+
+.mc-mustpass-course__checkbox:checked {
+    background: var(--mc-primary);
+    border-color: var(--mc-primary);
+}
+
+.mc-mustpass-course__checkbox:checked::before {
+    transform: translateY(-0.08rem) rotate(-45deg) scale(1);
+}
+
+.mc-mustpass-course__checkbox:focus-visible {
+    box-shadow: 0 0 0 3px var(--mc-focus-ring);
+    outline: none;
+}
+
+.mc-mustpass-course__name {
+    line-height: 1.4;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.mc-course-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 0;
+    position: relative;
+}
+
+.mc-course-picker label {
+    color: var(--mc-text);
+    display: flex;
+    flex-direction: column;
+    font-size: 0.78rem;
+    font-weight: 600;
+    gap: 0.35rem;
+    margin: 0;
+}
+
+.mc-course-picker__message {
+    color: var(--mc-text-muted);
+    font-size: 0.78rem;
+}
+
+.mc-course-picker__results {
+    background: #fff;
+    border: 1px solid var(--mc-border);
+    border-radius: 8px;
+    box-shadow: var(--mc-shadow-sm);
+    display: flex;
+    flex-direction: column;
+    max-height: 18rem;
+    overflow: auto;
+    padding: 0.35rem;
+    z-index: 3;
+}
+
+.mc-course-picker__option {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    border-radius: 6px;
+    color: var(--mc-text);
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    padding: 0.55rem 0.65rem;
+    text-align: left;
+    width: 100%;
+}
+
+.mc-course-picker__option:hover,
+.mc-course-picker__option:focus {
+    background: var(--mc-primary-light);
+    outline: 0;
+}
+
+.mc-course-picker__option:disabled {
+    cursor: not-allowed;
+    opacity: 0.75;
+}
+
+.mc-course-picker__option-main,
+.mc-course-picker__badges {
+    display: flex;
+    min-width: 0;
+}
+
+.mc-course-picker__option-main {
+    flex-direction: column;
+}
+
+.mc-course-picker__badges {
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    justify-content: flex-end;
+}
+
+.mc-course-picker__selection {
+    align-items: center;
+    background: var(--mc-surface-alt);
+    border: 1px solid var(--mc-border-light);
+    border-radius: 8px;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    padding: 0.65rem 0.75rem;
+}
+
+.mc-product-toolbar {
+    align-items: flex-end;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.mc-product-toolbar__search,
+.mc-product-toolbar__field {
+    min-width: 0;
+}
+
+.mc-product-toolbar__search {
+    flex: 1 1 240px;
+}
+
+.mc-product-toolbar__field {
+    display: flex;
+    flex-direction: column;
+    flex: 0 1 180px;
+}
+
+.mc-product-toolbar__field--small {
+    flex-basis: 90px;
+    max-width: 110px;
+}
+
+.mc-table-sort {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    color: inherit;
+    display: inline-flex;
+    font: inherit;
+    gap: 0.35rem;
+    justify-content: flex-start;
+    padding: 0;
+    text-transform: inherit;
+    width: 100%;
+}
+
+.mc-table-sort.text-end {
+    justify-content: flex-end;
+}
+
+.mc-table-sort.text-center {
+    justify-content: center;
+}
+
+.mc-product-table td {
+    vertical-align: middle;
+}
+
+.mc-product-table__description {
+    margin-top: 0.25rem;
+    max-width: 34rem;
+}
+
+.mc-product-table__compare {
+    color: var(--mc-text-muted);
+    font-size: 0.75rem;
+    text-decoration: line-through;
+}
+
+.mc-product-table__actions {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    min-width: 0;
+}
+
+.mc-product-pagination {
+    align-items: center;
+    display: flex;
+    gap: 0.375rem;
+    justify-content: flex-end;
+}
+
+.mc-product-pagination .mc-btn-soft,
+.mc-product-pagination .btn-mc-secondary,
+.mc-product-pagination button {
+    min-width: 2.25rem;
+    min-height: 2.25rem;
+    padding: 0.45rem 0.75rem;
+    border-radius: var(--mc-radius-sm);
+}
+
+.mc-price-ledger__table td {
+    vertical-align: middle;
+}
+
+@media (max-width: 1200px) {
+    .mc-product-toolbar {
+        align-items: stretch;
+    }
+}
+
+@media (max-width: 768px) {
+    .mc-product-admin__head,
+    .mc-product-admin__summary,
+    .mc-product-pagination {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .mc-product-toolbar {
+        flex-direction: column;
+    }
+
+    .mc-product-toolbar__search,
+    .mc-product-toolbar__field,
+    .mc-product-form__grid {
+        width: 100%;
+    }
+
+    .mc-product-form__grid {
+        grid-template-columns: 1fr;
+    }
+
+    .mc-product-form__wide {
+        grid-column: auto;
+    }
+
+    .mc-course-picker__selection {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .mc-product-toolbar__field--small {
+        max-width: none;
+    }
+}
+.mc-nowrap { white-space: nowrap; }
+.mc-mono { font-family: var(--mc-font-mono); font-size: 0.75rem; }
+.mc-action-divider { display: inline-block; height: 1.25rem; vertical-align: middle; }
+.mc-modal-body-text { font-size: 0.875rem; }
+.mc-modal-danger-icon {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--mc-danger-bg); color: var(--mc-danger);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.875rem; flex-shrink: 0;
+}
+.mc-modal-warn-icon {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--mc-warning-bg); color: var(--mc-warning);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.875rem; flex-shrink: 0;
+}
+
+/* Pricing manager legacy */
+.pricing-manager-header h2 { font-size: 1.25rem; font-weight: 600; color: var(--mc-text); }
+.course-filter-form { background: var(--mc-surface-alt); padding: 1.25rem; border-radius: var(--mc-radius); border: 1px solid var(--mc-border); margin-bottom: 1rem; }
+.course-filter-form label { font-size: 0.75rem; font-weight: 600; color: var(--mc-text-muted); margin-bottom: 0.375rem; }

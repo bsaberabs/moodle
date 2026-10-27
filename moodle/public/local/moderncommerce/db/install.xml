@@ -1,0 +1,2148 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="local/moderncommerce/db" VERSION="2026081104" COMMENT="Modern Commerce clean install schema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd">
+  <TABLES>
+
+    <TABLE NAME="local_moderncommerce_products" COMMENT="Sellable courses, bundles, programs, and plans">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="producttype" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="course" SEQUENCE="false"/>
+        <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="slug" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="sku" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="draft" SEQUENCE="false"/>
+        <FIELD NAME="visible" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="featured" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="shortdescription" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="description" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="imageurl" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="taxable" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="taxcategory" TYPE="char" LENGTH="50" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="enrolduration" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="maxenrollment" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="currentenrollment" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="displayorder" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="createdby" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="modifiedby" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="createdby_fk" TYPE="foreign" FIELDS="createdby" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="modifiedby_fk" TYPE="foreign" FIELDS="modifiedby" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="slug_uix" UNIQUE="true" FIELDS="slug"/>
+        <INDEX NAME="sku_uix" UNIQUE="true" FIELDS="sku"/>
+        <INDEX NAME="type_status_visible_ix" UNIQUE="false" FIELDS="producttype, status, visible"/>
+        <INDEX NAME="featured_ix" UNIQUE="false" FIELDS="featured"/>
+        <INDEX NAME="displayorder_ix" UNIQUE="false" FIELDS="displayorder"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_product_courses" COMMENT="Courses included in course, bundle, and program products">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="productid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="relationtype" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="included" SEQUENCE="false"/>
+        <FIELD NAME="sortorder" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="required" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="productid_fk" TYPE="foreign" FIELDS="productid" REFTABLE="local_moderncommerce_products" REFFIELDS="id"/>
+        <KEY NAME="courseid_fk" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="product_course_type_uix" UNIQUE="true" FIELDS="productid, courseid, relationtype"/>
+        <INDEX NAME="product_sort_ix" UNIQUE="false" FIELDS="productid, sortorder"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_product_prices" COMMENT="Product regular, sale, tier, and subscription prices">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="productid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="pricetype" TYPE="char" LENGTH="30" NOTNULL="true" DEFAULT="regular" SEQUENCE="false"/>
+        <FIELD NAME="amount" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="compareamount" TYPE="number" LENGTH="20" NOTNULL="false" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="minquantity" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="maxquantity" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="startdate" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="enddate" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="productid_fk" TYPE="foreign" FIELDS="productid" REFTABLE="local_moderncommerce_products" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="product_type_ix" UNIQUE="false" FIELDS="productid, pricetype"/>
+        <INDEX NAME="product_enabled_ix" UNIQUE="false" FIELDS="productid, enabled"/>
+        <INDEX NAME="active_window_ix" UNIQUE="false" FIELDS="enabled, startdate, enddate"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_product_inventory" COMMENT="Product stock and reservation state">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="productid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="stockmanaged" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="stock" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="reservedstock" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="allowbackorder" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="productid_fk" TYPE="foreign-unique" FIELDS="productid" REFTABLE="local_moderncommerce_products" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="stockmanaged_ix" UNIQUE="false" FIELDS="stockmanaged"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_product_tags" COMMENT="Searchable product tags">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="productid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="tag" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="productid_fk" TYPE="foreign" FIELDS="productid" REFTABLE="local_moderncommerce_products" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="product_tag_uix" UNIQUE="true" FIELDS="productid, tag"/>
+        <INDEX NAME="tag_ix" UNIQUE="false" FIELDS="tag"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_product_categories" COMMENT="Catalog category tree for products">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="parentid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="slug" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="description" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="path" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="depth" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="visible" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="sortorder" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="parentid_fk" TYPE="foreign" FIELDS="parentid" REFTABLE="local_moderncommerce_product_categories" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="slug_uix" UNIQUE="true" FIELDS="slug"/>
+        <INDEX NAME="parent_sort_ix" UNIQUE="false" FIELDS="parentid, sortorder"/>
+        <INDEX NAME="visible_sort_ix" UNIQUE="false" FIELDS="visible, sortorder"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_product_category_map" COMMENT="Product to catalog category assignments">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="productid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="categoryid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="isprimary" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="productid_fk" TYPE="foreign" FIELDS="productid" REFTABLE="local_moderncommerce_products" REFFIELDS="id"/>
+        <KEY NAME="categoryid_fk" TYPE="foreign" FIELDS="categoryid" REFTABLE="local_moderncommerce_product_categories" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="product_category_uix" UNIQUE="true" FIELDS="productid, categoryid"/>
+        <INDEX NAME="primary_ix" UNIQUE="false" FIELDS="productid, isprimary"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_product_attributes" COMMENT="Reusable product attribute definitions">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="code" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="datatype" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="text" SEQUENCE="false"/>
+        <FIELD NAME="inputtype" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="text" SEQUENCE="false"/>
+        <FIELD NAME="required" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="searchable" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="filterable" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="visible" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="multivalue" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="sortorder" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="configdata" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="code_uix" UNIQUE="true" FIELDS="code"/>
+        <INDEX NAME="filterable_ix" UNIQUE="false" FIELDS="filterable, visible"/>
+        <INDEX NAME="searchable_ix" UNIQUE="false" FIELDS="searchable, visible"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_product_attribute_values" COMMENT="Typed product attribute values">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="productid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="attributeid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="valuehash" TYPE="char" LENGTH="64" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="valuechar" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="valuetext" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="valuenumber" TYPE="number" LENGTH="20" NOTNULL="false" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="valueint" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="valuebool" TYPE="int" LENGTH="1" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="sortorder" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="productid_fk" TYPE="foreign" FIELDS="productid" REFTABLE="local_moderncommerce_products" REFFIELDS="id"/>
+        <KEY NAME="attributeid_fk" TYPE="foreign" FIELDS="attributeid" REFTABLE="local_moderncommerce_product_attributes" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="product_attribute_value_uix" UNIQUE="true" FIELDS="productid, attributeid, valuehash"/>
+        <INDEX NAME="attribute_char_ix" UNIQUE="false" FIELDS="attributeid, valuechar"/>
+        <INDEX NAME="attribute_int_ix" UNIQUE="false" FIELDS="attributeid, valueint"/>
+        <INDEX NAME="attribute_number_ix" UNIQUE="false" FIELDS="attributeid, valuenumber"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_product_relations" COMMENT="Product bundle, program, prerequisite, and add-on relationships">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="parentproductid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="childproductid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="relationtype" TYPE="char" LENGTH="30" NOTNULL="true" DEFAULT="bundle_item" SEQUENCE="false"/>
+        <FIELD NAME="quantity" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="1" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="required" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="pricingmode" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="included" SEQUENCE="false"/>
+        <FIELD NAME="sortorder" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="configdata" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="parentproductid_fk" TYPE="foreign" FIELDS="parentproductid" REFTABLE="local_moderncommerce_products" REFFIELDS="id"/>
+        <KEY NAME="childproductid_fk" TYPE="foreign" FIELDS="childproductid" REFTABLE="local_moderncommerce_products" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="parent_child_type_uix" UNIQUE="true" FIELDS="parentproductid, childproductid, relationtype"/>
+        <INDEX NAME="parent_type_sort_ix" UNIQUE="false" FIELDS="parentproductid, relationtype, sortorder"/>
+        <INDEX NAME="child_type_ix" UNIQUE="false" FIELDS="childproductid, relationtype"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_course_meta" COMMENT="Course catalog metadata">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="durationminutes" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="skilllevel" TYPE="char" LENGTH="50" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="language" TYPE="char" LENGTH="50" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="passgrade" TYPE="number" LENGTH="5" NOTNULL="false" DECIMALS="2" SEQUENCE="false"/>
+        <FIELD NAME="certificateenabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="overview" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="featured" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="bestseller" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="trending" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="courseid_fk" TYPE="foreign-unique" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+        <KEY NAME="usermodified_fk" TYPE="foreign" FIELDS="usermodified" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="featured_ix" UNIQUE="false" FIELDS="featured"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_course_objectives" COMMENT="Course learning objectives">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="sortorder" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="objective" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="courseid_fk" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="course_sort_ix" UNIQUE="false" FIELDS="courseid, sortorder"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_course_outline" COMMENT="Course outline rows for catalog pages">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="sortorder" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="sectiontitle" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="estimatedtime" TYPE="char" LENGTH="50" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="courseid_fk" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="course_sort_ix" UNIQUE="false" FIELDS="courseid, sortorder"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_billing_profiles" COMMENT="Reusable customer billing profiles">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="firstname" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="lastname" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="company" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="email" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="phone" TYPE="char" LENGTH="50" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="address1" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="address2" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="city" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="state" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="country" TYPE="char" LENGTH="2" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="postcode" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="isdefault" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="userid_fk" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="userid_default_ix" UNIQUE="false" FIELDS="userid, isdefault"/>
+        <INDEX NAME="email_ix" UNIQUE="false" FIELDS="email"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_carts" COMMENT="Shopping carts">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="sessionid" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="active" SEQUENCE="false"/>
+        <FIELD NAME="currency" TYPE="char" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="couponcode" TYPE="char" LENGTH="50" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="subtotal" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="discount" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="tax" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="total" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="expiresat" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="userid_fk" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="user_status_time_ix" UNIQUE="false" FIELDS="userid, status, timemodified"/>
+        <INDEX NAME="sessionid_ix" UNIQUE="false" FIELDS="sessionid"/>
+        <INDEX NAME="expiresat_ix" UNIQUE="false" FIELDS="expiresat"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_cart_items" COMMENT="Cart line items">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="cartid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="productid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="priceid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="quantity" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="1" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="unitprice" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="currency" TYPE="char" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="cartid_fk" TYPE="foreign" FIELDS="cartid" REFTABLE="local_moderncommerce_carts" REFFIELDS="id"/>
+        <KEY NAME="productid_fk" TYPE="foreign" FIELDS="productid" REFTABLE="local_moderncommerce_products" REFFIELDS="id"/>
+        <KEY NAME="priceid_fk" TYPE="foreign" FIELDS="priceid" REFTABLE="local_moderncommerce_product_prices" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="cart_product_uix" UNIQUE="true" FIELDS="cartid, productid"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_orders" COMMENT="Order headers">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="ordernumber" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="ordertype" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="purchase" SEQUENCE="false"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="pending" SEQUENCE="false"/>
+        <FIELD NAME="subtotal" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="discount" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="tax" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="fees" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="total" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="refundedtotal" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="currency" TYPE="char" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="currencysymbol" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="currencyposition" TYPE="char" LENGTH="10" NOTNULL="true" DEFAULT="before" SEQUENCE="false"/>
+        <FIELD NAME="decimalplaces" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="2" SEQUENCE="false"/>
+        <FIELD NAME="thousandseparator" TYPE="char" LENGTH="10" NOTNULL="false" DEFAULT="," SEQUENCE="false"/>
+        <FIELD NAME="decimalseparator" TYPE="char" LENGTH="10" NOTNULL="false" DEFAULT="." SEQUENCE="false"/>
+        <FIELD NAME="exchangerate" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="1" DECIMALS="10" SEQUENCE="false"/>
+        <FIELD NAME="couponcode" TYPE="char" LENGTH="50" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="customeremail" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="ipaddress" TYPE="char" LENGTH="50" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="useragent" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="referrer" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="notes" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="adminnotes" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="createdby" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="modifiedby" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timepaid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timecompleted" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timerefunded" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="userid_fk" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="createdby_fk" TYPE="foreign" FIELDS="createdby" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="modifiedby_fk" TYPE="foreign" FIELDS="modifiedby" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="ordernumber_uix" UNIQUE="true" FIELDS="ordernumber"/>
+        <INDEX NAME="userid_time_ix" UNIQUE="false" FIELDS="userid, timecreated"/>
+        <INDEX NAME="userid_status_time_ix" UNIQUE="false" FIELDS="userid, status, timecreated"/>
+        <INDEX NAME="status_time_ix" UNIQUE="false" FIELDS="status, timecreated"/>
+        <INDEX NAME="email_ix" UNIQUE="false" FIELDS="customeremail"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_order_operational" COMMENT="Internal order workflow and operational state">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="orderid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="cartid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="createdvia" TYPE="char" LENGTH="50" NOTNULL="true" DEFAULT="checkout" SEQUENCE="false"/>
+        <FIELD NAME="checkoutsessionid" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="cartchecksum" TYPE="char" LENGTH="64" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="pricesincludetax" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="couponusagerecorded" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="inventoryreserved" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="inventoryreduced" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="receiptqueued" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="receiptsent" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="paymentstatus" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="unpaid" SEQUENCE="false"/>
+        <FIELD NAME="fulfillmentstatus" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="unfulfilled" SEQUENCE="false"/>
+        <FIELD NAME="lastpaymentattemptid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="lastgatewayeventid" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timepaid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timefulfilled" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timecancelled" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="orderid_fk" TYPE="foreign-unique" FIELDS="orderid" REFTABLE="local_moderncommerce_orders" REFFIELDS="id"/>
+        <KEY NAME="cartid_fk" TYPE="foreign" FIELDS="cartid" REFTABLE="local_moderncommerce_carts" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="paymentstatus_ix" UNIQUE="false" FIELDS="paymentstatus, timemodified"/>
+        <INDEX NAME="fulfillmentstatus_ix" UNIQUE="false" FIELDS="fulfillmentstatus, timemodified"/>
+        <INDEX NAME="checkoutsession_ix" UNIQUE="false" FIELDS="checkoutsessionid"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_order_items" COMMENT="Order line items">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="orderid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="productid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="priceid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="itemtype" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="course" SEQUENCE="false"/>
+        <FIELD NAME="itemname" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="sku" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="unitprice" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="quantity" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="1" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="subtotal" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="discount" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="tax" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="total" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="currency" TYPE="char" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="enrolduration" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="orderid_fk" TYPE="foreign" FIELDS="orderid" REFTABLE="local_moderncommerce_orders" REFFIELDS="id"/>
+        <KEY NAME="productid_fk" TYPE="foreign" FIELDS="productid" REFTABLE="local_moderncommerce_products" REFFIELDS="id"/>
+        <KEY NAME="priceid_fk" TYPE="foreign" FIELDS="priceid" REFTABLE="local_moderncommerce_product_prices" REFFIELDS="id"/>
+        <KEY NAME="courseid_fk" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="course_order_ix" UNIQUE="false" FIELDS="courseid, orderid"/>
+        <INDEX NAME="type_course_ix" UNIQUE="false" FIELDS="itemtype, courseid"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_inventory_reservations" COMMENT="Product stock reservation ledger">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="productid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="cartid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="cartitemid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="orderid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="orderitemid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="quantity" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="reserved" SEQUENCE="false"/>
+        <FIELD NAME="expiresat" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="productid_fk" TYPE="foreign" FIELDS="productid" REFTABLE="local_moderncommerce_products" REFFIELDS="id"/>
+        <KEY NAME="cartid_fk" TYPE="foreign" FIELDS="cartid" REFTABLE="local_moderncommerce_carts" REFFIELDS="id"/>
+        <KEY NAME="cartitemid_fk" TYPE="foreign" FIELDS="cartitemid" REFTABLE="local_moderncommerce_cart_items" REFFIELDS="id"/>
+        <KEY NAME="orderid_fk" TYPE="foreign" FIELDS="orderid" REFTABLE="local_moderncommerce_orders" REFFIELDS="id"/>
+        <KEY NAME="orderitemid_fk" TYPE="foreign" FIELDS="orderitemid" REFTABLE="local_moderncommerce_order_items" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="product_status_expiry_ix" UNIQUE="false" FIELDS="productid, status, expiresat"/>
+        <INDEX NAME="cart_status_ix" UNIQUE="false" FIELDS="cartid, status"/>
+        <INDEX NAME="order_status_ix" UNIQUE="false" FIELDS="orderid, status"/>
+        <INDEX NAME="expiresat_ix" UNIQUE="false" FIELDS="expiresat"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_order_addresses" COMMENT="Order billing and shipping address snapshots">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="orderid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="addresstype" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="billing" SEQUENCE="false"/>
+        <FIELD NAME="firstname" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="lastname" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="company" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="email" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="phone" TYPE="char" LENGTH="50" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="address1" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="address2" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="city" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="state" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="country" TYPE="char" LENGTH="2" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="postcode" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="orderid_fk" TYPE="foreign" FIELDS="orderid" REFTABLE="local_moderncommerce_orders" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="order_type_uix" UNIQUE="true" FIELDS="orderid, addresstype"/>
+        <INDEX NAME="email_ix" UNIQUE="false" FIELDS="email"/>
+        <INDEX NAME="country_state_ix" UNIQUE="false" FIELDS="country, state"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_order_adjustments" COMMENT="Discounts, tax, fees, and manual order adjustments">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="orderid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="orderitemid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="adjustmenttype" TYPE="char" LENGTH="30" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="label" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="sourceid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="sourcecode" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="amount" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="currency" TYPE="char" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="taxrate" TYPE="number" LENGTH="8" NOTNULL="false" DECIMALS="4" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="orderid_fk" TYPE="foreign" FIELDS="orderid" REFTABLE="local_moderncommerce_orders" REFFIELDS="id"/>
+        <KEY NAME="orderitemid_fk" TYPE="foreign" FIELDS="orderitemid" REFTABLE="local_moderncommerce_order_items" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="order_type_ix" UNIQUE="false" FIELDS="orderid, adjustmenttype"/>
+        <INDEX NAME="source_ix" UNIQUE="false" FIELDS="adjustmenttype, sourceid"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_order_status_history" COMMENT="Order status transition history">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="orderid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="oldstatus" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="newstatus" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="actoruserid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="source" TYPE="char" LENGTH="30" NOTNULL="true" DEFAULT="system" SEQUENCE="false"/>
+        <FIELD NAME="note" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="orderid_fk" TYPE="foreign" FIELDS="orderid" REFTABLE="local_moderncommerce_orders" REFFIELDS="id"/>
+        <KEY NAME="actoruserid_fk" TYPE="foreign" FIELDS="actoruserid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="order_time_ix" UNIQUE="false" FIELDS="orderid, timecreated"/>
+        <INDEX NAME="status_time_ix" UNIQUE="false" FIELDS="newstatus, timecreated"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_invoices" COMMENT="Order invoices">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="orderid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="invoicenumber" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="draft" SEQUENCE="false"/>
+        <FIELD NAME="subtotal" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="tax" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="total" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="currency" TYPE="char" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="duedate" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="issuedat" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="paidat" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="filepath" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="notes" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="terms" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="createdby" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="orderid_fk" TYPE="foreign" FIELDS="orderid" REFTABLE="local_moderncommerce_orders" REFFIELDS="id"/>
+        <KEY NAME="userid_fk" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="createdby_fk" TYPE="foreign" FIELDS="createdby" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="invoicenumber_uix" UNIQUE="true" FIELDS="invoicenumber"/>
+        <INDEX NAME="user_status_ix" UNIQUE="false" FIELDS="userid, status"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_invoice_items" COMMENT="Invoice line items">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="invoiceid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="orderitemid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="description" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="quantity" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="1" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="unitprice" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="total" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="invoiceid_fk" TYPE="foreign" FIELDS="invoiceid" REFTABLE="local_moderncommerce_invoices" REFFIELDS="id"/>
+        <KEY NAME="orderitemid_fk" TYPE="foreign" FIELDS="orderitemid" REFTABLE="local_moderncommerce_order_items" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_gateways" COMMENT="Payment gateway configuration">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="gateway" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="displayname" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="displayorder" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="component" TYPE="char" LENGTH="100" NOTNULL="true" DEFAULT="local_moderncommerce" SEQUENCE="false"/>
+        <FIELD NAME="classname" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="methodtype" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="redirect" SEQUENCE="false"/>
+        <FIELD NAME="testmode" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="publickey" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="secretkey" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="merchantid" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="webhooksecret" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="supportedcurrencies" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="supportsrefunds" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="supportswebhooks" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="supportsrecurring" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="minamount" TYPE="number" LENGTH="20" NOTNULL="false" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="maxamount" TYPE="number" LENGTH="20" NOTNULL="false" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="feetype" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="feevalue" TYPE="number" LENGTH="20" NOTNULL="false" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="icon" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="configdata" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="gateway_uix" UNIQUE="true" FIELDS="gateway"/>
+        <INDEX NAME="enabled_order_ix" UNIQUE="false" FIELDS="enabled, displayorder"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_payment_attempts" COMMENT="Payment initialization attempts">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="orderid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="gateway" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="reference" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="amount" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="currency" TYPE="char" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="pending" SEQUENCE="false"/>
+        <FIELD NAME="idempotencykey" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="gatewaytransactionid" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="redirecturl" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="errorcode" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="errormessage" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecompleted" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="orderid_fk" TYPE="foreign" FIELDS="orderid" REFTABLE="local_moderncommerce_orders" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="gateway_reference_uix" UNIQUE="true" FIELDS="gateway, reference"/>
+        <INDEX NAME="order_status_time_ix" UNIQUE="false" FIELDS="orderid, status, timecreated"/>
+        <INDEX NAME="gateway_transaction_ix" UNIQUE="false" FIELDS="gateway, gatewaytransactionid"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_payment_events" COMMENT="Gateway payment lifecycle events">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="orderid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="attemptid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="gateway" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="dedupekey" TYPE="char" LENGTH="190" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="eventtype" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="gatewayeventid" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="reference" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="transactionid" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="amount" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="currency" TYPE="char" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="received" SEQUENCE="false"/>
+        <FIELD NAME="verified" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="payloadhash" TYPE="char" LENGTH="64" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="rawpayload" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="processed" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="processingerror" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timeprocessed" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="orderid_fk" TYPE="foreign" FIELDS="orderid" REFTABLE="local_moderncommerce_orders" REFFIELDS="id"/>
+        <KEY NAME="attemptid_fk" TYPE="foreign" FIELDS="attemptid" REFTABLE="local_moderncommerce_payment_attempts" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="dedupekey_uix" UNIQUE="true" FIELDS="dedupekey"/>
+        <INDEX NAME="gateway_event_ix" UNIQUE="false" FIELDS="gateway, gatewayeventid"/>
+        <INDEX NAME="order_time_ix" UNIQUE="false" FIELDS="orderid, timecreated"/>
+        <INDEX NAME="processed_time_ix" UNIQUE="false" FIELDS="processed, timecreated"/>
+        <INDEX NAME="gateway_reference_ix" UNIQUE="false" FIELDS="gateway, reference"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_webhook_events" COMMENT="Webhook intake log">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="gateway" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="dedupekey" TYPE="char" LENGTH="190" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="gatewayeventid" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="eventtype" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="reference" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="signatureverified" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="payloadhash" TYPE="char" LENGTH="64" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="payload" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="received" SEQUENCE="false"/>
+        <FIELD NAME="attemptcount" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="lasterror" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timeprocessed" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="dedupekey_uix" UNIQUE="true" FIELDS="dedupekey"/>
+        <INDEX NAME="gateway_event_ix" UNIQUE="false" FIELDS="gateway, gatewayeventid"/>
+        <INDEX NAME="status_time_ix" UNIQUE="false" FIELDS="status, timecreated"/>
+        <INDEX NAME="gateway_reference_ix" UNIQUE="false" FIELDS="gateway, reference"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_payment_log" COMMENT="Redacted payment diagnostic log">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="orderid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="gateway" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="action" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="reference" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="eventid" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="correlationid" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="result" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="payloadhash" TYPE="char" LENGTH="64" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="redacted" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="response" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="orderid_fk" TYPE="foreign" FIELDS="orderid" REFTABLE="local_moderncommerce_orders" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="order_time_ix" UNIQUE="false" FIELDS="orderid, timecreated"/>
+        <INDEX NAME="gateway_reference_ix" UNIQUE="false" FIELDS="gateway, reference"/>
+        <INDEX NAME="gateway_action_time_ix" UNIQUE="false" FIELDS="gateway, action, timecreated"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_refunds" COMMENT="Refund headers">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="orderid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="attemptid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="amount" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="currency" TYPE="char" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="reason" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="pending" SEQUENCE="false"/>
+        <FIELD NAME="refundreference" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="requestedby" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="processedby" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="adminnotes" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timerequested" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timeprocessed" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="orderid_fk" TYPE="foreign" FIELDS="orderid" REFTABLE="local_moderncommerce_orders" REFFIELDS="id"/>
+        <KEY NAME="attemptid_fk" TYPE="foreign" FIELDS="attemptid" REFTABLE="local_moderncommerce_payment_attempts" REFFIELDS="id"/>
+        <KEY NAME="requestedby_fk" TYPE="foreign" FIELDS="requestedby" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="processedby_fk" TYPE="foreign" FIELDS="processedby" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="status_time_ix" UNIQUE="false" FIELDS="status, timerequested"/>
+        <INDEX NAME="refundreference_ix" UNIQUE="false" FIELDS="refundreference"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_refund_items" COMMENT="Item-level refund allocations">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="refundid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="orderitemid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="quantity" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="amount" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="tax" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="total" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="currency" TYPE="char" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="refundid_fk" TYPE="foreign" FIELDS="refundid" REFTABLE="local_moderncommerce_refunds" REFFIELDS="id"/>
+        <KEY NAME="orderitemid_fk" TYPE="foreign" FIELDS="orderitemid" REFTABLE="local_moderncommerce_order_items" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_coupons" COMMENT="Discount coupons">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="code" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="discounttype" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="percentage" SEQUENCE="false"/>
+        <FIELD NAME="value" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="maxdiscount" TYPE="number" LENGTH="20" NOTNULL="false" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="minpurchase" TYPE="number" LENGTH="20" NOTNULL="false" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="minitems" TYPE="int" LENGTH="5" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="maxuses" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="usedcount" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="maxusesperuser" TYPE="int" LENGTH="5" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="stackable" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="active" SEQUENCE="false"/>
+        <FIELD NAME="startdate" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="enddate" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="createdby" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="createdby_fk" TYPE="foreign" FIELDS="createdby" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="code_uix" UNIQUE="true" FIELDS="code"/>
+        <INDEX NAME="status_dates_ix" UNIQUE="false" FIELDS="status, startdate, enddate"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_coupon_targets" COMMENT="Coupon applicability targets">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="couponid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="targettype" TYPE="char" LENGTH="30" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="targetid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="targetvalue" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="includemode" TYPE="char" LENGTH="10" NOTNULL="true" DEFAULT="include" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="couponid_fk" TYPE="foreign" FIELDS="couponid" REFTABLE="local_moderncommerce_coupons" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="coupon_type_id_ix" UNIQUE="false" FIELDS="couponid, targettype, targetid"/>
+        <INDEX NAME="type_target_ix" UNIQUE="false" FIELDS="targettype, targetid"/>
+        <INDEX NAME="type_value_ix" UNIQUE="false" FIELDS="targettype, targetvalue"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_coupon_usage" COMMENT="Coupon redemption tracking">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="couponid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="orderid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="discountamount" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="couponid_fk" TYPE="foreign" FIELDS="couponid" REFTABLE="local_moderncommerce_coupons" REFFIELDS="id"/>
+        <KEY NAME="userid_fk" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="orderid_fk" TYPE="foreign" FIELDS="orderid" REFTABLE="local_moderncommerce_orders" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="coupon_user_ix" UNIQUE="false" FIELDS="couponid, userid"/>
+        <INDEX NAME="coupon_order_uix" UNIQUE="true" FIELDS="couponid, orderid"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_enrollkeys" COMMENT="Prepaid enrollment keys">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="keycode" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="keytype" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="single" SEQUENCE="false"/>
+        <FIELD NAME="value" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="currency" TYPE="char" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="remainingvalue" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="maxuses" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="usedcount" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="maxusesperuser" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="batchid" TYPE="char" LENGTH="50" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="batchname" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="active" SEQUENCE="false"/>
+        <FIELD NAME="startdate" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="expirydate" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="requiredemail" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="enrolduration" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="roleid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="notes" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="createdby" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="createdby_fk" TYPE="foreign" FIELDS="createdby" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="keycode_uix" UNIQUE="true" FIELDS="keycode"/>
+        <INDEX NAME="status_dates_ix" UNIQUE="false" FIELDS="status, startdate, expirydate"/>
+        <INDEX NAME="batchid_ix" UNIQUE="false" FIELDS="batchid"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_enrollkey_targets" COMMENT="Enrollment key applicability targets">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="enrollkeyid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="targettype" TYPE="char" LENGTH="30" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="targetid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="targetvalue" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="includemode" TYPE="char" LENGTH="10" NOTNULL="true" DEFAULT="include" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="enrollkeyid_fk" TYPE="foreign" FIELDS="enrollkeyid" REFTABLE="local_moderncommerce_enrollkeys" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="key_type_id_ix" UNIQUE="false" FIELDS="enrollkeyid, targettype, targetid"/>
+        <INDEX NAME="type_target_ix" UNIQUE="false" FIELDS="targettype, targetid"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_key_usage" COMMENT="Enrollment key redemption log">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="enrollkeyid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="orderid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="productid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="valueused" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="ipaddress" TYPE="char" LENGTH="50" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="useragent" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timeredeemed" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="enrollkeyid_fk" TYPE="foreign" FIELDS="enrollkeyid" REFTABLE="local_moderncommerce_enrollkeys" REFFIELDS="id"/>
+        <KEY NAME="userid_fk" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="orderid_fk" TYPE="foreign" FIELDS="orderid" REFTABLE="local_moderncommerce_orders" REFFIELDS="id"/>
+        <KEY NAME="productid_fk" TYPE="foreign" FIELDS="productid" REFTABLE="local_moderncommerce_products" REFFIELDS="id"/>
+        <KEY NAME="courseid_fk" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="key_user_ix" UNIQUE="false" FIELDS="enrollkeyid, userid"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_fulfillments" COMMENT="Commercial fulfillment records">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="orderid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="pending" SEQUENCE="false"/>
+        <FIELD NAME="source" TYPE="char" LENGTH="30" NOTNULL="true" DEFAULT="order" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecompleted" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="orderid_fk" TYPE="foreign" FIELDS="orderid" REFTABLE="local_moderncommerce_orders" REFFIELDS="id"/>
+        <KEY NAME="userid_fk" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="user_status_ix" UNIQUE="false" FIELDS="userid, status"/>
+        <INDEX NAME="status_time_ix" UNIQUE="false" FIELDS="status, timecreated"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_fulfillment_items" COMMENT="Item-level fulfillment ledger">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="fulfillmentid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="orderitemid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="productid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="itemtype" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="course" SEQUENCE="false"/>
+        <FIELD NAME="enrolid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="pending" SEQUENCE="false"/>
+        <FIELD NAME="timestart" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timeend" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timefulfilled" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timerevoked" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="fulfillmentid_fk" TYPE="foreign" FIELDS="fulfillmentid" REFTABLE="local_moderncommerce_fulfillments" REFFIELDS="id"/>
+        <KEY NAME="orderitemid_fk" TYPE="foreign" FIELDS="orderitemid" REFTABLE="local_moderncommerce_order_items" REFFIELDS="id"/>
+        <KEY NAME="productid_fk" TYPE="foreign" FIELDS="productid" REFTABLE="local_moderncommerce_products" REFFIELDS="id"/>
+        <KEY NAME="courseid_fk" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="fulfillment_status_ix" UNIQUE="false" FIELDS="fulfillmentid, status"/>
+        <INDEX NAME="orderitem_course_uix" UNIQUE="true" FIELDS="orderitemid, courseid"/>
+        <INDEX NAME="course_status_ix" UNIQUE="false" FIELDS="courseid, status"/>
+        <INDEX NAME="product_status_ix" UNIQUE="false" FIELDS="productid, status"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_entitlements" COMMENT="Commercial ownership and access ledger">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="sourcekey" TYPE="char" LENGTH="190" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="productid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="orderid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="orderitemid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="fulfillmentid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="fulfillmentitemid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="enrollkeyid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="userenrolmentid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="enrolinstanceid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="entitlementtype" TYPE="char" LENGTH="30" NOTNULL="true" DEFAULT="course_access" SEQUENCE="false"/>
+        <FIELD NAME="source" TYPE="char" LENGTH="30" NOTNULL="true" DEFAULT="purchase" SEQUENCE="false"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="active" SEQUENCE="false"/>
+        <FIELD NAME="grantreason" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timestart" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timeend" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timegranted" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timerevoked" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timeexpired" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="revokereason" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="metadata" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="userid_fk" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="productid_fk" TYPE="foreign" FIELDS="productid" REFTABLE="local_moderncommerce_products" REFFIELDS="id"/>
+        <KEY NAME="courseid_fk" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+        <KEY NAME="orderid_fk" TYPE="foreign" FIELDS="orderid" REFTABLE="local_moderncommerce_orders" REFFIELDS="id"/>
+        <KEY NAME="orderitemid_fk" TYPE="foreign" FIELDS="orderitemid" REFTABLE="local_moderncommerce_order_items" REFFIELDS="id"/>
+        <KEY NAME="fulfillmentid_fk" TYPE="foreign" FIELDS="fulfillmentid" REFTABLE="local_moderncommerce_fulfillments" REFFIELDS="id"/>
+        <KEY NAME="fulfillmentitemid_fk" TYPE="foreign" FIELDS="fulfillmentitemid" REFTABLE="local_moderncommerce_fulfillment_items" REFFIELDS="id"/>
+        <KEY NAME="enrollkeyid_fk" TYPE="foreign" FIELDS="enrollkeyid" REFTABLE="local_moderncommerce_enrollkeys" REFFIELDS="id"/>
+        <KEY NAME="userenrolmentid_fk" TYPE="foreign" FIELDS="userenrolmentid" REFTABLE="user_enrolments" REFFIELDS="id"/>
+        <KEY NAME="enrolinstanceid_fk" TYPE="foreign" FIELDS="enrolinstanceid" REFTABLE="enrol" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="sourcekey_uix" UNIQUE="true" FIELDS="sourcekey"/>
+        <INDEX NAME="user_status_ix" UNIQUE="false" FIELDS="userid, status"/>
+        <INDEX NAME="user_course_status_ix" UNIQUE="false" FIELDS="userid, courseid, status"/>
+        <INDEX NAME="order_status_ix" UNIQUE="false" FIELDS="orderid, status"/>
+        <INDEX NAME="product_status_ix" UNIQUE="false" FIELDS="productid, status"/>
+        <INDEX NAME="validity_ix" UNIQUE="false" FIELDS="status, timestart, timeend"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_entitlement_events" COMMENT="Append-only entitlement lifecycle events">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="entitlementid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="eventuuid" TYPE="char" LENGTH="64" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="eventtype" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="oldstatus" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="newstatus" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="actoruserid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="source" TYPE="char" LENGTH="30" NOTNULL="true" DEFAULT="system" SEQUENCE="false"/>
+        <FIELD NAME="reason" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="correlationid" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="eventdata" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="entitlementid_fk" TYPE="foreign" FIELDS="entitlementid" REFTABLE="local_moderncommerce_entitlements" REFFIELDS="id"/>
+        <KEY NAME="actoruserid_fk" TYPE="foreign" FIELDS="actoruserid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="eventuuid_uix" UNIQUE="true" FIELDS="eventuuid"/>
+        <INDEX NAME="entitlement_time_ix" UNIQUE="false" FIELDS="entitlementid, timecreated"/>
+        <INDEX NAME="eventtype_time_ix" UNIQUE="false" FIELDS="eventtype, timecreated"/>
+        <INDEX NAME="correlationid_ix" UNIQUE="false" FIELDS="correlationid"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_tax_rates" COMMENT="Tax configuration by region">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="country" TYPE="char" LENGTH="2" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="state" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="postcode" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="taxcategory" TYPE="char" LENGTH="50" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="rate" TYPE="number" LENGTH="10" NOTNULL="true" DEFAULT="0" DECIMALS="4" SEQUENCE="false"/>
+        <FIELD NAME="priority" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="compound" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="country_state_ix" UNIQUE="false" FIELDS="country, state"/>
+        <INDEX NAME="enabled_priority_ix" UNIQUE="false" FIELDS="enabled, priority"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_wishlist" COMMENT="Learner product wishlist">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="productid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="userid_fk" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="productid_fk" TYPE="foreign" FIELDS="productid" REFTABLE="local_moderncommerce_products" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="user_product_uix" UNIQUE="true" FIELDS="userid, productid"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_audit_log" COMMENT="Structured immutable commerce audit ledger">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="eventuuid" TYPE="char" LENGTH="64" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="correlationid" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="actoruserid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="subjectuserid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="action" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="entitytype" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="entityid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="source" TYPE="char" LENGTH="30" NOTNULL="true" DEFAULT="system" SEQUENCE="false"/>
+        <FIELD NAME="result" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="success" SEQUENCE="false"/>
+        <FIELD NAME="severity" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="info" SEQUENCE="false"/>
+        <FIELD NAME="ipaddress" TYPE="char" LENGTH="50" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="useragent" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="olddata" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="newdata" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="oldhash" TYPE="char" LENGTH="64" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="newhash" TYPE="char" LENGTH="64" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="previoushash" TYPE="char" LENGTH="64" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="eventhash" TYPE="char" LENGTH="64" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="redacted" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="actoruserid_fk" TYPE="foreign" FIELDS="actoruserid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="subjectuserid_fk" TYPE="foreign" FIELDS="subjectuserid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="eventuuid_uix" UNIQUE="true" FIELDS="eventuuid"/>
+        <INDEX NAME="entity_time_ix" UNIQUE="false" FIELDS="entitytype, entityid, timecreated"/>
+        <INDEX NAME="actor_time_ix" UNIQUE="false" FIELDS="actoruserid, timecreated"/>
+        <INDEX NAME="subject_time_ix" UNIQUE="false" FIELDS="subjectuserid, timecreated"/>
+        <INDEX NAME="correlationid_ix" UNIQUE="false" FIELDS="correlationid"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_report_daily" COMMENT="Daily revenue and order reporting snapshots">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="reportdate" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="currency" TYPE="char" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="orders" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="paidorders" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="refunds" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="gross" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="discount" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="tax" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="net" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="date_currency_uix" UNIQUE="true" FIELDS="reportdate, currency"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_report_products" COMMENT="Product-level sales reporting snapshots">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="reportdate" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="productid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="currency" TYPE="char" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="quantity" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="gross" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="discount" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="net" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="productid_fk" TYPE="foreign" FIELDS="productid" REFTABLE="local_moderncommerce_products" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="date_product_currency_uix" UNIQUE="true" FIELDS="reportdate, productid, currency"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_report_gateways" COMMENT="Gateway-level payment reporting snapshots">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="reportdate" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="gateway" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="currency" TYPE="char" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="attempts" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="successful" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="failed" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="amount" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="fees" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="date_gateway_uix" UNIQUE="true" FIELDS="reportdate, gateway, currency"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_bundle_meta" COMMENT="Advanced merchandising metadata for bundle and program products">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="bundleid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="visibility" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="Public" SEQUENCE="false"/>
+        <FIELD NAME="availstart" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="availend" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="badge_featured" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="badge_bestseller" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="badge_trending" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="bundle_price" TYPE="number" LENGTH="20" NOTNULL="false" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="compare_at" TYPE="number" LENGTH="20" NOTNULL="false" DECIMALS="6" SEQUENCE="false"/>
+        <FIELD NAME="skill_level" TYPE="char" LENGTH="50" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="language" TYPE="char" LENGTH="50" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="has_prereq" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="auto_duration" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="dur_hours" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="dur_mins" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="auto_assessments" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="assessments_count" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="auto_outline" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="pass_grade" TYPE="number" LENGTH="5" NOTNULL="false" DECIMALS="2" SEQUENCE="false"/>
+        <FIELD NAME="pass_policy" TYPE="char" LENGTH="30" NOTNULL="true" DEFAULT="all_must_pass" SEQUENCE="false"/>
+        <FIELD NAME="bundle_cert" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="certificate_template_id" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="bundleid_fk" TYPE="foreign-unique" FIELDS="bundleid" REFTABLE="local_moderncommerce_products" REFFIELDS="id"/>
+        <KEY NAME="usermodified_fk" TYPE="foreign" FIELDS="usermodified" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_bundle_outline" COMMENT="Bundle curriculum outline items">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="bundleid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="sortorder" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="item_text" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="bundleid_fk" TYPE="foreign" FIELDS="bundleid" REFTABLE="local_moderncommerce_products" REFFIELDS="id"/>
+        <KEY NAME="usermodified_fk" TYPE="foreign" FIELDS="usermodified" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="bundle_sort_ix" UNIQUE="false" FIELDS="bundleid, sortorder"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_bundle_mustpass" COMMENT="Courses a learner must pass to complete a bundle">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="bundleid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="bundleid_fk" TYPE="foreign" FIELDS="bundleid" REFTABLE="local_moderncommerce_products" REFFIELDS="id"/>
+        <KEY NAME="courseid_fk" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="bundle_course_uix" UNIQUE="true" FIELDS="bundleid, courseid"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_bundle_prereq" COMMENT="Prerequisite courses recommended before a bundle">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="bundleid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="bundleid_fk" TYPE="foreign" FIELDS="bundleid" REFTABLE="local_moderncommerce_products" REFFIELDS="id"/>
+        <KEY NAME="courseid_fk" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="bundle_course_uix" UNIQUE="true" FIELDS="bundleid, courseid"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_bundle_tags" COMMENT="Merchandising tags for bundle and program products">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="bundleid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="tag" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="bundleid_fk" TYPE="foreign" FIELDS="bundleid" REFTABLE="local_moderncommerce_products" REFFIELDS="id"/>
+        <KEY NAME="usermodified_fk" TYPE="foreign" FIELDS="usermodified" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="bundle_tag_uix" UNIQUE="true" FIELDS="bundleid, tag"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_emailtpl" COMMENT="Core Modern Commerce email template content records">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="legacyid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Source local_modernemailtemplates id, used for upgrade remapping"/>
+        <FIELD NAME="template_key" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="component" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="template_type" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="description" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="subject" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="body" TYPE="text" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="format" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="html" SEQUENCE="false"/>
+        <FIELD NAME="placeholders" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="active" SEQUENCE="false"/>
+        <FIELD NAME="locked" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="created_by" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="createdby_fk" TYPE="foreign" FIELDS="created_by" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="templatekey_uix" UNIQUE="true" FIELDS="template_key"/>
+        <INDEX NAME="legacyid_ix" UNIQUE="false" FIELDS="legacyid"/>
+        <INDEX NAME="component_ix" UNIQUE="false" FIELDS="component"/>
+        <INDEX NAME="status_ix" UNIQUE="false" FIELDS="status"/>
+        <INDEX NAME="templatetype_ix" UNIQUE="false" FIELDS="template_type"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_widget" COMMENT="A placed storefront widget bound to a page zone">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="type" TYPE="char" LENGTH="30" NOTNULL="true" DEFAULT="slider" SEQUENCE="false"/>
+        <FIELD NAME="zone" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="pagetype" TYPE="char" LENGTH="30" NOTNULL="true" DEFAULT="catalog" SEQUENCE="false"/>
+        <FIELD NAME="sortorder" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="title" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="subtitle" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="audience" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="all" SEQUENCE="false"/>
+        <FIELD NAME="settings" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="styleconfig" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timestart" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timeend" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="usermodified_fk" TYPE="foreign" FIELDS="usermodified" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="page_zone_enabled_ix" UNIQUE="false" FIELDS="pagetype, zone, enabled"/>
+        <INDEX NAME="zone_sort_ix" UNIQUE="false" FIELDS="zone, sortorder"/>
+        <INDEX NAME="type_ix" UNIQUE="false" FIELDS="type"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_widget_slide" COMMENT="Slides belonging to a storefront slider widget">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="instanceid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="sortorder" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="image" TYPE="char" LENGTH="1333" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="heading" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="subheading" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="ctalabel" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="ctaurl" TYPE="char" LENGTH="1333" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="ctastyle" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="primary" SEQUENCE="false"/>
+        <FIELD NAME="bgcolor" TYPE="char" LENGTH="30" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="instanceid_fk" TYPE="foreign" FIELDS="instanceid" REFTABLE="local_moderncommerce_widget" REFFIELDS="id"/>
+        <KEY NAME="usermodified_fk" TYPE="foreign" FIELDS="usermodified" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="instance_sort_ix" UNIQUE="false" FIELDS="instanceid, sortorder"/>
+        <INDEX NAME="instance_enabled_ix" UNIQUE="false" FIELDS="instanceid, enabled"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_widget_preset" COMMENT="Reusable style-only presets for storefront widget types">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="type" TYPE="char" LENGTH="30" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="styleconfig" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="settingspatch" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="usermodified_fk" TYPE="foreign" FIELDS="usermodified" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="type_name_uix" UNIQUE="true" FIELDS="type, name"/>
+        <INDEX NAME="type_ix" UNIQUE="false" FIELDS="type"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_storepage" COMMENT="Admin-created custom public storefront pages">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="slug" TYPE="char" LENGTH="30" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="title" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="summary" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="icon" TYPE="char" LENGTH="50" NOTNULL="true" DEFAULT="bi-file-text" SEQUENCE="false"/>
+        <FIELD NAME="template" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="content" SEQUENCE="false"/>
+        <FIELD NAME="enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="sortorder" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="usermodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="usermodified_fk" TYPE="foreign" FIELDS="usermodified" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="slug_uix" UNIQUE="true" FIELDS="slug"/>
+        <INDEX NAME="enabled_sort_ix" UNIQUE="false" FIELDS="enabled, sortorder"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_subscriber" COMMENT="Storefront newsletter / lead-capture subscribers">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="email" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="source" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="email_uix" UNIQUE="true" FIELDS="email"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_dashpref" COMMENT="Per-admin commerce dashboard layout preferences">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="chartslayout" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON: per-admin chart visibility, order and size"/>
+        <FIELD NAME="panellayout" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON: per-admin KPI panel visibility and order"/>
+        <FIELD NAME="daterange" TYPE="char" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Preferred default insights date range"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="userid_fk" TYPE="foreign-unique" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_reviews" COMMENT="Core Modern Commerce course reviews">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Course ID from mdl_course"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="User ID who submitted the review"/>
+        <FIELD NAME="rating" TYPE="int" LENGTH="1" NOTNULL="true" SEQUENCE="false" COMMENT="Star rating from 1-5"/>
+        <FIELD NAME="comment" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="Review comment text"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Timestamp when review was created"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Timestamp when review was last modified"/>
+        <FIELD NAME="hidden" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="1 if review is hidden by admin"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="course_fk" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+        <KEY NAME="user_fk" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="courseid_userid_uq" UNIQUE="true" FIELDS="courseid, userid" COMMENT="Unique review per user per course"/>
+        <INDEX NAME="hidden_idx" UNIQUE="false" FIELDS="hidden"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_review_rxn" COMMENT="Core Modern Commerce review reactions">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="reviewid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="FK to local_moderncommerce_reviews.id"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="User who reacted"/>
+        <FIELD NAME="reaction" TYPE="int" LENGTH="1" NOTNULL="true" SEQUENCE="false" COMMENT="1=like, 2=dislike, 3=love"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Timestamp when reaction was created"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="review_fk" TYPE="foreign" FIELDS="reviewid" REFTABLE="local_moderncommerce_reviews" REFFIELDS="id"/>
+        <KEY NAME="user_fk" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="review_user_uq" UNIQUE="true" FIELDS="reviewid, userid" COMMENT="One reaction per user per review"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_notify_queue" COMMENT="Notification outbox: one row per recipient x channel awaiting or completing delivery.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="component" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="Producer component, e.g. local_moderncommerce."/>
+        <FIELD NAME="eventkey" TYPE="char" LENGTH="64" NOTNULL="true" SEQUENCE="false" COMMENT="Canonical event, e.g. order_paid."/>
+        <FIELD NAME="category" TYPE="char" LENGTH="32" NOTNULL="true" SEQUENCE="false" COMMENT="transactional|reminder|dunning|celebratory|marketing|operational."/>
+        <FIELD NAME="priority" TYPE="char" LENGTH="10" NOTNULL="true" DEFAULT="normal" SEQUENCE="false" COMMENT="high|normal|low send lane."/>
+        <FIELD NAME="templatekey" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="local_moderncommerce email template key (null for raw subject/body)."/>
+        <FIELD NAME="placeholders" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON entity placeholders captured at enqueue."/>
+        <FIELD NAME="recipientuserid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Recipient user (0 for endpoint channels)."/>
+        <FIELD NAME="recipientemail" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="channel" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false" COMMENT="email|inapp|slack|teams|slack_dm|teams_dm."/>
+        <FIELD NAME="endpointref" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Channel/webhook id or DM target for endpoint channels."/>
+        <FIELD NAME="subject" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Rendered subject (set at send time)."/>
+        <FIELD NAME="body" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Rendered HTML body (set at send time)."/>
+        <FIELD NAME="bodyformat" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="pending" SEQUENCE="false" COMMENT="pending|processing|sent|failed|cancelled|suppressed."/>
+        <FIELD NAME="attempts" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="maxattempts" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="5" SEQUENCE="false"/>
+        <FIELD NAME="lasterror" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="dedupekey" TYPE="char" LENGTH="64" NOTNULL="true" SEQUENCE="false" COMMENT="sha1 dedupe key (unique)."/>
+        <FIELD NAME="scheduledtime" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Earliest eligible send time."/>
+        <FIELD NAME="nextattempttime" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Backoff gate for retries."/>
+        <FIELD NAME="senttime" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="contexturl" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Deep link to the related object."/>
+        <FIELD NAME="relatedid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Source object id (orderid, subscriptionid...)."/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="dedupekey" UNIQUE="true" FIELDS="dedupekey"/>
+        <INDEX NAME="status_priority_sched" UNIQUE="false" FIELDS="status, priority, scheduledtime"/>
+        <INDEX NAME="status_nextattempt" UNIQUE="false" FIELDS="status, nextattempttime"/>
+        <INDEX NAME="component_event_related" UNIQUE="false" FIELDS="component, eventkey, relatedid"/>
+        <INDEX NAME="recipientuserid" UNIQUE="false" FIELDS="recipientuserid"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_notify_log" COMMENT="Immutable audit of every notification delivery attempt.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="queueid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="component" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="eventkey" TYPE="char" LENGTH="64" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="category" TYPE="char" LENGTH="32" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="recipientuserid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="recipientemail" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="channel" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="subject" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="body" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="result" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false" COMMENT="sent|failed|skipped|suppressed."/>
+        <FIELD NAME="error" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="httpcode" TYPE="int" LENGTH="6" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="externalid" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="recipientuserid" UNIQUE="false" FIELDS="recipientuserid"/>
+        <INDEX NAME="component_event" UNIQUE="false" FIELDS="component, eventkey"/>
+        <INDEX NAME="timecreated" UNIQUE="false" FIELDS="timecreated"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_notify_digest" COMMENT="Accumulated notification digest items awaiting a daily/weekly rollup.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="recipientuserid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="frequency" TYPE="char" LENGTH="10" NOTNULL="true" DEFAULT="daily" SEQUENCE="false" COMMENT="daily|weekly."/>
+        <FIELD NAME="category" TYPE="char" LENGTH="32" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="eventkey" TYPE="char" LENGTH="64" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="summary" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON summary payload for the rollup."/>
+        <FIELD NAME="relatedid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="pending" SEQUENCE="false" COMMENT="pending|sent."/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="status_freq_recipient" UNIQUE="false" FIELDS="status, frequency, recipientuserid"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_notify_identity" COMMENT="Links a user to a Slack/Teams account for direct messages.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="provider" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false" COMMENT="slack|teams."/>
+        <FIELD NAME="externalid" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Member/AAD id."/>
+        <FIELD NAME="workspace" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Workspace/tenant."/>
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="pending" SEQUENCE="false" COMMENT="pending|linked|revoked."/>
+        <FIELD NAME="verifiedat" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="userid_provider" UNIQUE="true" FIELDS="userid, provider"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_notify_suppression" COMMENT="Marketing-notification opt-out (unsubscribe) list.">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="email" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="scope" TYPE="char" LENGTH="32" NOTNULL="true" DEFAULT="all" SEQUENCE="false" COMMENT="all|category|eventkey."/>
+        <FIELD NAME="reason" TYPE="char" LENGTH="32" NOTNULL="false" SEQUENCE="false" COMMENT="unsubscribe|bounce|complaint."/>
+        <FIELD NAME="token" TYPE="char" LENGTH="64" NOTNULL="false" SEQUENCE="false" COMMENT="Signed unsubscribe token."/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="userid" UNIQUE="false" FIELDS="userid"/>
+        <INDEX NAME="email" UNIQUE="false" FIELDS="email"/>
+        <INDEX NAME="token" UNIQUE="false" FIELDS="token"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_contacts" COMMENT="Contact form submissions (absorbed from local_moderncontact).">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" COMMENT="Primary key"/>
+        <FIELD NAME="fullname" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Sender full name"/>
+        <FIELD NAME="email" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Sender email"/>
+        <FIELD NAME="subject" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Subject line"/>
+        <FIELD NAME="phone" TYPE="char" LENGTH="50" NOTNULL="false" SEQUENCE="false" COMMENT="Phone number"/>
+        <FIELD NAME="message" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="Message body"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="new" SEQUENCE="false" COMMENT="Submission status (new|inprogress|closed|archived)"/>
+        <FIELD NAME="source" TYPE="char" LENGTH="100" NOTNULL="false" DEFAULT="block_moderncommerce_hero_contact" SEQUENCE="false" COMMENT="Source of submission"/>
+        <FIELD NAME="replytoken" TYPE="char" LENGTH="64" NOTNULL="false" SEQUENCE="false" COMMENT="Token for client to reply via email link"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Creation timestamp"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="Last update timestamp"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="timecreated" UNIQUE="false" FIELDS="timecreated"/>
+        <INDEX NAME="email" UNIQUE="false" FIELDS="email"/>
+        <INDEX NAME="status" UNIQUE="false" FIELDS="status"/>
+        <INDEX NAME="replytoken" UNIQUE="false" FIELDS="replytoken"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="local_moderncommerce_contact_replies" COMMENT="Contact conversation thread replies (absorbed from local_moderncontact).">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" COMMENT="Primary key"/>
+        <FIELD NAME="contactid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="FK to contacts table"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="User ID if from admin, null if from client"/>
+        <FIELD NAME="fromclient" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="1 if reply is from client, 0 if from admin"/>
+        <FIELD NAME="message" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="Reply message"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Creation timestamp"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="contactid" TYPE="foreign" FIELDS="contactid" REFTABLE="local_moderncommerce_contacts" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+
+
+    <!-- ===== Subscription subsystem (absorbed from local_modernsubscription) ===== -->
+
+    <!-- Subscription Plans -->
+    <TABLE NAME="local_moderncommerce_subscription_plans" COMMENT="Subscription plan definitions">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true"/>
+        <FIELD NAME="code" TYPE="char" LENGTH="50" NOTNULL="true"/>
+        <FIELD NAME="description" TYPE="text"/>
+        <FIELD NAME="billing_cycle" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="monthly" COMMENT="monthly|yearly"/>
+        <FIELD NAME="price" TYPE="number" LENGTH="12" NOTNULL="true" DEFAULT="0" DECIMALS="4"/>
+        <FIELD NAME="promo_price" TYPE="number" LENGTH="12" NOTNULL="false" DECIMALS="4" COMMENT="Discounted promotional price"/>
+        <FIELD NAME="promo_end_date" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Unix timestamp when promo expires"/>
+        <FIELD NAME="currency" TYPE="char" LENGTH="3" NOTNULL="true" DEFAULT="USD"/>
+        <FIELD NAME="trial_days" TYPE="int" LENGTH="10" DEFAULT="0"/>
+        <FIELD NAME="grace_period_days" TYPE="int" LENGTH="10" DEFAULT="7"/>
+        <FIELD NAME="max_seats" TYPE="int" LENGTH="10" DEFAULT="1" COMMENT="For future team subscriptions"/>
+        <FIELD NAME="sortorder" TYPE="int" LENGTH="10" DEFAULT="0"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="active"/>
+        <FIELD NAME="featured" TYPE="int" LENGTH="1" DEFAULT="0"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="createdby" TYPE="int" LENGTH="10"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="code_ix" UNIQUE="true" FIELDS="code"/>
+        <INDEX NAME="status_ix" UNIQUE="false" FIELDS="status"/>
+        <INDEX NAME="sortorder_ix" UNIQUE="false" FIELDS="sortorder"/>
+      </INDEXES>
+    </TABLE>
+
+    <!-- Plan Features (legacy - per plan storage) -->
+    <TABLE NAME="local_moderncommerce_subscription_plan_features" COMMENT="Feature list items for each plan">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="planid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="feature" TYPE="char" LENGTH="255" NOTNULL="true"/>
+        <FIELD NAME="icon" TYPE="char" LENGTH="50" NOTNULL="false" COMMENT="Bootstrap icon name e.g. check-circle"/>
+        <FIELD NAME="sortorder" TYPE="int" LENGTH="10" DEFAULT="0"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="planid_fk" TYPE="foreign" FIELDS="planid" REFTABLE="local_moderncommerce_subscription_plans" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="planid_sortorder_ix" UNIQUE="false" FIELDS="planid, sortorder"/>
+      </INDEXES>
+    </TABLE>
+
+    <!-- Master Feature List -->
+    <TABLE NAME="local_moderncommerce_subscription_features" COMMENT="Master list of all available features">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true"/>
+        <FIELD NAME="description" TYPE="text"/>
+        <FIELD NAME="icon" TYPE="char" LENGTH="50" NOTNULL="false" DEFAULT="check-circle" COMMENT="Bootstrap icon name"/>
+        <FIELD NAME="sortorder" TYPE="int" LENGTH="10" DEFAULT="0"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="active"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="status_sortorder_ix" UNIQUE="false" FIELDS="status, sortorder"/>
+      </INDEXES>
+    </TABLE>
+
+    <!-- Plan Feature Mapping (junction table) -->
+    <TABLE NAME="local_moderncommerce_subscription_feature_map" COMMENT="Maps features to plans">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="planid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="featureid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="planid_fk" TYPE="foreign" FIELDS="planid" REFTABLE="local_moderncommerce_subscription_plans" REFFIELDS="id"/>
+        <KEY NAME="featureid_fk" TYPE="foreign" FIELDS="featureid" REFTABLE="local_moderncommerce_subscription_features" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="plan_feature_ix" UNIQUE="true" FIELDS="planid, featureid"/>
+      </INDEXES>
+    </TABLE>
+
+    <!-- Plan Access Rules -->
+    <TABLE NAME="local_moderncommerce_subscription_access_rules" COMMENT="What each plan grants access to">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="planid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="access_type" TYPE="char" LENGTH="20" NOTNULL="true" COMMENT="course|category|bundle"/>
+        <FIELD NAME="target_id" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="planid_fk" TYPE="foreign" FIELDS="planid" REFTABLE="local_moderncommerce_subscription_plans" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="planid_type_ix" UNIQUE="false" FIELDS="planid, access_type"/>
+        <INDEX NAME="target_ix" UNIQUE="false" FIELDS="access_type, target_id"/>
+      </INDEXES>
+    </TABLE>
+
+    <!-- User Subscriptions -->
+    <TABLE NAME="local_moderncommerce_user_subscriptions" COMMENT="Active user subscriptions">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="planid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="orderid" TYPE="int" LENGTH="10" COMMENT="Modern Commerce order that created this"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="active" COMMENT="active|trial|grace|suspended|cancelled|expired"/>
+        <FIELD NAME="start_date" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="end_date" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="trial_end_date" TYPE="int" LENGTH="10"/>
+        <FIELD NAME="trial_warning_sent" TYPE="int" LENGTH="1" DEFAULT="0" COMMENT="1 if trial ending warning was sent"/>
+        <FIELD NAME="grace_end_date" TYPE="int" LENGTH="10"/>
+        <FIELD NAME="auto_renew" TYPE="int" LENGTH="1" DEFAULT="0"/>
+        <FIELD NAME="renewal_count" TYPE="int" LENGTH="10" DEFAULT="0"/>
+        <FIELD NAME="last_reminder_sent" TYPE="int" LENGTH="10"/>
+        <FIELD NAME="cancellation_reason" TYPE="text"/>
+        <FIELD NAME="cancelled_at" TYPE="int" LENGTH="10"/>
+        <FIELD NAME="cancel_at_period_end" TYPE="int" LENGTH="1" DEFAULT="0" COMMENT="If 1, subscription will be cancelled at end_date"/>
+        <FIELD NAME="pending_planid" TYPE="int" LENGTH="10" COMMENT="Scheduled plan change (for downgrades)"/>
+        <FIELD NAME="pending_change_date" TYPE="int" LENGTH="10" COMMENT="When pending plan change takes effect"/>
+        <FIELD NAME="last_plan_change" TYPE="int" LENGTH="10" COMMENT="Timestamp of last plan change for cooldown"/>
+        <FIELD NAME="account_credit" TYPE="number" LENGTH="12" DECIMALS="4" NOTNULL="true" DEFAULT="0" COMMENT="Stored credit from downgrades"/>
+        <FIELD NAME="stripe_subscription_id" TYPE="char" LENGTH="100" COMMENT="Stripe subscription ID for recurring billing"/>
+        <FIELD NAME="stripe_customer_id" TYPE="char" LENGTH="100" COMMENT="Stripe customer ID"/>
+        <FIELD NAME="stripe_payment_method_id" TYPE="char" LENGTH="100" COMMENT="Default Stripe payment method"/>
+        <FIELD NAME="paypal_subscription_id" TYPE="char" LENGTH="100" COMMENT="PayPal billing agreement ID"/>
+        <FIELD NAME="paystack_subscription_code" TYPE="char" LENGTH="100" COMMENT="Paystack subscription code"/>
+        <FIELD NAME="paystack_authorization_code" TYPE="char" LENGTH="100" COMMENT="Reusable Paystack authorization for renewals"/>
+        <FIELD NAME="paystack_email" TYPE="char" LENGTH="255" COMMENT="Email the Paystack authorization belongs to"/>
+        <FIELD NAME="flutterwave_subscription_id" TYPE="char" LENGTH="100" COMMENT="Flutterwave subscription ID"/>
+        <FIELD NAME="next_billing_date" TYPE="int" LENGTH="10" COMMENT="Next automatic billing date"/>
+        <FIELD NAME="payment_failed_count" TYPE="int" LENGTH="2" DEFAULT="0" COMMENT="Number of consecutive payment failures"/>
+        <FIELD NAME="last_payment_attempt" TYPE="int" LENGTH="10" COMMENT="Last payment attempt timestamp"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="userid_fk" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="planid_fk" TYPE="foreign" FIELDS="planid" REFTABLE="local_moderncommerce_subscription_plans" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="userid_status_ix" UNIQUE="false" FIELDS="userid, status"/>
+        <INDEX NAME="end_date_ix" UNIQUE="false" FIELDS="end_date"/>
+        <INDEX NAME="status_ix" UNIQUE="false" FIELDS="status"/>
+        <INDEX NAME="grace_end_ix" UNIQUE="false" FIELDS="grace_end_date"/>
+      </INDEXES>
+    </TABLE>
+
+    <!-- Subscription History -->
+    <TABLE NAME="local_moderncommerce_subscription_history" COMMENT="Audit log of subscription changes">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="subscriptionid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="action" TYPE="char" LENGTH="50" NOTNULL="true" COMMENT="created|renewed|upgraded|downgraded|suspended|cancelled|expired|reactivated"/>
+        <FIELD NAME="old_planid" TYPE="int" LENGTH="10"/>
+        <FIELD NAME="new_planid" TYPE="int" LENGTH="10"/>
+        <FIELD NAME="old_end_date" TYPE="int" LENGTH="10"/>
+        <FIELD NAME="new_end_date" TYPE="int" LENGTH="10"/>
+        <FIELD NAME="amount_paid" TYPE="number" LENGTH="12" DECIMALS="4"/>
+        <FIELD NAME="orderid" TYPE="int" LENGTH="10"/>
+        <FIELD NAME="notes" TYPE="text"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="createdby" TYPE="int" LENGTH="10"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="subscriptionid_fk" TYPE="foreign" FIELDS="subscriptionid" REFTABLE="local_moderncommerce_user_subscriptions" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="userid_ix" UNIQUE="false" FIELDS="userid"/>
+        <INDEX NAME="action_ix" UNIQUE="false" FIELDS="action"/>
+        <INDEX NAME="timecreated_ix" UNIQUE="false" FIELDS="timecreated"/>
+      </INDEXES>
+    </TABLE>
+
+    <!-- Reminder Tracking -->
+    <TABLE NAME="local_moderncommerce_subscription_reminders" COMMENT="Track sent reminders to avoid duplicates">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="subscriptionid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="reminder_type" TYPE="char" LENGTH="50" NOTNULL="true" COMMENT="expiring_7d|expiring_3d|expiring_1d|expired|grace_ending"/>
+        <FIELD NAME="sent_at" TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="subscriptionid_fk" TYPE="foreign" FIELDS="subscriptionid" REFTABLE="local_moderncommerce_user_subscriptions" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="sub_type_ix" UNIQUE="true" FIELDS="subscriptionid, reminder_type"/>
+      </INDEXES>
+    </TABLE>
+
+    <!-- User Access Cache -->
+    <TABLE NAME="local_moderncommerce_subscription_access" COMMENT="Cache of user course access via subscription">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="subscriptionid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="granted_at" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="expires_at" TYPE="int" LENGTH="10"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="userid_fk" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="subscriptionid_fk" TYPE="foreign" FIELDS="subscriptionid" REFTABLE="local_moderncommerce_user_subscriptions" REFFIELDS="id"/>
+        <KEY NAME="courseid_fk" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="user_course_ix" UNIQUE="true" FIELDS="userid, courseid"/>
+        <INDEX NAME="expires_ix" UNIQUE="false" FIELDS="expires_at"/>
+      </INDEXES>
+    </TABLE>
+
+    <!-- Subscription Email Templates (local copy of selections and custom messages) -->
+    <TABLE NAME="local_moderncommerce_subscription_emailtpl" COMMENT="Local-managed subscription email templates and overrides">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="templatetype" TYPE="char" LENGTH="50" NOTNULL="true" COMMENT="activation|renewal"/>
+        <FIELD NAME="enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1"/>
+        <FIELD NAME="template_key" TYPE="char" LENGTH="255" NOTNULL="false" COMMENT="Selected key from local_moderncommerce core email templates"/>
+        <FIELD NAME="use_custom_message" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" COMMENT="Use custom subject/body instead of template"/>
+        <FIELD NAME="custom_subject" TYPE="char" LENGTH="255" NOTNULL="false"/>
+        <FIELD NAME="custom_message" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="type_unique_ix" UNIQUE="true" FIELDS="templatetype"/>
+      </INDEXES>
+    </TABLE>
+
+    <!-- Subscription Enrollment Keys -->
+    <TABLE NAME="local_moderncommerce_subscription_keys" COMMENT="Pre-paid subscription enrollment keys">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="keycode" TYPE="char" LENGTH="50" NOTNULL="true"/>
+        <FIELD NAME="planid" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Subscription plan this key activates"/>
+        <FIELD NAME="value" TYPE="number" LENGTH="12" NOTNULL="true" DEFAULT="0" DECIMALS="4" COMMENT="Value/price of the key"/>
+        <FIELD NAME="currency" TYPE="char" LENGTH="10" NOTNULL="true" DEFAULT="USD"/>
+        <FIELD NAME="duration_days" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Override subscription duration in days (NULL=use plan default)"/>
+        <FIELD NAME="maxuses" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Max total uses (NULL=unlimited)"/>
+        <FIELD NAME="usedcount" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="maxusesperuser" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="1"/>
+        <FIELD NAME="batchid" TYPE="char" LENGTH="50" NOTNULL="false" COMMENT="Batch identifier for bulk-generated keys"/>
+        <FIELD NAME="batchname" TYPE="char" LENGTH="255" NOTNULL="false"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="active" COMMENT="active|disabled|expired"/>
+        <FIELD NAME="startdate" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Key valid from"/>
+        <FIELD NAME="expirydate" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Key expires on"/>
+        <FIELD NAME="userids" TYPE="text" NOTNULL="false" COMMENT="JSON array of allowed user IDs"/>
+        <FIELD NAME="cohortids" TYPE="text" NOTNULL="false" COMMENT="JSON array of allowed cohort IDs"/>
+        <FIELD NAME="requiredemail" TYPE="char" LENGTH="255" NOTNULL="false" COMMENT="Restrict to specific email domain"/>
+        <FIELD NAME="notes" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="createdby" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="planid_fk" TYPE="foreign" FIELDS="planid" REFTABLE="local_moderncommerce_subscription_plans" REFFIELDS="id"/>
+        <KEY NAME="createdby_fk" TYPE="foreign" FIELDS="createdby" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="keycode_ix" UNIQUE="true" FIELDS="keycode"/>
+        <INDEX NAME="status_ix" UNIQUE="false" FIELDS="status"/>
+        <INDEX NAME="batchid_ix" UNIQUE="false" FIELDS="batchid"/>
+      </INDEXES>
+    </TABLE>
+
+    <!-- Subscription Key Usage Log -->
+    <TABLE NAME="local_moderncommerce_subscription_key_usage" COMMENT="Subscription key redemption log">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="keyid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="subscriptionid" TYPE="int" LENGTH="10" NOTNULL="false" COMMENT="Resulting subscription"/>
+        <FIELD NAME="orderid" TYPE="int" LENGTH="10" NOTNULL="false"/>
+        <FIELD NAME="ipaddress" TYPE="char" LENGTH="45" NOTNULL="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="keyid_fk" TYPE="foreign" FIELDS="keyid" REFTABLE="local_moderncommerce_subscription_keys" REFFIELDS="id"/>
+        <KEY NAME="userid_fk" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="subscriptionid_fk" TYPE="foreign" FIELDS="subscriptionid" REFTABLE="local_moderncommerce_user_subscriptions" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="key_user_ix" UNIQUE="false" FIELDS="keyid, userid"/>
+      </INDEXES>
+    </TABLE>
+
+
+    <TABLE NAME="local_moderncommerce_subscription_log" COMMENT="Subscription billing/lifecycle action log (absorbed from local_modernsubscription).">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="subscriptionid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="planid" TYPE="int" LENGTH="10" NOTNULL="false"/>
+        <FIELD NAME="action" TYPE="char" LENGTH="50" NOTNULL="true"/>
+        <FIELD NAME="details" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="subscriptionid_ix" UNIQUE="false" FIELDS="subscriptionid"/>
+        <INDEX NAME="userid_ix" UNIQUE="false" FIELDS="userid"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="local_moderncommerce_program_progress" COMMENT="Auditable learner progress and certificate issuance for ordered programs">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="programid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="orderid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="active" SEQUENCE="false"/>
+        <FIELD NAME="totalcourses" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="completedcourses" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="passedcourses" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="averagegrade" TYPE="number" LENGTH="10" NOTNULL="true" DEFAULT="0" DECIMALS="2" SEQUENCE="false"/>
+        <FIELD NAME="progresspercentage" TYPE="number" LENGTH="10" NOTNULL="true" DEFAULT="0" DECIMALS="2" SEQUENCE="false"/>
+        <FIELD NAME="currentcourseid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="certificateissueid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timecompleted" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="programid_fk" TYPE="foreign" FIELDS="programid" REFTABLE="local_moderncommerce_products" REFFIELDS="id"/>
+        <KEY NAME="userid_fk" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="program_user_uix" UNIQUE="true" FIELDS="programid, userid"/>
+        <INDEX NAME="status_ix" UNIQUE="false" FIELDS="status"/>
+        <INDEX NAME="certificateissue_ix" UNIQUE="false" FIELDS="certificateissueid"/>
+      </INDEXES>
+    </TABLE>
+  </TABLES>
+</XMLDB>

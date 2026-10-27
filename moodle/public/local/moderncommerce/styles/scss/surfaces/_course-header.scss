@@ -1,0 +1,362 @@
+// This file is part of Moodle and is licensed under the
+// GNU General Public License, version 3 or later.
+//
+// You may redistribute and modify it under the terms of the GPL.
+// See the plugin root LICENSE file for complete terms.
+//
+// Modern Commerce styles.
+//
+// @package    local_moderncommerce
+// @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+// @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+/*
+ * Modern Commerce SCSS partial: course header media helpers.
+ * Migrated from standalone CSS so generated bundles have a single source of truth.
+ */
+
+/* Source: styles/header.css */
+/* ============================ Course Header Styles ================================== */
+
+/* Image Cover and Overlay Styles */
+.path-local-moderncommerce {
+.image-cover {
+    background-size: cover !important;
+    background-position: center !important;
+}
+
+.image-cover.bottom {
+    background-position: bottom !important;
+}
+
+[data-overlay] {
+    position: relative;
+}
+
+[data-overlay]:before {
+    position: absolute;
+    content: '';
+    background: var(--bs-primary);
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: 1;
+}
+
+[data-overlay] .container {
+    position: relative;
+    z-index: 2;
+}
+
+[data-overlay].image--light:before {
+    background: var(--mc-surface, #fff);
+}
+
+[data-overlay].bg--primary:before {
+    background: var(--maincolor);
+}
+
+[data-overlay="1"]:before {
+    opacity: 0.1;
+}
+
+[data-overlay="2"]:before {
+    opacity: 0.2;
+}
+
+[data-overlay="3"]:before {
+    opacity: 0.3;
+}
+
+[data-overlay="4"]:before {
+    opacity: 0.4;
+}
+
+[data-overlay="5"]:before {
+    opacity: 0.5;
+}
+
+[data-overlay="6"]:before {
+    opacity: 0.6;
+}
+
+[data-overlay="7"]:before {
+    opacity: 0.7;
+}
+
+[data-overlay="8"]:before {
+    opacity: 0.8;
+}
+
+[data-overlay="9"]:before {
+    opacity: 0.9;
+}
+
+[data-overlay="10"]:before {
+    opacity: 1;
+}
+
+[data-overlay="0"]:before {
+    opacity: 0;
+}
+
+div[data-overlay] h1,
+div[data-overlay] h2,
+div[data-overlay] h3,
+div[data-overlay] h4,
+div[data-overlay] h5,
+div[data-overlay] h6 {
+    color: var(--mc-text-inverse, #fff);
+}
+
+.mc-course-section-accordion .accordion-button {
+    padding: 1rem 1.25rem;
+    font-size: 1rem;
+}
+
+.mc-course-section-accordion .accordion-button:not(.collapsed) {
+    background-color: #f8f9fa;
+    color: #212529;
+    box-shadow: none;
+}
+
+.mc-course-section-accordion .accordion-button:focus {
+    border-color: rgba(0, 0, 0, .125);
+    box-shadow: none;
+}
+
+.mc-course-section-accordion .subsection-item {
+    border: 1px solid #e9ecef;
+    transition: background-color .2s ease;
+}
+
+.mc-course-section-accordion .subsection-item:hover {
+    background-color: #f8f9fa;
+}
+
+.mc-course-section-accordion .subsection-icon {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #e9ecef;
+}
+
+.mc-course-section-accordion .subsection-name {
+    color: #495057;
+    font-weight: 500;
+}
+
+.mc-course-section-accordion .accordion-body {
+    padding: 1rem 1.25rem;
+}
+
+.mc-bundle-course-card__badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 1;
+}
+
+.mc-bundle-course-card__image {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+}
+
+div[data-overlay] p {
+    color: var(--mc-text-inverse, #fff);
+}
+
+/* Background Colors */
+.bg-main {
+    background-color: var(--maincolor) !important;
+}
+
+.bg-green {
+    background-color: var(--greencolor) !important;
+}
+
+.bg-red {
+    background-color: var(--redcolor) !important;
+}
+
+.bg-light {
+    background-color: var(--lightcolor) !important;
+}
+
+.bg-dark {
+    background-color: var(--darkcolor) !important;
+}
+
+.bg-white {
+    background-color: var(--mc-surface, #ffffff) !important;
+}
+
+.bg-light-main {
+    background-color: color-mix(in srgb, var(--maincolor), transparent 94%) !important;
+}
+
+.bg-light-green {
+    background-color: color-mix(in srgb, var(--greencolor), transparent 90%) !important;
+}
+
+.bg-light-red {
+    background-color: color-mix(in srgb, var(--redcolor), transparent 90%) !important;
+}
+
+/* Course Detail Header */
+.ccp_detail_head {
+    padding: 3rem 0;
+}
+
+.ccp_detail_head.lg {
+    padding: 4rem;
+}
+
+.ccp_detail_wrap {
+    width: 100%;
+    display: block;
+    position: relative;
+}
+
+.ccp_detail_wrap.light {
+    color: var(--mc-text-inverse, #ffffff);
+}
+
+.ccp_detail_wrap.light ul.cources_facts_list li {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: var(--mc-text-inverse, #ffffff) !important;
+}
+
+/* Course Header Caption */
+.ccp_header_caption {
+    width: 100%;
+    display: block;
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.ccp_header_caption ul {
+    padding: 0;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    column-gap: 1.5rem;
+    row-gap: 0.4rem;
+    flex-wrap: wrap;
+}
+
+.ccp_header_caption ul li,
+.edu_inline_info li {
+    list-style: none;
+    font-size: 15px;
+}
+
+.ccp_header_caption ul li:last-child,
+.edu_inline_info li:last-child {
+    margin-right: 0rem;
+}
+
+.ccp_header_caption ul li i,
+.edu_inline_info li i {
+    margin-right: 7px;
+}
+
+/* Course Type Badges */
+.course-type {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.course-type .badge {
+    padding: 0.35em 0.85em;
+}
+
+/* Rating Info */
+.ccp_rate_info {
+    margin-top: 1rem;
+}
+
+.star_info {
+    font-size: 1rem;
+}
+
+.review_counter {
+    font-size: 0.95rem;
+}
+
+.review_counter strong {
+    font-size: 1.15rem;
+}
+
+/* Inline Education Wrap */
+.inline_edu_wrap {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.inline_edu_first {
+    flex: 1;
+}
+
+.inline_edu_last {
+    display: flex;
+    align-items: center;
+}
+
+.inline_edu_last .edu_price {
+    font-size: 31px;
+    margin: 0;
+    margin-right: 10px;
+}
+
+.inline_edu_last .enroll-btn {
+    border-radius: 0.3rem;
+    color: var(--mc-text-inverse, #ffffff) !important;
+}
+
+/* Responsive Styles */
+@media (max-width: 991.98px) {
+    .ccp_detail_head.lg {
+        padding: 3rem 1rem;
+    }
+
+    .ccp_detail_wrap {
+        padding: 0 1rem;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .ccp_detail_head {
+        padding: 2rem 0;
+    }
+
+    .ccp_detail_head.lg {
+        padding: 2rem 1rem;
+    }
+
+    .ccp_header_caption h2 {
+        font-size: 1.5rem;
+    }
+
+    .inline_edu_wrap {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .inline_edu_last {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
+
+}

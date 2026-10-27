@@ -1,0 +1,393 @@
+/**
+ * This file is part of Moodle and is licensed under the
+ * GNU General Public License, version 3 or later.
+ *
+ * You may redistribute and modify it under the terms of the GPL.
+ * See the plugin root LICENSE file for complete terms.
+ *
+ * Compiled Modern Commerce styles.
+ *
+ * @package    local_moderncommerce
+ * @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+/*
+ * Modern Commerce SCSS partial: branding editor page.
+ * Migrated from standalone CSS so generated bundles have a single source of truth.
+ */
+/* Source: styles/branding-admin.css */
+/*
+ * Modern Commerce - branding editor page layout.
+ * Page-specific helpers for /local/moderncommerce/admin/branding.php. Consumes
+ * the --mc-* design tokens; not part of the compiled runtime stylesheet.
+ */
+.mc-brand-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--mc-space-6);
+  align-items: start;
+}
+
+@media (min-width: 1025px) {
+  .mc-brand-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(360px, 390px);
+  }
+}
+.mc-brand-editor {
+  min-width: 0;
+}
+
+.mc-brand-group {
+  margin-bottom: var(--mc-space-6);
+}
+
+.mc-brand-group__title {
+  margin: 0 0 var(--mc-space-3);
+  padding-bottom: var(--mc-space-2);
+  border-bottom: 1px solid var(--mc-border);
+  font-size: var(--mc-fs-h4);
+  font-weight: var(--mc-fw-semibold);
+  color: var(--mc-text);
+}
+
+.mc-brand-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: var(--mc-space-4);
+}
+
+.mc-brand-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mc-space-1);
+}
+
+.mc-brand-field--full {
+  grid-column: 1/-1;
+}
+
+.mc-brand-field__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mc-space-2);
+  min-height: 26px;
+}
+
+.mc-brand-field__label {
+  font-size: var(--mc-fs-ui);
+  font-weight: var(--mc-fw-medium);
+  color: var(--mc-text);
+}
+
+.mc-brand-field__badge {
+  font-size: var(--mc-fs-caption);
+  color: var(--mc-text-subtle);
+}
+
+.mc-brand-field__control {
+  display: flex;
+  align-items: center;
+  gap: var(--mc-space-2);
+}
+
+.mc-brand-field__text {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--mc-font-mono);
+}
+
+.mc-brand-field__reset {
+  flex: 0 0 auto;
+}
+
+.mc-brand-swatch {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid var(--mc-border-strong);
+  border-radius: var(--mc-radius);
+  background: none;
+  cursor: pointer;
+}
+
+.mc-brand-swatch::-webkit-color-swatch-wrapper {
+  padding: 2px;
+}
+
+.mc-brand-swatch::-webkit-color-swatch {
+  border: none;
+  border-radius: calc(var(--mc-radius) - 2px);
+}
+
+.mc-brand-swatch::-moz-color-swatch {
+  border: none;
+  border-radius: calc(var(--mc-radius) - 2px);
+}
+
+.mc-brand-preview {
+  position: sticky;
+  top: var(--mc-space-4);
+  min-width: 0;
+}
+
+.mc-brand-preview__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mc-space-3);
+  margin-bottom: var(--mc-space-3);
+}
+
+.mc-brand-preview__title {
+  margin: 0;
+  font-size: var(--mc-fs-h4);
+  font-weight: var(--mc-fw-semibold);
+  color: var(--mc-text);
+}
+
+.mc-brand-preview__state {
+  display: inline-flex;
+  min-height: 1.65rem;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid var(--mc-border);
+  border-radius: var(--mc-radius-pill);
+  align-items: center;
+  justify-content: center;
+  background: var(--mc-surface);
+  color: var(--mc-text-muted);
+  font-size: var(--mc-fs-caption);
+  font-weight: var(--mc-fw-semibold);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.mc-brand-preview__state--dirty {
+  border-color: var(--mc-warning-border);
+  background: var(--mc-warning-bg);
+  color: var(--mc-warning-text);
+}
+
+.mc-brand-preview__stage {
+  border: 1px solid var(--mc-border);
+  border-radius: var(--mc-radius);
+  overflow: hidden;
+  background: var(--mc-surface);
+}
+
+.mc-brand-preview__chrome {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.35rem;
+  padding: 0 var(--mc-space-3);
+  border-bottom: 1px solid var(--mc-border-subtle);
+  background: var(--mc-surface);
+}
+
+.mc-brand-preview__dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: var(--mc-radius-pill);
+  background: var(--mc-border-strong);
+}
+
+.mc-brand-preview__chrome-title {
+  margin-left: 0.35rem;
+  color: var(--mc-text-muted);
+  font-size: var(--mc-fs-caption);
+  font-weight: var(--mc-fw-medium);
+}
+
+.mc-brand-preview__canvas {
+  display: grid;
+  grid-template-columns: 7rem minmax(0, 1fr);
+  min-height: 19rem;
+  background: var(--mc-page-bg);
+}
+
+.mc-brand-preview__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+  padding: var(--mc-space-4) var(--mc-space-3);
+  background: var(--mc-secondary);
+  color: var(--mc-sidebar-text);
+}
+
+.mc-brand-preview__mark {
+  width: 2rem;
+  height: 2rem;
+  margin-bottom: var(--mc-space-2);
+  border-radius: calc(var(--mc-radius) * 0.8);
+  background: linear-gradient(135deg, var(--mc-primary), var(--mc-accent));
+}
+
+.mc-brand-preview__nav-title {
+  margin-bottom: var(--mc-space-2);
+  color: var(--mc-text-inverse);
+  font-size: var(--mc-fs-caption);
+  font-weight: var(--mc-fw-semibold);
+  line-height: 1.25;
+}
+
+.mc-brand-preview__nav-item {
+  display: block;
+  width: 100%;
+  padding: 0.42rem 0.5rem;
+  border-radius: calc(var(--mc-radius) * 0.75);
+  color: var(--mc-sidebar-text);
+  font-size: var(--mc-fs-caption);
+  font-weight: var(--mc-fw-medium);
+  line-height: 1.2;
+}
+
+.mc-brand-preview__nav-item--active {
+  background: var(--mc-sidebar-active-bg);
+  color: var(--mc-sidebar-text-hover);
+  outline: 1px solid var(--mc-sidebar-border);
+}
+
+.mc-brand-preview__content {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--mc-space-3);
+  padding: var(--mc-space-4);
+}
+
+.mc-brand-preview__panel {
+  display: flex;
+  gap: var(--mc-space-3);
+  justify-content: space-between;
+  padding: var(--mc-space-4);
+  border: 1px solid var(--mc-border);
+  border-radius: var(--mc-radius);
+  background: var(--mc-surface);
+}
+
+.mc-brand-preview__panel h5 {
+  margin: var(--mc-space-2) 0 var(--mc-space-1);
+  color: var(--mc-text);
+  font-size: var(--mc-fs-h5);
+  font-weight: var(--mc-fw-semibold);
+  line-height: var(--mc-lh-heading);
+}
+
+.mc-brand-preview__panel p {
+  max-width: 18ch;
+  margin: 0;
+  color: var(--mc-text-muted);
+  font-size: var(--mc-fs-caption);
+  line-height: 1.45;
+}
+
+.mc-brand-preview__metric {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  color: var(--mc-text);
+}
+
+.mc-brand-preview__metric strong {
+  color: var(--mc-primary);
+  font-size: var(--mc-fs-h3);
+  font-weight: var(--mc-fw-display);
+  line-height: 1;
+}
+
+.mc-brand-preview__metric span {
+  margin-top: 0.2rem;
+  color: var(--mc-text-muted);
+  font-size: var(--mc-fs-caption);
+}
+
+.mc-brand-preview__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mc-space-2);
+}
+
+.mc-brand-preview__swatches {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--mc-space-2);
+}
+
+.mc-brand-preview__swatch {
+  height: 2.35rem;
+  border: 1px solid var(--mc-border);
+  border-radius: var(--mc-radius);
+}
+
+.mc-brand-preview__swatch--primary {
+  background: var(--mc-primary);
+}
+
+.mc-brand-preview__swatch--accent {
+  background: var(--mc-accent);
+}
+
+.mc-brand-preview__swatch--surface {
+  background: var(--mc-surface);
+}
+
+.mc-brand-preview__notice {
+  display: flex;
+  min-height: 2.5rem;
+  padding: 0 var(--mc-space-3);
+  border: 1px solid var(--mc-primary-border);
+  border-radius: var(--mc-radius);
+  align-items: center;
+  gap: var(--mc-space-2);
+  background: var(--mc-primary-light);
+  color: var(--mc-primary);
+  font-size: var(--mc-fs-caption);
+  font-weight: var(--mc-fw-semibold);
+}
+
+.mc-brand-footer {
+  grid-column: 1/-1;
+}
+
+@media (max-width: 1024px) {
+  .mc-brand-layout {
+    grid-template-columns: 1fr;
+  }
+  .mc-brand-preview {
+    position: static;
+  }
+}
+@media (max-width: 560px) {
+  .mc-brand-preview__canvas {
+    grid-template-columns: 1fr;
+  }
+  .mc-brand-preview__nav {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .mc-brand-preview__mark,
+  .mc-brand-preview__nav-title {
+    margin-bottom: 0;
+  }
+  .mc-brand-preview__nav-item {
+    width: auto;
+  }
+  .mc-brand-preview__panel {
+    flex-direction: column;
+  }
+  .mc-brand-preview__metric {
+    align-items: flex-start;
+  }
+}
+/*
+ * Modern Commerce branding editor page bundle.
+ */

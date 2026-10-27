@@ -1,0 +1,31 @@
+site_name: Modern Commerce for Moodle
+site_description: Documentation for the Modern Commerce Moodle ecommerce plugin.
+docs_dir: docs
+site_dir: site
+use_directory_urls: false
+nav:
+  - Home: README.md
+  - Installation: installation.md
+  - First Run: first-run.md
+  - Products and Pricing: products-and-pricing.md
+  - Payments: payments.md
+  - Storefront: storefront.md
+  - Dashboard Widgets: dashboard-widgets.md
+  - Orders and Reports: orders-and-reports.md
+  - Coupons and Keys: coupons-and-keys.md
+  - Subscriptions: subscriptions.md
+  - Notifications: notifications.md
+  - Operations: operations.md
+  - Release:
+      - Upgrade Notes: upgrade-notes.md
+      - Release Packaging: release-packaging.md
+      - Moodle Plugins Directory: moodle-plugin-directory.md
+      - Troubleshooting: troubleshooting.md
+  - Reference:
+      - CLI: reference/cli.md
+      - Settings: reference/settings.md
+      - Capabilities: reference/capabilities.md
+      - Scheduled Tasks: reference/scheduled-tasks.md
+      - Web Services: reference/web-services.md
+      - Storefront Widgets: reference/widgets.md
+      - Database: reference/database.md

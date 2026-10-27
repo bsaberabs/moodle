@@ -1,0 +1,24 @@
+{{!
+    This file is part of Moodle and is licensed under the
+    GNU General Public License, version 3 or later.
+
+    You may redistribute and modify it under the terms of the GPL.
+    See the plugin root LICENSE file for complete terms.
+}}
+{{!
+    @template local_moderncommerce/admin/dashboard_charts
+
+    React mount for the Modern Commerce admin dashboard analytics charts.
+
+    Context variables:
+    * chartsreactconfig - JSON config for Moodle's Mustache React helper.
+
+    @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com | www.agunfoninteractivity.com
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+}}
+<div class="mc-admin-react-shell" data-region="moderncommerce-dashboard-charts">
+    {{#react}}
+    {{{chartsreactconfig}}}
+    <div class="mc-chart-skel">{{#str}}chart_loading, local_moderncommerce{{/str}}</div>
+    {{/react}}
+</div>

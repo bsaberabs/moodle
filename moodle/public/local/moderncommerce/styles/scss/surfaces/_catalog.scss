@@ -1,0 +1,2511 @@
+/*
+ * Modern Commerce SCSS partial: catalog, product cards, filters, and catalog embeds.
+ * Migrated from standalone CSS so generated bundles have a single source of truth.
+ */
+
+/* Source: styles/catalog.css */
+/**
+ * CCP Course Catalog Styles for Local Plugin
+ *
+ * Modern course catalog with sidebar filters and responsive grid.
+ * Based on block_ccp_coursecatalog component.
+ *
+ * @package    local_moderncommerce
+ * @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com | www.agunfoninteractivity.com
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+/* ================================
+   CSS Variables
+   ================================ */
+.mc-catalog-section {
+  /* Aligned with the page-scoped design-system tokens (styles/design-system.css :root) so the
+     catalog renders with the teal brand + system neutrals everywhere — both on
+     the public catalog page and when embedded as a widget elsewhere. */
+  --mc-bg: var(--mc-page-bg, #f8fafc);
+  --mc-bg-muted: var(--mc-surface-alt, #f1f5f9);
+  --mc-card-bg: var(--mc-surface, #ffffff);
+  --mc-shadow: var(--mc-shadow-sm, 0 1px 2px rgba(15, 23, 42, 0.06));
+  --mc-shadow-lg: var(--mc-shadow-lg, 0 18px 42px rgba(15, 23, 42, 0.14));
+  --mc-radius: 6px;
+  --mc-radius-lg: 8px;
+  --mc-yellow: var(--mc-warning, #f0ad4e);
+  --mc-yellow-dark: var(--mc-warning-text, #60451f);
+  --mc-blue: var(--mc-info, #008196);
+  --mc-red: var(--mc-danger, #ca3120);
+}
+
+/* ================================
+   Section & Layout
+   ================================ */
+.mc-catalog-section {
+  min-height: 100vh;
+  background-color: var(--mc-bg-muted);
+  font-family: inherit;
+  color: var(--mc-text);
+}
+
+.mc-catalog-container {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+.mc-catalog-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+@media (min-width: 768px) {
+  .mc-catalog-layout {
+    flex-direction: row;
+  }
+}
+
+/* ================================
+   Header
+   ================================ */
+.mc-catalog-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  width: 100%;
+  border-bottom: 1px solid var(--mc-border);
+  background: var(--mc-surface, #fff);
+}
+
+.mc-catalog-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  height: 64px;
+}
+
+.mc-catalog-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mc-catalog-logo-icon {
+  width: 32px;
+  height: 32px;
+  background: var(--mc-primary);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1rem;
+}
+
+.mc-catalog-logo-text {
+  font-size: 1.125rem;
+  font-weight: 700;
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .mc-catalog-logo-text {
+    display: inline-block;
+  }
+}
+
+/* Search */
+.mc-catalog-search {
+  flex: 1;
+  max-width: 32rem;
+  position: relative;
+}
+
+.mc-catalog-search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--mc-text-muted);
+  font-size: 0.875rem;
+}
+
+.mc-catalog-search-input {
+  width: 100%;
+  padding: 0.5rem 1rem 0.5rem 2.5rem;
+  border-radius: 9999px;
+  border: 1px solid var(--mc-border);
+  background: var(--mc-bg-muted);
+  font-size: 0.875rem;
+  transition: all 0.2s;
+  outline: none;
+}
+
+.mc-catalog-search-input:focus {
+  background: #fff;
+  border-color: var(--mc-primary);
+  box-shadow: 0 0 0 3px var(--mc-focus-ring, rgba(13, 148, 136, 0.18));
+}
+
+/* Header Actions */
+.mc-catalog-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .mc-catalog-header-actions {
+    gap: 1rem;
+  }
+}
+
+.mc-catalog-cart-btn {
+  position: relative;
+  padding: 0.5rem;
+  background: transparent;
+  border: none;
+  color: var(--mc-text-muted);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.mc-catalog-cart-btn:hover {
+  color: var(--mc-text);
+}
+
+.mc-catalog-cart-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  background: var(--mc-red);
+  border-radius: 50%;
+}
+
+.mc-catalog-user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--mc-bg-muted);
+  border: 1px solid var(--mc-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* ================================
+   Mobile Filter Toggle
+   ================================ */
+.mc-catalog-mobile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 768px) {
+  .mc-catalog-mobile-header {
+    display: none;
+  }
+}
+
+.mc-catalog-title-mobile {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.mc-catalog-filter-toggle,
+.mc-catalog-filter-toggle.mc-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--mc-bg-muted);
+  border: 1px solid var(--mc-border);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.mc-catalog-filter-toggle:hover,
+.mc-catalog-filter-toggle.mc-button:hover {
+  background: #e2e8f0;
+}
+
+/* ================================
+   Sidebar
+   ================================ */
+.mc-catalog-sidebar {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: var(--mc-card-bg);
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  overflow-y: auto;
+}
+
+.mc-catalog-sidebar.open {
+  transform: translateX(0);
+}
+
+@media (min-width: 768px) {
+  .mc-catalog-sidebar {
+    position: static;
+    width: 260px;
+    flex-shrink: 0;
+    transform: translateX(0);
+    background: transparent;
+    overflow: visible;
+  }
+}
+
+.mc-catalog-sidebar-inner {
+  padding: 1rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 768px) {
+  .mc-catalog-sidebar-inner {
+    padding: 0;
+    position: sticky;
+    top: 80px;
+  }
+}
+
+.mc-catalog-sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .mc-catalog-sidebar-header {
+    display: none;
+  }
+}
+
+.mc-catalog-sidebar-header h3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.mc-catalog-sidebar-close,
+.mc-catalog-sidebar-close.mc-button {
+  padding: 0.5rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+
+.mc-catalog-sidebar-close:hover,
+.mc-catalog-sidebar-close.mc-button:hover {
+  background: var(--mc-bg-muted);
+}
+
+.mc-catalog-sidebar-footer {
+  margin-top: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .mc-catalog-sidebar-footer {
+    display: none;
+  }
+}
+
+.mc-show-results-btn {
+  width: 100%;
+  padding: 0.75rem;
+  font-weight: 600;
+}
+
+/* Backdrop */
+.mc-catalog-backdrop {
+  display: none;
+}
+
+.mc-catalog-backdrop.open {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+@media (min-width: 768px) {
+  .mc-catalog-backdrop.open {
+    display: none;
+  }
+}
+
+body.mc-sidebar-open {
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  body.mc-sidebar-open {
+    overflow: auto;
+  }
+}
+
+/* ================================
+   Filter Sections
+   ================================ */
+.mc-catalog-filters {
+  flex: 1;
+}
+
+.mc-filter-section {
+  border-bottom: 1px solid var(--mc-border);
+  padding: 1rem 0;
+}
+
+.mc-filter-section:last-child {
+  border-bottom: none;
+}
+
+.mc-filter-section-header,
+.mc-filter-section-header.mc-button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin-bottom: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--mc-text);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.mc-filter-section-header:hover,
+.mc-filter-section-header.mc-button:hover {
+  color: var(--mc-primary);
+}
+
+.mc-filter-section-header i {
+  transition: transform 0.2s;
+}
+
+.mc-filter-section.collapsed .mc-filter-section-header i {
+  transform: rotate(-180deg);
+}
+
+.mc-filter-section-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow: hidden;
+  max-height: 500px;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+}
+
+.mc-filter-section.collapsed .mc-filter-section-content {
+  max-height: 0;
+  opacity: 0;
+}
+
+/* Checkboxes */
+.mc-filter-checkbox,
+.mc-filter-radio {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+}
+
+.mc-filter-checkbox:hover .mc-filter-checkbox-label,
+.mc-filter-radio:hover .mc-filter-rating-label {
+  color: var(--mc-text);
+}
+
+.mc-filter-checkbox input,
+.mc-filter-radio input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mc-filter-checkbox-mark {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--mc-text-muted);
+  border-radius: 4px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.mc-filter-checkbox input:checked + .mc-filter-checkbox-mark {
+  background: var(--mc-primary);
+  border-color: var(--mc-primary);
+}
+
+.mc-filter-checkbox input:checked + .mc-filter-checkbox-mark::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 5px;
+  height: 9px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.mc-filter-radio-mark {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--mc-text-muted);
+  border-radius: 50%;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.mc-filter-radio input:checked + .mc-filter-radio-mark {
+  border-color: var(--mc-primary);
+  background: var(--mc-primary);
+}
+
+.mc-filter-radio input:checked + .mc-filter-radio-mark::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  width: 4px;
+  height: 4px;
+  background: #fff;
+  border-radius: 50%;
+}
+
+.mc-filter-checkbox-label,
+.mc-filter-rating-label {
+  font-size: 0.875rem;
+  color: var(--mc-text-muted);
+  transition: color 0.2s;
+}
+
+.mc-filter-rating-stars {
+  display: flex;
+  gap: 2px;
+  color: var(--mc-yellow);
+  font-size: 0.75rem;
+}
+
+/* Price Range */
+.mc-filter-price-range {
+  padding: 0.5rem 0;
+}
+
+.mc-filter-price-range input[type="range"] {
+  width: 100%;
+  height: 8px;
+  background: var(--mc-bg-muted);
+  border-radius: 4px;
+  appearance: none;
+  cursor: pointer;
+}
+
+.mc-filter-price-range input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: var(--mc-primary);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.mc-filter-price-range input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: var(--mc-primary);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+.mc-filter-price-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--mc-text-muted);
+}
+
+.mc-filter-price-value {
+  font-weight: 600;
+  color: var(--mc-text);
+}
+
+/* ================================
+   Main Content
+   ================================ */
+.mc-catalog-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.mc-catalog-main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.mc-catalog-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .mc-catalog-title {
+    display: block;
+  }
+}
+
+.mc-catalog-count {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--mc-text-muted);
+  margin-left: 0.5rem;
+}
+
+/* Controls Row (Per-page + Sort) */
+.mc-catalog-controls {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-left: auto;
+}
+
+/* Per-page Selector */
+.mc-catalog-perpage {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mc-catalog-perpage-label {
+  font-size: 0.875rem;
+  color: var(--mc-text-muted);
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .mc-catalog-perpage-label {
+    display: inline;
+  }
+}
+
+.mc-catalog-perpage-select-wrap {
+  position: relative;
+}
+
+.mc-catalog-perpage-select {
+  appearance: none;
+  background: var(--mc-card-bg);
+  border: 1px solid var(--mc-border);
+  border-radius: 8px;
+  padding: 0.5rem 2rem 0.5rem 1rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+  min-width: 70px;
+}
+
+.mc-catalog-perpage-select:focus {
+  border-color: var(--mc-primary);
+}
+
+.mc-catalog-perpage-select-wrap i {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--mc-text-muted);
+  pointer-events: none;
+  font-size: 0.75rem;
+}
+
+/* Sort */
+.mc-catalog-sort {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mc-catalog-sort-label {
+  font-size: 0.875rem;
+  color: var(--mc-text-muted);
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .mc-catalog-sort-label {
+    display: inline;
+  }
+}
+
+.mc-catalog-sort-select-wrap {
+  position: relative;
+}
+
+.mc-catalog-sort-select {
+  appearance: none;
+  background: var(--mc-card-bg);
+  border: 1px solid var(--mc-border);
+  border-radius: 8px;
+  padding: 0.5rem 2rem 0.5rem 1rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.mc-catalog-sort-select:focus {
+  border-color: var(--mc-primary);
+}
+
+.mc-catalog-sort-select-wrap i {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--mc-text-muted);
+  pointer-events: none;
+  font-size: 0.75rem;
+}
+
+/* ================================
+   Course Grid
+   ================================ */
+.mc-catalog-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  align-items: stretch;
+  grid-auto-rows: 1fr;
+  transition: opacity 0.2s ease-out;
+}
+
+.mc-catalog-grid.mc-grid-animating {
+  pointer-events: none;
+}
+
+@media (min-width: 640px) {
+  .mc-catalog-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .mc-catalog-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ================================
+   Course Card
+   ================================ */
+.mc-course-card {
+  position: relative;
+  background: var(--mc-card-bg);
+  border: 1px solid var(--mc-border);
+  border-radius: var(--mc-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--mc-shadow);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  transition: transform 0.3s, box-shadow 0.3s, opacity 0.3s;
+}
+
+/* Animation class for page transitions */
+.mc-course-card.mc-card-animating {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.mc-course-card.mc-card-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.mc-course-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--mc-shadow-lg);
+}
+
+/* Card Image */
+.mc-course-card-image {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+}
+
+.mc-course-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s;
+}
+
+.mc-course-card:hover .mc-course-card-image img {
+  transform: scale(1.1);
+}
+
+.mc-course-card-actions {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+  z-index: 2;
+}
+
+.mc-course-card-wishlist {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--mc-surface, #fff);
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  color: var(--mc-text-muted);
+  transition: color 0.2s, background 0.2s;
+}
+
+.mc-course-card-wishlist:hover {
+  background: #fff;
+  color: var(--mc-red);
+}
+
+.mc-course-card-badges {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  right: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 0.25rem;
+  max-width: calc(100% - 1rem);
+  z-index: 2;
+}
+
+.mc-badge {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.mc-badge-bestseller {
+  background: var(--mc-yellow);
+  color: var(--mc-yellow-dark);
+}
+
+.mc-badge-bundle {
+  background: var(--mc-blue);
+  color: #fff;
+}
+
+.mc-badge-program {
+  background: #8b5cf6;
+  color: #fff;
+}
+
+/* Card Body */
+.mc-course-card-body {
+  padding: 1.25rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.mc-course-card-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: nowrap;
+  margin-bottom: 0.5rem;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.mc-course-card-category {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem 0.25rem 0;
+  background: var(--mc-bg-muted);
+  color: var(--mc-text-muted);
+  border-radius: 9999px;
+}
+
+.mc-course-card-duration {
+  flex: 0 0 auto;
+  font-size: 0.75rem;
+  color: var(--mc-text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+}
+
+.mc-course-card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.4;
+  margin: 0 0 0.25rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: color 0.2s;
+}
+
+.mc-course-card:hover .mc-course-card-title {
+  color: var(--mc-primary);
+}
+
+.mc-course-card-instructor {
+  font-size: 0.875rem;
+  color: var(--mc-text-muted);
+  margin: 0 0 0.75rem;
+}
+
+.mc-course-card-detailsrow {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+body.mc-public-catalog-page .mc-course-card-detailsrow .mc-course-card-details {
+  margin-top: 0;
+}
+
+.mc-course-card-rating {
+  margin: 0 0 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+}
+
+.mc-course-card-detailsrow .mc-course-card-rating {
+  margin: 0;
+}
+
+.mc-course-card-rating .mc-rating-stars {
+  font-size: 0.8125rem;
+}
+
+.mc-course-card-rating .mc-rating-value {
+  font-weight: 700;
+  color: var(--mc-text);
+}
+
+.mc-course-card-rating .mc-rating-count {
+  color: var(--mc-text-muted);
+}
+
+/* Card Footer */
+.mc-course-card-footer {
+  margin-top: auto;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--mc-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mc-course-card-price {
+  display: flex;
+  flex-direction: column;
+}
+
+.mc-course-card-original-price {
+  font-size: 0.75rem;
+  color: var(--mc-text-muted);
+  text-decoration: line-through;
+}
+
+.mc-course-card-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 8px;
+  position: relative;
+  z-index: 2;
+}
+
+.mc-course-card-link {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+/* ================================
+   No Results
+   ================================ */
+.mc-catalog-no-results {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem 1rem;
+  text-align: center;
+}
+
+#mc-no-results {
+  display: none;
+}
+
+.mc-no-results-icon {
+  width: 64px;
+  height: 64px;
+  background: var(--mc-bg-muted);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+  color: var(--mc-text-muted);
+  font-size: 1.5rem;
+}
+
+.mc-catalog-no-results h3 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem;
+}
+
+.mc-catalog-no-results p {
+  color: var(--mc-text-muted);
+  margin: 0 0 1rem;
+}
+
+.mc-clear-filters-btn {
+  background: transparent;
+  border: none;
+  color: var(--mc-primary);
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+}
+
+.mc-clear-filters-btn:hover {
+  text-decoration: underline;
+}
+
+/* ================================
+   Pagination
+   ================================ */
+.mc-catalog-pagination {
+  margin-top: 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+/* Scoped to the legacy catalog template's own container. These rules predate the shared
+   McTablePagination and would otherwise override it wherever both load, which is how the
+   storefront's catalogue widget ended up 1px larger than every other paginated screen. */
+.mc-catalog-pagination .mc-pagination-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mc-catalog-pagination .mc-pagination-pages {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.mc-catalog-pagination .mc-pagination-btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  border: 1px solid var(--mc-border);
+  background: var(--mc-card-bg);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mc-catalog-pagination .mc-pagination-btn:hover:not(:disabled) {
+  background: var(--mc-bg-muted);
+}
+
+.mc-catalog-pagination .mc-pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mc-catalog-pagination .mc-pagination-prev,
+.mc-catalog-pagination .mc-pagination-next {
+  font-weight: 500;
+}
+
+.mc-pagination-page {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+}
+
+.mc-pagination-page.active {
+  background: var(--mc-primary);
+  color: #fff;
+  border-color: var(--mc-primary);
+}
+
+.mc-pagination-dots {
+  color: var(--mc-text-muted);
+  padding: 0 0.25rem;
+}
+
+.mc-pagination-info {
+  font-size: 0.875rem;
+  color: var(--mc-text-muted);
+}
+
+/* ================================
+   Sidebar Position - Right
+   ================================ */
+@media (min-width: 768px) {
+  .mc-sidebar-right .mc-catalog-layout {
+    flex-direction: row-reverse;
+  }
+}
+
+/* ================================
+   Modern Commerce public storefront shell.
+   Applies to the catalog home and widget-driven public pages.
+   ================================ */
+body.mc-public-catalog-page,
+body.mc-public-storefront-page {
+  background: #f8fafc;
+}
+
+body.mc-public-storefront-page #page,
+body.mc-public-storefront-page #topofscroll,
+body.mc-public-storefront-page #page-content,
+body.mc-public-storefront-page #region-main,
+body.mc-public-catalog-page #page,
+body.mc-public-catalog-page #topofscroll,
+body.mc-public-catalog-page #page-content,
+body.mc-public-catalog-page #region-main {
+  background: #f8fafc !important;
+}
+
+body.mc-public-storefront-page #region-main,
+body.mc-public-catalog-page #region-main {
+  border: 0;
+  padding: 0;
+  overflow: visible;
+}
+
+body.mc-public-storefront-page #page.drawers .main-inner,
+body.mc-public-storefront-page .main-inner,
+body.mc-public-storefront-page #page-content,
+body.mc-public-storefront-page #region-main-box,
+body.mc-public-catalog-page #page.drawers .main-inner,
+body.mc-public-catalog-page .main-inner,
+body.mc-public-catalog-page #page-content,
+body.mc-public-catalog-page #region-main-box {
+  max-width: none;
+}
+
+body.mc-public-storefront-page #page.drawers .main-inner,
+body.mc-public-storefront-page .main-inner,
+body.mc-public-catalog-page #page.drawers .main-inner,
+body.mc-public-catalog-page .main-inner {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+body.mc-public-catalog-page .local-moderncommerce-catalog {
+  width: 100%;
+}
+
+body.mc-public-catalog-page .mc-catalog-section {
+  --mc-primary: #0b7f75;
+  --mc-primary-hover: #0f766e;
+  --mc-primary-light: #f0fdfa;
+  --mc-primary-border: #99f6e4;
+  --mc-bg: #f8fafc;
+  --mc-bg-muted: #eef2f7;
+  --mc-card-bg: #ffffff;
+  --mc-text: #111827;
+  --mc-text-muted: #64748b;
+  --mc-border: #dbe3ee;
+  --mc-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --mc-shadow-lg: 0 12px 26px rgba(15, 23, 42, 0.10);
+  --mc-radius: 6px;
+  --mc-radius-lg: 8px;
+  background: #f8fafc;
+  color: var(--mc-text);
+  min-height: 100vh;
+  padding: 1.5rem 0 3rem;
+}
+
+body.mc-public-catalog-page .mc-catalog-container {
+  width: min(100%, 1280px);
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+
+body.mc-public-catalog-page .mc-catalog-hero {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  align-items: stretch;
+  margin-bottom: 1.25rem;
+  padding: 1.25rem;
+  border: 1px solid #1f2937;
+  border-radius: var(--mc-radius-lg);
+  background: #111827;
+  color: #ffffff;
+  box-shadow: var(--mc-shadow);
+}
+
+@media (min-width: 992px) {
+  body.mc-public-catalog-page .mc-catalog-hero {
+    grid-template-columns: minmax(0, 1.55fr) minmax(280px, 0.8fr);
+  }
+}
+
+body.mc-public-catalog-page .mc-catalog-hero__copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+
+body.mc-public-catalog-page .mc-catalog-eyebrow {
+  color: #99f6e4;
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-bottom: 0.375rem;
+}
+
+body.mc-public-catalog-page .mc-catalog-hero h1 {
+  margin: 0;
+  max-width: 760px;
+  color: #ffffff;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+body.mc-public-catalog-page .mc-catalog-hero p {
+  max-width: 760px;
+  margin: 0.5rem 0 1rem;
+  color: #d1d5db;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+body.mc-public-catalog-page .mc-catalog-hero-search {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.625rem;
+  width: min(100%, 760px);
+  padding: 0.375rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: var(--mc-radius-lg);
+  background: #ffffff;
+}
+
+body.mc-public-catalog-page .mc-catalog-hero-search > i {
+  color: var(--mc-text-muted);
+  padding-left: 0.625rem;
+}
+
+body.mc-public-catalog-page .mc-catalog-hero-search input {
+  min-width: 0;
+  height: 42px;
+  border: 0;
+  outline: 0;
+  color: var(--mc-text);
+  font-size: 0.9375rem;
+}
+
+body.mc-public-catalog-page .mc-catalog-hero-search input:focus {
+  box-shadow: none;
+}
+
+body.mc-public-catalog-page .mc-catalog-hero-search .btn-mc-primary {
+  min-height: 42px;
+  white-space: nowrap;
+}
+
+body.mc-public-catalog-page .mc-catalog-hero__panel {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.625rem;
+}
+
+body.mc-public-catalog-page .mc-catalog-hero__panel > div,
+body.mc-public-catalog-page .mc-catalog-hero__panel > button {
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0.875rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--mc-radius);
+  background: rgba(255, 255, 255, 0.07);
+  color: #ffffff;
+}
+
+body.mc-public-catalog-page .mc-catalog-hero__panel span {
+  color: #d1d5db;
+  font-size: 0.8125rem;
+}
+
+body.mc-public-catalog-page .mc-catalog-hero__panel strong {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+body.mc-public-catalog-page .mc-catalog-hero__panel i {
+  color: #99f6e4;
+  font-size: 1.125rem;
+}
+
+@media (min-width: 992px) {
+  body.mc-public-catalog-page .mc-catalog-hero__panel > button {
+    display: none;
+  }
+}
+
+body.mc-public-catalog-page .mc-catalog-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+@media (min-width: 992px) {
+  body.mc-public-catalog-page .mc-catalog-layout {
+    grid-template-columns: 288px minmax(0, 1fr);
+  }
+
+  body.mc-public-catalog-page.mc-catalog-sidebar-right .mc-catalog-layout,
+  body.mc-public-catalog-page .mc-sidebar-right .mc-catalog-layout {
+    grid-template-columns: minmax(0, 1fr) 288px;
+  }
+
+  body.mc-public-catalog-page.mc-catalog-sidebar-right .mc-catalog-sidebar,
+  body.mc-public-catalog-page .mc-sidebar-right .mc-catalog-sidebar {
+    grid-column: 2;
+  }
+
+  body.mc-public-catalog-page.mc-catalog-sidebar-right .mc-catalog-main,
+  body.mc-public-catalog-page .mc-sidebar-right .mc-catalog-main {
+    grid-column: 1;
+    grid-row: 1;
+  }
+}
+
+body.mc-public-catalog-page .mc-catalog-sidebar {
+  position: sticky;
+  top: 1rem;
+  width: auto;
+  background: var(--mc-card-bg);
+  border: 1px solid var(--mc-border);
+  border-radius: var(--mc-radius-lg);
+  box-shadow: var(--mc-shadow);
+  transform: none;
+  overflow: visible;
+}
+
+body.mc-public-catalog-page .mc-catalog-sidebar-inner {
+  height: auto;
+  padding: 0;
+}
+
+body.mc-public-catalog-page .mc-catalog-sidebar-header {
+  display: flex;
+  margin: 0;
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--mc-border);
+}
+
+body.mc-public-catalog-page .mc-catalog-sidebar-header h3 {
+  color: var(--mc-text);
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+body.mc-public-catalog-page .mc-catalog-filter-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  margin-left: auto;
+  margin-right: 0.5rem;
+  border-radius: 999px;
+  background: var(--mc-primary-light);
+  color: var(--mc-primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+body.mc-public-catalog-page .mc-filter-section {
+  padding: 0;
+  border-bottom: 1px solid var(--mc-border);
+}
+
+body.mc-public-catalog-page .mc-filter-section-header {
+  margin: 0;
+  padding: 0.875rem 1rem 0.5rem;
+  color: var(--mc-text);
+  cursor: default;
+  font-size: 0.8125rem;
+}
+
+body.mc-public-catalog-page .mc-filter-section-header:hover {
+  color: var(--mc-text);
+}
+
+body.mc-public-catalog-page .mc-filter-section-body {
+  padding: 0 1rem 1rem;
+}
+
+body.mc-public-catalog-page .mc-catalog-search {
+  max-width: none;
+}
+
+body.mc-public-catalog-page .mc-catalog-search-input,
+body.mc-public-catalog-page .mc-select,
+body.mc-public-catalog-page .mc-form-control,
+body.mc-public-catalog-page .mc-catalog-perpage-select,
+body.mc-public-catalog-page .mc-catalog-sort-select {
+  min-height: 40px;
+  border: 1px solid var(--mc-border);
+  border-radius: var(--mc-radius);
+  background: #ffffff;
+  color: var(--mc-text);
+  font-size: 0.875rem;
+}
+
+body.mc-public-catalog-page .mc-catalog-search-input {
+  padding-left: 2.25rem;
+}
+
+body.mc-public-catalog-page .mc-catalog-search-input:focus,
+body.mc-public-catalog-page .mc-select:focus,
+body.mc-public-catalog-page .mc-form-control:focus,
+body.mc-public-catalog-page .mc-catalog-perpage-select:focus,
+body.mc-public-catalog-page .mc-catalog-sort-select:focus {
+  border-color: var(--mc-primary);
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.16);
+}
+
+body.mc-public-catalog-page .mc-catalog-sidebar form > .p-3 {
+  padding: 1rem !important;
+}
+
+body.mc-public-catalog-page .mc-catalog-results-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.875rem;
+  padding: 1rem;
+  border: 1px solid var(--mc-border);
+  border-radius: var(--mc-radius-lg);
+  background: #ffffff;
+}
+
+body.mc-public-catalog-page .mc-catalog-kicker {
+  display: block;
+  margin-bottom: 0.125rem;
+  color: var(--mc-text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+body.mc-public-catalog-page .mc-catalog-title {
+  display: block;
+  margin: 0;
+  color: var(--mc-text);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+body.mc-public-catalog-page .mc-catalog-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-left: 0;
+}
+
+body.mc-public-catalog-page .mc-catalog-perpage,
+body.mc-public-catalog-page .mc-catalog-sort {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+body.mc-public-catalog-page .mc-catalog-perpage-label,
+body.mc-public-catalog-page .mc-catalog-sort-label {
+  display: inline;
+  color: var(--mc-text-muted);
+  font-size: 0.8125rem;
+}
+
+body.mc-public-catalog-page .mc-catalog-sort-select {
+  min-width: 180px;
+}
+
+body.mc-public-catalog-page .mc-catalog-type-tabs {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+body.mc-public-catalog-page .mc-catalog-type-tab {
+  min-height: 36px;
+  padding: 0.4375rem 0.875rem;
+  border: 1px solid var(--mc-border);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--mc-text-muted);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+body.mc-public-catalog-page .mc-catalog-type-tab.active,
+body.mc-public-catalog-page .mc-catalog-type-tab:hover {
+  border-color: var(--mc-primary-border);
+  background: var(--mc-primary-light);
+  color: var(--mc-primary);
+}
+
+body.mc-public-catalog-page .mc-catalog-grid {
+  display: grid;
+  // Fixed 3-up track count so one or two results keep card width instead of
+  // stretching across the row (auto-fit collapses the empty tracks).
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: stretch;
+  grid-auto-rows: 1fr;
+}
+
+@media (max-width: 1023px) {
+  body.mc-public-catalog-page .mc-catalog-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 639px) {
+  body.mc-public-catalog-page .mc-catalog-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+body.mc-public-catalog-page .mc-course-card {
+  min-width: 0;
+  border: 1px solid var(--mc-border);
+  border-radius: var(--mc-radius-lg);
+  background: #ffffff;
+  box-shadow: var(--mc-shadow);
+  overflow: hidden;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+body.mc-public-catalog-page .mc-course-card:hover {
+  transform: translateY(-2px);
+  border-color: #cbd5e1;
+  box-shadow: var(--mc-shadow-lg);
+}
+
+body.mc-public-catalog-page .mc-course-card--owned {
+  border-color: var(--mc-primary-border);
+}
+
+body.mc-public-catalog-page .mc-course-card-image {
+  aspect-ratio: 16 / 9;
+  background: #e5e7eb;
+}
+
+body.mc-public-catalog-page .mc-course-card:hover .mc-course-card-image img {
+  transform: none;
+}
+
+body.mc-public-catalog-page .mc-course-card-badges {
+  top: 0.75rem;
+  left: 0.75rem;
+  right: auto;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  max-width: calc(100% - 1.5rem);
+}
+
+body.mc-public-catalog-page .mc-badge-bundle,
+body.mc-public-catalog-page .mc-badge-program {
+  background: var(--mc-primary-light);
+  color: var(--mc-primary);
+  border: 1px solid var(--mc-primary-border);
+}
+
+body.mc-public-catalog-page .mc-badge-bestseller {
+  background: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+body.mc-public-catalog-page .mc-course-card-body {
+  padding: 1rem;
+}
+
+body.mc-public-catalog-page .mc-course-card-meta {
+  align-items: center;
+  flex-wrap: nowrap;
+  margin-bottom: 0.625rem;
+  min-width: 0;
+}
+
+body.mc-public-catalog-page .mc-course-card-category {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: none;
+  padding-left: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: #f8fafc;
+  color: #475569;
+}
+
+body.mc-public-catalog-page .mc-course-card-title {
+  min-height: 2.8em;
+  margin-bottom: 0.25rem;
+  color: var(--mc-text);
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+body.mc-public-catalog-page .mc-course-card-instructor {
+  min-height: 1.25rem;
+  margin-bottom: 0.75rem;
+  color: var(--mc-text-muted);
+}
+
+body.mc-public-catalog-page .mc-course-card-details {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: auto;
+  color: var(--mc-primary);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+body.mc-public-catalog-page .mc-course-card-footer {
+  margin-top: auto;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem 1rem;
+  border-top: 1px solid var(--mc-border);
+}
+
+body.mc-public-catalog-page .mc-course-card-price {
+  min-width: 0;
+  color: var(--mc-text);
+  font-size: 1rem;
+}
+
+body.mc-public-catalog-page .mc-course-card-original-price {
+  color: var(--mc-text-muted);
+}
+
+body.mc-public-catalog-page .mc-course-card-btn {
+  min-height: 40px;
+  max-width: 52%;
+  justify-content: center;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.2;
+}
+
+body.mc-public-catalog-page .mc-catalog-no-results {
+  min-height: 340px;
+  border: 1px solid var(--mc-border);
+  border-radius: var(--mc-radius-lg);
+  background: #ffffff;
+}
+
+body.mc-public-catalog-page .mc-catalog-pagination {
+  margin-top: 1.5rem;
+  flex-direction: row;
+  justify-content: center;
+}
+
+body.mc-public-catalog-page .mc-catalog-filter-toggle {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: var(--mc-radius);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+body.mc-public-catalog-page .mc-catalog-sidebar-close {
+  display: none;
+}
+
+body.mc-public-catalog-page .mc-catalog-backdrop {
+  display: none;
+}
+
+@media (max-width: 991.98px) {
+  body.mc-public-catalog-page .mc-catalog-hero {
+    grid-template-columns: 1fr;
+  }
+
+  body.mc-public-catalog-page .mc-catalog-hero__panel {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  body.mc-public-catalog-page .mc-catalog-layout {
+    grid-template-columns: 1fr;
+  }
+
+  body.mc-public-catalog-page .mc-catalog-sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 1050;
+    width: min(88vw, 340px);
+    max-width: 100%;
+    border-radius: 0;
+    transform: translateX(-100%);
+    transition: transform 0.22s ease;
+    overflow-y: auto;
+  }
+
+  body.mc-public-catalog-page .mc-catalog-sidebar--open {
+    transform: translateX(0);
+  }
+
+  body.mc-public-catalog-page.mc-catalog-sidebar-right .mc-catalog-sidebar,
+  body.mc-public-catalog-page .mc-sidebar-right .mc-catalog-sidebar {
+    inset: 0 0 0 auto;
+    transform: translateX(100%);
+  }
+
+  body.mc-public-catalog-page.mc-catalog-sidebar-right .mc-catalog-sidebar--open,
+  body.mc-public-catalog-page .mc-sidebar-right .mc-catalog-sidebar--open {
+    transform: translateX(0);
+  }
+
+  body.mc-public-catalog-page .mc-catalog-sidebar-close {
+    display: inline-flex;
+  }
+
+  body.mc-public-catalog-page .mc-catalog-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1040;
+    display: none;
+    background: rgba(15, 23, 42, 0.48);
+  }
+
+  body.mc-public-catalog-page .mc-catalog-backdrop--open {
+    display: block;
+  }
+}
+
+@media (max-width: 767.98px) {
+  body.mc-public-catalog-page .mc-catalog-section {
+    padding-top: 0.75rem;
+  }
+
+  body.mc-public-catalog-page .mc-catalog-container {
+    padding: 0 0.75rem;
+  }
+
+  body.mc-public-catalog-page .mc-catalog-hero {
+    padding: 1rem;
+  }
+
+  body.mc-public-catalog-page .mc-catalog-hero h1 {
+    font-size: 1.5rem;
+  }
+
+  body.mc-public-catalog-page .mc-catalog-hero-search {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  body.mc-public-catalog-page .mc-catalog-hero-search .btn-mc-primary {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  body.mc-public-catalog-page .mc-catalog-hero__panel {
+    grid-template-columns: 1fr;
+  }
+
+  body.mc-public-catalog-page .mc-catalog-results-bar,
+  body.mc-public-catalog-page .mc-catalog-controls,
+  body.mc-public-catalog-page .mc-catalog-perpage,
+  body.mc-public-catalog-page .mc-catalog-sort {
+    align-items: stretch;
+    width: 100%;
+  }
+
+  body.mc-public-catalog-page .mc-catalog-controls {
+    flex-direction: column;
+  }
+
+  body.mc-public-catalog-page .mc-catalog-perpage-select,
+  body.mc-public-catalog-page .mc-catalog-sort-select {
+    width: 100%;
+  }
+
+  body.mc-public-catalog-page .mc-course-card-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  body.mc-public-catalog-page .mc-course-card-btn {
+    max-width: none;
+    width: 100%;
+  }
+}
+
+/* Widget preset bridge: these variables are set by the catalogue widget resolver. */
+.mc-catalog-section {
+  --mc-primary: var(--mc-catalog-accent, var(--mc-widget-accent-color, #0b7f75));
+  --mc-primary-hover: var(--mc-catalog-accent, var(--mc-widget-accent-color, #0f766e));
+  background-color: var(--mc-catalog-bg, var(--mc-bg-muted, #f8fafc));
+}
+
+.mc-catalog-section .mc-catalog-title {
+  color: var(--mc-catalog-title-color, var(--mc-widget-heading-color, var(--mc-text, #111827)));
+  font-size: var(--mc-catalog-title-font-size, var(--mc-widget-heading-font-size));
+}
+
+.mc-catalog-section .mc-catalog-hero h1 {
+  color: var(--mc-catalog-title-color, var(--mc-widget-heading-color, #ffffff));
+  font-size: var(--mc-catalog-title-font-size, var(--mc-widget-heading-font-size));
+}
+
+.mc-catalog-section .mc-catalog-kicker,
+.mc-catalog-section .mc-catalog-count,
+.mc-catalog-section .mc-catalog-perpage-label,
+.mc-catalog-section .mc-catalog-sort-label,
+.mc-catalog-section .mc-course-card-duration,
+.mc-catalog-section .mc-course-card-instructor,
+.mc-catalog-section .mc-rating-count {
+  color: var(--mc-catalog-text-color, var(--mc-widget-body-color, var(--mc-text-muted, #64748b)));
+  font-size: var(--mc-catalog-text-font-size, var(--mc-widget-body-font-size));
+}
+
+.mc-catalog-section .mc-catalog-hero p {
+  color: var(--mc-catalog-text-color, var(--mc-widget-body-color, #d1d5db));
+  font-size: var(--mc-catalog-text-font-size, var(--mc-widget-body-font-size));
+}
+
+.mc-catalog-section .mc-catalog-sidebar,
+.mc-catalog-section .mc-catalog-results-bar,
+.mc-catalog-section .mc-catalog-no-results {
+  background: var(--mc-catalog-filter-bg, #ffffff);
+  border-color: var(--mc-catalog-filter-border, var(--mc-border, #dbe3ee));
+}
+
+.mc-catalog-section .mc-filter-section,
+.mc-catalog-section .mc-catalog-sidebar-header,
+.mc-catalog-section .mc-catalog-search-input,
+.mc-catalog-section .mc-select,
+.mc-catalog-section .mc-form-control,
+.mc-catalog-section .mc-catalog-perpage-select,
+.mc-catalog-section .mc-catalog-sort-select {
+  border-color: var(--mc-catalog-filter-border, var(--mc-border, #dbe3ee));
+}
+
+.mc-catalog-section .mc-course-card {
+  background: var(--mc-catalog-card-bg, #ffffff);
+  border-color: var(--mc-catalog-card-border, var(--mc-border, #dbe3ee));
+  border-width: var(--mc-catalog-card-border-width, 1px);
+  border-radius: var(--mc-catalog-card-radius, var(--mc-radius-lg, 8px));
+}
+
+.mc-catalog-section .mc-course-card-footer {
+  border-color: var(--mc-catalog-card-border, var(--mc-border, #dbe3ee));
+}
+
+.mc-catalog-section .mc-course-card-title,
+.mc-catalog-section .mc-course-card-title a,
+.mc-catalog-section .mc-filter-section-header,
+.mc-catalog-section .mc-catalog-sidebar-header h3 {
+  color: var(--mc-catalog-title-color, var(--mc-widget-heading-color, var(--mc-text, #111827)));
+}
+
+.mc-catalog-section .mc-course-card-details,
+.mc-catalog-section .mc-course-card:hover .mc-course-card-title,
+.mc-catalog-section .mc-course-card-category,
+.mc-catalog-section .mc-catalog-type-tab.active,
+.mc-catalog-section .mc-catalog-type-tab:hover {
+  color: var(--mc-catalog-accent, var(--mc-widget-accent-color, var(--mc-primary, #0b7f75)));
+}
+
+.mc-catalog-section .mc-course-card-price {
+  color: var(--mc-catalog-price-color, var(--mc-catalog-title-color, var(--mc-text, #111827)));
+}
+
+.mc-catalog-section .mc-badge-bundle,
+.mc-catalog-section .mc-badge-program,
+.mc-catalog-section .mc-badge--neutral {
+  background: var(--mc-catalog-badge-bg, var(--mc-primary-light, #f0fdfa));
+  border-color: var(--mc-catalog-badge-bg, var(--mc-primary-border, #99f6e4));
+  color: var(--mc-catalog-badge-text, var(--mc-catalog-accent, var(--mc-primary, #0b7f75)));
+}
+
+.mc-catalog-section .mc-course-card-btn.mc-button,
+.mc-catalog-section .mc-course-card-btn.btn-mc-primary,
+.mc-catalog-section .mc-catalog-hero-search .btn-mc-primary,
+.mc-catalog-section .mc-catalog-sidebar form .btn-mc-primary {
+  --mc-button-bg: var(--mc-catalog-button-bg, var(--mc-catalog-accent, var(--mc-primary, #0b7f75)));
+  --mc-button-border: var(--mc-catalog-button-bg, var(--mc-catalog-accent, var(--mc-primary, #0b7f75)));
+  --mc-button-color: var(--mc-catalog-button-text, #ffffff);
+  --mc-button-hover-bg: var(--mc-catalog-button-bg, var(--mc-catalog-accent, var(--mc-primary-hover, #0f766e)));
+  --mc-button-hover-border: var(--mc-catalog-button-bg, var(--mc-catalog-accent, var(--mc-primary-hover, #0f766e)));
+  --mc-button-hover-color: var(--mc-catalog-button-text, #ffffff);
+  background: var(--mc-catalog-button-bg, var(--mc-catalog-accent, var(--mc-primary, #0b7f75)));
+  border-color: var(--mc-catalog-button-bg, var(--mc-catalog-accent, var(--mc-primary, #0b7f75)));
+  color: var(--mc-catalog-button-text, #ffffff);
+}
+
+.mc-catalog-section .mc-course-card-btn.mc-button:hover,
+.mc-catalog-section .mc-course-card-btn.btn-mc-primary:hover,
+.mc-catalog-section .mc-catalog-hero-search .btn-mc-primary:hover,
+.mc-catalog-section .mc-catalog-sidebar form .btn-mc-primary:hover {
+  background: var(--mc-catalog-button-bg, var(--mc-catalog-accent, var(--mc-primary-hover, #0f766e)));
+  border-color: var(--mc-catalog-button-bg, var(--mc-catalog-accent, var(--mc-primary-hover, #0f766e)));
+  color: var(--mc-catalog-button-text, #ffffff);
+}
+
+/* Body-scoped catalog preset bridge. These rules mirror the widget bridge with
+   enough specificity to beat the standalone catalog page defaults. */
+body.mc-public-catalog-page .mc-catalog-section {
+  --mc-primary: var(--mc-catalog-accent, var(--mc-widget-accent-color, #0b7f75));
+  --mc-primary-hover: var(--mc-catalog-accent, var(--mc-widget-accent-color, #0f766e));
+  background-color: var(--mc-catalog-bg, var(--mc-bg-muted, #f8fafc));
+}
+
+body.mc-public-catalog-page .mc-catalog-title,
+body.mc-public-catalog-page .mc-catalog-hero h1 {
+  color: var(--mc-catalog-title-color, var(--mc-widget-heading-color, var(--mc-text, #111827)));
+  font-size: var(--mc-catalog-title-font-size, var(--mc-widget-heading-font-size, 2rem));
+}
+
+body.mc-public-catalog-page .mc-catalog-hero p,
+body.mc-public-catalog-page .mc-catalog-kicker,
+body.mc-public-catalog-page .mc-catalog-count,
+body.mc-public-catalog-page .mc-catalog-perpage-label,
+body.mc-public-catalog-page .mc-catalog-sort-label,
+body.mc-public-catalog-page .mc-course-card-duration,
+body.mc-public-catalog-page .mc-course-card-instructor,
+body.mc-public-catalog-page .mc-rating-count {
+  color: var(--mc-catalog-text-color, var(--mc-widget-body-color, var(--mc-text-muted, #64748b)));
+  font-size: var(--mc-catalog-text-font-size, var(--mc-widget-body-font-size, .9375rem));
+}
+
+body.mc-public-catalog-page .mc-catalog-sidebar,
+body.mc-public-catalog-page .mc-catalog-results-bar,
+body.mc-public-catalog-page .mc-catalog-no-results {
+  background: var(--mc-catalog-filter-bg, #ffffff);
+  border-color: var(--mc-catalog-filter-border, var(--mc-border, #dbe3ee));
+}
+
+body.mc-public-catalog-page .mc-filter-section,
+body.mc-public-catalog-page .mc-catalog-sidebar-header,
+body.mc-public-catalog-page .mc-catalog-search-input,
+body.mc-public-catalog-page .mc-select,
+body.mc-public-catalog-page .mc-form-control,
+body.mc-public-catalog-page .mc-catalog-perpage-select,
+body.mc-public-catalog-page .mc-catalog-sort-select {
+  border-color: var(--mc-catalog-filter-border, var(--mc-border, #dbe3ee));
+}
+
+body.mc-public-catalog-page .mc-course-card {
+  background: var(--mc-catalog-card-bg, #ffffff);
+  border: var(--mc-catalog-card-border-width, 1px) solid var(--mc-catalog-card-border, var(--mc-border, #dbe3ee));
+  border-radius: var(--mc-catalog-card-radius, var(--mc-radius-lg, 8px));
+}
+
+body.mc-public-catalog-page .mc-course-card:hover {
+  border-color: var(--mc-catalog-card-border, var(--mc-border, #cbd5e1));
+}
+
+body.mc-public-catalog-page .mc-course-card-footer {
+  border-top: var(--mc-catalog-card-border-width, 1px) solid var(--mc-catalog-card-border, var(--mc-border, #dbe3ee));
+}
+
+body.mc-public-catalog-page .mc-course-card-title,
+body.mc-public-catalog-page .mc-course-card-title a,
+body.mc-public-catalog-page .mc-filter-section-header,
+body.mc-public-catalog-page .mc-catalog-sidebar-header h3 {
+  color: var(--mc-catalog-title-color, var(--mc-widget-heading-color, var(--mc-text, #111827)));
+}
+
+body.mc-public-catalog-page .mc-course-card-details,
+body.mc-public-catalog-page .mc-course-card:hover .mc-course-card-title,
+body.mc-public-catalog-page .mc-course-card-category,
+body.mc-public-catalog-page .mc-catalog-type-tab.active,
+body.mc-public-catalog-page .mc-catalog-type-tab:hover {
+  color: var(--mc-catalog-accent, var(--mc-widget-accent-color, var(--mc-primary, #0b7f75)));
+}
+
+body.mc-public-catalog-page .mc-course-card-price {
+  color: var(--mc-catalog-price-color, var(--mc-catalog-title-color, var(--mc-text, #111827)));
+}
+
+body.mc-public-catalog-page .mc-badge,
+body.mc-public-catalog-page .mc-badge-bestseller,
+body.mc-public-catalog-page .mc-badge-bundle,
+body.mc-public-catalog-page .mc-badge-program,
+body.mc-public-catalog-page .mc-badge--neutral {
+  background: var(--mc-catalog-badge-bg, var(--mc-primary-light, #f0fdfa));
+  border-color: var(--mc-catalog-badge-bg, var(--mc-primary-border, #99f6e4));
+  color: var(--mc-catalog-badge-text, var(--mc-catalog-accent, var(--mc-primary, #0b7f75)));
+}
+
+body.mc-public-catalog-page .mc-course-card-btn.mc-button,
+body.mc-public-catalog-page .mc-course-card-btn.btn-mc-primary,
+body.mc-public-catalog-page .mc-catalog-hero-search .btn-mc-primary,
+body.mc-public-catalog-page .mc-catalog-sidebar form .btn-mc-primary {
+  --mc-button-bg: var(--mc-catalog-button-bg, var(--mc-catalog-accent, var(--mc-primary, #0b7f75)));
+  --mc-button-border: var(--mc-catalog-button-bg, var(--mc-catalog-accent, var(--mc-primary, #0b7f75)));
+  --mc-button-color: var(--mc-catalog-button-text, #ffffff);
+  --mc-button-hover-bg: var(--mc-catalog-button-bg, var(--mc-catalog-accent, var(--mc-primary-hover, #0f766e)));
+  --mc-button-hover-border: var(--mc-catalog-button-bg, var(--mc-catalog-accent, var(--mc-primary-hover, #0f766e)));
+  --mc-button-hover-color: var(--mc-catalog-button-text, #ffffff);
+  background: var(--mc-catalog-button-bg, var(--mc-catalog-accent, var(--mc-primary, #0b7f75)));
+  border-color: var(--mc-catalog-button-bg, var(--mc-catalog-accent, var(--mc-primary, #0b7f75)));
+  color: var(--mc-catalog-button-text, #ffffff);
+}
+
+body.mc-public-catalog-page .mc-course-card-btn.mc-button:hover,
+body.mc-public-catalog-page .mc-course-card-btn.btn-mc-primary:hover,
+body.mc-public-catalog-page .mc-catalog-hero-search .btn-mc-primary:hover,
+body.mc-public-catalog-page .mc-catalog-sidebar form .btn-mc-primary:hover {
+  background: var(--mc-catalog-button-bg, var(--mc-catalog-accent, var(--mc-primary-hover, #0f766e)));
+  border-color: var(--mc-catalog-button-bg, var(--mc-catalog-accent, var(--mc-primary-hover, #0f766e)));
+  color: var(--mc-catalog-button-text, #ffffff);
+}
+
+/* Extended catalog preset bridge: keep the base catalog layout, but expose the
+   visible visual surfaces to widget presets and the storefront editor. */
+.mc-catalog-section .mc-catalog-hero,
+body.mc-public-catalog-page .mc-catalog-section .mc-catalog-hero {
+  background: var(--mc-catalog-hero-bg, #111827);
+  border-color: var(--mc-catalog-hero-border, #1f2937);
+  border-radius: var(--mc-catalog-hero-radius, var(--mc-radius-lg, 8px));
+}
+
+.mc-catalog-section .mc-catalog-eyebrow,
+body.mc-public-catalog-page .mc-catalog-section .mc-catalog-eyebrow {
+  color: var(--mc-catalog-eyebrow-color, var(--mc-catalog-accent, #99f6e4));
+}
+
+.mc-catalog-section .mc-catalog-hero-search,
+body.mc-public-catalog-page .mc-catalog-section .mc-catalog-hero-search {
+  background: var(--mc-catalog-input-bg, #ffffff);
+  border-color: var(--mc-catalog-input-border, rgba(255, 255, 255, 0.16));
+  border-width: var(--mc-catalog-filter-border-width, 1px);
+  border-radius: var(--mc-catalog-filter-radius, var(--mc-radius-lg, 8px));
+}
+
+.mc-catalog-section .mc-catalog-hero-search input,
+body.mc-public-catalog-page .mc-catalog-section .mc-catalog-hero-search input {
+  background: var(--mc-catalog-input-bg, #ffffff);
+  color: var(--mc-catalog-input-text, var(--mc-text, #111827));
+}
+
+.mc-catalog-section .mc-catalog-hero-search > i,
+body.mc-public-catalog-page .mc-catalog-section .mc-catalog-hero-search > i,
+.mc-catalog-section .mc-catalog-search-icon,
+body.mc-public-catalog-page .mc-catalog-section .mc-catalog-search-icon {
+  color: var(--mc-catalog-filter-text, var(--mc-text-muted, #64748b));
+}
+
+.mc-catalog-section .mc-catalog-hero__panel > div,
+.mc-catalog-section .mc-catalog-hero__panel > button,
+body.mc-public-catalog-page .mc-catalog-section .mc-catalog-hero__panel > div,
+body.mc-public-catalog-page .mc-catalog-section .mc-catalog-hero__panel > button {
+  background: var(--mc-catalog-hero-panel-bg, rgba(255, 255, 255, 0.07));
+  border-color: var(--mc-catalog-hero-panel-border, rgba(255, 255, 255, 0.12));
+  color: var(--mc-catalog-hero-panel-text, #ffffff);
+  border-radius: var(--mc-catalog-filter-radius, var(--mc-radius, 6px));
+}
+
+.mc-catalog-section .mc-catalog-hero__panel span,
+body.mc-public-catalog-page .mc-catalog-section .mc-catalog-hero__panel span {
+  color: var(--mc-catalog-hero-panel-text, #d1d5db);
+}
+
+.mc-catalog-section .mc-catalog-hero__panel i,
+body.mc-public-catalog-page .mc-catalog-section .mc-catalog-hero__panel i {
+  color: var(--mc-catalog-hero-panel-accent, var(--mc-catalog-accent, #99f6e4));
+}
+
+.mc-catalog-section .mc-catalog-sidebar,
+.mc-catalog-section .mc-catalog-results-bar,
+.mc-catalog-section .mc-catalog-no-results,
+body.mc-public-catalog-page .mc-catalog-section .mc-catalog-sidebar,
+body.mc-public-catalog-page .mc-catalog-section .mc-catalog-results-bar,
+body.mc-public-catalog-page .mc-catalog-section .mc-catalog-no-results {
+  background: var(--mc-catalog-filter-bg, #ffffff);
+  border-color: var(--mc-catalog-filter-border, var(--mc-border, #dbe3ee));
+  border-width: var(--mc-catalog-filter-border-width, 1px);
+  border-radius: var(--mc-catalog-filter-radius, var(--mc-radius-lg, 8px));
+}
+
+.mc-catalog-section .mc-filter-section,
+.mc-catalog-section .mc-catalog-sidebar-header,
+.mc-catalog-section .mc-catalog-search-input,
+.mc-catalog-section .mc-select,
+.mc-catalog-section .mc-form-control,
+.mc-catalog-section .mc-catalog-perpage-select,
+.mc-catalog-section .mc-catalog-sort-select,
+body.mc-public-catalog-page .mc-catalog-section .mc-filter-section,
+body.mc-public-catalog-page .mc-catalog-section .mc-catalog-sidebar-header,
+body.mc-public-catalog-page .mc-catalog-section .mc-catalog-search-input,
+body.mc-public-catalog-page .mc-catalog-section .mc-select,
+body.mc-public-catalog-page .mc-catalog-section .mc-form-control,
+body.mc-public-catalog-page .mc-catalog-section .mc-catalog-perpage-select,
+body.mc-public-catalog-page .mc-catalog-section .mc-catalog-sort-select {
+  border-color: var(--mc-catalog-input-border, var(--mc-catalog-filter-border, var(--mc-border, #dbe3ee)));
+  border-width: var(--mc-catalog-filter-border-width, 1px);
+  border-radius: var(--mc-catalog-filter-radius, var(--mc-radius, 6px));
+}
+
+.mc-catalog-section .mc-catalog-search-input,
+.mc-catalog-section .mc-select,
+.mc-catalog-section .mc-form-control,
+.mc-catalog-section .mc-catalog-perpage-select,
+.mc-catalog-section .mc-catalog-sort-select,
+body.mc-public-catalog-page .mc-catalog-section .mc-catalog-search-input,
+body.mc-public-catalog-page .mc-catalog-section .mc-select,
+body.mc-public-catalog-page .mc-catalog-section .mc-form-control,
+body.mc-public-catalog-page .mc-catalog-section .mc-catalog-perpage-select,
+body.mc-public-catalog-page .mc-catalog-section .mc-catalog-sort-select {
+  background: var(--mc-catalog-input-bg, #ffffff);
+  color: var(--mc-catalog-input-text, var(--mc-text, #111827));
+}
+
+.mc-catalog-section .mc-filter-section-header,
+.mc-catalog-section .mc-catalog-kicker,
+.mc-catalog-section .mc-catalog-count,
+.mc-catalog-section .mc-catalog-perpage-label,
+.mc-catalog-section .mc-catalog-sort-label,
+body.mc-public-catalog-page .mc-catalog-section .mc-filter-section-header,
+body.mc-public-catalog-page .mc-catalog-section .mc-catalog-kicker,
+body.mc-public-catalog-page .mc-catalog-section .mc-catalog-count,
+body.mc-public-catalog-page .mc-catalog-section .mc-catalog-perpage-label,
+body.mc-public-catalog-page .mc-catalog-section .mc-catalog-sort-label {
+  color: var(--mc-catalog-filter-text, var(--mc-catalog-text-color, var(--mc-text-muted, #64748b)));
+}
+
+.mc-catalog-section .mc-catalog-type-tab,
+body.mc-public-catalog-page .mc-catalog-section .mc-catalog-type-tab {
+  background: var(--mc-catalog-tab-bg, #ffffff);
+  border-color: var(--mc-catalog-tab-border, var(--mc-border, #dbe3ee));
+  color: var(--mc-catalog-tab-text, var(--mc-text-muted, #64748b));
+}
+
+.mc-catalog-section .mc-catalog-type-tab.active,
+.mc-catalog-section .mc-catalog-type-tab:hover,
+body.mc-public-catalog-page .mc-catalog-section .mc-catalog-type-tab.active,
+body.mc-public-catalog-page .mc-catalog-section .mc-catalog-type-tab:hover {
+  background: var(--mc-catalog-tab-active-bg, var(--mc-primary-light, #f0fdfa));
+  border-color: var(--mc-catalog-tab-active-bg, var(--mc-primary-border, #99f6e4));
+  color: var(--mc-catalog-tab-active-text, var(--mc-catalog-accent, var(--mc-primary, #0b7f75)));
+}
+
+.mc-catalog-section .mc-course-card-title,
+.mc-catalog-section .mc-course-card-title a,
+body.mc-public-catalog-page .mc-catalog-section .mc-course-card-title,
+body.mc-public-catalog-page .mc-catalog-section .mc-course-card-title a {
+  color: var(--mc-catalog-card-title-color, var(--mc-catalog-title-color, var(--mc-text, #111827)));
+  font-size: var(--mc-catalog-card-title-font-size, 1rem);
+}
+
+.mc-catalog-section .mc-course-card-duration,
+.mc-catalog-section .mc-course-card-instructor,
+.mc-catalog-section .mc-rating-count,
+body.mc-public-catalog-page .mc-catalog-section .mc-course-card-duration,
+body.mc-public-catalog-page .mc-catalog-section .mc-course-card-instructor,
+body.mc-public-catalog-page .mc-catalog-section .mc-rating-count {
+  color: var(--mc-catalog-card-text-color, var(--mc-catalog-text-color, var(--mc-text-muted, #64748b)));
+}
+
+.mc-catalog-section .mc-course-card-category,
+body.mc-public-catalog-page .mc-catalog-section .mc-course-card-category {
+  background: var(--mc-catalog-card-meta-bg, #f8fafc);
+  color: var(--mc-catalog-card-meta-text, var(--mc-catalog-accent, #475569));
+}
+
+.mc-catalog-section .mc-rating-stars,
+body.mc-public-catalog-page .mc-catalog-section .mc-rating-stars {
+  color: var(--mc-catalog-rating-color, #f59e0b) !important;
+}
+
+.mc-catalog-section .mc-course-card-original-price,
+body.mc-public-catalog-page .mc-catalog-section .mc-course-card-original-price {
+  color: var(--mc-catalog-original-price-color, var(--mc-text-muted, #64748b));
+}
+
+.mc-catalog-section .mc-badge,
+.mc-catalog-section .mc-badge-bestseller,
+.mc-catalog-section .mc-badge-bundle,
+.mc-catalog-section .mc-badge-program,
+.mc-catalog-section .mc-badge--neutral,
+body.mc-public-catalog-page .mc-catalog-section .mc-badge,
+body.mc-public-catalog-page .mc-catalog-section .mc-badge-bestseller,
+body.mc-public-catalog-page .mc-catalog-section .mc-badge-bundle,
+body.mc-public-catalog-page .mc-catalog-section .mc-badge-program,
+body.mc-public-catalog-page .mc-catalog-section .mc-badge--neutral {
+  border-color: var(--mc-catalog-badge-border, var(--mc-catalog-badge-bg, var(--mc-primary-border, #99f6e4)));
+}
+
+.mc-catalog-section .mc-course-card-btn.mc-button,
+.mc-catalog-section .mc-course-card-btn.btn-mc-primary,
+.mc-catalog-section .mc-catalog-hero-search .btn-mc-primary,
+.mc-catalog-section .mc-catalog-sidebar form .btn-mc-primary,
+.mc-catalog-section .mc-catalog-filter-toggle,
+body.mc-public-catalog-page .mc-catalog-section .mc-course-card-btn.mc-button,
+body.mc-public-catalog-page .mc-catalog-section .mc-course-card-btn.btn-mc-primary,
+body.mc-public-catalog-page .mc-catalog-section .mc-catalog-hero-search .btn-mc-primary,
+body.mc-public-catalog-page .mc-catalog-section .mc-catalog-sidebar form .btn-mc-primary,
+body.mc-public-catalog-page .mc-catalog-section .mc-catalog-filter-toggle {
+  border-radius: var(--mc-catalog-button-radius, var(--mc-radius, 6px));
+}
+
+/* Embedded catalog widgets need a contained layout. The public catalog page keeps
+   its body-scoped full-page rules above. */
+.local-moderncommerce-storefront .mw-widget--catalog .mc-catalog-section {
+  min-height: auto;
+  overflow: visible;
+  background-color: var(--mc-catalog-bg, var(--mc-bg-muted, #f8fafc));
+}
+
+.local-moderncommerce-storefront .mw-widget--catalog .mc-catalog-container {
+  width: min(100%, 1180px);
+  margin: 0 auto;
+  padding: var(--mc-catalog-padding-top, 1rem) var(--mc-catalog-padding-right, 1rem)
+    var(--mc-catalog-padding-bottom, 1rem) var(--mc-catalog-padding-left, 1rem);
+}
+
+.local-moderncommerce-storefront .mw-widget--catalog .mc-catalog-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(220px, 0.75fr);
+  gap: 1rem;
+  align-items: stretch;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--mc-catalog-hero-border, #1f2937);
+  color: #ffffff;
+  box-shadow: var(--mc-shadow, 0 1px 2px rgba(15, 23, 42, 0.06));
+}
+
+.local-moderncommerce-storefront .mw-widget--catalog .mc-catalog-hero__copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.local-moderncommerce-storefront .mw-widget--catalog .mc-catalog-hero h1 {
+  margin: 0;
+  max-width: 760px;
+  line-height: 1.15;
+}
+
+.local-moderncommerce-storefront .mw-widget--catalog .mc-catalog-hero p {
+  max-width: 760px;
+  margin: 0.5rem 0 1rem;
+  line-height: 1.55;
+}
+
+.local-moderncommerce-storefront .mw-widget--catalog .mc-catalog-hero-search {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.625rem;
+  width: min(100%, 760px);
+  padding: 0.375rem;
+}
+
+.local-moderncommerce-storefront .mw-widget--catalog .mc-catalog-hero-search input {
+  min-width: 0;
+  height: 42px;
+  border: 0;
+  outline: 0;
+}
+
+.local-moderncommerce-storefront .mw-widget--catalog .mc-catalog-hero-search .btn-mc-primary {
+  min-height: 42px;
+  white-space: nowrap;
+}
+
+.local-moderncommerce-storefront .mw-widget--catalog .mc-catalog-hero__panel {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.625rem;
+}
+
+.local-moderncommerce-storefront .mw-widget--catalog .mc-catalog-hero__panel > div,
+.local-moderncommerce-storefront .mw-widget--catalog .mc-catalog-hero__panel > button {
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0.875rem;
+  border: 1px solid var(--mc-catalog-hero-panel-border, rgba(255, 255, 255, 0.12));
+}
+
+.local-moderncommerce-storefront .mw-widget--catalog .mc-catalog-hero__panel strong {
+  color: var(--mc-catalog-hero-panel-value, var(--mc-catalog-hero-panel-text, #ffffff));
+  font-size: var(--mc-catalog-hero-panel-value-font-size, 1.25rem);
+  line-height: 1;
+}
+
+.local-moderncommerce-storefront .mw-widget--catalog .mc-catalog-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (min-width: 992px) {
+  .local-moderncommerce-storefront .mw-widget--catalog .mc-catalog-layout {
+    grid-template-columns: minmax(210px, 250px) minmax(0, 1fr);
+  }
+
+  .local-moderncommerce-storefront .mw-widget--catalog .mc-sidebar-right .mc-catalog-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(210px, 250px);
+  }
+
+  .local-moderncommerce-storefront .mw-widget--catalog .mc-sidebar-right .mc-catalog-sidebar {
+    grid-column: 2;
+  }
+
+  .local-moderncommerce-storefront .mw-widget--catalog .mc-sidebar-right .mc-catalog-main {
+    grid-column: 1;
+    grid-row: 1;
+  }
+}
+
+.local-moderncommerce-storefront .mw-widget--catalog .mc-catalog-sidebar {
+  position: static;
+  inset: auto;
+  width: auto;
+  transform: none;
+  overflow: visible;
+  background: transparent;
+}
+
+.local-moderncommerce-storefront .mw-widget--catalog .mc-catalog-sidebar-inner {
+  height: auto;
+  padding: 0;
+  position: sticky;
+  top: 1rem;
+}
+
+.local-moderncommerce-storefront .mw-widget--catalog .mc-catalog-sidebar-close {
+  display: none;
+}
+
+.local-moderncommerce-storefront .mw-widget--catalog .mc-catalog-results-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+}
+
+.local-moderncommerce-storefront .mw-widget--catalog .mc-catalog-controls,
+.local-moderncommerce-storefront .mw-widget--catalog .mc-catalog-perpage,
+.local-moderncommerce-storefront .mw-widget--catalog .mc-catalog-sort {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.local-moderncommerce-storefront .mw-widget--catalog .mc-catalog-type-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.local-moderncommerce-storefront .mw-widget--catalog .mc-catalog-grid {
+  // Fixed 3-up track count so one or two results keep card width instead of
+  // stretching across the row (auto-fit collapses the empty tracks).
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 1023px) {
+  .local-moderncommerce-storefront .mw-widget--catalog .mc-catalog-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 639px) {
+  .local-moderncommerce-storefront .mw-widget--catalog .mc-catalog-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.local-moderncommerce-storefront .mw-widget--catalog .mc-course-card-footer {
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  background: var(--mc-catalog-card-footer-bg, transparent);
+}
+
+.mc-catalog-section .mc-rating-value,
+body.mc-public-catalog-page .mc-catalog-section .mc-rating-value {
+  color: var(--mc-catalog-rating-text, var(--mc-catalog-card-title-color, var(--mc-text, #111827)));
+}
+
+.mc-catalog-section .mc-filter-section-header,
+.mc-catalog-section .mc-catalog-sidebar-header h3,
+body.mc-public-catalog-page .mc-catalog-section .mc-filter-section-header,
+body.mc-public-catalog-page .mc-catalog-section .mc-catalog-sidebar-header h3 {
+  color: var(--mc-catalog-filter-title, var(--mc-catalog-title-color, var(--mc-text, #111827)));
+}
+
+.mc-catalog-section .mc-catalog-search-input::placeholder,
+.mc-catalog-section .mc-form-control::placeholder,
+.mc-catalog-section .mc-catalog-hero-search input::placeholder,
+body.mc-public-catalog-page .mc-catalog-section .mc-catalog-search-input::placeholder,
+body.mc-public-catalog-page .mc-catalog-section .mc-form-control::placeholder,
+body.mc-public-catalog-page .mc-catalog-section .mc-catalog-hero-search input::placeholder {
+  color: var(--mc-catalog-input-placeholder, var(--mc-catalog-filter-text, var(--mc-text-muted, #64748b)));
+}
+
+.mc-catalog-section .mc-badge,
+.mc-catalog-section .mc-badge-bestseller,
+.mc-catalog-section .mc-badge-bundle,
+.mc-catalog-section .mc-badge-program,
+.mc-catalog-section .mc-badge--neutral,
+body.mc-public-catalog-page .mc-catalog-section .mc-badge,
+body.mc-public-catalog-page .mc-catalog-section .mc-badge-bestseller,
+body.mc-public-catalog-page .mc-catalog-section .mc-badge-bundle,
+body.mc-public-catalog-page .mc-catalog-section .mc-badge-program,
+body.mc-public-catalog-page .mc-catalog-section .mc-badge--neutral {
+  border-radius: var(--mc-catalog-badge-radius, 6px);
+  font-size: var(--mc-catalog-badge-font-size, 0.625rem);
+}
+
+.mc-catalog-section .mc-badge-course,
+.mc-catalog-section .mc-badge--neutral,
+body.mc-public-catalog-page .mc-catalog-section .mc-badge-course,
+body.mc-public-catalog-page .mc-catalog-section .mc-badge--neutral {
+  background: var(--mc-catalog-course-badge-bg, var(--mc-catalog-badge-bg, var(--mc-primary-light, #f0fdfa)));
+  border-color: var(--mc-catalog-course-badge-border, var(--mc-catalog-badge-border, var(--mc-primary-border, #99f6e4)));
+  color: var(--mc-catalog-course-badge-text, var(--mc-catalog-badge-text, var(--mc-catalog-accent, #0b7f75)));
+}
+
+.mc-catalog-section .mc-badge-program,
+body.mc-public-catalog-page .mc-catalog-section .mc-badge-program {
+  background: var(--mc-catalog-program-badge-bg, var(--mc-catalog-badge-bg, #8b5cf6));
+  border-color: var(--mc-catalog-program-badge-border, var(--mc-catalog-badge-border, #7c3aed));
+  color: var(--mc-catalog-program-badge-text, var(--mc-catalog-badge-text, #ffffff));
+}
+
+.mc-catalog-section .mc-badge-bundle,
+body.mc-public-catalog-page .mc-catalog-section .mc-badge-bundle {
+  background: var(--mc-catalog-bundle-badge-bg, var(--mc-catalog-badge-bg, var(--mc-blue, #3b82f6)));
+  border-color: var(--mc-catalog-bundle-badge-border, var(--mc-catalog-badge-border, #2563eb));
+  color: var(--mc-catalog-bundle-badge-text, var(--mc-catalog-badge-text, #ffffff));
+}
+
+.mc-catalog-section .mc-course-card-footer,
+body.mc-public-catalog-page .mc-catalog-section .mc-course-card-footer {
+  background: var(--mc-catalog-card-footer-bg, transparent);
+}
+
+@media (min-width: 768px) {
+  .local-moderncommerce-storefront .mw-widget--catalog .mc-catalog-hero__panel > button {
+    display: none;
+  }
+}
+
+@media (max-width: 860px) {
+  .local-moderncommerce-storefront .mw-widget--catalog .mc-catalog-hero,
+  .local-moderncommerce-storefront .mw-widget--catalog .mc-catalog-layout,
+  .local-moderncommerce-storefront .mw-widget--catalog .mc-sidebar-right .mc-catalog-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .local-moderncommerce-storefront .mw-widget--catalog .mc-sidebar-right .mc-catalog-sidebar,
+  .local-moderncommerce-storefront .mw-widget--catalog .mc-sidebar-right .mc-catalog-main {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .local-moderncommerce-storefront .mw-widget--catalog .mc-catalog-sidebar-inner {
+    position: static;
+  }
+}

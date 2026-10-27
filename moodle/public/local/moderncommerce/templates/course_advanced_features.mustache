@@ -1,0 +1,409 @@
+{{!
+    This file is part of Moodle and is licensed under the
+    GNU General Public License, version 3 or later.
+
+    You may redistribute and modify it under the terms of the GPL.
+    See the plugin root LICENSE file for complete terms.
+
+    @template local_moderncommerce/course_advanced_features
+
+    Advanced course feature management interface.
+
+    @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+}}
+ <div class="container-fluid acf-shell py-4" data-courseid="{{courseid}}">
+    <div class="row g-4">
+      <!-- LEFT: Course basics + KPIs -->
+      <div class="col-lg-4">
+        <div class="acf-card card">
+          <div class="acf-card-header card-header">
+            <div class="d-flex align-items-start gap-2">
+              <!-- Course basic info actions -->
+              <div class="flex-grow-1">
+                <div class="d-flex align-items-center gap-2">
+                  <h2 class="h6 mb-0">{{#str}}p1_courseacf_title, local_moderncommerce{{/str}}</h2>
+                </div>
+                <div class="acf-muted mt-1">{{#str}}p1_courseacf_basic_summary, local_moderncommerce{{/str}}</div>
+              </div>
+              <a class="badge text-bg-secondary text-decoration-none ms-auto" href="{{{wwwroot}}}/local/moderncommerce/admin/pricing.php?courseid={{courseid}}" title="{{#str}}p1_courseacf_editpricing, local_moderncommerce{{/str}}">{{#str}}p1_courseacf_editpricing, local_moderncommerce{{/str}}</a>
+            </div>
+          </div>
+
+          <div class="card-body">
+            <!-- Course card image -->
+            <div class="mb-3">
+              <div class="ratio ratio-16x9 rounded-3 overflow-hidden border acf-media-frame">
+                <img src="{{courseimageurl}}" alt="{{#str}}p1_courseacf_courseimage, local_moderncommerce{{/str}}" class="w-100 h-100 object-fit-cover">
+              </div>
+
+            </div>
+            <div class="mb-2">
+              <label class="form-label">{{#str}}p1_courseacf_coursename, local_moderncommerce{{/str}}</label>
+              <input class="form-control" value="{{coursename}}" disabled readonly />
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label">{{#str}}category, local_moderncommerce{{/str}}</label>
+              <input class="form-control" value="{{categoryname}}" disabled readonly />
+            </div>
+
+
+            <div class="mt-2">
+              <div class="d-flex align-items-start gap-2 p-2 rounded-3 acf-info-note">
+                <span class="text-secondary" aria-hidden="true">ℹ️</span>
+                <div class="acf-help mb-0">
+                  <strong>{{#str}}acf_note, local_moderncommerce{{/str}}</strong> {{#str}}p1_courseacf_managedinmoodle, local_moderncommerce{{/str}}
+                </div>
+              </div>
+            </div>
+
+            <!-- Tags -->
+            <div class="mt-3">
+              <div class="acf-section-title acf-section-title--start mb-2">
+                <h3 class="h6 mb-0">{{#str}}acf_tags, local_moderncommerce{{/str}}</h3>
+              </div>
+              <div class="acf-tag-input-wrap">
+                <div class="input-group">
+                  <input class="form-control" id="tagInput" placeholder="{{#str}}p1_courseacf_addtagplaceholder, local_moderncommerce{{/str}}" autocomplete="off" data-courseid="{{courseid}}" />
+                  <button class="mc-button mc-btn-soft" type="button" id="addTagBtn" data-mc-button="soft">{{#str}}acf_add, local_moderncommerce{{/str}}</button>
+                </div>
+                <div class="acf-autocomplete-dropdown" id="tagSuggestions"></div>
+              </div>
+              <div class="d-flex flex-wrap gap-2 mt-2" id="tagsWrap" aria-label="{{#str}}p1_courseacf_coursetags, local_moderncommerce{{/str}}">
+                {{#hastags}}
+                  {{#coursetags}}
+                    <span class="acf-chip" data-tagid="{{id}}" data-rawname="{{rawname}}">{{name}} <button type="button" aria-label="{{#str}}p1_courseacf_removetag, local_moderncommerce{{/str}}" class="mc-button remove-tag-btn" data-mc-button="soft">✕</button></span>
+                  {{/coursetags}}
+                {{/hastags}}
+                {{^hastags}}
+                  <span class="text-muted small" id="noTagsMsg">{{#str}}p1_courseacf_notags, local_moderncommerce{{/str}}</span>
+                {{/hastags}}
+              </div>
+              <div class="acf-help mt-2">{{#str}}p1_courseacf_tagshelp, local_moderncommerce{{/str}}</div>
+            </div>
+
+            <div class="row g-3 mb-3 mt-3">
+              <div class="col-6">
+                <label class="form-label">{{#str}}price, local_moderncommerce{{/str}}</label>
+                <div class="input-group">
+                  <span class="input-group-text">{{currency_symbol}}</span>
+                  <input class="form-control" type="number" id="priceInput" step="0.01" min="0" value="{{regularprice}}" placeholder="0.00" />
+                </div>
+              </div>
+              <div class="col-6">
+                <label class="form-label">{{#str}}acf_discountedprice, local_moderncommerce{{/str}}</label>
+                <div class="input-group">
+                  <span class="input-group-text">{{currency_symbol}}</span>
+                  <input class="form-control" type="number" id="salePriceInput" step="0.01" min="0" value="{{saleprice}}" placeholder="0.00" />
+                </div>
+              </div>
+            </div>
+
+            <div class="acf-divider my-3"></div>
+
+            <div class="row g-3">
+              <div class="col-6">
+                <div class="acf-kpi">
+                  <div class="value" id="kpiEnrolled">0</div>
+                  <div class="label">{{#str}}p1_courseacf_studentsenrolled, local_moderncommerce{{/str}}</div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="acf-kpi">
+                  <div class="value" id="kpiLectures">0</div>
+                  <div class="label">{{#str}}p1_courseacf_lectures, local_moderncommerce{{/str}}</div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="acf-kpi">
+                  <div class="value" id="kpiQuizzes">0</div>
+                  <div class="label">{{#str}}p1_courseacf_quizzes, local_moderncommerce{{/str}}</div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="acf-kpi">
+                  <div class="value" id="kpiDuration">0m</div>
+                  <div class="label">{{#str}}duration, local_moderncommerce{{/str}}</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="acf-divider my-3"></div>
+
+            <div class="d-flex flex-wrap gap-2">
+              <span class="acf-chip"><span class="fw-semibold">{{#str}}p1_courseacf_skill, local_moderncommerce{{/str}}</span> <span id="chipLevel">{{chip_level}}</span></span>
+              <span class="acf-chip"><span class="fw-semibold">{{#str}}language{{/str}}</span> <span id="chipLang">{{chip_lang}}</span></span>
+              <span class="acf-chip"><span class="fw-semibold">{{#str}}acf_certificate, local_moderncommerce{{/str}}</span> <span id="chipCert">{{chip_cert}}</span></span>
+            </div>
+
+            <p class="acf-help mt-3 mb-0">{{#str}}p1_courseacf_kpihelp, local_moderncommerce{{/str}}</p>
+          </div>
+        </div>
+
+        <div class="alert alert-light border mt-3 mb-0 acf-radius-alert" role="alert">
+          <div class="d-flex gap-2">
+            <div class="flex-shrink-0">ℹ️</div>
+            <div>
+              <div class="fw-semibold">{{#str}}p1_courseacf_smartdefaults, local_moderncommerce{{/str}}</div>
+              <div class="acf-muted">{{#str}}p1_courseacf_smartdefaultshelp, local_moderncommerce{{/str}}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Advanced fields -->
+      <div class="col-lg-8">
+        <div class="acf-card card">
+          <div class="card-body">
+            <!-- Row 1: Duration, Level, Language, Certification -->
+            <div class="acf-section-title mb-3">
+              <div>
+                <h2 class="h6 mb-0">{{#str}}p1_courseacf_learningdetails, local_moderncommerce{{/str}}</h2>
+                <div class="acf-muted">{{#str}}p1_courseacf_learningdetailshelp, local_moderncommerce{{/str}}</div>
+              </div>
+              <span class="badge text-bg-secondary">{{#str}}p1_courseacf_metadata, local_moderncommerce{{/str}}</span>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">{{#str}}duration, local_moderncommerce{{/str}}</label>
+                <div class="row g-2">
+                  <div class="col-6">
+                    <div class="acf-input-icon">
+                      <span class="icon">⏱</span>
+                      <input type="number" min="0" class="form-control" id="durationHours" placeholder="{{#str}}acf_hours, local_moderncommerce{{/str}}" value="{{duration_hours}}" />
+                    </div>
+                  </div>
+                  <div class="col-6">
+                    <input type="number" min="0" max="59" class="form-control" id="durationMinutes" placeholder="{{#str}}acf_minutes, local_moderncommerce{{/str}}" value="{{duration_minutes}}" />
+                  </div>
+                </div>
+                <div class="acf-help mt-1">{{#str}}p1_courseacf_durationhelp, local_moderncommerce{{/str}}</div>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">{{#str}}acf_skilllevel, local_moderncommerce{{/str}}</label>
+                <div class="acf-input-icon">
+                  <span class="icon">📈</span>
+                  <select class="form-select" id="levelSelect">
+                    <option value="" disabled {{^level_beginner}}{{^level_intermediate}}{{^level_advanced}}{{^level_all}}selected{{/level_all}}{{/level_advanced}}{{/level_intermediate}}{{/level_beginner}}>{{#str}}p1_courseacf_chooselevel, local_moderncommerce{{/str}}</option>
+                    <option value="Beginner" {{#level_beginner}}selected{{/level_beginner}}>{{#str}}acf_beginner, local_moderncommerce{{/str}}</option>
+                    <option value="Intermediate" {{#level_intermediate}}selected{{/level_intermediate}}>{{#str}}acf_intermediate, local_moderncommerce{{/str}}</option>
+                    <option value="Advanced" {{#level_advanced}}selected{{/level_advanced}}>{{#str}}acf_advanced, local_moderncommerce{{/str}}</option>
+                    <option value="All Levels" {{#level_all}}selected{{/level_all}}>{{#str}}acf_alllevels, local_moderncommerce{{/str}}</option>
+                  </select>
+                </div>
+                <div class="acf-help mt-1">{{#str}}p1_courseacf_levelhelp, local_moderncommerce{{/str}}</div>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">{{#str}}language{{/str}}</label>
+                <div class="acf-input-icon">
+                  <span class="icon">🌐</span>
+                  <select class="form-select" id="langSelect">
+                    <option value="" disabled {{^lang_english}}{{^lang_french}}{{^lang_yoruba}}{{^lang_arabic}}{{^lang_spanish}}selected{{/lang_spanish}}{{/lang_arabic}}{{/lang_yoruba}}{{/lang_french}}{{/lang_english}}>{{#str}}p1_courseacf_chooselanguage, local_moderncommerce{{/str}}</option>
+                    <option value="English" {{#lang_english}}selected{{/lang_english}}>{{#str}}acf_english, local_moderncommerce{{/str}}</option>
+                    <option value="French" {{#lang_french}}selected{{/lang_french}}>{{#str}}acf_french, local_moderncommerce{{/str}}</option>
+                    <option value="Yoruba" {{#lang_yoruba}}selected{{/lang_yoruba}}>{{#str}}acf_yoruba, local_moderncommerce{{/str}}</option>
+                    <option value="Arabic" {{#lang_arabic}}selected{{/lang_arabic}}>{{#str}}acf_arabic, local_moderncommerce{{/str}}</option>
+                    <option value="Spanish" {{#lang_spanish}}selected{{/lang_spanish}}>{{#str}}acf_spanish, local_moderncommerce{{/str}}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">{{#str}}p1_courseacf_numberofquizzes, local_moderncommerce{{/str}}</label>
+                <div class="acf-input-icon">
+                  <span class="icon">📝</span>
+                  <input type="number" min="0" class="form-control" id="quizzesInput" value="{{quizzes_count}}" />
+                </div>
+                <div class="acf-help mt-1">{{#str}}p1_courseacf_quizzeshelp, local_moderncommerce{{/str}}</div>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">{{#str}}acf_passgrade, local_moderncommerce{{/str}}</label>
+                <div class="acf-input-icon">
+                  <span class="icon">✅</span>
+                  <input type="number" min="0" max="100" step="0.01" class="form-control" id="passGradeInput" placeholder="{{#str}}p1_courseacf_passgradeplaceholder, local_moderncommerce{{/str}}" />
+                </div>
+                <div class="acf-help mt-1">{{#str}}p1_courseacf_passgradehelp, local_moderncommerce{{/str}}</div>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">{{#str}}acf_certificate, local_moderncommerce{{/str}}</label>
+                <div class="d-flex flex-wrap align-items-center gap-3 border rounded-3 p-3 acf-border-panel">
+                  <div class="form-check form-switch mb-0">
+                    <input class="form-check-input" type="checkbox" id="certSwitch" {{#cert_checked}}checked{{/cert_checked}}>
+                    <label class="form-check-label" for="certSwitch">{{#str}}p1_courseacf_enablecert, local_moderncommerce{{/str}}</label>
+                  </div>
+                  <button class="mc-button btn-sm mc-btn-soft" type="button" onclick="window.location.href = M.cfg.wwwroot + '/local/moderncommerce/help_view.php?doc=configure_certificate&courseid={{courseid}}'" data-mc-button="soft" data-mc-button-size="sm">{{#str}}acf_configure, local_moderncommerce{{/str}}</button>
+                </div>
+                <div class="acf-help mt-1">{{#str}}p1_courseacf_certhelp, local_moderncommerce{{/str}}</div>
+              </div>
+            </div>
+
+            <div class="acf-divider my-4"></div>
+
+            <!-- Course Overview (text) -->
+            <div class="acf-section-title mb-3">
+              <div>
+                <h2 class="h6 mb-0">{{#str}}p1_courseacf_overview, local_moderncommerce{{/str}}</h2>
+                <div class="acf-muted">{{#str}}p1_courseacf_overviewhelp, local_moderncommerce{{/str}}</div>
+              </div>
+            </div>
+
+            <!-- Auto-generate overview from Moodle course summary -->
+            <div class="mb-3">
+              <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 p-2 rounded-3 acf-info-note">
+                <div>
+                  <div class="fw-semibold">{{#str}}p1_courseacf_usemoodlesummary, local_moderncommerce{{/str}}</div>
+                  <div class="acf-help mb-0">{{#str}}p1_courseacf_usemoodlesummaryhelp, local_moderncommerce{{/str}}</div>
+                </div>
+                <div class="form-check form-switch mb-0">
+                  <input class="form-check-input" type="checkbox" id="overviewAutoSwitch" {{#overview_auto_checked}}checked{{/overview_auto_checked}}>
+                  <label class="form-check-label" for="overviewAutoSwitch">{{#str}}enable{{/str}}</label>
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <textarea class="form-control acf-textarea" id="courseOverviewTextarea" placeholder="{{#str}}p1_courseacf_overviewplaceholder, local_moderncommerce{{/str}}">{{overview_text}}</textarea>
+            </div>
+
+            <div class="acf-divider my-4"></div>
+
+            <!-- Row 2: Objectives -->
+            <div class="acf-section-title mb-3">
+              <div>
+                <h2 class="h6 mb-0">{{#str}}p1_courseacf_objectives, local_moderncommerce{{/str}}</h2>
+                <div class="acf-muted">{{#str}}p1_courseacf_objectiveshelp, local_moderncommerce{{/str}}</div>
+              </div>
+              <button class="mc-button btn-sm mc-btn-soft" type="button" onclick="addObjective()" data-mc-button="soft" data-mc-button-size="sm">{{#str}}p1_courseacf_addobjective, local_moderncommerce{{/str}}</button>
+            </div>
+
+            <div id="objectivesList" class="vstack gap-2"></div>
+
+            <div class="acf-divider my-4"></div>
+
+            <!-- Row 3: Outline / Curriculum -->
+            <div class="acf-section-title mb-3">
+              <div>
+                <h2 class="h6 mb-0">{{#str}}acf_courseoutline, local_moderncommerce{{/str}}</h2>
+                <div class="acf-muted">{{#str}}p1_courseacf_outlinehelp, local_moderncommerce{{/str}}</div>
+              </div>
+              <button class="mc-button btn-sm mc-btn-soft" type="button" id="addOutlineBtn" onclick="addOutline()" data-mc-button="soft" data-mc-button-size="sm">{{#str}}p1_courseacf_addsection, local_moderncommerce{{/str}}</button>
+            </div>
+
+            <!-- Auto-generate outline from Moodle course content -->
+            <div class="mt-2 mb-3">
+              <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 p-2 rounded-3 acf-info-note">
+                <div>
+                  <div class="fw-semibold">{{#str}}acf_autogenerateoutline, local_moderncommerce{{/str}}</div>
+                  <div class="acf-help mb-0">{{#str}}p1_courseacf_autooutlinehelp, local_moderncommerce{{/str}}</div>
+                </div>
+                <div class="form-check form-switch mb-0">
+                  <input class="form-check-input" type="checkbox" id="outlineAutoSwitch" {{#outline_auto_checked}}checked{{/outline_auto_checked}}>
+                  <label class="form-check-label" for="outlineAutoSwitch">{{#str}}enable{{/str}}</label>
+                </div>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table table-sm align-middle acf-table">
+                <thead>
+                  <tr>
+                    <th class="acf-table-col-index">#</th>
+                    <th>{{#str}}p1_courseacf_sectiontitle, local_moderncommerce{{/str}}</th>
+                    <th class="acf-table-col-time">{{#str}}p1_courseacf_estimatedtime, local_moderncommerce{{/str}}</th>
+                    <th class="acf-table-col-actions text-end">{{#str}}actions, local_moderncommerce{{/str}}</th>
+                  </tr>
+                </thead>
+                <tbody id="outlineTable"></tbody>
+              </table>
+            </div>
+
+            <div class="acf-divider my-4"></div>
+
+            <!-- Course Metadata -->
+            <div class="acf-section-title mb-3">
+              <div>
+                <h2 class="h6 mb-0">{{#str}}p1_courseacf_metadata_title, local_moderncommerce{{/str}}</h2>
+                <div class="acf-muted">{{#str}}p1_courseacf_metadatahelp, local_moderncommerce{{/str}}</div>
+              </div>
+            </div>
+
+            <div class="p-3 rounded-3 mb-4 acf-surface-box">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="metaDownloadable" {{#meta_downloadable}}checked{{/meta_downloadable}}>
+                    <label class="form-check-label" for="metaDownloadable">{{#str}}p1_courseacf_downloadable, local_moderncommerce{{/str}}</label>
+                  </div>
+                  <div class="acf-help">{{#str}}p1_courseacf_downloadablehelp, local_moderncommerce{{/str}}</div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="metaPrerequisites" {{#meta_prerequisites}}checked{{/meta_prerequisites}}>
+                    <label class="form-check-label" for="metaPrerequisites">{{#str}}acf_prerequisites, local_moderncommerce{{/str}}</label>
+                  </div>
+                  <div class="acf-help">{{#str}}p1_courseacf_prerequisiteshelp, local_moderncommerce{{/str}}</div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="metaFeatured" {{#meta_featured}}checked{{/meta_featured}}>
+                    <label class="form-check-label" for="metaFeatured">{{#str}}p1_courseacf_featuredcourse, local_moderncommerce{{/str}}</label>
+                  </div>
+                  <div class="acf-help">{{#str}}p1_courseacf_featuredhelp, local_moderncommerce{{/str}}</div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="metaBestseller" {{#meta_bestseller}}checked{{/meta_bestseller}}>
+                    <label class="form-check-label" for="metaBestseller">{{#str}}p1_courseacf_bestsellerbadge, local_moderncommerce{{/str}}</label>
+                  </div>
+                  <div class="acf-help">{{#str}}p1_courseacf_bestsellerhelp, local_moderncommerce{{/str}}</div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="metaTrending" {{#meta_trending}}checked{{/meta_trending}}>
+                    <label class="form-check-label" for="metaTrending">{{#str}}p1_courseacf_trendingbadge, local_moderncommerce{{/str}}</label>
+                  </div>
+                  <div class="acf-help">{{#str}}p1_courseacf_trendinghelp, local_moderncommerce{{/str}}</div>
+                </div>
+              </div>
+            </div>
+
+
+
+            <!-- Sticky actions inside the card -->
+            <div class="acf-sticky-actions mt-4">
+              <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div class="acf-muted">{{#str}}acf_lastupdated, local_moderncommerce{{/str}} <span id="lastUpdated">{{#str}}acf_justnow, local_moderncommerce{{/str}}</span></div>
+                <div class="d-flex gap-2">
+                  <button class="mc-button mc-btn-soft" type="button" onclick="resetForm()" data-mc-button="soft">{{#str}}acf_reset, local_moderncommerce{{/str}}</button>
+                  <button class="mc-button btn-mc-primary" type="button" onclick="saveAdvancedFeatures()" data-mc-button="primary">{{#str}}acf_savechanges, local_moderncommerce{{/str}}</button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast container -->
+    <div class="position-fixed bottom-0 end-0 p-3 acf-toast-container">
+      <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+          <strong class="me-auto">{{#str}}p1_courseacf_courseadmin, local_moderncommerce{{/str}}</strong>
+          <small class="text-body-secondary">{{#str}}acf_now, local_moderncommerce{{/str}}</small>
+          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="{{#str}}closebuttontitle{{/str}}"></button>
+        </div>
+        <div class="toast-body" id="toastBody">{{#str}}acf_done, local_moderncommerce{{/str}}</div>
+      </div>
+    </div>
+  </div>

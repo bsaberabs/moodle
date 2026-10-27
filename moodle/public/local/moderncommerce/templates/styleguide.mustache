@@ -1,0 +1,335 @@
+{{!
+    @template local_moderncommerce/styleguide
+
+    Living style guide / component gallery for the mc-* design system.
+    Static showcase — no data, no React. Rendered inside the admin shell.
+    Gallery-only layout helpers are scoped under .mc-styleguide so they
+    never leak into the runtime design-system CSS.
+
+
+    @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+}}
+<div class="mc-content mc-styleguide">
+
+    <p class="mc-page-subtitle sg-section">Living reference for the <code>local_moderncommerce</code> mc-* design system. Components compiled from <code>styles/scss/</code>. Items marked <span class="sg-new">New</span> are the generic control primitives (design-system doc &sect;6: 16, 17, 19&ndash;24, 37).</p>
+
+    {{! ── Color tokens ── }}
+    <section class="mc-card sg-section">
+        <div class="mc-card-header"><h2 class="mc-card-title">Color tokens</h2></div>
+        <div class="mc-card-body">
+            <div class="sg-swatches">
+                {{#colors}}
+                <div class="sg-swatch">
+                    <div class="sg-swatch__chip" style="background: var({{var}});"></div>
+                    <div class="sg-swatch__meta">
+                        <div class="sg-swatch__name">{{name}}</div>
+                        <div class="sg-swatch__var">{{var}}</div>
+                    </div>
+                </div>
+                {{/colors}}
+            </div>
+        </div>
+    </section>
+
+    {{! ── Buttons ── }}
+    <section class="mc-card sg-section">
+        <div class="mc-card-header"><h2 class="mc-card-title">Buttons</h2></div>
+        <div class="mc-card-body">
+            <span class="sg-label">Text buttons</span>
+            <div class="sg-row mb-3">
+                <button type="button" class="mc-button btn-mc-primary" data-mc-button="primary">Primary action</button>
+                <button type="button" class="mc-button btn-mc-secondary" data-mc-button="secondary">Secondary</button>
+                <button type="button" class="mc-button mc-btn-soft" data-mc-button="soft"><i class="bi bi-download mc-icon"></i> Soft</button>
+                <button type="button" class="mc-button mc-btn-ghost" data-mc-button="ghost">Ghost</button>
+                <button type="button" class="mc-button btn-mc-danger" data-mc-button="danger"><i class="bi bi-trash mc-icon"></i> Danger</button>
+                <button type="button" class="mc-button btn-mc-primary" disabled data-mc-button="primary">Disabled</button>
+            </div>
+
+            <span class="sg-label">Icon button <span class="sg-new">New</span></span>
+            <div class="sg-row mb-3">
+                <button type="button" class="mc-button mc-btn-icon" aria-label="Edit" data-mc-button="soft" data-mc-button-size="icon"><i class="bi bi-pencil"></i></button>
+                <button type="button" class="mc-button mc-btn-icon mc-btn-icon--ghost" aria-label="More" data-mc-button="soft" data-mc-button-size="icon"><i class="bi bi-three-dots"></i></button>
+                <button type="button" class="mc-button mc-btn-icon mc-btn-icon--danger" aria-label="Delete" data-mc-button="danger" data-mc-button-size="icon"><i class="bi bi-trash"></i></button>
+                <button type="button" class="mc-button mc-btn-icon" aria-label="Refresh" disabled data-mc-button="soft" data-mc-button-size="icon"><i class="bi bi-arrow-clockwise"></i></button>
+            </div>
+
+            <span class="sg-label">Action group <span class="sg-new">New</span></span>
+            <div class="mc-action-group">
+                <button type="button" class="mc-button mc-btn-soft" data-mc-button="soft"><i class="bi bi-funnel mc-icon"></i> Filter</button>
+                <button type="button" class="mc-button mc-btn-soft" data-mc-button="soft"><i class="bi bi-download mc-icon"></i> Export</button>
+                <button type="button" class="mc-button btn-mc-primary" data-mc-button="primary"><i class="bi bi-plus-lg mc-icon"></i> New item</button>
+            </div>
+        </div>
+    </section>
+
+    {{! ── Badges & pills ── }}
+    <section class="mc-card sg-section">
+        <div class="mc-card-header"><h2 class="mc-card-title">Badges &amp; pills</h2></div>
+        <div class="mc-card-body">
+            <span class="sg-label">Status badges</span>
+            <div class="sg-row mb-3">
+                {{#statuses}}<span class="mc-badge mc-badge--{{key}}">{{label}}</span>{{/statuses}}
+            </div>
+            <span class="sg-label">Pills</span>
+            <div class="sg-row">
+                {{#statuses}}<span class="mc-pill mc-pill--{{key}}">{{label}}</span>{{/statuses}}
+            </div>
+        </div>
+    </section>
+
+    {{! ── Alerts (NEW) ── }}
+    <section class="mc-card sg-section">
+        <div class="mc-card-header"><h2 class="mc-card-title">Alerts <span class="sg-new">New</span></h2></div>
+        <div class="mc-card-body">
+            <div class="sg-stack sg-stack--wide">
+                <div class="mc-alert mc-alert--info"><i class="bi bi-info-circle mc-alert__icon"></i><div class="mc-alert__body"><p class="mc-alert__title">Heads up</p>Neutral guidance or a processing state.</div></div>
+                <div class="mc-alert mc-alert--success"><i class="bi bi-check-circle mc-alert__icon"></i><div class="mc-alert__body"><p class="mc-alert__title">Payment received</p>Order #1042 marked paid.</div></div>
+                <div class="mc-alert mc-alert--warning"><i class="bi bi-exclamation-triangle mc-alert__icon"></i><div class="mc-alert__body"><p class="mc-alert__title">Setup incomplete</p>No payment gateway is enabled yet.</div></div>
+                <div class="mc-alert mc-alert--danger"><i class="bi bi-x-octagon mc-alert__icon"></i><div class="mc-alert__body"><p class="mc-alert__title">Payment failed</p>Retry or choose another method.</div></div>
+                <div class="mc-alert mc-alert--primary"><i class="bi bi-stars mc-alert__icon"></i><div class="mc-alert__body"><p class="mc-alert__title">Tip</p>You can generate enrollment keys in bulk.</div></div>
+                <div class="mc-alert mc-alert--neutral"><i class="bi bi-dot mc-alert__icon"></i><div class="mc-alert__body">A quiet neutral notice with no title.</div></div>
+            </div>
+        </div>
+    </section>
+
+    {{! ── Toasts (NEW) ── }}
+    <section class="mc-card sg-section">
+        <div class="mc-card-header"><h2 class="mc-card-title">Toasts <span class="sg-new">New</span></h2></div>
+        <div class="mc-card-body">
+            <p class="mc-field-help mb-3">Floating, auto-dismissing notifications built on the alert visual language. The display corner is admin-configurable (Settings › Notifications), and server-rendered Moodle notifications are adopted into toasts automatically. Fire one:</p>
+            <div class="sg-row mb-4">
+                <button type="button" class="mc-button btn-mc-primary" data-sg-toast="success" data-mc-button="primary">Success toast</button>
+                <button type="button" class="mc-button mc-btn-soft" data-sg-toast="info" data-mc-button="soft">Info toast</button>
+                <button type="button" class="mc-button mc-btn-soft" data-sg-toast="warning" data-mc-button="soft">Warning toast</button>
+                <button type="button" class="mc-button btn-mc-danger" data-sg-toast="danger" data-mc-button="danger">Error toast</button>
+                <button type="button" class="mc-button mc-btn-soft" data-sg-toast="sticky" data-mc-button="soft">Sticky (manual close)</button>
+            </div>
+            <span class="sg-label">Anatomy</span>
+            <div class="sg-stack sg-stack--toast">
+                <div class="mc-toast mc-toast--success"><i class="bi bi-check-circle mc-toast__icon" aria-hidden="true"></i><div class="mc-toast__body"><p class="mc-toast__title">Payment received</p><p class="mc-toast__message">Order #1042 marked paid.</p></div><button type="button" class="mc-toast__close" aria-label="Dismiss notification"><i class="bi bi-x-lg"></i></button></div>
+                <div class="mc-toast mc-toast--danger"><i class="bi bi-x-octagon mc-toast__icon" aria-hidden="true"></i><div class="mc-toast__body"><p class="mc-toast__title">Payment failed</p><p class="mc-toast__message">Card was declined. Try another method.</p></div><button type="button" class="mc-toast__close" aria-label="Dismiss notification"><i class="bi bi-x-lg"></i></button></div>
+                <div class="mc-toast mc-toast--info"><i class="bi bi-info-circle mc-toast__icon" aria-hidden="true"></i><div class="mc-toast__body"><p class="mc-toast__message">A quiet toast with no title.</p></div><button type="button" class="mc-toast__close" aria-label="Dismiss notification"><i class="bi bi-x-lg"></i></button></div>
+            </div>
+        </div>
+    </section>
+
+    {{! ── Form controls ── }}
+    <section class="mc-card sg-section">
+        <div class="mc-card-header"><h2 class="mc-card-title">Form controls</h2></div>
+        <div class="mc-card-body">
+            <div class="sg-grid">
+                <div>
+                    <label class="mc-field-label" for="sg-text">Text input</label>
+                    <input id="sg-text" type="text" class="mc-form-control" placeholder="Course name">
+                    <p class="mc-field-help">Help text appears below the field.</p>
+                </div>
+                <div>
+                    <label class="mc-field-label" for="sg-search">Search input <span class="sg-new">New</span></label>
+                    <div class="mc-search">
+                        <i class="bi bi-search mc-search__icon"></i>
+                        <input id="sg-search" type="search" class="mc-search-input" placeholder="Search products&hellip;">
+                    </div>
+                </div>
+                <div>
+                    <label class="mc-field-label" for="sg-select">Select <span class="sg-new">New</span></label>
+                    <select id="sg-select" class="mc-select">
+                        <option>All product types</option>
+                        <option>Course</option>
+                        <option>Bundle</option>
+                        <option>Program</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="mc-field-label" for="sg-req">Required field</label>
+                    <input id="sg-req" type="text" class="mc-form-control" required>
+                    <p class="mc-field-help">Marked required <span class="mc-required">*</span></p>
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <label class="mc-field-label" for="sg-textarea">Textarea <span class="sg-new">New</span></label>
+                <textarea id="sg-textarea" class="mc-textarea" placeholder="Product description&hellip;"></textarea>
+            </div>
+
+            <div class="sg-row sg-row--spacious mt-3">
+                <div>
+                    <span class="sg-label">Checkbox <span class="sg-new">New</span></span>
+                    <label class="mc-checkbox"><input type="checkbox" checked> Featured</label>
+                    <label class="mc-checkbox"><input type="checkbox"> Bestseller</label>
+                    <label class="mc-checkbox mc-checkbox--disabled"><input type="checkbox" disabled> Disabled</label>
+                </div>
+                <div>
+                    <span class="sg-label">Radio <span class="sg-new">New</span></span>
+                    <label class="mc-radio"><input type="radio" name="sg-r" checked> Percentage</label>
+                    <label class="mc-radio"><input type="radio" name="sg-r"> Fixed amount</label>
+                </div>
+                <div>
+                    <span class="sg-label">Switch <span class="sg-new">New</span></span>
+                    <div class="d-flex flex-column gap-2">
+                        <label class="mc-switch"><input type="checkbox" checked><span class="mc-switch__track"></span><span class="mc-switch__thumb"></span><span class="mc-switch__label">Enabled</span></label>
+                        <label class="mc-switch"><input type="checkbox"><span class="mc-switch__track"></span><span class="mc-switch__thumb"></span><span class="mc-switch__label">Disabled state</span></label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {{! ── Form section ── }}
+    <section class="mc-form-section sg-section">
+        <div class="mc-form-section__header"><h3 class="mc-form-section__title">Form section</h3></div>
+        <div class="mc-form-section__body">
+            <div class="sg-grid">
+                <div>
+                    <label class="mc-field-label" for="sg-fs1">Regular price</label>
+                    <input id="sg-fs1" type="text" class="mc-form-control" value="49.00">
+                </div>
+                <div>
+                    <label class="mc-field-label" for="sg-fs2">Sale price</label>
+                    <input id="sg-fs2" type="text" class="mc-form-control" value="29.00">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {{! ── Table ── }}
+    <section class="mc-card sg-section">
+        <div class="mc-card-header"><h2 class="mc-card-title">Data table</h2></div>
+        <div class="mc-card-body">
+            <div class="mc-table-wrapper">
+                <table class="mc-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Order</th>
+                            <th scope="col">Customer</th>
+                            <th scope="col">Status</th>
+                            <th scope="col" class="text-end">Total</th>
+                            <th scope="col" class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#orders}}
+                        <tr>
+                            <td class="mc-mono">{{number}}</td>
+                            <td>{{customer}}<div class="mc-cell-muted">{{email}}</div></td>
+                            <td><span class="mc-badge mc-badge--{{statuskey}}">{{status}}</span></td>
+                            <td class="text-end">{{total}}</td>
+                            <td class="text-end">
+                                <span class="mc-action-group">
+                                    <button type="button" class="mc-button mc-btn-icon" aria-label="View" data-mc-button="soft" data-mc-button-size="icon"><i class="bi bi-eye"></i></button>
+                                    <button type="button" class="mc-button mc-btn-icon mc-btn-icon--danger" aria-label="Refund" data-mc-button="danger" data-mc-button-size="icon"><i class="bi bi-arrow-counterclockwise"></i></button>
+                                </span>
+                            </td>
+                        </tr>
+                        {{/orders}}
+                    </tbody>
+                </table>
+            </div>
+            <nav class="mc-pagination">
+                <span class="mc-pagination-info">Showing 1&ndash;3 of 24</span>
+                <span class="mc-pagination-pages">
+                    <button type="button" class="mc-button mc-pagination-btn" disabled data-mc-button="soft">Prev</button>
+                    <button type="button" class="mc-button mc-pagination-btn active" aria-current="page" data-mc-button="soft">1</button>
+                    <button type="button" class="mc-button mc-pagination-btn" data-mc-button="soft">2</button>
+                    <button type="button" class="mc-button mc-pagination-btn" data-mc-button="soft">3</button>
+                    <button type="button" class="mc-button mc-pagination-btn" data-mc-button="soft">Next</button>
+                </span>
+            </nav>
+        </div>
+    </section>
+
+    {{! ── Metric tiles ── }}
+    <section class="sg-section">
+        <span class="sg-label">Metric tiles</span>
+        <div class="sg-grid">
+            <div class="mc-metric-tile">
+                <div class="mc-metric-tile__body">
+                    <div class="mc-metric-tile__label">Revenue</div>
+                    <div class="mc-metric-tile__value">$12,480</div>
+                    <div class="mc-metric-tile__delta mc-metric-tile__delta--up"><i class="bi bi-arrow-up"></i> 12% vs last month</div>
+                </div>
+                <span class="mc-metric-tile__icon"><i class="bi bi-currency-dollar"></i></span>
+            </div>
+            <div class="mc-metric-tile">
+                <div class="mc-metric-tile__body">
+                    <div class="mc-metric-tile__label">Orders</div>
+                    <div class="mc-metric-tile__value">318</div>
+                    <div class="mc-metric-tile__delta mc-metric-tile__delta--down"><i class="bi bi-arrow-down"></i> 4% vs last month</div>
+                </div>
+                <span class="mc-metric-tile__icon"><i class="bi bi-bag"></i></span>
+            </div>
+            <div class="mc-metric-tile mc-metric-tile--neutral">
+                <div class="mc-metric-tile__body">
+                    <div class="mc-metric-tile__label">Pending <span class="sg-new">New</span></div>
+                    <div class="mc-metric-tile__value">7</div>
+                    <div class="mc-metric-tile__delta mc-metric-tile__delta--flat">No change</div>
+                </div>
+                <span class="mc-metric-tile__icon"><i class="bi bi-hourglass-split"></i></span>
+            </div>
+        </div>
+    </section>
+
+    {{! ── Price + progress ── }}
+    <section class="mc-card sg-section">
+        <div class="mc-card-header"><h2 class="mc-card-title">Price &amp; progress</h2></div>
+        <div class="mc-card-body">
+            <div class="sg-row sg-row--price-progress">
+                <div>
+                    <span class="sg-label">Price (sale)</span>
+                    <div class="mc-price"><span class="mc-price__sale">$29.00</span> <span class="mc-price__original">$49.00</span></div>
+                </div>
+                <div>
+                    <span class="sg-label">Price (free)</span>
+                    <div class="mc-price mc-price--free"><span class="mc-price__main">Free</span></div>
+                </div>
+                <div class="sg-progress-demo">
+                    <span class="sg-label">Progress</span>
+                    <div class="mc-progress-bar-wrap"><div class="mc-progress-bar-fill sg-progress-fill--65"></div></div>
+                    <div class="mc-progress-bar-wrap mt-2"><div class="mc-progress-bar-fill mc-progress-bar-fill--complete sg-progress-fill--100"></div></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {{! ── Empty & loading ── }}
+    <section class="sg-section">
+        <div class="sg-grid">
+            <div class="mc-empty">
+                <span class="mc-empty__icon"><i class="bi bi-inbox"></i></span>
+                <div class="mc-empty__title">No orders yet</div>
+                <p class="mc-empty__desc">Orders will appear here once customers start buying.</p>
+                <button type="button" class="mc-button btn-mc-primary" data-mc-button="primary">Browse catalog</button>
+            </div>
+            <div class="mc-card">
+                <div class="mc-card-body">
+                    <div class="mc-loading"><i class="bi bi-arrow-repeat"></i> Loading&hellip;</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</div>
+{{#js}}
+require(['local_moderncommerce/floating_notifications'], function(toast) {
+    document.querySelectorAll('[data-sg-toast]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            switch (btn.getAttribute('data-sg-toast')) {
+                case 'success':
+                    toast.success('Order #1042 marked paid.', {title: 'Payment received'});
+                    break;
+                case 'warning':
+                    toast.warning('No payment gateway is enabled yet.', {title: 'Setup incomplete'});
+                    break;
+                case 'danger':
+                    toast.error('Card was declined. Try another method.', {title: 'Payment failed'});
+                    break;
+                case 'sticky':
+                    toast.info('This toast stays until you close it.', {title: 'Sticky', delay: 0});
+                    break;
+                default:
+                    toast.info('You can generate enrollment keys in bulk.');
+            }
+        });
+    });
+});
+{{/js}}

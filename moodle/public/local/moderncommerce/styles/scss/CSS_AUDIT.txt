@@ -1,0 +1,192 @@
+Modern Commerce CSS Architecture Audit
+======================================
+
+Status
+------
+Modern Commerce page CSS is now generated from SCSS and loaded through one
+central route-aware hook:
+
+- Core bundle: styles/design-system.css
+- Route bundles: styles/bundles/*.css
+- Global Moodle auto-load bundle: styles.css
+- Loader: classes/hook/callbacks.php::inject_custom_css()
+- Build command: node public/local/moderncommerce/styles/tools/build-design-system.mjs
+- Validation command: node public/local/moderncommerce/styles/tools/build-design-system.mjs --check
+
+Loading Policy
+--------------
+Do not add page-level calls such as:
+
+    $PAGE->requires->css('/local/moderncommerce/styles/example.css');
+
+All /local/moderncommerce/ pages receive styles/design-system.css from the
+before_standard_head_html_generation hook after the page URL is set. The hook
+then adds route bundles from styles/bundles/ for storefront, catalog, learner,
+admin, public-page, gallery, branding, icon browser, and advanced-feature
+surfaces. Moodle auto-loads the plugin root styles.css, so that file must stay
+small and tightly scoped to UI that can render outside Modern Commerce pages.
+
+Template CSS Policy
+-------------------
+Do not add Mustache-level <style> blocks. Template presentation belongs in the
+owning SCSS partial and generated route bundle. Inline style attributes should
+be limited to runtime data values that CSS cannot know by itself, such as
+uploaded background-image URLs, dynamic progress widths, configured catalog
+section variables, styleguide swatch colors, or toast animation duration.
+
+SCSS Groups
+-----------
+- thirdparty/bootstrap-icons
+  Vendored Bootstrap Icons CSS and font files.
+
+- foundation, tokens, mixins, shared-components
+  Core design tokens, helpers, and reusable mc-* component vocabulary.
+
+- runtime/
+  Modern Commerce page runtime: layout, components, buyer, learner, admin,
+  responsive, compatibility, apps, typography. Runtime layout/components,
+  responsive, compatibility, apps, and typography compile into the core bundle;
+  buyer/learner/admin compile into route bundles.
+
+- surfaces/_learner-dashboard.scss
+  Learner account, checkout, cart, subscription, order, wishlist, grades, and
+  related learner routes.
+
+- surfaces/_public-pages.scss
+  Public legal/support/guest checkout pages.
+
+- surfaces/_catalog.scss
+  Catalog grid, filters, product cards, catalog embeds.
+
+- surfaces/_storefront.scss
+  Storefront widget renderer and public page widgets.
+
+- surfaces/_advanced-features.scss
+  Course and bundle advanced-feature pages using acf-* markup.
+
+- surfaces/_course-header.scss
+  Course header media and overlay helpers.
+
+- surfaces/_admin-branding.scss
+  Branding editor page.
+
+- surfaces/_admin-gallery.scss
+  Admin storefront widget gallery.
+
+- surfaces/_admin-help.scss
+  Admin documentation center and Markdown reader.
+
+- surfaces/_contact-dashboard.scss
+  Contact/support reply dashboard.
+
+- surfaces/_icon-browser.scss
+  Icon browser pages.
+
+- surfaces/_component-showcase.scss
+  Component showcase and upgrade examples.
+
+- global/_navbar-cart.scss
+  Moodle navbar cart UI. Compiles to root styles.css because this surface can
+  appear outside Modern Commerce pages.
+
+Generated Route Bundles
+-----------------------
+- styles/design-system.css
+  Core tokens, Bootstrap Icons, layout, common components, compatibility,
+  app helpers, and typography.
+
+- styles/bundles/storefront.css
+  Storefront widget renderer.
+
+- styles/bundles/catalog.css
+  Catalog grid, filters, course/product cards, and catalog widgets.
+
+- styles/bundles/public.css
+  Public legal/support/checkout/success hero and card treatments.
+
+- styles/bundles/learner.css
+  Learner account, buyer, cart, checkout, order, subscription, and redeem
+  surfaces.
+
+- styles/bundles/admin.css
+  Admin shell/runtime styles shared across Modern Commerce admin routes.
+
+- styles/bundles/admin-gallery.css
+  Storefront widget gallery admin page.
+
+- styles/bundles/admin-help.css
+  Admin help center and documentation reader page.
+
+- styles/bundles/admin-branding.css
+  Branding editor page.
+
+- styles/bundles/contact-dashboard.css
+  Contact/pricing dashboard legacy surfaces.
+
+- styles/bundles/icon-browser.css
+  Curated icon browser pages.
+
+- styles/bundles/component-showcase.css
+  Component showcase and styleguide routes.
+
+- styles/bundles/advanced-features.css
+  Course and bundle advanced-feature editor routes.
+
+- styles/bundles/course-detail.css
+  Course and bundle detail header/media helpers.
+
+Performance Tooling
+-------------------
+- node public/local/moderncommerce/scripts/performance-report.mjs
+  Reports largest assets, generated CSS, route React bundles, fonts, images,
+  and non-license external URLs.
+
+- node public/local/moderncommerce/scripts/performance-smoke.mjs
+  Fetches key local routes and reports Modern Commerce CSS links and payloads.
+
+- node public/local/moderncommerce/styles/tools/audit-css-usage.mjs
+  Reports likely-unused selector candidates. Do not delete automatically.
+
+- node public/local/moderncommerce/styles/tools/audit-bootstrap-icons.mjs
+  Reports Bootstrap Icons usage and whether subsetting is worth maintaining.
+
+Migrated Standalone CSS
+-----------------------
+The following standalone files were migrated into SCSS partials and removed:
+
+- style-upgrade.css
+- styles/branding-admin.css
+- styles/bundle_advanced_features.css
+- styles/catalog.css
+- styles/course_advanced_features.css
+- styles/dashboard.css
+- styles/gallery.css
+- styles/header.css
+- styles/icons.css
+- styles/learner-dashboard.css
+- styles/navbar-cart.css
+- styles/public-pages.css
+- styles/storefront.css
+
+Audit Findings
+--------------
+- Previous state: page routes mixed core design-system CSS with ad hoc
+  page-level CSS requires, which made cascade order hard to reason about and
+  encouraged multiple sources of truth.
+- Current state: design-system.css is the required Modern Commerce core
+  stylesheet, route-specific bundles are loaded from styles/bundles/, and
+  styles.css remains the only global auto-loaded stylesheet.
+- Phase two cleanup: Bootstrap Icons is vendored into the SCSS thirdparty
+  group, the navbar cart global bundle is constrained to prefixed selectors,
+  advanced-feature/course-header styles are scoped to Modern Commerce pages,
+  legacy left-stripe card/status treatments were converted to tokenized full
+  borders, and the storefront video placeholder no longer depends on an
+  external image URL.
+- Performance phase: page CSS is split into readable generated route bundles.
+  CSS is intentionally not minified here so design iteration remains easy;
+  minification should happen when the Moodle release package is created.
+- Remaining technical debt: several migrated surface partials still contain
+  legacy Bootstrap variables and hard-coded colors. Keep future cleanup inside
+  these partials and gradually replace them with semantic --mc-* tokens.
+- Bundle-size tradeoff: route bundles reduce unnecessary CSS transfer, but keep
+  bundle selection centralized to avoid scattered page-level requires.

@@ -1,0 +1,458 @@
+{{!
+    This file is part of Moodle and is licensed under the
+    GNU General Public License, version 3 or later.
+
+    You may redistribute and modify it under the terms of the GPL.
+    See the plugin root LICENSE file for complete terms.
+}}
+{{!
+    @template local_moderncommerce/shell
+
+    Admin console shell using the Modern Commerce admin layout system.
+    Uses the local-moderncommerce-admin-* classes / --mc-admin-* tokens provided by this plugin.
+    Dark slate sidebar,
+    sticky header strip, content area, footer, and an off-canvas mobile drawer.
+
+    Context variables (unchanged from the previous shell contract):
+    * title         - Page title (shown in header strip)
+    * subtitle      - Optional subtitle
+    * actionshtml   - Optional action buttons HTML (trusted)
+    * contenthtml   - Main page content HTML (trusted)
+    * navigation    - Optional array of nav groups [{label, items[{url, icon, label, active, hasbadge, badge, badgevariant}]}]
+    * hasnavigation - bool (use data-driven nav; else hardcoded fallback below)
+    * nav.*active   - Legacy active flags used by the hardcoded fallback nav
+    * plugins.*     - Optional plugin availability flags for the fallback nav
+    * config.wwwroot - Moodle wwwroot
+    * version       - Optional plugin version string (footer)
+
+
+    @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+}}
+<div class="local-moderncommerce-admin-shell" id="local-moderncommerce-admin-shell">
+
+    {{! ── Sidebar ── }}
+    <aside class="local-moderncommerce-admin-sidebar"
+           id="local-moderncommerce-admin-sidebar"
+           role="navigation"
+           aria-label="{{#str}}adminnavigation, local_moderncommerce{{/str}}">
+
+        <div class="local-moderncommerce-admin-sidebar__header">
+            <div class="local-moderncommerce-admin-sidebar__brand">
+                <span class="local-moderncommerce-admin-sidebar__logo" aria-hidden="true">
+                    <i class="bi bi-cart3"></i>
+                </span>
+                <span class="local-moderncommerce-admin-sidebar__title">{{#str}}pluginname, local_moderncommerce{{/str}}</span>
+            </div>
+            <button type="button"
+                    class="mc-button local-moderncommerce-admin-sidebar__toggle"
+                    data-mc-button="ghost"
+                    data-mc-button-size="icon"
+                    id="local-moderncommerce-admin-sidebar-toggle"
+                    aria-label="{{#str}}togglesidebar, local_moderncommerce{{/str}}"
+                    aria-expanded="true"
+                    aria-controls="local-moderncommerce-admin-sidebar">
+                <i class="bi bi-chevron-left" id="local-moderncommerce-admin-sidebar-toggle-icon" aria-hidden="true"></i>
+            </button>
+        </div>
+
+        <nav class="local-moderncommerce-admin-sidebar__nav">
+            {{#hasnavigation}}
+            {{#navigation}}
+            <div class="local-moderncommerce-admin-nav-group">
+                <h4 class="local-moderncommerce-admin-nav-group__heading" aria-hidden="true">{{label}}</h4>
+                <ul class="local-moderncommerce-admin-nav-group__list" role="list">
+                    {{#items}}
+                    <li class="local-moderncommerce-admin-nav-item {{#active}}local-moderncommerce-admin-nav-item--active{{/active}} {{#ancestoractive}}local-moderncommerce-admin-nav-item--ancestor-active{{/ancestoractive}} {{#haschildren}}local-moderncommerce-admin-nav-item--has-children{{/haschildren}} {{#expanded}}local-moderncommerce-admin-nav-item--expanded{{/expanded}}"
+                        data-nav-group-key="{{key}}"
+                        role="listitem">
+                        <div class="local-moderncommerce-admin-nav-item__row">
+                            <a href="{{url}}"
+                               class="local-moderncommerce-admin-nav-item__link"
+                               {{#current}}aria-current="page"{{/current}}
+                               {{#newtab}}target="_blank" rel="noopener"{{/newtab}}
+                               title="{{label}}">
+                                <span class="local-moderncommerce-admin-nav-item__icon" aria-hidden="true">
+                                    <i class="bi {{icon}}"></i>
+                                </span>
+                                <span class="local-moderncommerce-admin-nav-item__label">{{label}}</span>
+                                {{#hasbadge}}
+                                <span class="local-moderncommerce-admin-nav-item__badge {{#badgedanger}}local-moderncommerce-admin-nav-item__badge--danger{{/badgedanger}}"
+                                      aria-label="{{badge}}">{{badge}}</span>
+                                {{/hasbadge}}
+                            </a>
+                            {{#haschildren}}
+                            <button type="button"
+                                    class="local-moderncommerce-admin-nav-item__toggle"
+                                    aria-label="{{togglelabel}}"
+                                    aria-expanded="{{#expanded}}true{{/expanded}}{{^expanded}}false{{/expanded}}"
+                                    aria-controls="{{submenuid}}">
+                                <i class="bi bi-caret-right-fill local-moderncommerce-admin-nav-item__toggle-icon" aria-hidden="true"></i>
+                            </button>
+                            {{/haschildren}}
+                        </div>
+                        {{#haschildren}}
+                        <ul class="local-moderncommerce-admin-subnav"
+                            id="{{submenuid}}"
+                            role="list"
+                            {{^expanded}}hidden{{/expanded}}>
+                            {{#children}}
+                            <li class="local-moderncommerce-admin-subnav__item {{#active}}local-moderncommerce-admin-subnav__item--active{{/active}}"
+                                role="listitem">
+                                <a href="{{url}}"
+                                   class="local-moderncommerce-admin-subnav__link"
+                                   {{#current}}aria-current="page"{{/current}}
+                                   {{#newtab}}target="_blank" rel="noopener"{{/newtab}}
+                                   title="{{label}}">
+                                    <span class="local-moderncommerce-admin-subnav__icon" aria-hidden="true">
+                                        <i class="bi {{icon}}"></i>
+                                    </span>
+                                    <span class="local-moderncommerce-admin-subnav__label">{{label}}</span>
+                                    {{#hasbadge}}
+                                    <span class="local-moderncommerce-admin-nav-item__badge {{#badgedanger}}local-moderncommerce-admin-nav-item__badge--danger{{/badgedanger}}"
+                                          aria-label="{{badge}}">{{badge}}</span>
+                                    {{/hasbadge}}
+                                </a>
+                            </li>
+                            {{/children}}
+                        </ul>
+                        {{/haschildren}}
+                    </li>
+                    {{/items}}
+                </ul>
+            </div>
+            {{/navigation}}
+            {{/hasnavigation}}
+
+            {{^hasnavigation}}
+            {{! ── Hardcoded fallback nav (legacy active flags) ── }}
+            <div class="local-moderncommerce-admin-nav-group">
+                <h4 class="local-moderncommerce-admin-nav-group__heading" aria-hidden="true">{{#str}}commerce, local_moderncommerce{{/str}}</h4>
+                <ul class="local-moderncommerce-admin-nav-group__list" role="list">
+                    <li class="local-moderncommerce-admin-nav-item {{#nav.dashboardactive}}local-moderncommerce-admin-nav-item--active{{/nav.dashboardactive}}" role="listitem">
+                        <a href="{{config.wwwroot}}/local/moderncommerce/admin/index.php" class="local-moderncommerce-admin-nav-item__link" {{#nav.dashboardactive}}aria-current="page"{{/nav.dashboardactive}}>
+                            <span class="local-moderncommerce-admin-nav-item__icon" aria-hidden="true"><i class="bi bi-speedometer2"></i></span>
+                            <span class="local-moderncommerce-admin-nav-item__label">{{#str}}dashboard, local_moderncommerce{{/str}}</span>
+                        </a>
+                    </li>
+                    <li class="local-moderncommerce-admin-nav-item {{#nav.ordersactive}}local-moderncommerce-admin-nav-item--active{{/nav.ordersactive}}" role="listitem">
+                        <a href="{{config.wwwroot}}/local/moderncommerce/admin/orders.php" class="local-moderncommerce-admin-nav-item__link" {{#nav.ordersactive}}aria-current="page"{{/nav.ordersactive}}>
+                            <span class="local-moderncommerce-admin-nav-item__icon" aria-hidden="true"><i class="bi bi-bag"></i></span>
+                            <span class="local-moderncommerce-admin-nav-item__label">{{#str}}orders, local_moderncommerce{{/str}}</span>
+                        </a>
+                    </li>
+                    <li class="local-moderncommerce-admin-nav-item {{#nav.invoicesactive}}local-moderncommerce-admin-nav-item--active{{/nav.invoicesactive}}" role="listitem">
+                        <a href="{{config.wwwroot}}/local/moderncommerce/admin/invoices.php" class="local-moderncommerce-admin-nav-item__link" {{#nav.invoicesactive}}aria-current="page"{{/nav.invoicesactive}}>
+                            <span class="local-moderncommerce-admin-nav-item__icon" aria-hidden="true"><i class="bi bi-file-text"></i></span>
+                            <span class="local-moderncommerce-admin-nav-item__label">{{#str}}invoices, local_moderncommerce{{/str}}</span>
+                        </a>
+                    </li>
+                    <li class="local-moderncommerce-admin-nav-item {{#nav.coursesactive}}local-moderncommerce-admin-nav-item--active{{/nav.coursesactive}}" role="listitem">
+                        <a href="{{config.wwwroot}}/local/moderncommerce/admin/pricing.php" class="local-moderncommerce-admin-nav-item__link" {{#nav.coursesactive}}aria-current="page"{{/nav.coursesactive}}>
+                            <span class="local-moderncommerce-admin-nav-item__icon" aria-hidden="true"><i class="bi bi-tag"></i></span>
+                            <span class="local-moderncommerce-admin-nav-item__label">{{#str}}nav_courses, local_moderncommerce{{/str}}</span>
+                        </a>
+                    </li>
+                    <li class="local-moderncommerce-admin-nav-item {{#nav.bundlesactive}}local-moderncommerce-admin-nav-item--active{{/nav.bundlesactive}}" role="listitem">
+                        <a href="{{config.wwwroot}}/local/moderncommerce/admin/bundles.php" class="local-moderncommerce-admin-nav-item__link" {{#nav.bundlesactive}}aria-current="page"{{/nav.bundlesactive}}>
+                            <span class="local-moderncommerce-admin-nav-item__icon" aria-hidden="true"><i class="bi bi-layers"></i></span>
+                            <span class="local-moderncommerce-admin-nav-item__label">{{#str}}bundles, local_moderncommerce{{/str}}</span>
+                        </a>
+                    </li>
+                    {{#plugins.subscription}}
+                    <li class="local-moderncommerce-admin-nav-item {{#nav.subscriptionsactive}}local-moderncommerce-admin-nav-item--active{{/nav.subscriptionsactive}}" role="listitem">
+                        <a href="{{config.wwwroot}}/local/moderncommerce/admin/subscriptions.php" class="local-moderncommerce-admin-nav-item__link" {{#nav.subscriptionsactive}}aria-current="page"{{/nav.subscriptionsactive}}>
+                            <span class="local-moderncommerce-admin-nav-item__icon" aria-hidden="true"><i class="bi bi-credit-card"></i></span>
+                            <span class="local-moderncommerce-admin-nav-item__label">{{#str}}subscriptions, local_moderncommerce{{/str}}</span>
+                        </a>
+                    </li>
+                    {{/plugins.subscription}}
+                    <li class="local-moderncommerce-admin-nav-item {{#nav.couponsactive}}local-moderncommerce-admin-nav-item--active{{/nav.couponsactive}}" role="listitem">
+                        <a href="{{config.wwwroot}}/local/moderncommerce/admin/coupons.php" class="local-moderncommerce-admin-nav-item__link" {{#nav.couponsactive}}aria-current="page"{{/nav.couponsactive}}>
+                            <span class="local-moderncommerce-admin-nav-item__icon" aria-hidden="true"><i class="bi bi-ticket-perforated"></i></span>
+                            <span class="local-moderncommerce-admin-nav-item__label">{{#str}}coupons, local_moderncommerce{{/str}}</span>
+                        </a>
+                    </li>
+                    <li class="local-moderncommerce-admin-nav-item {{#nav.keysactive}}local-moderncommerce-admin-nav-item--active{{/nav.keysactive}}" role="listitem">
+                        <a href="{{config.wwwroot}}/local/moderncommerce/admin/keys.php" class="local-moderncommerce-admin-nav-item__link" {{#nav.keysactive}}aria-current="page"{{/nav.keysactive}}>
+                            <span class="local-moderncommerce-admin-nav-item__icon" aria-hidden="true"><i class="bi bi-key"></i></span>
+                            <span class="local-moderncommerce-admin-nav-item__label">{{#str}}courseenrollmentkeys, local_moderncommerce{{/str}}</span>
+                        </a>
+                    </li>
+                    <li class="local-moderncommerce-admin-nav-item {{#nav.bundlekeysactive}}local-moderncommerce-admin-nav-item--active{{/nav.bundlekeysactive}}" role="listitem">
+                        <a href="{{config.wwwroot}}/local/moderncommerce/admin/bundle_keys.php" class="local-moderncommerce-admin-nav-item__link" {{#nav.bundlekeysactive}}aria-current="page"{{/nav.bundlekeysactive}}>
+                            <span class="local-moderncommerce-admin-nav-item__icon" aria-hidden="true"><i class="bi bi-key-fill"></i></span>
+                            <span class="local-moderncommerce-admin-nav-item__label">{{#str}}bundleenrollmentkeys, local_moderncommerce{{/str}}</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            {{#plugins.pagedesigner}}
+            <div class="local-moderncommerce-admin-nav-group">
+                <h4 class="local-moderncommerce-admin-nav-group__heading" aria-hidden="true">{{#str}}design, local_moderncommerce{{/str}}</h4>
+                <ul class="local-moderncommerce-admin-nav-group__list" role="list">
+                    <li class="local-moderncommerce-admin-nav-item {{#nav.pagedesigneractive}}local-moderncommerce-admin-nav-item--active{{/nav.pagedesigneractive}}" role="listitem">
+                        <a href="{{config.wwwroot}}/local/ccp_pagedesigner/index.php" class="local-moderncommerce-admin-nav-item__link" {{#nav.pagedesigneractive}}aria-current="page"{{/nav.pagedesigneractive}}>
+                            <span class="local-moderncommerce-admin-nav-item__icon" aria-hidden="true"><i class="bi bi-layout-text-window-reverse"></i></span>
+                            <span class="local-moderncommerce-admin-nav-item__label">{{#str}}pagedesigner, local_moderncommerce{{/str}}</span>
+                        </a>
+                    </li>
+                    <li class="local-moderncommerce-admin-nav-item {{#nav.blocksactive}}local-moderncommerce-admin-nav-item--active{{/nav.blocksactive}}" role="listitem">
+                        <a href="{{config.wwwroot}}/local/ccp_pagedesigner/blocks.php" class="local-moderncommerce-admin-nav-item__link" {{#nav.blocksactive}}aria-current="page"{{/nav.blocksactive}}>
+                            <span class="local-moderncommerce-admin-nav-item__icon" aria-hidden="true"><i class="bi bi-grid-3x3-gap"></i></span>
+                            <span class="local-moderncommerce-admin-nav-item__label">{{#str}}blockcatalog, local_moderncommerce{{/str}}</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            {{/plugins.pagedesigner}}
+
+            <div class="local-moderncommerce-admin-nav-group">
+                <h4 class="local-moderncommerce-admin-nav-group__heading" aria-hidden="true">{{#str}}communication, local_moderncommerce{{/str}}</h4>
+                <ul class="local-moderncommerce-admin-nav-group__list" role="list">
+                    <li class="local-moderncommerce-admin-nav-item {{#nav.emailactive}}local-moderncommerce-admin-nav-item--active{{/nav.emailactive}}" role="listitem">
+                        <a href="{{config.wwwroot}}/local/moderncommerce/admin/email_templates.php" class="local-moderncommerce-admin-nav-item__link" {{#nav.emailactive}}aria-current="page"{{/nav.emailactive}}>
+                            <span class="local-moderncommerce-admin-nav-item__icon" aria-hidden="true"><i class="bi bi-envelope"></i></span>
+                            <span class="local-moderncommerce-admin-nav-item__label">{{#str}}emailtemplates, local_moderncommerce{{/str}}</span>
+                        </a>
+                    </li>
+                    {{#plugins.contact}}
+                    <li class="local-moderncommerce-admin-nav-item {{#nav.contactactive}}local-moderncommerce-admin-nav-item--active{{/nav.contactactive}}" role="listitem">
+                        <a href="{{config.wwwroot}}/local/moderncommerce/admin/contacts.php" class="local-moderncommerce-admin-nav-item__link" {{#nav.contactactive}}aria-current="page"{{/nav.contactactive}}>
+                            <span class="local-moderncommerce-admin-nav-item__icon" aria-hidden="true"><i class="bi bi-person-lines-fill"></i></span>
+                            <span class="local-moderncommerce-admin-nav-item__label">{{#str}}contactforms, local_moderncommerce{{/str}}</span>
+                        </a>
+                    </li>
+                    {{/plugins.contact}}
+                </ul>
+            </div>
+
+            <div class="local-moderncommerce-admin-nav-group">
+                <h4 class="local-moderncommerce-admin-nav-group__heading" aria-hidden="true">{{#str}}analytics, local_moderncommerce{{/str}}</h4>
+                <ul class="local-moderncommerce-admin-nav-group__list" role="list">
+                    <li class="local-moderncommerce-admin-nav-item {{#nav.reportsactive}}local-moderncommerce-admin-nav-item--active{{/nav.reportsactive}}" role="listitem">
+                        <a href="{{config.wwwroot}}/local/moderncommerce/admin/reports.php" class="local-moderncommerce-admin-nav-item__link" {{#nav.reportsactive}}aria-current="page"{{/nav.reportsactive}}>
+                            <span class="local-moderncommerce-admin-nav-item__icon" aria-hidden="true"><i class="bi bi-graph-up"></i></span>
+                            <span class="local-moderncommerce-admin-nav-item__label">{{#str}}reports, local_moderncommerce{{/str}}</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            {{/hasnavigation}}
+        </nav>
+
+        <div class="local-moderncommerce-admin-sidebar__footer">
+            <span class="local-moderncommerce-admin-sidebar__version">{{#version}}v{{version}}{{/version}}</span>
+        </div>
+    </aside>
+
+    {{! ── Main area ── }}
+    <main class="local-moderncommerce-admin-main" id="local-moderncommerce-admin-main" role="main">
+
+        {{! Header strip }}
+        <div class="local-moderncommerce-admin-header-strip">
+            <button type="button"
+                    class="mc-button local-moderncommerce-admin-header-strip__menu"
+                    data-mc-button="ghost"
+                    data-mc-button-size="icon"
+                    id="local-moderncommerce-admin-menu-toggle"
+                    aria-label="{{#str}}togglesidebar, local_moderncommerce{{/str}}"
+                    aria-controls="local-moderncommerce-admin-sidebar"
+                    aria-expanded="false">
+                <i class="bi bi-list" aria-hidden="true"></i>
+            </button>
+            <h1 class="local-moderncommerce-admin-header-strip__title">{{title}}</h1>
+            {{#actionshtml}}
+            <div class="local-moderncommerce-admin-header-strip__actions">
+                {{{actionshtml}}}
+            </div>
+            {{/actionshtml}}
+        </div>
+
+        {{! Page content }}
+        <div class="local-moderncommerce-admin-content">
+            {{{contenthtml}}}
+        </div>
+
+        {{! Footer }}
+        <footer class="local-moderncommerce-admin-footer">
+            <span>{{#str}}pluginname, local_moderncommerce{{/str}}{{#version}} v{{version}}{{/version}}</span>
+        </footer>
+    </main>
+
+    {{! ── Mobile sidebar backdrop (off-canvas drawer) ── }}
+    <div class="local-moderncommerce-admin-sidebar-backdrop"
+         id="local-moderncommerce-admin-sidebar-backdrop"
+         aria-hidden="true"></div>
+</div>
+
+{{#js}}
+require(['jquery'], function($) {
+    'use strict';
+
+    var $sidebar = $('#local-moderncommerce-admin-sidebar');
+    var $toggleBtn = $('#local-moderncommerce-admin-sidebar-toggle');
+    var $toggleIcon = $('#local-moderncommerce-admin-sidebar-toggle-icon');
+    var $menuBtn = $('#local-moderncommerce-admin-menu-toggle');
+    var $backdrop = $('#local-moderncommerce-admin-sidebar-backdrop');
+    var mqMobile = window.matchMedia('(max-width: 768px)');
+    var navGroupsStorageKey = 'local-moderncommerce-admin-nav-groups';
+
+    function getPersistedNavGroups() {
+        var raw = null;
+        try {
+            raw = localStorage.getItem(navGroupsStorageKey);
+        } catch (e) {
+            raw = null;
+        }
+
+        if (!raw) {
+            return {};
+        }
+
+        try {
+            return JSON.parse(raw) || {};
+        } catch (e) {
+            return {};
+        }
+    }
+
+    function savePersistedNavGroups(groups) {
+        try {
+            localStorage.setItem(navGroupsStorageKey, JSON.stringify(groups));
+        } catch (e) {
+            // Persistence is progressive enhancement; the navigation still works without it.
+        }
+    }
+
+    function setNavGroupExpanded($item, expanded, persist) {
+        var $submenu = $item.children('.local-moderncommerce-admin-subnav');
+        var $toggle = $item.children('.local-moderncommerce-admin-nav-item__row')
+            .children('.local-moderncommerce-admin-nav-item__toggle');
+
+        $item.toggleClass('local-moderncommerce-admin-nav-item--expanded', expanded);
+        if (expanded) {
+            $submenu.removeAttr('hidden');
+        } else {
+            $submenu.attr('hidden', 'hidden');
+        }
+        $toggle.attr('aria-expanded', expanded ? 'true' : 'false');
+
+        if (!persist) {
+            return;
+        }
+
+        var key = String($item.data('nav-group-key') || '');
+        if (!key) {
+            return;
+        }
+
+        var groups = getPersistedNavGroups();
+        groups[key] = !!expanded;
+        savePersistedNavGroups(groups);
+    }
+
+    var persistedNavGroups = getPersistedNavGroups();
+    $sidebar.find('.local-moderncommerce-admin-nav-item--has-children').each(function() {
+        var $item = $(this);
+        var key = String($item.data('nav-group-key') || '');
+        var hasActivePage = $item.hasClass('local-moderncommerce-admin-nav-item--active')
+            || $item.hasClass('local-moderncommerce-admin-nav-item--ancestor-active')
+            || $item.children('.local-moderncommerce-admin-subnav')
+                .find('.local-moderncommerce-admin-subnav__item--active').length > 0;
+        var expanded = $item.hasClass('local-moderncommerce-admin-nav-item--expanded');
+
+        if (hasActivePage) {
+            expanded = true;
+        } else if (Object.prototype.hasOwnProperty.call(persistedNavGroups, key)) {
+            expanded = persistedNavGroups[key] === true;
+        }
+
+        setNavGroupExpanded($item, expanded, false);
+    });
+
+    $sidebar.on('click', '.local-moderncommerce-admin-nav-item__toggle', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        var $item = $(this).closest('.local-moderncommerce-admin-nav-item--has-children');
+        setNavGroupExpanded(
+            $item,
+            !$item.hasClass('local-moderncommerce-admin-nav-item--expanded'),
+            true
+        );
+    });
+
+    // ── Mobile off-canvas drawer ──
+    function openMobileSidebar() {
+        $sidebar.addClass('local-moderncommerce-admin-sidebar--open');
+        $backdrop.addClass('local-moderncommerce-admin-sidebar-backdrop--visible');
+        $menuBtn.attr('aria-expanded', 'true');
+    }
+    function closeMobileSidebar() {
+        $sidebar.removeClass('local-moderncommerce-admin-sidebar--open');
+        $backdrop.removeClass('local-moderncommerce-admin-sidebar-backdrop--visible');
+        $menuBtn.attr('aria-expanded', 'false');
+    }
+
+    $menuBtn.on('click', function() {
+        if (mqMobile.matches) {
+            // Mobile: open/close the off-canvas drawer.
+            if ($sidebar.hasClass('local-moderncommerce-admin-sidebar--open')) {
+                closeMobileSidebar();
+            } else {
+                openMobileSidebar();
+            }
+        } else {
+            // Desktop: collapse/expand the sidebar (reuse the chevron handler).
+            $toggleBtn.trigger('click');
+        }
+    });
+    $backdrop.on('click', closeMobileSidebar);
+    $sidebar.on('click', '.local-moderncommerce-admin-nav-item__link, .local-moderncommerce-admin-subnav__link', function() {
+        if (mqMobile.matches) {
+            closeMobileSidebar();
+        }
+    });
+    $(document).on('keydown', function(e) {
+        if (e.key === 'Escape' && $sidebar.hasClass('local-moderncommerce-admin-sidebar--open')) {
+            closeMobileSidebar();
+            $menuBtn.trigger('focus');
+        }
+    });
+    mqMobile.addEventListener('change', function(e) {
+        if (!e.matches) {
+            closeMobileSidebar();
+        }
+    });
+
+    // ── Desktop collapse/expand (persisted) ──
+    var collapsed = localStorage.getItem('local-moderncommerce-admin-sidebar-collapsed') === 'true';
+    if (collapsed) {
+        $sidebar.addClass('local-moderncommerce-admin-sidebar--collapsed');
+        $toggleIcon.removeClass('bi-chevron-left').addClass('bi-chevron-right');
+        $toggleBtn.attr('aria-expanded', 'false');
+    }
+
+    $toggleBtn.on('click', function() {
+        if (mqMobile.matches) {
+            closeMobileSidebar();
+            return;
+        }
+        var isCollapsed = $sidebar.hasClass('local-moderncommerce-admin-sidebar--collapsed');
+        if (isCollapsed) {
+            $sidebar.removeClass('local-moderncommerce-admin-sidebar--collapsed');
+            $toggleIcon.removeClass('bi-chevron-right').addClass('bi-chevron-left');
+            $toggleBtn.attr('aria-expanded', 'true');
+            localStorage.setItem('local-moderncommerce-admin-sidebar-collapsed', 'false');
+        } else {
+            $sidebar.addClass('local-moderncommerce-admin-sidebar--collapsed');
+            $toggleIcon.removeClass('bi-chevron-left').addClass('bi-chevron-right');
+            $toggleBtn.attr('aria-expanded', 'false');
+            localStorage.setItem('local-moderncommerce-admin-sidebar-collapsed', 'true');
+        }
+    });
+});
+
+{{/js}}

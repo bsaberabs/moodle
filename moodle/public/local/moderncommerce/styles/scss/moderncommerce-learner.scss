@@ -1,0 +1,21 @@
+// This file is part of Moodle and is licensed under the
+// GNU General Public License, version 3 or later.
+//
+// You may redistribute and modify it under the terms of the GPL.
+// See the plugin root LICENSE file for complete terms.
+//
+// Modern Commerce styles.
+//
+// @package    local_moderncommerce
+// @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+// @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+@use "runtime/learner";
+@use "runtime/buyer";
+@use "surfaces/learner-dashboard";
+
+/*
+ * Modern Commerce learner and buyer workflow bundle.
+ *
+ * Covers the learner shell, account routes, cart, checkout, order, subscription,
+ * redeem, and buyer-facing product access screens.
+ */

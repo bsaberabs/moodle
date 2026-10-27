@@ -1,0 +1,80 @@
+<?xml version="1.0"?>
+<libraries>
+    <library>
+        <location>styles/scss/thirdparty/bootstrap-icons</location>
+        <name>Bootstrap Icons</name>
+        <version>1.11.3</version>
+        <license>MIT</license>
+        <licenseversion></licenseversion>
+    </library>
+    <library>
+        <location>vendor/apimatic/core</location>
+        <name>APIMatic Core</name>
+        <version>0.3.16</version>
+        <license>MIT</license>
+        <licenseversion></licenseversion>
+    </library>
+    <library>
+        <location>vendor/apimatic/core-interfaces</location>
+        <name>APIMatic Core Interfaces</name>
+        <version>0.1.5</version>
+        <license>MIT</license>
+        <licenseversion></licenseversion>
+    </library>
+    <library>
+        <location>vendor/apimatic/jsonmapper</location>
+        <name>APIMatic JsonMapper</name>
+        <version>3.1.7</version>
+        <license>OSL</license>
+        <licenseversion>3.0</licenseversion>
+    </library>
+    <library>
+        <location>vendor/apimatic/unirest-php</location>
+        <name>APIMatic Unirest PHP</name>
+        <version>4.0.7</version>
+        <license>MIT</license>
+        <licenseversion></licenseversion>
+    </library>
+    <library>
+        <location>vendor/paypal/paypal-server-sdk</location>
+        <name>PayPal Server SDK</name>
+        <version>1.1.0</version>
+        <license>MIT</license>
+        <licenseversion></licenseversion>
+    </library>
+    <library>
+        <location>vendor/php-jsonpointer/php-jsonpointer</location>
+        <name>PHP JSON Pointer</name>
+        <version>3.0.2</version>
+        <license>MIT</license>
+        <licenseversion></licenseversion>
+    </library>
+    <library>
+        <location>vendor/psr/log</location>
+        <name>PSR Log</name>
+        <version>3.0.2</version>
+        <license>MIT</license>
+        <licenseversion></licenseversion>
+    </library>
+    <library>
+        <location>vendor/symfony/deprecation-contracts</location>
+        <name>Symfony Deprecation Contracts</name>
+        <version>3.7.0</version>
+        <license>MIT</license>
+        <licenseversion></licenseversion>
+    </library>
+    <library>
+        <location>vendor/symfony/http-foundation</location>
+        <name>Symfony HTTP Foundation</name>
+        <version>7.4.13</version>
+        <license>MIT</license>
+        <licenseversion></licenseversion>
+    </library>
+    <library>
+        <location>vendor/symfony/polyfill-mbstring</location>
+        <name>Symfony Polyfill Mbstring</name>
+        <version>1.38.2</version>
+        <license>MIT</license>
+        <licenseversion></licenseversion>
+    </library>
+</libraries>

@@ -1,0 +1,273 @@
+/**
+ * This file is part of Moodle and is licensed under the
+ * GNU General Public License, version 3 or later.
+ *
+ * You may redistribute and modify it under the terms of the GPL.
+ * See the plugin root LICENSE file for complete terms.
+ *
+ * Compiled Modern Commerce styles.
+ *
+ * @package    local_moderncommerce
+ * @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+/*
+ * Modern Commerce SCSS partial: course and bundle advanced features.
+ *
+ * Shared acf-* rules for:
+ * - templates/course_advanced_features.mustache
+ * - templates/bundle_advanced_features.mustache
+ */
+.path-local-moderncommerce .acf-shell {
+  --acf-radius: var(--mc-radius-lg, 0.75rem);
+  max-width: 1180px;
+  padding-block: var(--mc-space-4, 1rem);
+  color: var(--mc-text);
+}
+.path-local-moderncommerce .acf-card {
+  border: 1px solid var(--mc-border, var(--bs-border-color));
+  border-radius: var(--acf-radius);
+  background: var(--mc-surface, var(--bs-body-bg));
+  box-shadow: none;
+}
+.path-local-moderncommerce .acf-card.card {
+  border-radius: var(--acf-radius);
+}
+.path-local-moderncommerce .acf-card .card-body {
+  padding: var(--mc-space-4, 1rem);
+}
+.path-local-moderncommerce .acf-card-header {
+  border-start-start-radius: var(--acf-radius);
+  border-start-end-radius: var(--acf-radius);
+  background: var(--mc-surface-alt, var(--bs-body-bg));
+}
+.path-local-moderncommerce .acf-card-header.card-header {
+  border-start-start-radius: var(--acf-radius);
+  border-start-end-radius: var(--acf-radius);
+}
+.path-local-moderncommerce .acf-badge,
+.path-local-moderncommerce .acf-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  max-width: 100%;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--mc-neutral-border, var(--bs-border-color));
+  border-radius: var(--mc-radius-pill, 999px);
+  background: var(--mc-neutral-bg, var(--bs-tertiary-bg));
+  color: var(--mc-text, var(--bs-body-color));
+  font-size: var(--mc-fs-ui, 0.875rem);
+  line-height: var(--mc-lh-ui, 1.45);
+}
+.path-local-moderncommerce .acf-chip button {
+  border: 0;
+  background: transparent;
+  color: var(--mc-text-muted, var(--bs-secondary-color));
+  line-height: 1;
+  padding: 0;
+}
+.path-local-moderncommerce .acf-chip button:hover, .path-local-moderncommerce .acf-chip button:focus {
+  color: var(--mc-text, var(--bs-body-color));
+}
+.path-local-moderncommerce .acf-chip-label {
+  max-width: min(260px, 100%);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.path-local-moderncommerce .acf-muted,
+.path-local-moderncommerce .acf-help {
+  color: var(--mc-text-muted, var(--bs-secondary-color));
+}
+.path-local-moderncommerce .acf-muted {
+  font-size: var(--mc-fs-ui, 0.875rem);
+}
+.path-local-moderncommerce .acf-help {
+  font-size: var(--mc-fs-ui, 0.875rem);
+}
+.path-local-moderncommerce .acf-divider {
+  width: 100%;
+  height: 1px;
+  background: var(--mc-border, var(--bs-border-color));
+  opacity: 0.9;
+}
+.path-local-moderncommerce .acf-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mc-space-4, 1rem);
+  min-width: 0;
+}
+.path-local-moderncommerce .acf-section-title h2 {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: var(--mc-fs-h5, 1rem);
+}
+.path-local-moderncommerce .acf-kpi {
+  height: 100%;
+  padding: var(--mc-space-4, 1rem);
+  border: 1px solid var(--mc-border, var(--bs-border-color));
+  border-radius: var(--mc-radius, 0.5rem);
+  background: var(--mc-surface-alt, var(--bs-tertiary-bg));
+}
+.path-local-moderncommerce .acf-kpi .value {
+  font-size: var(--mc-fs-h3, 1.25rem);
+  font-weight: var(--mc-fw-heading, 700);
+  line-height: 1;
+}
+.path-local-moderncommerce .acf-kpi .label {
+  margin-top: var(--mc-space-1, 0.25rem);
+  color: var(--mc-text-muted, var(--bs-secondary-color));
+  font-size: var(--mc-fs-meta, 0.8125rem);
+}
+.path-local-moderncommerce .acf-input-icon {
+  position: relative;
+}
+.path-local-moderncommerce .acf-input-icon .icon {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 0.75rem;
+  transform: translateY(-50%);
+  color: var(--mc-text-muted, var(--bs-secondary-color));
+  pointer-events: none;
+  font-size: 0.95rem;
+}
+.path-local-moderncommerce .acf-input-icon input,
+.path-local-moderncommerce .acf-input-icon select {
+  padding-inline-start: 2.25rem;
+}
+.path-local-moderncommerce .acf-duration-inputs {
+  width: 100%;
+  min-width: 0;
+}
+.path-local-moderncommerce .acf-duration-inputs .form-control {
+  min-width: 0;
+}
+.path-local-moderncommerce .acf-assessment-count {
+  width: 100%;
+  max-width: none;
+}
+@media (min-width: 576px) {
+  .path-local-moderncommerce .acf-assessment-count {
+    max-width: 10rem;
+  }
+}
+@media (min-width: 992px) {
+  .path-local-moderncommerce .acf-duration-inputs {
+    width: auto;
+    min-width: min(15rem, 100%);
+  }
+}
+.path-local-moderncommerce .acf-table td,
+.path-local-moderncommerce .acf-table th {
+  vertical-align: middle;
+}
+.path-local-moderncommerce .acf-table th {
+  white-space: nowrap;
+  font-weight: var(--mc-fw-semibold, 600);
+}
+.path-local-moderncommerce .acf-table-col-index {
+  width: 4rem;
+}
+.path-local-moderncommerce .acf-table-col-time {
+  min-width: 11.25rem;
+}
+.path-local-moderncommerce .acf-table-col-actions {
+  min-width: 7.5rem;
+}
+.path-local-moderncommerce .acf-outline-item span {
+  overflow-wrap: anywhere;
+}
+.path-local-moderncommerce .acf-sticky-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  padding: var(--mc-space-3, 0.75rem);
+  border-top: 1px solid var(--mc-border, var(--bs-border-color));
+  border-end-start-radius: var(--acf-radius);
+  border-end-end-radius: var(--acf-radius);
+  background: color-mix(in srgb, var(--mc-surface, var(--bs-body-bg)) 92%, transparent);
+  backdrop-filter: blur(8px);
+}
+.path-local-moderncommerce .acf-textarea {
+  min-height: 140px;
+  resize: vertical;
+}
+.path-local-moderncommerce .acf-media-frame {
+  border-color: var(--bs-border-color);
+}
+.path-local-moderncommerce .acf-info-note,
+.path-local-moderncommerce .acf-surface-box {
+  border: 1px solid var(--bs-border-color);
+  background: var(--bs-tertiary-bg);
+}
+.path-local-moderncommerce .acf-section-title--start {
+  justify-content: flex-start;
+}
+.path-local-moderncommerce .acf-tag-input-wrap {
+  position: relative;
+}
+.path-local-moderncommerce .acf-radius-alert {
+  border-radius: var(--acf-radius);
+}
+.path-local-moderncommerce .acf-border-panel {
+  border-color: var(--bs-border-color);
+}
+.path-local-moderncommerce .acf-toast-container {
+  z-index: 9999;
+}
+.path-local-moderncommerce #outlineEditor[style*="display: none"] + .acf-help {
+  margin-top: 0;
+}
+.path-local-moderncommerce .acf-autocomplete,
+.path-local-moderncommerce .acf-autocomplete-dropdown {
+  border: 1px solid var(--mc-border, var(--bs-border-color));
+  border-radius: var(--mc-radius, 0.5rem);
+  background: var(--mc-surface, var(--bs-body-bg));
+  box-shadow: var(--mc-shadow-md, 0 8px 20px rgba(15, 23, 42, 0.1));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.path-local-moderncommerce .acf-autocomplete {
+  position: absolute;
+  z-index: 20;
+  display: none;
+  width: 100%;
+  max-height: 260px;
+  margin-block-start: var(--mc-space-1, 0.25rem);
+}
+.path-local-moderncommerce .acf-autocomplete-dropdown {
+  position: absolute;
+  inset-block-start: 100%;
+  inset-inline: 0;
+  z-index: var(--mc-z-dropdown, 1050);
+  display: none;
+  max-height: 200px;
+  margin-block-start: 2px;
+}
+.path-local-moderncommerce .acf-autocomplete-item {
+  padding: var(--mc-space-2, 0.5rem) var(--mc-space-3, 0.75rem);
+  border-bottom: 1px solid var(--mc-border-light, var(--bs-border-color));
+  color: var(--mc-text, var(--bs-body-color));
+  cursor: pointer;
+  transition: background-color var(--mc-transition-fast, 0.15s ease);
+}
+.path-local-moderncommerce .acf-autocomplete-item:last-child {
+  border-bottom: 0;
+}
+.path-local-moderncommerce .acf-autocomplete-item:hover, .path-local-moderncommerce .acf-autocomplete-item:focus {
+  background: var(--mc-surface-alt, var(--bs-tertiary-bg));
+}
+.path-local-moderncommerce .acf-shell .object-fit-cover {
+  object-fit: cover;
+}
+
+@media (max-width: 991.98px) {
+  .path-local-moderncommerce .acf-sticky-actions {
+    border-radius: 0;
+  }
+}
+/*
+ * Modern Commerce course/bundle advanced-feature editor bundle.
+ */

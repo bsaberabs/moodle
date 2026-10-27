@@ -1,0 +1,21 @@
+// This file is part of Moodle and is licensed under the
+// GNU General Public License, version 3 or later.
+//
+// You may redistribute and modify it under the terms of the GPL.
+// See the plugin root LICENSE file for complete terms.
+//
+// Modern Commerce styles.
+//
+// @package    local_moderncommerce
+// @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+// @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+@use "global/navbar-cart";
+
+/*
+ * Modern Commerce global SCSS entry.
+ *
+ * Moodle auto-loads the plugin root styles.css into the active theme. Keep this
+ * bundle limited to tightly prefixed UI that can render outside Modern Commerce
+ * pages, such as the navbar cart. Full page and admin styles belong in
+ * moderncommerce-design-system.scss.
+ */

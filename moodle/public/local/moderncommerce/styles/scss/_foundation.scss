@@ -1,0 +1,202 @@
+// This file is part of Moodle and is licensed under the
+// GNU General Public License, version 3 or later.
+//
+// You may redistribute and modify it under the terms of the GPL.
+// See the plugin root LICENSE file for complete terms.
+//
+// Modern Commerce styles.
+//
+// @package    local_moderncommerce
+// @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+// @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+@use "tokens";
+
+/*
+ * Modern Commerce design-system output.
+ * Tokens stay in _tokens.scss; this partial emits them for compiled CSS.
+ */
+
+:root {
+    @include tokens.emit-moderncommerce-tokens;
+}
+
+.local-moderncommerce-admin-shell {
+    @include tokens.emit-moderncommerce-admin-overrides;
+}
+
+@media (max-width: 767.98px) {
+    :root {
+        --mc-fs-display: 2rem;
+        --mc-fs-h1: 1.75rem;
+        --mc-fs-h2: 1.5rem;
+    }
+}
+
+.path-local-moderncommerce,
+.local-moderncommerce-storefront,
+.mc-shell,
+.mc-learner-shell,
+.mc-react-mount,
+.mw-zone-render {
+    color: var(--mc-text);
+    font-family: var(--mc-font);
+    font-size: var(--mc-fs-body);
+    line-height: var(--mc-lh-body);
+}
+
+.path-local-moderncommerce :where(h1, h2, h3, h4, h5, h6),
+.local-moderncommerce-storefront :where(h1, h2, h3, h4, h5, h6),
+.mc-shell :where(h1, h2, h3, h4, h5, h6),
+.mc-learner-shell :where(h1, h2, h3, h4, h5, h6),
+.mc-react-mount :where(h1, h2, h3, h4, h5, h6),
+.mw-zone-render :where(h1, h2, h3, h4, h5, h6) {
+    color: var(--mc-type-heading-color);
+    font-family: var(--mc-font-heading);
+    font-weight: var(--mc-fw-heading);
+    letter-spacing: 0;
+    line-height: var(--mc-lh-heading);
+}
+
+// Base content links use the brand link colour. Nav/header anchors are excluded
+// so Moodle themes keep ownership of navbar icon and link colours.
+.path-local-moderncommerce :where(a):not(:where(nav a, .navbar a, a.nav-link, a.dropdown-toggle, a.popover-region-toggle, a.mui-mode-toggle, a.mui-cart__trigger)),
+.local-moderncommerce-storefront :where(a):not(:where(nav a, .navbar a, a.nav-link, a.dropdown-toggle, a.popover-region-toggle, a.mui-mode-toggle, a.mui-cart__trigger)),
+.mc-shell :where(a):not(:where(nav a, .navbar a, a.nav-link, a.dropdown-toggle, a.popover-region-toggle, a.mui-mode-toggle, a.mui-cart__trigger)),
+.mc-learner-shell :where(a):not(:where(nav a, .navbar a, a.nav-link, a.dropdown-toggle, a.popover-region-toggle, a.mui-mode-toggle, a.mui-cart__trigger)),
+.mc-react-mount :where(a):not(:where(nav a, .navbar a, a.nav-link, a.dropdown-toggle, a.popover-region-toggle, a.mui-mode-toggle, a.mui-cart__trigger)),
+.mw-zone-render :where(a):not(:where(nav a, .navbar a, a.nav-link, a.dropdown-toggle, a.popover-region-toggle, a.mui-mode-toggle, a.mui-cart__trigger)) {
+    color: var(--mc-link);
+}
+
+.path-local-moderncommerce :where(a):not(:where(nav a, .navbar a, a.nav-link, a.dropdown-toggle, a.popover-region-toggle, a.mui-mode-toggle, a.mui-cart__trigger)):hover,
+.local-moderncommerce-storefront :where(a):not(:where(nav a, .navbar a, a.nav-link, a.dropdown-toggle, a.popover-region-toggle, a.mui-mode-toggle, a.mui-cart__trigger)):hover,
+.mc-shell :where(a):not(:where(nav a, .navbar a, a.nav-link, a.dropdown-toggle, a.popover-region-toggle, a.mui-mode-toggle, a.mui-cart__trigger)):hover,
+.mc-learner-shell :where(a):not(:where(nav a, .navbar a, a.nav-link, a.dropdown-toggle, a.popover-region-toggle, a.mui-mode-toggle, a.mui-cart__trigger)):hover,
+.mc-react-mount :where(a):not(:where(nav a, .navbar a, a.nav-link, a.dropdown-toggle, a.popover-region-toggle, a.mui-mode-toggle, a.mui-cart__trigger)):hover,
+.mw-zone-render :where(a):not(:where(nav a, .navbar a, a.nav-link, a.dropdown-toggle, a.popover-region-toggle, a.mui-mode-toggle, a.mui-cart__trigger)):hover {
+    color: var(--mc-link-hover);
+}
+
+.path-local-moderncommerce :where(nav a, .navbar a, a.nav-link, a.dropdown-toggle, a.popover-region-toggle, a.mui-mode-toggle, a.mui-cart__trigger) :where(i, .icon, svg),
+.local-moderncommerce-storefront :where(nav a, .navbar a, a.nav-link, a.dropdown-toggle, a.popover-region-toggle, a.mui-mode-toggle, a.mui-cart__trigger) :where(i, .icon, svg),
+.mc-shell :where(nav a, .navbar a, a.nav-link, a.dropdown-toggle, a.popover-region-toggle, a.mui-mode-toggle, a.mui-cart__trigger) :where(i, .icon, svg),
+.mc-learner-shell :where(nav a, .navbar a, a.nav-link, a.dropdown-toggle, a.popover-region-toggle, a.mui-mode-toggle, a.mui-cart__trigger) :where(i, .icon, svg),
+.mc-react-mount :where(nav a, .navbar a, a.nav-link, a.dropdown-toggle, a.popover-region-toggle, a.mui-mode-toggle, a.mui-cart__trigger) :where(i, .icon, svg),
+.mw-zone-render :where(nav a, .navbar a, a.nav-link, a.dropdown-toggle, a.popover-region-toggle, a.mui-mode-toggle, a.mui-cart__trigger) :where(i, .icon, svg) {
+    color: inherit;
+}
+
+body.path-local-moderncommerce .footer-content-debugging.footer-dark {
+    display: none !important;
+}
+
+.path-local-moderncommerce :where(h1),
+.local-moderncommerce-storefront :where(h1),
+.mc-shell :where(h1),
+.mc-learner-shell :where(h1),
+.mc-react-mount :where(h1),
+.mw-zone-render :where(h1) {
+    font-size: var(--mc-fs-h1);
+}
+
+.path-local-moderncommerce :where(h2),
+.local-moderncommerce-storefront :where(h2),
+.mc-shell :where(h2),
+.mc-learner-shell :where(h2),
+.mc-react-mount :where(h2),
+.mw-zone-render :where(h2) {
+    font-size: var(--mc-fs-h2);
+}
+
+.path-local-moderncommerce :where(h3),
+.local-moderncommerce-storefront :where(h3),
+.mc-shell :where(h3),
+.mc-learner-shell :where(h3),
+.mc-react-mount :where(h3),
+.mw-zone-render :where(h3) {
+    font-size: var(--mc-fs-h3);
+}
+
+.path-local-moderncommerce :where(h4),
+.local-moderncommerce-storefront :where(h4),
+.mc-shell :where(h4),
+.mc-learner-shell :where(h4),
+.mc-react-mount :where(h4),
+.mw-zone-render :where(h4) {
+    font-size: var(--mc-fs-h4);
+}
+
+.path-local-moderncommerce :where(h5),
+.local-moderncommerce-storefront :where(h5),
+.mc-shell :where(h5),
+.mc-learner-shell :where(h5),
+.mc-react-mount :where(h5),
+.mw-zone-render :where(h5) {
+    font-size: var(--mc-fs-h5);
+}
+
+.path-local-moderncommerce :where(h6),
+.local-moderncommerce-storefront :where(h6),
+.mc-shell :where(h6),
+.mc-learner-shell :where(h6),
+.mc-react-mount :where(h6),
+.mw-zone-render :where(h6) {
+    font-size: var(--mc-fs-h6);
+}
+
+.mc-type-display {
+    color: var(--mc-type-heading-color);
+    font-family: var(--mc-font-heading);
+    font-size: var(--mc-fs-display);
+    font-weight: var(--mc-fw-display);
+    letter-spacing: 0;
+    line-height: var(--mc-lh-tight);
+}
+
+.mc-type-h1 { font-size: var(--mc-fs-h1); }
+.mc-type-h2 { font-size: var(--mc-fs-h2); }
+.mc-type-h3 { font-size: var(--mc-fs-h3); }
+.mc-type-h4 { font-size: var(--mc-fs-h4); }
+.mc-type-h5 { font-size: var(--mc-fs-h5); }
+.mc-type-h6 { font-size: var(--mc-fs-h6); }
+
+.mc-type-lead {
+    color: var(--mc-type-body-color);
+    font-size: var(--mc-fs-lead);
+    font-weight: var(--mc-fw-body);
+    line-height: var(--mc-lh-body);
+}
+
+.mc-type-body {
+    color: var(--mc-type-body-color);
+    font-size: var(--mc-fs-body);
+    font-weight: var(--mc-fw-body);
+    line-height: var(--mc-lh-body);
+}
+
+.mc-type-ui {
+    font-size: var(--mc-fs-ui);
+    line-height: var(--mc-lh-ui);
+}
+
+.mc-type-meta {
+    color: var(--mc-type-body-color);
+    font-size: var(--mc-fs-meta);
+    line-height: var(--mc-lh-ui);
+}
+
+.mc-type-caption {
+    color: var(--mc-type-subtle-color);
+    font-size: var(--mc-fs-caption);
+    line-height: var(--mc-lh-ui);
+}
+
+.mc-type-micro,
+.mc-type-label {
+    color: var(--mc-type-subtle-color);
+    font-size: var(--mc-fs-micro);
+    font-weight: var(--mc-fw-semibold);
+    letter-spacing: var(--mc-tracking-eyebrow);
+    line-height: var(--mc-lh-ui);
+    text-transform: uppercase;
+}

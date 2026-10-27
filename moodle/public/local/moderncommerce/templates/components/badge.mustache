@@ -1,0 +1,30 @@
+{{!
+    This file is part of Moodle and is licensed under the
+    GNU General Public License, version 3 or later.
+
+    You may redistribute and modify it under the terms of the GPL.
+    See the plugin root LICENSE file for complete terms.
+}}
+{{!
+    @template local_moderncommerce/components/badge
+
+    Brand-aware badge for status labels, metadata, and small feature markers.
+
+    Context variables:
+    * label      - Display label string
+    * variant    - Optional variant: primary, secondary, accent, success, warning, danger, info, neutral
+    * tone       - Optional tone: subtle, soft, medium, strong
+    * size       - Optional size: sm, lg
+    * icon       - Optional Bootstrap icon class without the "bi" prefix class (e.g. "bi-check-circle")
+    * dot        - Optional boolean to render a leading status dot
+    * class      - Optional additional class names
+
+
+    @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+}}
+<span class="mc-badge mc-badge--{{#variant}}{{variant}}{{/variant}}{{^variant}}neutral{{/variant}}{{#tone}} mc-badge--tone-{{tone}}{{/tone}}{{#size}} mc-badge--{{size}}{{/size}}{{#class}} {{class}}{{/class}}">
+    {{#dot}}<span class="mc-badge__dot" aria-hidden="true"></span>{{/dot}}
+    {{#icon}}<i class="bi {{icon}} mc-badge__icon" aria-hidden="true"></i>{{/icon}}
+    <span class="mc-badge__label">{{label}}</span>
+</span>

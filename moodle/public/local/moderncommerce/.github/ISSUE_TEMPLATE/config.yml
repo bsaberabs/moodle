@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security report
+    url: mailto:support@agunfoninteractivity.com?subject=ModernCommerce%20security%20report
+    about: Report vulnerabilities privately rather than opening a public issue.
+  - name: Commercial support
+    url: https://coursecommercepro.com/
+    about: Request implementation, managed services, migrations, or contracted support.

@@ -1,0 +1,122 @@
+{{!
+    This file is part of Moodle and is licensed under the
+    GNU General Public License, version 3 or later.
+
+    You may redistribute and modify it under the terms of the GPL.
+    See the plugin root LICENSE file for complete terms.
+}}
+{{!
+    @template local_moderncommerce/contact/clientreply
+
+    Client reply page - allows clients to respond via email link.
+
+    @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+
+    Example context (json):
+    {
+        "token": "abc123",
+        "sesskey": "xyz789",
+        "fullname": "John Doe",
+        "subject": "Question about courses",
+        "replyurl": "https://example.com/local/moderncommerce/contact/reply.php",
+        "sitename": "Example site",
+        "thread": []
+    }
+}}
+
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+
+      <!-- Header -->
+      <div class="text-center mb-4">
+        <h1 class="h3">{{#str}}clientreply, local_moderncommerce{{/str}}</h1>
+        <p class="text-muted">{{#str}}clientreplyhelp, local_moderncommerce{{/str}}</p>
+      </div>
+
+      <!-- Subject -->
+      {{#subject}}
+      <div class="alert alert-light mb-4">
+        <strong>{{#str}}col_subject, local_moderncommerce{{/str}}:</strong> {{subject}}
+      </div>
+      {{/subject}}
+
+      <!-- Conversation Thread -->
+      <div class="card mb-4">
+        <div class="card-header">
+          <h2 class="h6 mb-0">{{#str}}yourpreviousmessages, local_moderncommerce{{/str}}</h2>
+        </div>
+        <div class="card-body">
+          <div class="conversation-thread">
+            {{#thread}}
+            <div class="message-item mb-3 {{#fromadmin}}message-admin{{/fromadmin}}{{#fromclient}}message-client{{/fromclient}}">
+              <div class="d-flex gap-3">
+                <div class="message-avatar flex-shrink-0">
+                  {{#fromclient}}
+                  <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white mc-contact-reply-avatar">
+                    <i class="bi bi-person"></i>
+                  </div>
+                  {{/fromclient}}
+                  {{#fromadmin}}
+                  <div class="rounded-circle bg-success d-flex align-items-center justify-content-center text-white mc-contact-reply-avatar">
+                    <i class="bi bi-headset"></i>
+                  </div>
+                  {{/fromadmin}}
+                </div>
+                <div class="message-content flex-grow-1">
+                  <div class="d-flex align-items-center gap-2 mb-1">
+                    <strong>{{sendername}}</strong>
+                    {{#isoriginal}}<span class="badge text-bg-light">{{#str}}originalmessage, local_moderncommerce{{/str}}</span>{{/isoriginal}}
+                    <span class="small text-muted">{{timecreated}}</span>
+                  </div>
+                  <div class="p-3 rounded {{#fromadmin}}bg-success bg-opacity-10{{/fromadmin}}{{#fromclient}}bg-light{{/fromclient}}">
+                    {{{message}}}
+                  </div>
+                </div>
+              </div>
+            </div>
+            {{/thread}}
+          </div>
+        </div>
+      </div>
+
+      <!-- Reply Form -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="h6 mb-0"><i class="bi bi-reply me-2"></i>{{#str}}sendreply, local_moderncommerce{{/str}}</h2>
+        </div>
+        <div class="card-body">
+          <form method="post" action="{{replyurl}}">
+            <input type="hidden" name="token" value="{{token}}">
+            <input type="hidden" name="sesskey" value="{{sesskey}}">
+            <input type="hidden" name="action" value="reply">
+            <div class="mb-3 mc-field">
+              <label class="mc-field-label" for="mc-clientreply-message">
+                {{#str}}clientreply, local_moderncommerce{{/str}}
+                <span class="mc-required" aria-hidden="true">*</span>
+              </label>
+              <textarea id="mc-clientreply-message" name="replymessage" class="form-control{{#replyerror}} mc-field-invalid{{/replyerror}}" rows="5" placeholder="{{#str}}typeyourreply, local_moderncommerce{{/str}}" aria-required="true" {{#replyerror}}aria-invalid="true" aria-describedby="mc-clientreply-message-error"{{/replyerror}} required>{{replyvalue}}</textarea>
+              {{#replyerror}}
+                <div class="mc-field-error" id="mc-clientreply-message-error" role="alert">
+                  <i class="bi bi-exclamation-circle mc-field-error__icon" aria-hidden="true"></i>
+                  <span>{{replyerror}}</span>
+                </div>
+              {{/replyerror}}
+            </div>
+            <div class="text-end">
+              <button type="submit" class="mc-button btn-mc-primary" data-mc-button="primary">
+                <i class="bi bi-send me-2"></i>{{#str}}submitreply, local_moderncommerce{{/str}}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="text-center mt-4">
+        <p class="small text-muted">{{sitename}}</p>
+      </div>
+
+    </div>
+  </div>
+</div>

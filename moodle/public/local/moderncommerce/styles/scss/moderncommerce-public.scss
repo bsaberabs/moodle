@@ -1,0 +1,19 @@
+// This file is part of Moodle and is licensed under the
+// GNU General Public License, version 3 or later.
+//
+// You may redistribute and modify it under the terms of the GPL.
+// See the plugin root LICENSE file for complete terms.
+//
+// Modern Commerce styles.
+//
+// @package    local_moderncommerce
+// @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+// @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+@use "surfaces/public-pages";
+
+/*
+ * Modern Commerce public-page helper bundle.
+ *
+ * Covers legal/support fallback pages plus checkout/success public hero/card
+ * treatments that can render outside the storefront widget renderer.
+ */

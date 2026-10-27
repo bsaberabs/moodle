@@ -1,0 +1,19 @@
+// This file is part of Moodle and is licensed under the
+// GNU General Public License, version 3 or later.
+//
+// You may redistribute and modify it under the terms of the GPL.
+// See the plugin root LICENSE file for complete terms.
+//
+// Modern Commerce styles.
+//
+// @package    local_moderncommerce
+// @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+// @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+@use "surfaces/admin-help";
+
+/*
+ * Modern Commerce admin help center bundle.
+ *
+ * Loaded only for /local/moderncommerce/admin/help/ so normal admin screens
+ * do not pay for documentation-reader layout styles.
+ */

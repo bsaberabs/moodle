@@ -1,0 +1,38 @@
+{{!
+    This file is part of Moodle and is licensed under the
+    GNU General Public License, version 3 or later.
+
+    You may redistribute and modify it under the terms of the GPL.
+    See the plugin root LICENSE file for complete terms.
+}}
+{{!
+    @template local_moderncommerce/admin/nav
+
+    Admin sidebar navigation partial.
+    Rendered inside the sidebar card; stacks above content on mobile.
+
+    Context variables:
+    * navigation - Array of {label, items[{url, icon, label, active, hasbadge, badge}]}
+
+
+    @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+}}
+{{#navigation}}
+<div class="mc-nav-section">{{label}}</div>
+<nav class="nav flex-column mc-nav" role="list">
+    {{#items}}
+    <a class="nav-link {{#active}}active{{/active}}"
+       href="{{url}}"
+       role="listitem"
+       {{#active}}aria-current="page"{{/active}}
+       title="{{label}}">
+        <i class="bi {{icon}} mc-icon" aria-hidden="true"></i>
+        <span>{{label}}</span>
+        {{#hasbadge}}
+        <span class="ms-auto mc-badge mc-badge--{{badgevariant}}">{{badge}}</span>
+        {{/hasbadge}}
+    </a>
+    {{/items}}
+</nav>
+{{/navigation}}

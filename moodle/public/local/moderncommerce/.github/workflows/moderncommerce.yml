@@ -1,0 +1,51 @@
+name: Modern Commerce
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: Check and package
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Install Moodle coding standard
+        shell: pwsh
+        run: |
+          composer global config allow-plugins.dealerdirect/phpcodesniffer-composer-installer true
+          composer global require --no-interaction --no-progress moodlehq/moodle-cs
+          $composerBin = Join-Path $env:APPDATA 'Composer\vendor\bin'
+          Add-Content -Path $env:GITHUB_PATH -Value $composerBin
+          & (Join-Path $composerBin 'phpcs.bat') -i
+
+      - name: Run fast checks
+        run: composer run mc:check-fast
+
+      - name: Build release package
+        run: composer run mc:package
+
+      - name: Upload release package
+        uses: actions/upload-artifact@v4
+        with:
+          name: moderncommerce-release
+          path: releases/*.zip
+          if-no-files-found: error

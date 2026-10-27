@@ -1,0 +1,51 @@
+{{!
+    This file is part of Moodle and is licensed under the
+    GNU General Public License, version 3 or later.
+
+    You may redistribute and modify it under the terms of the GPL.
+    See the plugin root LICENSE file for complete terms.
+}}
+{{!
+    @template local_moderncommerce/breadcrumb_simple
+
+    Simple breadcrumb navigation for non-course pages
+
+    @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+
+    Example context (json):
+    {
+        "homeurl": "/my/",
+        "hometext": "Home",
+        "parenturl": "/local/moderncommerce/index.php",
+        "parenttext": "Catalog",
+        "currentpage": "Shopping Cart",
+        "backgroundimage": "",
+        "hasparent": true
+    }
+}}
+
+<!-- ============================ Page Header Start ================================== -->
+<div class="image-cover ccp_detail_head lg theme-ov" style="background:#f4f4f4{{#backgroundimage}} url({{{backgroundimage}}}){{/backgroundimage}};" data-overlay="7">
+    <div class="container">
+        <div class="row">
+            <div class="col-xl-7 col-lg-7 col-md-10">
+                <div class="ccp_detail_wrap light">
+                    <div class="breadcrumb mb-3">
+                        <a href="{{{homeurl}}}">{{{hometext}}}</a>
+                        {{#hasparent}}
+                        /
+                        <a href="{{{parenturl}}}">{{{parenttext}}}</a>
+                        {{/hasparent}}
+                        /
+                        <span class="fw-bold">{{{currentpage}}}</span>
+                    </div>
+                    <div class="ccp_header_caption">
+                        <h2 class="ccp_title">{{{currentpage}}}</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- ============================ Page Header End ================================== -->

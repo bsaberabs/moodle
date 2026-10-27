@@ -1,0 +1,205 @@
+/**
+ * This file is part of Moodle and is licensed under the
+ * GNU General Public License, version 3 or later.
+ *
+ * You may redistribute and modify it under the terms of the GPL.
+ * See the plugin root LICENSE file for complete terms.
+ *
+ * Compiled Modern Commerce styles.
+ *
+ * @package    local_moderncommerce
+ * @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+/*
+ * Modern Commerce global SCSS partial: Moodle navbar cart.
+ *
+ * Moodle auto-loads root styles.css into every theme page, so this partial must
+ * stay tightly prefixed. Full Modern Commerce page styling belongs in
+ * moderncommerce-design-system.scss.
+ */
+.local-moderncommerce-navbar-cart {
+  position: relative;
+}
+.local-moderncommerce-navbar-cart .mui-cart__trigger {
+  color: inherit;
+}
+.local-moderncommerce-navbar-cart .mui-cart__trigger :where(i, .icon, svg) {
+  color: inherit;
+}
+.local-moderncommerce-navbar-cart .mui-cart__badge {
+  position: absolute;
+  inset-block-start: 15px;
+  inset-inline-end: 0;
+  padding: 2px;
+  border-radius: 2px;
+  font-size: 11px;
+  line-height: 11px;
+}
+.local-moderncommerce-navbar-cart .mui-cart__panel {
+  width: 19rem;
+  max-width: calc(100vw - 2rem);
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--mc-border, rgba(15, 23, 42, 0.12));
+  border-radius: var(--mc-radius, 0.625rem);
+  box-shadow: var(--mc-shadow-lg, 0 12px 28px rgba(15, 23, 42, 0.14));
+}
+.local-moderncommerce-navbar-cart :where(.mc-button,
+[data-mc-button],
+.btn-mc-primary,
+.btn-mc-secondary,
+.mc-btn-soft) {
+  --mc-button-bg: var(--mc-surface, #fff);
+  --mc-button-border: var(--mc-border, #dddfe1);
+  --mc-button-color: var(--mc-text, #0f172a);
+  --mc-button-hover-bg: var(--mc-surface-alt, #f8f8f9);
+  --mc-button-hover-border: var(--mc-border-strong, #caccd0);
+  --mc-button-hover-color: var(--mc-text, #0f172a);
+  --mc-button-active-bg: var(--mc-neutral-bg, #f8f8f9);
+  --mc-button-active-border: var(--mc-border-strong, #caccd0);
+  --mc-button-active-color: var(--mc-text, #0f172a);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  max-width: 100%;
+  min-height: 2.5rem;
+  padding: 0.5625rem 1rem;
+  border: 1px solid var(--mc-button-border) !important;
+  border-radius: var(--mc-radius, 8px);
+  background: var(--mc-button-bg) !important;
+  color: var(--mc-button-color) !important;
+  font-family: var(--mc-font, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif);
+  font-size: var(--mc-fs-ui, 0.875rem);
+  font-weight: var(--mc-fw-semibold, 600);
+  line-height: var(--mc-lh-ui, 1.45);
+  letter-spacing: 0;
+  text-align: center;
+  text-decoration: none !important;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  vertical-align: middle;
+  transition: background var(--mc-transition-fast, 160ms ease), border-color var(--mc-transition-fast, 160ms ease), color var(--mc-transition-fast, 160ms ease), box-shadow var(--mc-transition-fast, 160ms ease);
+}
+.local-moderncommerce-navbar-cart :where(.mc-button,
+[data-mc-button],
+.btn-mc-primary,
+.btn-mc-secondary,
+.mc-btn-soft):where(:hover, :focus) {
+  border-color: var(--mc-button-hover-border) !important;
+  background: var(--mc-button-hover-bg) !important;
+  color: var(--mc-button-hover-color) !important;
+}
+.local-moderncommerce-navbar-cart :where([data-mc-button=primary], .btn-mc-primary) {
+  --mc-button-bg: var(--mc-primary, #7c3aed);
+  --mc-button-border: var(--mc-primary, #7c3aed);
+  --mc-button-color: #fff;
+  --mc-button-hover-bg: var(--mc-primary-hover, #6d33d1);
+  --mc-button-hover-border: var(--mc-primary-hover, #6d33d1);
+  --mc-button-hover-color: #fff;
+  --mc-button-active-bg: var(--mc-primary-active, #5e2cb4);
+  --mc-button-active-border: var(--mc-primary-active, #5e2cb4);
+  --mc-button-active-color: #fff;
+}
+.local-moderncommerce-navbar-cart :where([data-mc-button=secondary], .btn-mc-secondary) {
+  --mc-button-bg: var(--mc-secondary, #1e1b4b);
+  --mc-button-border: var(--mc-secondary, #1e1b4b);
+  --mc-button-color: #fff;
+  --mc-button-hover-bg: color-mix(in srgb, var(--mc-secondary, #1e1b4b) 86%, #000);
+  --mc-button-hover-border: color-mix(in srgb, var(--mc-secondary, #1e1b4b) 86%, #000);
+  --mc-button-hover-color: #fff;
+  --mc-button-active-bg: color-mix(in srgb, var(--mc-secondary, #1e1b4b) 74%, #000);
+  --mc-button-active-border: color-mix(in srgb, var(--mc-secondary, #1e1b4b) 74%, #000);
+  --mc-button-active-color: #fff;
+}
+.local-moderncommerce-navbar-cart :where([data-mc-button=soft], .mc-btn-soft) {
+  --mc-button-bg: var(--mc-primary-light, #f2ebfd);
+  --mc-button-border: var(--mc-primary-border, #d1baf9);
+  --mc-button-color: var(--mc-primary, #7c3aed);
+  --mc-button-hover-bg: color-mix(in srgb, var(--mc-primary-light, #f2ebfd) 88%, var(--mc-primary, #7c3aed));
+  --mc-button-hover-border: var(--mc-primary, #7c3aed);
+  --mc-button-hover-color: var(--mc-primary, #7c3aed);
+}
+.local-moderncommerce-navbar-cart :where([data-mc-button-size=sm], .btn-sm.mc-button) {
+  min-height: 2rem;
+  padding: 0.3125rem 0.625rem;
+  font-size: var(--mc-fs-meta, 0.8125rem);
+}
+
+.local-moderncommerce-cart-dropdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  color: var(--mc-text, #0f172a);
+  background: var(--mc-surface, #fff);
+}
+
+.local-moderncommerce-cart-dropdown__empty,
+.local-moderncommerce-cart-dropdown__item,
+.local-moderncommerce-cart-dropdown__more {
+  color: var(--mc-text-muted, #64748b);
+}
+
+.local-moderncommerce-cart-dropdown__item {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.local-moderncommerce-cart-dropdown__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.local-moderncommerce-cart-dropdown__price {
+  flex-shrink: 0;
+  font-weight: var(--mc-fw-semibold, 600);
+}
+
+.local-moderncommerce-cart-dropdown__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  margin-top: 0.25rem;
+  background: var(--mc-surface-alt, #f8f8f9);
+}
+
+.local-moderncommerce-cart-dropdown__button {
+  white-space: nowrap;
+}
+
+.local-moderncommerce-navbar-cart.local-moderncommerce-navbar-cart .local-moderncommerce-cart-dropdown a.local-moderncommerce-cart-dropdown__button.mc-button[data-mc-button] {
+  border-color: var(--mc-button-border) !important;
+  background: var(--mc-button-bg) !important;
+  color: var(--mc-button-color) !important;
+  text-decoration: none !important;
+}
+.local-moderncommerce-navbar-cart.local-moderncommerce-navbar-cart .local-moderncommerce-cart-dropdown a.local-moderncommerce-cart-dropdown__button.mc-button[data-mc-button]:where(:hover, :focus) {
+  border-color: var(--mc-button-hover-border) !important;
+  background: var(--mc-button-hover-bg) !important;
+  color: var(--mc-button-hover-color) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .local-moderncommerce-navbar-cart :where(.mc-button,
+  [data-mc-button],
+  .btn-mc-primary,
+  .btn-mc-secondary,
+  .mc-btn-soft) {
+    transition: none;
+  }
+}
+/*
+ * Modern Commerce global SCSS entry.
+ *
+ * Moodle auto-loads the plugin root styles.css into the active theme. Keep this
+ * bundle limited to tightly prefixed UI that can render outside Modern Commerce
+ * pages, such as the navbar cart. Full page and admin styles belong in
+ * moderncommerce-design-system.scss.
+ */

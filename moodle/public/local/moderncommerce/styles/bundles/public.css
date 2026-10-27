@@ -1,0 +1,559 @@
+/**
+ * This file is part of Moodle and is licensed under the
+ * GNU General Public License, version 3 or later.
+ *
+ * You may redistribute and modify it under the terms of the GPL.
+ * See the plugin root LICENSE file for complete terms.
+ *
+ * Compiled Modern Commerce styles.
+ *
+ * @package    local_moderncommerce
+ * @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+/*
+ * Modern Commerce SCSS partial: public legal/support/checkout pages.
+ * Migrated from standalone CSS so generated bundles have a single source of truth.
+ */
+/* Source: styles/public-pages.css */
+.mc-public-page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+  color: var(--mc-text);
+}
+
+.mc-public-page--widgets {
+  max-width: none;
+  padding: 0;
+}
+
+.mc-public-breadcrumb .breadcrumb {
+  margin-bottom: 1rem;
+  padding-left: 0;
+  background: transparent;
+}
+
+.mc-public-breadcrumb a {
+  color: var(--mc-link);
+}
+
+.mc-public-breadcrumb .breadcrumb-item,
+.mc-public-breadcrumb .breadcrumb-item.active {
+  color: var(--mc-text-muted);
+}
+
+.mc-public-hero {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--mc-primary-border);
+  border-radius: 8px;
+  padding: clamp(2rem, 4vw, 3.5rem);
+  margin-bottom: 1.5rem;
+  color: var(--mc-text);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--mc-primary) 14%, var(--mc-surface)) 0%, color-mix(in srgb, var(--mc-primary) 7%, var(--mc-surface)) 100%);
+  box-shadow: var(--mc-shadow-sm);
+}
+
+.mc-public-hero__icon {
+  display: inline-flex;
+  width: 3rem;
+  height: 3rem;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  color: var(--mc-primary-active);
+  background: var(--mc-surface);
+  border: 1px solid var(--mc-primary-border);
+  font-size: 1.45rem;
+}
+
+.mc-public-hero__eyebrow {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  color: var(--mc-primary-active);
+}
+
+.mc-public-hero__title {
+  max-width: 760px;
+  margin: 0 0 0.8rem;
+  font-size: var(--mc-fs-h1, 2.25rem);
+  font-weight: var(--mc-fw-display, 800);
+  line-height: var(--mc-lh-tight, 1.12);
+  letter-spacing: 0;
+}
+
+.mc-public-hero__summary {
+  max-width: 760px;
+  margin: 0;
+  color: var(--mc-text);
+  font-size: 1.05rem;
+  line-height: 1.65;
+}
+
+.mc-public-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.mc-public-hero__actions .mc-button[data-mc-button=primary],
+.mc-public-hero__actions .btn-mc-primary {
+  color: var(--mc-text-inverse);
+  background: var(--mc-primary);
+  border-color: var(--mc-primary);
+}
+
+.mc-public-hero__actions .mc-button[data-mc-button=primary]:hover,
+.mc-public-hero__actions .mc-button[data-mc-button=primary]:focus,
+.mc-public-hero__actions .btn-mc-primary:hover,
+.mc-public-hero__actions .btn-mc-primary:focus {
+  color: var(--mc-text-inverse);
+  background: var(--mc-primary-hover);
+  border-color: var(--mc-primary-hover);
+}
+
+.mc-public-hero__actions .mc-button[data-mc-button=soft],
+.mc-public-hero__actions .mc-btn-soft {
+  color: var(--mc-primary-active);
+  background: var(--mc-surface);
+  border-color: var(--mc-primary-border);
+}
+
+.mc-public-hero__actions .mc-button[data-mc-button=soft]:hover,
+.mc-public-hero__actions .mc-button[data-mc-button=soft]:focus,
+.mc-public-hero__actions .mc-btn-soft:hover,
+.mc-public-hero__actions .mc-btn-soft:focus {
+  color: var(--mc-text-inverse);
+  background: var(--mc-primary-active);
+  border-color: var(--mc-primary-active);
+}
+
+.mc-public-section-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .mc-public-section-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.mc-public-card {
+  border: 1px solid var(--mc-border);
+  border-radius: 8px;
+  padding: 1.25rem;
+  color: var(--mc-text);
+  background: var(--mc-surface);
+  box-shadow: var(--mc-shadow-sm);
+}
+
+.mc-public-card__icon {
+  display: inline-flex;
+  width: 2.5rem;
+  height: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.8rem;
+  border-radius: 8px;
+  color: var(--mc-primary);
+  background: var(--mc-primary-light);
+  font-size: 1.25rem;
+}
+
+.mc-public-card__title {
+  margin: 0 0 0.55rem;
+  color: var(--mc-text);
+  font-size: 1.15rem;
+  font-weight: 750;
+  letter-spacing: 0;
+}
+
+.mc-public-card__text {
+  margin: 0;
+  color: var(--mc-text-muted);
+  line-height: 1.6;
+}
+
+.mc-public-card dt {
+  color: var(--mc-text-muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.mc-public-card dd {
+  color: var(--mc-text);
+  font-weight: 650;
+}
+
+.mc-public-page .text-muted {
+  color: var(--mc-text-muted) !important;
+}
+
+.mc-public-list {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0.8rem 0 0;
+  padding-left: 1.1rem;
+  color: var(--mc-text);
+}
+
+.mc-public-richtext {
+  max-width: 920px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+.mc-public-richtext h2,
+.mc-public-richtext h3 {
+  margin-top: 1.5rem;
+  letter-spacing: 0;
+}
+
+.mc-public-footerlinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 1.25rem;
+}
+
+.mc-public-footerlinks a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.35rem;
+  padding: 0.45rem 0.8rem;
+  border: 1px solid var(--mc-border);
+  border-radius: 8px;
+  background: var(--mc-surface);
+  text-decoration: none;
+}
+
+.mc-public-helpnote {
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--mc-primary-border);
+  border-radius: 8px;
+  background: var(--mc-primary-light);
+  color: var(--mc-text);
+}
+
+.mc-support-form {
+  max-width: 860px;
+  margin: 1rem auto 0;
+}
+
+.mc-success-hero {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--mc-primary-border);
+  border-radius: 8px;
+  padding: clamp(2rem, 4vw, 3.5rem);
+  margin-bottom: 1.5rem;
+  color: var(--mc-text);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--mc-primary) 14%, var(--mc-surface)) 0%, color-mix(in srgb, var(--mc-primary) 7%, var(--mc-surface)) 100%);
+  box-shadow: var(--mc-shadow-sm);
+}
+
+.mc-success-hero__icon {
+  display: inline-flex;
+  width: 3rem;
+  height: 3rem;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  color: var(--mc-primary-active);
+  background: var(--mc-surface);
+  border: 1px solid var(--mc-primary-border);
+  font-size: 1.45rem;
+}
+
+.mc-success-hero__eyebrow {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  color: var(--mc-primary-active);
+}
+
+.mc-success-hero__title {
+  max-width: 760px;
+  margin: 0 0 0.8rem;
+  font-size: var(--mc-fs-h1, 2.25rem);
+  font-weight: var(--mc-fw-display, 800);
+  line-height: var(--mc-lh-tight, 1.12);
+  letter-spacing: 0;
+}
+
+.mc-success-hero__summary {
+  max-width: 760px;
+  margin: 0;
+  color: var(--mc-text);
+  font-size: 1.05rem;
+  line-height: 1.65;
+}
+
+.mc-success-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.mc-success-hero__actions .mc-button[data-mc-button=primary],
+.mc-success-hero__actions .btn-mc-primary {
+  color: var(--mc-text-inverse);
+  background: var(--mc-primary);
+  border-color: var(--mc-primary);
+}
+
+.mc-success-hero__actions .mc-button[data-mc-button=primary]:hover,
+.mc-success-hero__actions .mc-button[data-mc-button=primary]:focus,
+.mc-success-hero__actions .btn-mc-primary:hover,
+.mc-success-hero__actions .btn-mc-primary:focus {
+  color: var(--mc-text-inverse);
+  background: var(--mc-primary-hover);
+  border-color: var(--mc-primary-hover);
+}
+
+.mc-success-hero__actions .mc-button[data-mc-button=soft],
+.mc-success-hero__actions .mc-btn-soft {
+  color: var(--mc-primary-active);
+  background: var(--mc-surface);
+  border-color: var(--mc-primary-border);
+}
+
+.mc-success-hero__actions .mc-button[data-mc-button=soft]:hover,
+.mc-success-hero__actions .mc-button[data-mc-button=soft]:focus,
+.mc-success-hero__actions .mc-btn-soft:hover,
+.mc-success-hero__actions .mc-btn-soft:focus {
+  color: var(--mc-text-inverse);
+  background: var(--mc-primary-active);
+  border-color: var(--mc-primary-active);
+}
+
+.mc-success-summary {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 992px) {
+  .mc-success-summary {
+    grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.7fr);
+  }
+}
+.mc-success-items {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mc-success-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  color: var(--mc-text);
+  border-bottom: 1px solid var(--mc-border-subtle);
+}
+
+.mc-admin-simple-table {
+  width: 100%;
+}
+
+/* Public pricing/value page. */
+.mc-pricing {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 1rem 3rem;
+}
+
+.mc-pricing__hero {
+  margin: 1.5rem 0 2rem;
+  padding: 2.75rem 2rem;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 100%);
+  color: #fff;
+  text-align: center;
+}
+
+.mc-pricing__eyebrow {
+  margin: 0 0 0.65rem;
+  color: #bfdbfe;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mc-pricing__title {
+  max-width: 18ch;
+  margin: 0 auto 0.75rem;
+  font-size: var(--mc-fs-h1, 2.25rem);
+  font-weight: var(--mc-fw-display, 800);
+  line-height: var(--mc-lh-tight, 1.12);
+}
+
+.mc-pricing__subtitle {
+  max-width: 60ch;
+  margin: 0 auto 1.25rem;
+  color: #e2e8f0;
+  font-size: 1.0625rem;
+  line-height: 1.55;
+}
+
+.mc-pricing__price {
+  margin: 0 0 0.5rem;
+  font-size: var(--mc-fs-display, 2.75rem);
+  font-weight: var(--mc-fw-display, 800);
+  line-height: var(--mc-lh-tight, 1.12);
+}
+
+.mc-pricing__offer {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin: 0 auto 1.5rem;
+  color: #dbeafe;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.mc-pricing__offer .bi {
+  color: #4ade80;
+}
+
+.mc-pricing__cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.mc-pricing__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.7rem 1.4rem;
+  border-radius: 9px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform 0.08s ease, box-shadow 0.15s ease;
+}
+
+.mc-pricing__btn:hover {
+  transform: translateY(-1px);
+  text-decoration: none;
+}
+
+.mc-pricing__btn--primary {
+  background: #fff;
+  color: #1d4ed8;
+}
+
+.mc-pricing__btn--ghost {
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.mc-pricing__reassure {
+  margin: 1.1rem 0 0;
+  color: #cbd5e1;
+  font-size: 0.85rem;
+}
+
+.mc-pricing__pillars {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.mc-pricing__pillar {
+  padding: 1.25rem;
+  border: 1px solid var(--mc-border, #e2e8f0);
+  border-radius: 12px;
+  background: var(--mc-surface, #fff);
+}
+
+.mc-pricing__pillaricon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  margin-bottom: 0.75rem;
+  border-radius: 9px;
+  background: #eef6ff;
+  color: #1d4ed8;
+  font-size: 1.2rem;
+}
+
+.mc-pricing__pillartitle {
+  margin: 0 0 0.35rem;
+  color: var(--mc-text, #0f172a);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.mc-pricing__pillarbody {
+  margin: 0;
+  color: var(--mc-muted, #64748b);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.mc-pricing__premium {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+  margin-top: 2rem;
+  padding: 1.5rem 1.75rem;
+  border: 1px solid var(--mc-border, #e2e8f0);
+  border-radius: 14px;
+  background: var(--mc-surface-muted, #f8fafc);
+}
+
+.mc-pricing__premiumtitle {
+  margin: 0 0 0.35rem;
+  color: var(--mc-text, #0f172a);
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.mc-pricing__premiumbody {
+  max-width: 60ch;
+  margin: 0;
+  color: var(--mc-muted, #64748b);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.mc-pricing__premium .mc-pricing__btn--primary {
+  background: #1d4ed8;
+  color: #fff;
+  white-space: nowrap;
+}
+
+/*
+ * Modern Commerce public-page helper bundle.
+ *
+ * Covers legal/support fallback pages plus checkout/success public hero/card
+ * treatments that can render outside the storefront widget renderer.
+ */

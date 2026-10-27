@@ -1,0 +1,11 @@
+#!/bin/sh
+set -e
+
+if command -v pwsh >/dev/null 2>&1; then
+    pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/git-check.ps1 -Fast -SkipBuild -SkipPhpUnit -PhpcsReportOnly
+elif command -v powershell.exe >/dev/null 2>&1; then
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/git-check.ps1 -Fast -SkipBuild -SkipPhpUnit -PhpcsReportOnly
+else
+    echo "PowerShell was not found; cannot run Modern Commerce pre-commit checks." >&2
+    exit 1
+fi

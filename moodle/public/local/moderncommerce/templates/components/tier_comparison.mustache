@@ -1,0 +1,65 @@
+{{!
+    This file is part of Moodle and is licensed under the
+    GNU General Public License, version 3 or later.
+
+    You may redistribute and modify it under the terms of the GPL.
+    See the plugin root LICENSE file for complete terms.
+}}
+{{!
+    @template local_moderncommerce/components/tier_comparison
+
+    Free-vs-Premium capability comparison table. Self-contained styling so it
+    renders identically on the admin add-ons page and the public pricing page.
+
+    Context variables:
+    * comparison - Array of groups, each { grouptitle, features: [{ label, corecheck, addoncheck }] }.
+
+    @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com | www.agunfoninteractivity.com
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+}}
+<section class="mc-cmp">
+    <div class="mc-cmp__head">
+        <h2 class="mc-cmp__title">{{#str}}cmp_title, local_moderncommerce{{/str}}</h2>
+        <p class="mc-cmp__intro">{{#str}}cmp_subtitle, local_moderncommerce{{/str}}</p>
+    </div>
+    <div class="mc-cmp__body">
+        <div class="mc-cmp__scroll">
+            <table class="mc-cmp-table">
+                <thead>
+                    <tr>
+                        <th scope="col" class="mc-cmp-feature">{{#str}}cmp_colfeature, local_moderncommerce{{/str}}</th>
+                        <th scope="col" class="mc-cmp-tier mc-cmp-tier--premium">
+                            <span class="mc-cmp-tier__name">{{#str}}cmp_colcore, local_moderncommerce{{/str}}</span>
+                            <span class="mc-cmp-tier__note">{{#str}}cmp_colcorenote, local_moderncommerce{{/str}}</span>
+                        </th>
+                        <th scope="col" class="mc-cmp-tier">
+                            <span class="mc-cmp-tier__name">{{#str}}cmp_coladdon, local_moderncommerce{{/str}}</span>
+                            <span class="mc-cmp-tier__note">{{#str}}cmp_coladdonnote, local_moderncommerce{{/str}}</span>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#comparison}}
+                        <tr class="mc-cmp-group">
+                            <th scope="colgroup" colspan="3">{{grouptitle}}</th>
+                        </tr>
+                        {{#features}}
+                            <tr>
+                                <th scope="row" class="mc-cmp-feature">{{label}}</th>
+                                <td class="mc-cmp-cell mc-cmp-cell--premium">
+                                    {{#corecheck}}<i class="bi bi-check-lg mc-cmp-yes" aria-label="{{#str}}cmp_included, local_moderncommerce{{/str}}"></i>{{/corecheck}}
+                                    {{^corecheck}}<span class="mc-cmp-no" aria-hidden="true">—</span>{{/corecheck}}
+                                </td>
+                                <td class="mc-cmp-cell">
+                                    {{#addoncheck}}<i class="bi bi-check-lg mc-cmp-yes" aria-label="{{#str}}cmp_included, local_moderncommerce{{/str}}"></i>{{/addoncheck}}
+                                    {{^addoncheck}}<span class="mc-cmp-no" aria-hidden="true">—</span>{{/addoncheck}}
+                                </td>
+                            </tr>
+                        {{/features}}
+                    {{/comparison}}
+                </tbody>
+            </table>
+        </div>
+        <p class="mc-cmp__foot">{{#str}}cmp_footnote, local_moderncommerce{{/str}}</p>
+    </div>
+</section>

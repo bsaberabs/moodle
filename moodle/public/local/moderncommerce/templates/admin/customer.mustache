@@ -1,0 +1,27 @@
+{{!
+    This file is part of Moodle and is licensed under the
+    GNU General Public License, version 3 or later.
+
+    You may redistribute and modify it under the terms of the GPL.
+    See the plugin root LICENSE file for complete terms.
+}}
+{{!
+    @template local_moderncommerce/admin/customer
+
+    React mount for the Modern Commerce admin customer detail screen.
+
+    Context variables:
+    * customerdetailreactconfig - JSON config for Moodle's Mustache React helper.
+
+    @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com | www.agunfoninteractivity.com
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+}}
+<div class="mc-admin-react-shell" data-region="moderncommerce-customer-detail">
+    {{#react}}
+    {{{customerdetailreactconfig}}}
+    <div class="mc-empty mc-empty--centered">
+        <span class="mc-empty__icon"><i class="bi bi-person-vcard" aria-hidden="true"></i></span>
+        <p class="mc-empty__title">{{#str}}loading, local_moderncommerce{{/str}}</p>
+    </div>
+    {{/react}}
+</div>

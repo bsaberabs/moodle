@@ -1,0 +1,80 @@
+{{!
+    This file is part of Moodle and is licensed under the
+    GNU General Public License, version 3 or later.
+
+    You may redistribute and modify it under the terms of the GPL.
+    See the plugin root LICENSE file for complete terms.
+}}
+{{!
+    @template local_moderncommerce/breadcrumb
+
+    Course header with breadcrumb navigation
+
+    @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+
+    Example context (json):
+    {
+        "homeurl": "/my/",
+        "hometext": "Home",
+        "catalogurl": "/local/moderncommerce/index.php",
+        "catalogtext": "Catalog",
+        "coursename": "Web Design Course",
+        "courseduration": "10 - 20 weeks",
+        "lecturecount": "102 Lectures",
+        "studentcount": "502 Students",
+        "rating": "4.9",
+        "reviewcount": "2.24k",
+        "level": "Beginner",
+        "ispro": false
+    }
+}}
+
+<!-- Breadcrumb Navigation -->
+
+
+<!-- ============================ Course Header Info Start================================== -->
+			<div class="image-cover ccp_detail_head lg theme-ov" style="background:#f4f4f4 url({{{backgroundimage}}});" data-overlay="7">
+				<div class="container">
+					<div class="row">
+
+						<div class="col-xl-7 col-lg-7 col-md-10">
+						<div class="ccp_detail_wrap light">
+								<div class="breadcrumb mb-3">
+                                    <a href="{{{homeurl}}}">{{{hometext}}}</a>
+                                    /
+                                    <a href="{{{catalogurl}}}">{{{catalogtext}}}</a>
+                                    /
+                                    <span class="fw-bold">{{{coursename}}}</span>
+                                </div>
+							<div class="ccp_header_caption">
+								<h2 class="ccp_title">{{{coursename}}}</h2>
+									<ul>
+										<li><i class="bi bi-calendar-check"></i>{{{courseduration}}}</li>
+										<li><i class="bi bi-calendar-check"></i>{{{lecturecount}}}</li>
+										<li><i class="bi bi-people"></i>{{{studentcount}}}</li>
+									</ul>
+								</div>
+
+								<div class="ed_rate_info">
+									<div class="d-flex align-items-center justify-content-start gap-2">
+										<div class="star_info text-md d-flex align-items-center gap-1">
+											<i class="bi bi-star-fill text-warning"></i>
+											<i class="bi bi-star-fill text-warning"></i>
+											<i class="bi bi-star-fill text-warning"></i>
+											<i class="bi bi-star-fill text-warning"></i>
+											<i class="bi bi-star-fill text-warning"></i>
+										</div>
+										<div class="review_counter d-flex align-items-center gap-1">
+											<strong class="high fw-bold text-light">4.9</strong><span class="text-mid text-light">(2.24k Reviews)</span>
+										</div>
+
+									</div>
+								</div>
+
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- ============================ Course Header Info End ================================== -->

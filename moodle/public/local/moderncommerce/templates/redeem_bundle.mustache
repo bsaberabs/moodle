@@ -1,0 +1,116 @@
+{{!
+    This file is part of Moodle and is licensed under the
+    GNU General Public License, version 3 or later.
+
+    You may redistribute and modify it under the terms of the GPL.
+    See the plugin root LICENSE file for complete terms.
+}}
+{{!
+    @template local_moderncommerce/redeem_bundle
+
+    Bundle enrollment key redemption. One key per bundle item in the order.
+
+    Context variables:
+    * redeemurl    - Form action URL
+    * sesskey      - Session key
+    * orderid      - Order ID
+    * bundles      - Array: {id, name, coursecount, keycode, isredeemed, haserror, errormessage}
+    * hasbundles   - bool
+    * allredeemed  - bool
+    * coursesurl   - URL to my courses
+    * catalogurl   - Back to catalog URL
+
+
+    @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+}}
+<div class="mc-redeem-page py-5">
+    <div class="container">
+
+        {{#allredeemed}}
+        <div class="mc-redeem-card">
+            <span class="mc-redeem-card__icon"><i class="bi bi-check-circle-fill text-success" aria-hidden="true"></i></span>
+            <h1 class="mc-redeem-card__title">{{#str}}allbundlekeysredeemed, local_moderncommerce{{/str}}</h1>
+            <a href="{{coursesurl}}" class="mc-button btn-mc-primary" data-mc-button="primary">
+                <i class="bi bi-play-circle me-1" aria-hidden="true"></i>
+                {{#str}}gotomycourses, local_moderncommerce{{/str}}
+            </a>
+        </div>
+        {{/allredeemed}}
+
+        {{^allredeemed}}
+        <div class="mc-redeem-card mc-redeem-card--wide">
+            <span class="mc-redeem-card__icon"><i class="bi bi-layers" aria-hidden="true"></i></span>
+            <h1 class="mc-redeem-card__title">{{#str}}redeembundlekey, local_moderncommerce{{/str}}</h1>
+            <p class="mc-redeem-card__desc">{{#str}}enterbundlekeysdescription, local_moderncommerce{{/str}}</p>
+
+            {{#hasbundles}}
+            <form method="post" action="{{redeemurl}}" class="w-100">
+                <input type="hidden" name="sesskey" value="{{sesskey}}">
+                <input type="hidden" name="orderid" value="{{orderid}}">
+                <div class="d-flex flex-column gap-3 mb-4">
+                    {{#bundles}}
+                    <div class="mc-card text-start">
+                        <div class="mc-card-header">
+                            <div class="d-flex align-items-center gap-2">
+                                {{#isredeemed}}<i class="bi bi-check-circle-fill text-success" aria-hidden="true"></i>{{/isredeemed}}
+                                {{^isredeemed}}<i class="bi bi-layers text-muted" aria-hidden="true"></i>{{/isredeemed}}
+                                <div>
+                                    <div class="mc-card-title">{{name}}</div>
+                                    {{#coursecount}}
+                                    <div class="mc-cell-muted">{{coursecount}} {{#str}}courses, local_moderncommerce{{/str}}</div>
+                                    {{/coursecount}}
+                                </div>
+                                {{#isredeemed}}
+                                <span class="mc-badge mc-badge--success ms-auto">{{#str}}keyredeemed, local_moderncommerce{{/str}}</span>
+                                {{/isredeemed}}
+                            </div>
+                        </div>
+                        {{^isredeemed}}
+                        <div class="mc-card-body">
+                            {{#haserror}}
+                            <div class="alert alert-danger py-1 mb-2 d-flex gap-2">
+                                <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+                                {{errormessage}}
+                            </div>
+                            {{/haserror}}
+                            <label for="bundlekey-{{id}}" class="mc-filter-label">{{#str}}keycode, local_moderncommerce{{/str}}</label>
+                            <input type="text"
+                                   class="form-control form-control-sm mc-key-input"
+                                   id="bundlekey-{{id}}"
+                                   name="bundlekeys[{{id}}]"
+                                   value="{{keycode}}"
+                                   placeholder="{{#str}}enterbundlekeycode, local_moderncommerce{{/str}}"
+                                   autocomplete="off">
+                        </div>
+                        {{/isredeemed}}
+                    </div>
+                    {{/bundles}}
+                </div>
+                <button type="submit" class="mc-button btn-mc-primary w-100 d-flex justify-content-center"
+                        data-mc-button="primary" data-mc-loading-submit data-mc-loading-label="{{#str}}loading, local_moderncommerce{{/str}}">
+                    <i class="bi bi-key me-1" aria-hidden="true"></i>
+                    {{#str}}redeemallbundlekeys, local_moderncommerce{{/str}}
+                </button>
+            </form>
+            {{/hasbundles}}
+        </div>
+        {{/allredeemed}}
+
+    </div>
+</div>
+
+<script>
+(function() {
+    document.addEventListener('submit', function(event) {
+        var button = event.target.querySelector('[data-mc-loading-submit]');
+        if (!button) {
+            return;
+        }
+        button.setAttribute('aria-busy', 'true');
+        button.setAttribute('data-mc-button-state', 'loading');
+        button.disabled = true;
+        button.textContent = button.getAttribute('data-mc-loading-label') || 'Loading...';
+    });
+})();
+</script>

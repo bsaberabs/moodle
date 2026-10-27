@@ -1,0 +1,151 @@
+{{!
+    This file is part of Moodle and is licensed under the
+    GNU General Public License, version 3 or later.
+
+    You may redistribute and modify it under the terms of the GPL.
+    See the plugin root LICENSE file for complete terms.
+}}
+{{!
+    @template local_moderncommerce/admin/bundle_keys
+
+    Bundle enrollment key management. Bundle selector, generate form, keys table.
+
+    Context variables:
+    * generateform  - {action, sesskey, bundleoptions[], typeoptions[], quantity, validdays}
+    * keys          - Array: {id, bundlename, keycode, keytype, maxuses, usedcount, expiry, status, statusclass, deleteurl}
+    * haskeys       - bool
+    * searchterm    - Current filter string
+    * filterurl     - Filter form URL
+    * pagination    - Pagination HTML (trusted)
+
+
+    @copyright  2025 Adebare Showemimo | adebareshowemimo@gmail.com | support@agunfoninteractivity.com
+    @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+}}
+<div id="mc-bundle-keys-container" data-region="bundle-keys">
+
+    {{! Generate form }}
+    <div class="mc-form-section mb-4">
+        <div class="mc-form-section__header">
+            <h2 class="mc-form-section__title">
+                <i class="bi bi-lightning me-2" aria-hidden="true"></i>
+                {{#str}}generatebundlekeys, local_moderncommerce{{/str}}
+            </h2>
+        </div>
+        <div class="mc-form-section__body">
+            <form method="post" action="{{generateform.action}}" class="row g-3 align-items-end">
+                <input type="hidden" name="sesskey" value="{{generateform.sesskey}}">
+                <div class="col-sm-4">
+                    <label for="mc-bk-bundle" class="mc-field-label">{{#str}}selectbundle, local_moderncommerce{{/str}}</label>
+                    <select class="form-select form-select-sm" id="mc-bk-bundle" name="bundleid" required>
+                        <option value="">{{#str}}searchandselectbundle, local_moderncommerce{{/str}}</option>
+                        {{#generateform.bundleoptions}}
+                        <option value="{{value}}"{{#selected}} selected{{/selected}}>{{label}}</option>
+                        {{/generateform.bundleoptions}}
+                    </select>
+                </div>
+                <div class="col-sm-2">
+                    <label for="mc-bk-qty" class="mc-field-label">{{#str}}numberofkeys, local_moderncommerce{{/str}}</label>
+                    <input type="number" class="form-control form-control-sm" id="mc-bk-qty"
+                           name="quantity" value="{{generateform.quantity}}" min="1" max="100">
+                </div>
+                <div class="col-sm-2">
+                    <label for="mc-bk-days" class="mc-field-label">{{#str}}expirydays, local_moderncommerce{{/str}}</label>
+                    <input type="number" class="form-control form-control-sm" id="mc-bk-days"
+                           name="validdays" value="{{generateform.validdays}}" min="0">
+                    <div class="mc-field-help">{{#str}}zerofornoexpiry, local_moderncommerce{{/str}}</div>
+                </div>
+                <div class="col-sm-auto">
+                    <button type="submit" class="mc-button btn-sm btn-mc-primary" data-mc-button="primary" data-mc-button-size="sm"
+                            data-mc-loading-submit data-mc-loading-label="{{#str}}loading, local_moderncommerce{{/str}}">
+                        <i class="bi bi-lightning me-1" aria-hidden="true"></i>
+                        {{#str}}generatekeys, local_moderncommerce{{/str}}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{! Filter }}
+    <div class="mc-toolbar mb-3">
+        <form method="get" action="{{filterurl}}" class="d-flex gap-2 align-items-end">
+            <div>
+                <label for="mc-bk-search" class="mc-filter-label">{{#str}}search, local_moderncommerce{{/str}}</label>
+                <input type="text" class="form-control form-control-sm" id="mc-bk-search"
+                       name="search" value="{{searchterm}}"
+                       placeholder="{{#str}}filtertablebykeycode, local_moderncommerce{{/str}}">
+            </div>
+            <button type="submit" class="mc-button btn-sm btn-mc-secondary" data-mc-button="secondary" data-mc-button-size="sm">
+                <i class="bi bi-funnel me-1" aria-hidden="true"></i>
+                {{#str}}filter, local_moderncommerce{{/str}}
+            </button>
+        </form>
+    </div>
+
+    {{! Keys table }}
+    {{#haskeys}}
+    <div class="mc-table-wrapper">
+        <table class="table mc-table mb-0" aria-label="{{#str}}managebundlekeys, local_moderncommerce{{/str}}">
+            <thead>
+                <tr>
+                    <th scope="col">{{#str}}bundle, local_moderncommerce{{/str}}</th>
+                    <th scope="col">{{#str}}keycode, local_moderncommerce{{/str}}</th>
+                    <th scope="col">{{#str}}keytype, local_moderncommerce{{/str}}</th>
+                    <th scope="col" class="text-center">{{#str}}uses, local_moderncommerce{{/str}}</th>
+                    <th scope="col">{{#str}}expiry, local_moderncommerce{{/str}}</th>
+                    <th scope="col">{{#str}}keystatus, local_moderncommerce{{/str}}</th>
+                    <th scope="col" class="text-end pe-3">{{#str}}actions, local_moderncommerce{{/str}}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#keys}}
+                <tr>
+                    <td class="fw-semibold">{{bundlename}}</td>
+                    <td class="mc-key-code">{{keycode}}</td>
+                    <td class="mc-cell-muted">{{keytype}}</td>
+                    <td class="text-center"><span class="fw-semibold">{{usedcount}}</span>{{#maxuses}}/{{maxuses}}{{/maxuses}}</td>
+                    <td class="mc-cell-muted mc-nowrap">
+                        {{#expiry}}{{expiry}}{{/expiry}}{{^expiry}}{{#str}}never, local_moderncommerce{{/str}}{{/expiry}}
+                    </td>
+                    <td><span class="mc-badge mc-badge--{{statusclass}}">{{status}}</span></td>
+                    <td class="text-end pe-3">
+                        <a href="{{deleteurl}}"
+                           class="mc-button btn-sm btn-mc-danger"
+                           title="{{#str}}delete, local_moderncommerce{{/str}}"
+                           aria-label="{{#str}}delete, local_moderncommerce{{/str}} {{keycode}}"
+                           data-confirm="{{#str}}confirmdeletekey, local_moderncommerce{{/str}}" data-mc-button="danger" data-mc-button-size="sm">
+                            <i class="bi bi-trash" aria-hidden="true"></i>
+                        </a>
+                    </td>
+                </tr>
+                {{/keys}}
+            </tbody>
+        </table>
+    </div>
+    {{#pagination}}{{{pagination}}}{{/pagination}}
+    {{/haskeys}}
+
+    {{^haskeys}}
+    <div class="mc-empty">
+        <span class="mc-empty__icon"><i class="bi bi-key" aria-hidden="true"></i></span>
+        <p class="mc-empty__title">{{#str}}noresultsfound, local_moderncommerce{{/str}}</p>
+        <p class="mc-empty__desc">{{#str}}managebundlekeys_desc, local_moderncommerce{{/str}}</p>
+    </div>
+    {{/haskeys}}
+
+</div>
+
+<script>
+(function() {
+    document.addEventListener('submit', function(event) {
+        var button = event.target.querySelector('[data-mc-loading-submit]');
+        if (!button) {
+            return;
+        }
+        button.setAttribute('aria-busy', 'true');
+        button.setAttribute('data-mc-button-state', 'loading');
+        button.disabled = true;
+        button.textContent = button.getAttribute('data-mc-loading-label') || 'Loading...';
+    });
+})();
+</script>
