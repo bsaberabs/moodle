@@ -17,15 +17,21 @@
 namespace local_secureandpay\privacy;
 
 use core_privacy\local\metadata\collection;
+use core_privacy\local\request\writer;
+use local_secureandpay\token_store;
 
 /**
- * Privacy provider: this plugin stores nothing itself, payment records live in Modern Commerce.
+ * Privacy provider: payment records live in Modern Commerce; this plugin only keeps the
+ * SecureAndPay card token of users who pay in one click (a user preference).
  *
  * @package    local_secureandpay
  * @copyright  2026 Advanced TM
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class provider implements \core_privacy\local\metadata\provider, \core_privacy\local\request\data_provider {
+class provider implements
+    \core_privacy\local\metadata\provider,
+    \core_privacy\local\request\data_provider,
+    \core_privacy\local\request\user_preference_provider {
 
     /**
      * Data sent to SecureAndPay.
@@ -42,6 +48,21 @@ class provider implements \core_privacy\local\metadata\provider, \core_privacy\l
             'address' => 'privacy:metadata:secureandpay:address',
             'order' => 'privacy:metadata:secureandpay:order',
         ], 'privacy:metadata:secureandpay');
+        $collection->add_user_preference(token_store::PREFERENCE, 'privacy:metadata:preference:card');
         return $collection;
+    }
+
+    /**
+     * Export the saved card reference (never the card itself, which SecureAndPay keeps).
+     *
+     * @param int $userid User.
+     */
+    public static function export_user_preferences(int $userid) {
+        $saved = json_decode((string) get_user_preferences(token_store::PREFERENCE, '', $userid), true);
+        if (!empty($saved['token'])) {
+            writer::export_user_preference('local_secureandpay', token_store::PREFERENCE,
+                get_string('savedcardexpiry', 'local_secureandpay', $saved['expiry'] ?? '-'),
+                get_string('privacy:metadata:preference:card', 'local_secureandpay'));
+        }
     }
 }

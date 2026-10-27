@@ -41,13 +41,13 @@ if (!$order || (int) $order->userid !== (int) $USER->id) {
 if ($order->status !== 'pending') {
     redirect(new moodle_url('/local/moderncommerce/success.php', ['orderid' => $orderid]));
 }
-// The reference must be the one Modern Commerce recorded when this attempt started.
-if (!$DB->record_exists('local_moderncommerce_payment_attempts',
-        ['orderid' => $orderid, 'gateway' => gateway::GATEWAY, 'reference' => $reference])) {
+// The reference must be the one recorded when this attempt (or free trial) started.
+if (!gateway::reference_matches($order, $reference)) {
     throw new moodle_exception('invalidorder', 'local_moderncommerce');
 }
 
 $request = (new gateway())->build_request($order, $reference);
+$sent = json_decode(base64_decode($request['data']), true);
 
 $PAGE->set_context(context_system::instance());
 $PAGE->set_url(new moodle_url('/local/secureandpay/pay.php', ['orderid' => $orderid, 'ref' => $reference]));
@@ -60,6 +60,10 @@ echo html_writer::start_tag('form', ['method' => 'post', 'action' => $request['u
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'data', 'value' => $request['data']]);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'signature', 'value' => $request['signature']]);
 echo html_writer::tag('p', get_string('redirecting', 'local_secureandpay'));
+// Tell the buyer when the card is kept by SecureAndPay (trial, subscription or one-click payments).
+if ((int) $sent['Clicktopay'] === 1) {
+    echo html_writer::tag('p', get_string('cardwillbesaved', 'local_secureandpay'), ['class' => 'text-muted small']);
+}
 echo html_writer::tag('button', get_string('continuetopayment', 'local_secureandpay'),
     ['type' => 'submit', 'class' => 'btn btn-primary']);
 echo html_writer::end_tag('form');

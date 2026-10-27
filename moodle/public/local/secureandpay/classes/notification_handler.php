@@ -59,14 +59,25 @@ class notification_handler {
         switch ($status) {
             case '00':
             case '02':
+                self::remember_card($order, $data);
                 if (!$paid) {
                     self::record($order, $data, 'success');
                     order_api::update_order_status($order->id, 'paid');
+                    if (gateway::is_trial_order($order)) {
+                        // The card is registered for 0: the subscription Modern Commerce just created is a trial.
+                        self::start_trial($order);
+                        return 'trial_started';
+                    }
                     return 'paid';
                 }
                 if ($subscription && !self::record($order, $data, 'success')->duplicate) {
-                    // A later ClicktoPay instalment: extend the subscription by one cycle.
-                    subscription_service::renew((int) $subscription->id, null, (int) $order->id);
+                    // A later ClicktoPay instalment: extend the subscription by one cycle, or bring it
+                    // back if Modern Commerce expired it before the instalment arrived.
+                    if (in_array($subscription->status, ['active', 'trial', 'grace'], true)) {
+                        subscription_service::renew((int) $subscription->id, null, (int) $order->id);
+                    } else {
+                        subscription_service::reactivate((int) $subscription->id, (int) $order->id);
+                    }
                     return 'renewed';
                 }
                 return 'duplicate';
@@ -115,17 +126,67 @@ class notification_handler {
     private static function find_order(array $data): object {
         global $DB;
 
+        $reference = (string) $data['PAYID'];
         $orderid = (int) $DB->get_field('local_moderncommerce_payment_attempts', 'orderid', [
             'gateway' => gateway::GATEWAY,
-            'reference' => (string) $data['PAYID'],
+            'reference' => $reference,
         ], IGNORE_MULTIPLE);
 
-        // The order id also travels as osc_id; it must agree with the reference.
+        // The order id also travels as osc_id; it must agree with the reference. A free trial has
+        // no payment attempt yet, so it is found by osc_id and checked against its notes.
         $oscid = (int) ($data['osCsid'] ?? 0);
+        if (!$orderid && $oscid) {
+            $order = $DB->get_record('local_moderncommerce_orders', ['id' => $oscid]);
+            if ($order && gateway::reference_matches($order, $reference)) {
+                $orderid = $oscid;
+            }
+        }
         if (!$orderid || ($oscid && $oscid !== $orderid)) {
             throw new moodle_exception('invalidorder', 'local_moderncommerce');
         }
         return order_api::get_order($orderid);
+    }
+
+    /**
+     * Keep the card token for one-click payments, when that option is on.
+     *
+     * @param object $order Order.
+     * @param array $data Notification.
+     */
+    private static function remember_card(object $order, array $data): void {
+        if (!empty($data['token']) && get_config('local_secureandpay', 'oneclick')) {
+            token_store::save((int) $order->userid, (string) $data['token'], (string) ($data['dateValidate'] ?? ''));
+        }
+    }
+
+    /**
+     * Turn the subscription created for a 0-cost trial order into a trial.
+     *
+     * The trial ends one day after SecureAndPay's first charge is due, so Modern Commerce
+     * does not expire it before that charge is notified.
+     *
+     * @param object $order Trial order.
+     */
+    private static function start_trial(object $order): void {
+        global $DB;
+
+        $subscription = self::find_subscription($order);
+        if (!$subscription || $subscription->status === 'trial') {
+            return;
+        }
+        $plan = $DB->get_record('local_moderncommerce_subscription_plans', ['id' => $subscription->planid], '*', MUST_EXIST);
+        $trialend = time() + ((int) $plan->trial_days + 1) * DAYSECS;
+        $DB->update_record('local_moderncommerce_user_subscriptions', (object) [
+            'id' => $subscription->id,
+            'status' => 'trial',
+            'trial_end_date' => $trialend,
+            'end_date' => $trialend,
+            'timemodified' => time(),
+        ]);
+        $DB->set_field('local_moderncommerce_subscription_access', 'expires_at', $trialend,
+            ['subscriptionid' => $subscription->id]);
+        subscription_service::log_history((int) $subscription->id, (int) $subscription->userid, 'trial_started',
+            null, (int) $subscription->planid, null, $trialend, 0.0, (int) $order->id);
     }
 
     /**

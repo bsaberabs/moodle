@@ -31,9 +31,10 @@ use moodle_url;
  * authorisation; subscription orders use ClicktoPay, so SecureAndPay charges the
  * following instalments itself.
  *
- * Gateway admin fields: "Public key" (required by the Modern Commerce form) holds the
- * IdSite and "Secret key" holds the signing key supplied by SecureAndPay. The webhook
- * secret is not used: notifications are signed with the same key.
+ * Gateway admin fields: "Merchant client ID" holds the IdSite (or "Public key", which the
+ * Modern Commerce form requires anyway, when the merchant ID is left empty) and "Secret key"
+ * holds the signing key supplied by SecureAndPay. The webhook secret is not used:
+ * notifications are signed with the same key.
  *
  * @package    local_secureandpay
  * @copyright  2026 Advanced TM
@@ -97,13 +98,13 @@ class gateway implements gateway_interface {
     }
 
     /**
-     * SecureAndPay IdSite: the "Public key" field, or "Merchant client ID" if that is the one filled in.
+     * SecureAndPay IdSite: the "Merchant client ID" field, or "Public key" when that one is empty.
      *
      * @param array $config Gateway config.
      * @return string
      */
     private static function site_id(array $config): string {
-        return trim((string) (($config['public_key'] ?? '') ?: ($config['merchantid'] ?? '')));
+        return trim((string) (($config['merchantid'] ?? '') ?: ($config['public_key'] ?? '')));
     }
 
     public function get_supported_currencies() {
@@ -204,7 +205,8 @@ class gateway implements gateway_interface {
         $config = $this->get_config();
         $user = $DB->get_record('user', ['id' => $order->userid], '*', MUST_EXIST);
         $amount = (int) round((float) $order->total * 100);
-        if ($amount <= 0) {
+        // Only a free trial is paid 0: SecureAndPay then just registers the card.
+        if ($amount < 0 || ($amount === 0 && !self::is_trial_order($order))) {
             throw new moodle_exception('invalidamount', 'local_secureandpay');
         }
 
@@ -229,14 +231,10 @@ class gateway implements gateway_interface {
             'CustCountry' => (string) $user->country,
             'Language' => strpos(current_language(), 'fr') === 0 ? 'fr' : 'en',
             'orderProducts' => implode(', ', array_filter($products)) ?: $order->ordernumber,
-            'Clicktopay' => 0,
             'urlOk' => (new moodle_url('/local/moderncommerce/success.php', ['orderid' => $order->id]))->out(false),
             'urlNotify' => (new moodle_url('/local/secureandpay/notify.php'))->out(false),
         ];
-
-        if (self::order_is_subscription($order)) {
-            $data = array_merge($data, $this->subscription_fields($order));
-        }
+        $data = array_merge($data, $this->payment_mode_fields($order, $amount));
 
         $encoded = base64_encode(json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
         return [
@@ -247,7 +245,44 @@ class gateway implements gateway_interface {
     }
 
     /**
-     * ClicktoPay fields: SecureAndPay charges the plan price every cycle until cancelled.
+     * Clicktopay mode: 0 simple payment, 1 card registered at SecureAndPay, 2 payment with a saved card.
+     *
+     * With one-click payment on, a one-off purchase is sent as a single ClicktoPay instalment:
+     * SecureAndPay registers the card, returns its token and closes the schedule without charging
+     * again (its recurring cron stops once ReccurentNumber instalments are paid).
+     *
+     * @param object $order Order.
+     * @param int $amount Amount in cents.
+     * @return array
+     */
+    private function payment_mode_fields(object $order, int $amount): array {
+        $oneclick = (bool) get_config('local_secureandpay', 'oneclick');
+
+        if (self::order_is_subscription($order)) {
+            $fields = $this->subscription_fields($order);
+        } else if ($oneclick) {
+            $fields = [
+                'Clicktopay' => 1,
+                'MontantReccurent' => (string) $amount,
+                'ReccurentNumber' => '1',
+                'ReccurentFrequency' => '1',
+                'ReccurentTestPeriod' => '0',
+            ];
+        } else {
+            return ['Clicktopay' => 0];
+        }
+
+        $token = $oneclick ? token_store::get((int) $order->userid) : null;
+        if ($token !== null) {
+            $fields['Clicktopay'] = 2;
+            $fields['token'] = $token;
+        }
+        return $fields;
+    }
+
+    /**
+     * ClicktoPay fields: SecureAndPay charges the plan price every cycle until cancelled,
+     * after the plan's free trial when the order starts one.
      *
      * @param object $order Subscription order.
      * @return array
@@ -264,8 +299,52 @@ class gateway implements gateway_interface {
             'MontantReccurent' => (string) (int) round((float) $plan->price * 100),
             'ReccurentNumber' => 'X',
             'ReccurentFrequency' => (string) (self::CYCLE_DAYS[$plan->billing_cycle] ?? 30),
-            'ReccurentTestPeriod' => '0',
+            'ReccurentTestPeriod' => (string) (self::is_trial_order($order) ? (int) $plan->trial_days : 0),
         ];
+    }
+
+    /**
+     * Whether a subscription order starts a free trial (created by trial.php).
+     *
+     * @param object $order Order.
+     * @return bool
+     */
+    public static function is_trial_order(object $order): bool {
+        $notes = json_decode((string) ($order->notes ?? ''), true);
+        return !empty($notes['subscription']['trial']);
+    }
+
+    /**
+     * Whether a SecureAndPay orderID belongs to this order.
+     *
+     * Paid orders get theirs from the Modern Commerce payment attempt; free trials, which
+     * Modern Commerce cannot send to a gateway, keep it in the order notes.
+     *
+     * @param object $order Order.
+     * @param string $reference SecureAndPay orderID.
+     * @return bool
+     */
+    public static function reference_matches(object $order, string $reference): bool {
+        global $DB;
+
+        if ($DB->record_exists('local_moderncommerce_payment_attempts',
+                ['orderid' => $order->id, 'gateway' => self::GATEWAY, 'reference' => $reference])) {
+            return true;
+        }
+        $notes = json_decode((string) ($order->notes ?? ''), true);
+        return ($notes['subscription']['secureandpay_reference'] ?? null) === $reference;
+    }
+
+    /**
+     * Start a free trial: the order costs 0 and SecureAndPay registers the card.
+     *
+     * @param object $order Trial subscription order.
+     * @return string SecureAndPay orderID.
+     */
+    public function start_trial(object $order): string {
+        $reference = self::build_reference($order, 1);
+        $this->store_mandate_fields((int) $order->id, ['secureandpay_reference' => $reference]);
+        return $reference;
     }
 
     /**
