@@ -42,4 +42,6 @@ else
     as_www php admin/cli/upgrade.php --non-interactive
 fi
 
+as_www php /usr/local/bin/moodle-fr-templates.php
+
 exec "$@"

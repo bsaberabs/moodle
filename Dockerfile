@@ -19,6 +19,7 @@ COPY docker/apache-moodle.conf /etc/apache2/sites-available/000-default.conf
 COPY docker/php.ini "$PHP_INI_DIR/conf.d/zz-moodle.ini"
 COPY docker/config.php /var/www/moodle/config.php
 COPY docker/db-status.php /usr/local/bin/moodle-db-status.php
+COPY docker/moderncommerce-fr-templates.php /usr/local/bin/moodle-fr-templates.php
 COPY --chmod=755 docker/entrypoint.sh /usr/local/bin/moodle-entrypoint
 
 WORKDIR /var/www/moodle
