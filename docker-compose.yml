@@ -1,0 +1,65 @@
+name: moodle
+
+x-moodle: &moodle
+  image: ${MOODLE_IMAGE:-moodle-local:latest}
+  build: .
+  restart: unless-stopped
+  environment:
+    MOODLE_WWWROOT: ${MOODLE_WWWROOT:-http://localhost:8080}
+    MOODLE_SSLPROXY: ${MOODLE_SSLPROXY:-false}
+    MOODLE_DB_HOST: db
+    MOODLE_DB_NAME: ${MOODLE_DB_NAME:-moodle}
+    MOODLE_DB_USER: ${MOODLE_DB_USER:-moodle}
+    MOODLE_DB_PASSWORD: ${MOODLE_DB_PASSWORD:?définir MOODLE_DB_PASSWORD dans .env}
+    MOODLE_LANG: ${MOODLE_LANG:-fr}
+    MOODLE_ADMIN_USER: ${MOODLE_ADMIN_USER:-admin}
+    MOODLE_ADMIN_PASSWORD: ${MOODLE_ADMIN_PASSWORD:?définir MOODLE_ADMIN_PASSWORD dans .env}
+    MOODLE_ADMIN_EMAIL: ${MOODLE_ADMIN_EMAIL:-admin@example.com}
+    MOODLE_SITE_FULLNAME: ${MOODLE_SITE_FULLNAME:-Moodle}
+    MOODLE_SITE_SHORTNAME: ${MOODLE_SITE_SHORTNAME:-moodle}
+  volumes:
+    - moodledata:/var/www/moodledata
+
+services:
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --innodb-file-per-table=1
+    environment:
+      MYSQL_DATABASE: ${MOODLE_DB_NAME:-moodle}
+      MYSQL_USER: ${MOODLE_DB_USER:-moodle}
+      MYSQL_PASSWORD: ${MOODLE_DB_PASSWORD:?définir MOODLE_DB_PASSWORD dans .env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?définir MYSQL_ROOT_PASSWORD dans .env}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      # Ping en TCP : le serveur temporaire d'initialisation n'écoute pas sur le réseau
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$${MYSQL_ROOT_PASSWORD}\" --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  moodle:
+    <<: *moodle
+    ports:
+      - "${MOODLE_HTTP_PORT:-8080}:80"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  cron:
+    <<: *moodle
+    command: ["cron"]
+    healthcheck:
+      disable: true
+    depends_on:
+      moodle:
+        condition: service_healthy
+
+volumes:
+  db_data:
+  moodledata:

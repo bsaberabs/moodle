@@ -1,0 +1,3 @@
+ignored:
+  # COPY --from=mlocati/php-extension-installer : image externe volontaire
+  - DL3022

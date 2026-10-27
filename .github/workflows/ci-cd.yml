@@ -1,0 +1,149 @@
+name: CI/CD Moodle
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Dockerfile (hadolint)
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+
+      - name: Scripts shell (shellcheck)
+        run: shellcheck docker/entrypoint.sh
+
+      - name: Syntaxe PHP
+        run: for f in docker/*.php; do php -l "$f"; done
+
+      - name: Fichier docker compose
+        run: |
+          cp .env.example .env
+          docker compose config --quiet
+
+  test:
+    name: Build + test d'installation
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Démarrer la stack (installation complète de Moodle)
+        run: |
+          cp .env.example .env
+          docker compose up -d --build --wait --wait-timeout 1200
+
+      - name: Vérifier la page de connexion
+        run: |
+          code=$(curl -s -o page.html -w '%{http_code}' http://localhost:8080/login/index.php)
+          echo "HTTP $code"
+          test "$code" = "200"
+          grep -qi 'moodle' page.html
+
+      - name: Logs en cas d'échec
+        if: failure()
+        run: docker compose logs --no-color --tail=200
+
+      - name: Nettoyage
+        if: always()
+        run: docker compose down -v
+
+  publish:
+    name: Publier l'image (GHCR)
+    needs: test
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.img.outputs.image }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Nom de l'image (en minuscules)
+        id: img
+        run: echo "image=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/moodle" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ steps.img.outputs.image }}:latest
+            ${{ steps.img.outputs.image }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Déployer sur le serveur
+    needs: publish
+    # Activé seulement quand la variable de dépôt DEPLOY_ENABLED vaut "true"
+    if: vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      packages: read
+    env:
+      IMAGE: ${{ needs.publish.outputs.image }}:${{ github.sha }}
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
+      DEPLOY_PATH: ${{ secrets.DEPLOY_PATH || '/opt/moodle' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurer SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
+          printf 'Host target\n  HostName %s\n  User %s\n  Port %s\n  IdentityFile ~/.ssh/id_deploy\n' \
+            "$SSH_HOST" "$SSH_USER" "$SSH_PORT" > ~/.ssh/config
+
+      - name: Copier docker-compose.yml
+        run: |
+          ssh target "mkdir -p '$DEPLOY_PATH'"
+          scp docker-compose.yml "target:$DEPLOY_PATH/docker-compose.yml"
+
+      - name: Mettre à jour et redémarrer Moodle
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | ssh target "docker login ghcr.io -u '${{ github.actor }}' --password-stdin"
+          ssh target "set -e
+            cd '$DEPLOY_PATH'
+            test -f .env || { echo 'Fichier .env manquant dans $DEPLOY_PATH' >&2; exit 1; }
+            if grep -q '^MOODLE_IMAGE=' .env; then
+              sed -i 's|^MOODLE_IMAGE=.*|MOODLE_IMAGE=$IMAGE|' .env
+            else
+              echo 'MOODLE_IMAGE=$IMAGE' >> .env
+            fi
+            docker compose pull moodle cron
+            docker compose up -d --no-build --remove-orphans --wait --wait-timeout 900
+            docker image prune -f
+            docker logout ghcr.io"

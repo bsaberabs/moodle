@@ -1,0 +1,13 @@
+.git
+.github
+.env
+.env.example
+*.md
+docker-compose*.yml
+
+# Outils de développement Moodle inutiles en production
+moodle/.github
+moodle/.grunt
+moodle/.jest
+moodle/node_modules
+moodle/config.php
