@@ -10,10 +10,14 @@ abonnements (ClicktoPay, prélevés par SecureAndPay).
    - la déclaration du domaine du site Moodle (sinon erreur 021) ;
    - l'URL de notification : `https://<site>/local/secureandpay/notify.php`.
 2. Dans Moodle : *Modern Commerce → Passerelles → Carte bancaire (SecureAndPay)* :
-   - **ID client marchand** : l'`IdSite` ;
+   - **Clé publique** : l'`IdSite` (champ obligatoire du formulaire) ;
    - **Clé secrète** : la clé de signature ;
    - **Mode test** : coché pour `https://www.secureandpay.com:4443`, décoché pour la production ;
    - **Activé** : coché.
+
+   *ID client marchand* et *Secret webhook* restent vides : les notifications sont signées
+   avec la clé secrète. Le formulaire étant commun à toutes les passerelles, ces champs restent
+   affichés.
 
 ## Fonctionnement
 

@@ -26,7 +26,8 @@ use moodle_exception;
  *
  * TransStatus: 00 paid, 01 deferred/pre-authorised, 02 deferred validated, 03 refunded,
  * 04 chargeback, 05 refused, 06 subscription cancelled. Every instalment of a ClicktoPay
- * subscription is notified with the orderID of the first payment; banqueId tells them apart.
+ * subscription is notified with the orderID of the first payment; banqueId tells them apart,
+ * so a repeated notification for the same instalment is applied only once.
  *
  * @package    local_secureandpay
  * @copyright  2026 Advanced TM
@@ -161,7 +162,8 @@ class notification_handler {
             'orderreference' => $order->ordernumber,
             'reference' => (string) $data['PAYID'],
             'gatewaytransactionid' => $banqueid ?: (string) $data['PAYID'],
-            'gatewayeventid' => $transstatus . '-' . ($banqueid ?: $data['PAYID']),
+            // Modern Commerce deduplicates events across all orders, so scope the bank reference to the orderID.
+            'gatewayeventid' => $transstatus . '-' . $data['PAYID'] . '-' . $banqueid,
             'amount' => is_numeric($amount) ? ((float) $amount / 100) : null,
             'currency' => $order->currency,
             'channel' => 'card',

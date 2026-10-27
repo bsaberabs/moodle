@@ -31,8 +31,9 @@ use moodle_url;
  * authorisation; subscription orders use ClicktoPay, so SecureAndPay charges the
  * following instalments itself.
  *
- * Gateway admin fields: "Merchant client ID" holds the IdSite and "Secret key"
- * holds the signing key supplied by SecureAndPay.
+ * Gateway admin fields: "Public key" (required by the Modern Commerce form) holds the
+ * IdSite and "Secret key" holds the signing key supplied by SecureAndPay. The webhook
+ * secret is not used: notifications are signed with the same key.
  *
  * @package    local_secureandpay
  * @copyright  2026 Advanced TM
@@ -71,9 +72,11 @@ class gateway implements gateway_interface {
             'classname' => '\\' . self::class,
             'methodtype' => 'redirect',
             'testmode' => $existing->testmode ?? 1,
+            'publickey' => $existing->publickey ?? null,
             'merchantid' => $existing->merchantid ?? null,
             'supportedcurrencies' => implode(',', self::CURRENCIES),
-            'supportswebhooks' => 1,
+            // Notifications are verified with the secret key, so no webhook secret is asked for.
+            'supportswebhooks' => 0,
             'supportsrefunds' => 0,
             'supportsrecurring' => 1,
             'icon' => 'credit-card',
@@ -90,7 +93,17 @@ class gateway implements gateway_interface {
 
     public function is_enabled() {
         $config = $this->get_config();
-        return !empty($config['enabled']) && !empty($config['merchantid']) && !empty($config['secret_key']);
+        return !empty($config['enabled']) && self::site_id($config) !== '' && !empty($config['secret_key']);
+    }
+
+    /**
+     * SecureAndPay IdSite: the "Public key" field, or "Merchant client ID" if that is the one filled in.
+     *
+     * @param array $config Gateway config.
+     * @return string
+     */
+    private static function site_id(array $config): string {
+        return trim((string) (($config['public_key'] ?? '') ?: ($config['merchantid'] ?? '')));
     }
 
     public function get_supported_currencies() {
@@ -201,7 +214,7 @@ class gateway implements gateway_interface {
         }
 
         $data = [
-            'IdSite' => (string) $config['merchantid'],
+            'IdSite' => self::site_id($config),
             'orderID' => $reference,
             'osc_id' => (string) $order->id,
             'Amount' => (string) $amount,

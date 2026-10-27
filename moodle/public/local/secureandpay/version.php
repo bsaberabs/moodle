@@ -25,7 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'local_secureandpay';
-$plugin->version = 2026102800;
+$plugin->version = 2026102801;
 $plugin->requires = 2026100500;
 $plugin->supported = [503, 503];
 $plugin->maturity = MATURITY_BETA;
