@@ -1,0 +1,168 @@
+#page,
+#page.drawers {
+    margin-top: 70px;
+}
+
+#page.drawers {
+    padding: 0 15px;
+    height: initial;
+
+    .main-inner {
+        margin-top: 0;
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        background-color: var(--moove-bg-white);
+    }
+
+    &.show-drawer-left {
+        width: calc(100% - 285px);
+    }
+
+    &.show-drawer-right {
+        width: calc(100% - 315px);
+    }
+
+    &.show-drawer-left.show-drawer-right {
+        width: calc(100% - 600px);
+
+        #topofscroll {
+            max-width: 100%;
+        }
+    }
+}
+
+#page-my-index.pagelayout-mydashboard {
+    #page.drawers div[role="main"] {
+        padding: 0;
+    }
+}
+
+#page-my-index.page-mycourses {
+    #page.drawers {
+        div[role="main"] {
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        .block_myoverview {
+            margin-bottom: 0 !important; /* stylelint-disable-line */
+
+            > .card-body {
+                padding: 1rem !important; /* stylelint-disable-line */
+            }
+        }
+    }
+}
+
+#region-main {
+    background-color: var(--moove-bg-white);
+}
+
+.drawer-toggles .drawer-toggler {
+    top: 80px;
+
+    .btn {
+        background-color: $brand-primary;
+
+        &:hover {
+            background-color: darken($brand-primary, 10%);
+        }
+
+        .icon {
+            color: #fff;
+        }
+
+        svg path {
+            fill: #fff;
+        }
+    }
+}
+
+.drawer.drawer-right {
+    background-color: var(--bs-gray-200);
+    transition: width 0.2s ease, left 0.2s ease, visibility 0.2s ease, max-height 0.2s ease !important;
+}
+
+.drawer-toggles .drawer-toggler {
+    &.drawer-left-toggle {
+        left: 0 !important;
+        right: auto !important;
+    }
+
+    &.drawer-right-toggle {
+        left: auto !important;
+        right: 0 !important;
+    }
+}
+
+body.has-secondarynavigation {
+    #page,
+    #page.drawers {
+        margin-top: 130px;
+    }
+
+    .drawer-toggles .drawer-toggler {
+        position: fixed;
+        top: 140px;
+    }
+}
+
+.drawer {
+    background-color: var(--moove-bg-white);
+}
+
+.message-app {
+    background-color: var(--moove-bg-white);
+
+    .closewidget .text-dark {
+        color: var(--bs-btn-color) !important;
+    }
+}
+
+[data-region=right-hand-drawer].drawer {
+    top: 70px;
+    height: calc(100% - 70px);
+
+    .footer-container {
+        padding: .5rem 0;
+        background-color: var(--moove-gray-bg);
+    }
+}
+
+@include media-breakpoint-up(md) {
+    .pagelayout-course #page.drawers .main-inner {
+        max-width: 100%;
+    }
+
+    .drawer-left,
+    .drawer-right {
+        top: calc(70px + 1px) !important;
+        height: calc(100vh - 70px) !important;
+    }
+
+    .drawer-left {
+        left: 0 !important;
+        right: auto !important;
+    }
+
+    .drawer-right {
+        left: auto !important;
+        right: 0 !important;
+    }
+
+    body.has-secondarynavigation {
+        .drawer-left,
+        .drawer-right {
+            top: calc(130px + 1px) !important;
+            height: calc(100vh - 130px) !important;
+        }
+    }
+}
+
+@include media-breakpoint-down(md) {
+    .drawer-left,
+    .drawer-right {
+        top: 0;
+        height: 100vh;
+    }
+}

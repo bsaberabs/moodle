@@ -1,0 +1,94 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template core/user_action_menu_items
+
+    Template for user action menu items.
+
+    Example context (json):
+    {
+        "items": [
+            {
+                "link": {
+                    "title": "Github user",
+                    "url": "https://raw.githubusercontent.com/",
+                    "pixicon": [{
+                        "key": "t/dashboard",
+                        "component": "moodle",
+                        "title": "The dashboard icon"
+                    }],
+                    "imgsrc": "https://raw.githubusercontent.com/moodle/moodle/master/pix/t/check.png"
+                },
+                "divider": 1
+            },
+            {
+                "submenulink": {
+                    "title": "Title",
+                    "submenuid": "86cebd87",
+                    "pixicon": "t/dashboard",
+                    "imgsrc": "https://raw.githubusercontent.com/moodle/moodle/master/pix/t/check.png"
+                },
+                "divider": 1
+            }
+        ]
+    }
+}}
+{{!
+    This template is a modified version of core/user_action_menu_items
+
+    Modifications compared to the original template:
+    * Add menu classes to submenu links.
+    * Add tooltip to submenu links.
+    * Add additional attributes to submenu links.
+    * Allow formatted text within the submenu link.
+    * Only treat an item as a text item if it is not a link, submenu link or divider item.
+      (Boost Union's smart menu items carry a 'text' context variable with the formatted item text,
+      which would otherwise be mistaken for Moodle core's text item type.)
+    * The modifications of the link items are located in core/user_action_menu_item_link.
+}}
+{{#items}}
+    {{#submenulink}}
+        <a href="#" class="carousel-navigation-link dropdown-item {{#menuclasses}} {{.}} {{/menuclasses}}" role="menuitem" tabindex="-1" data-carousel-target-id="carousel-item-{{submenuid}}" {{#tooltip}}title="{{.}}" data-bs-toggle="tooltip"{{/tooltip}}
+        {{#attributes}}{{#name}}{{name}}="{{value}}"{{/name}}{{/attributes}}>
+            {{#pixicon}}
+                {{#pix}}{{pixicon}}{{/pix}}
+            {{/pixicon}}
+            {{^pixicon}}
+                {{#imgsrc}}<img aria-hidden="true" src="{{imgsrc}}" alt="{{title}}"/>{{/imgsrc}}
+            {{/pixicon}}
+            {{#text}}{{{text}}}{{/text}}{{^text}}{{title}}{{/text}}
+        </a>
+    {{/submenulink}}
+    {{#header}}
+        {{> core/user_action_menu_item_header}}
+    {{/header}}
+    {{^link}}
+    {{^submenulink}}
+    {{^divider}}
+    {{#text}}
+        {{> core/user_action_menu_item_text}}
+    {{/text}}
+    {{/divider}}
+    {{/submenulink}}
+    {{/link}}
+    {{#link}}
+        {{> core/user_action_menu_item_link}}
+    {{/link}}
+    {{#divider}}
+        {{> core/user_action_menu_item_divider}}
+    {{/divider}}
+{{/items}}
