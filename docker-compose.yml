@@ -17,6 +17,12 @@ x-moodle: &moodle
     MOODLE_ADMIN_EMAIL: ${MOODLE_ADMIN_EMAIL:-admin@example.com}
     MOODLE_SITE_FULLNAME: ${MOODLE_SITE_FULLNAME:-Moodle}
     MOODLE_SITE_SHORTNAME: ${MOODLE_SITE_SHORTNAME:-moodle}
+    MOODLE_SMTP_HOST: ${MOODLE_SMTP_HOST:-}
+    MOODLE_SMTP_SECURE: ${MOODLE_SMTP_SECURE:-}
+    MOODLE_SMTP_USER: ${MOODLE_SMTP_USER:-}
+    MOODLE_SMTP_PASSWORD: ${MOODLE_SMTP_PASSWORD:-}
+    MOODLE_NOREPLY_ADDRESS: ${MOODLE_NOREPLY_ADDRESS:-}
+    MOODLE_SUPPORT_EMAIL: ${MOODLE_SUPPORT_EMAIL:-}
   volumes:
     - moodledata:/var/www/moodledata
 
@@ -59,6 +65,15 @@ services:
     depends_on:
       moodle:
         condition: service_healthy
+
+  # Boîte mail de test pour le développement : capture les e-mails sans les envoyer.
+  # Démarrée seulement avec le profil "mail-test" (COMPOSE_PROFILES dans .env).
+  mailpit:
+    image: axllent/mailpit:v1.27.0
+    profiles: ["mail-test"]
+    restart: unless-stopped
+    ports:
+      - "${MAILPIT_HTTP_PORT:-8025}:8025"
 
 volumes:
   db_data:

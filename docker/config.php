@@ -32,4 +32,19 @@ if (getenv('MOODLE_SSLPROXY') === 'true') {
     $CFG->sslproxy = true;
 }
 
+// Envoi des e-mails : ces valeurs remplacent les réglages de l'interface d'administration.
+if (getenv('MOODLE_SMTP_HOST')) {
+    $CFG->smtphosts    = getenv('MOODLE_SMTP_HOST');            // hôte:port
+    $CFG->smtpsecure   = getenv('MOODLE_SMTP_SECURE') ?: '';    // '', 'tls' ou 'ssl'
+    $CFG->smtpauthtype = 'LOGIN';
+    $CFG->smtpuser     = getenv('MOODLE_SMTP_USER') ?: '';
+    $CFG->smtppass     = getenv('MOODLE_SMTP_PASSWORD') ?: '';
+}
+if (getenv('MOODLE_NOREPLY_ADDRESS')) {
+    $CFG->noreplyaddress = getenv('MOODLE_NOREPLY_ADDRESS');
+}
+if (getenv('MOODLE_SUPPORT_EMAIL')) {
+    $CFG->supportemail = getenv('MOODLE_SUPPORT_EMAIL');
+}
+
 require_once(__DIR__ . '/lib/setup.php');
