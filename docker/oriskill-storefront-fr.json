@@ -231,7 +231,7 @@
     "columns/1/title": "Formations",
     "columns/1/links": "Formations | /local/moderncommerce/index.php?coursetype=Course\nPacks | /local/moderncommerce/index.php?coursetype=Bundle\nProgrammes | /local/moderncommerce/index.php?coursetype=Program",
     "columns/2/title": "Aide",
-    "columns/2/links": "Nous contacter | /local/moderncommerce/support.php\nPolitique de remboursement | /local/moderncommerce/refund-policy.php\nEspace apprenant | /local/moderncommerce/learner/dashboard.php\nDevenir formateur | /local/oriskill/apply.php\nDevenir affilié | /local/oriskill/affiliate.php",
+    "columns/2/links": "Nous contacter | /local/moderncommerce/support.php\nPolitique de remboursement | /local/moderncommerce/refund-policy.php\nEspace apprenant | /local/moderncommerce/learner/index.php\nDevenir formateur | /local/oriskill/apply.php\nDevenir affilié | /local/oriskill/affiliate.php",
     "columns/3/title": "Informations légales",
     "columns/3/links": "Conditions générales | /local/moderncommerce/terms.php\nConfidentialité | /local/moderncommerce/privacy.php\nRemboursements | /local/moderncommerce/refund-policy.php",
     "social/0/label": "LinkedIn",

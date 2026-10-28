@@ -13,3 +13,5 @@ Ces changements ne viennent pas du dépôt d'origine. À reporter après chaque 
    - `classes/external/checkout/checkout_helper.php` : la page de paiement (application) reçoit les moyens
      filtrés pour la commande reprise ou le panier.
    - `classes/output/checkout_page.php` : passe la commande reprise à `get_payment_methods()`.
+3. **Lien « Learner dashboard » du pied de page** : `classes/storefront/seed.php` pointait vers
+   `learner/dashboard.php`, qui n'existe pas ; corrigé en `learner/index.php`.

@@ -147,7 +147,7 @@ class seed {
                 ],
                 [
                     'title' => 'Support',
-                    'links' => "Contact support | " . self::SUPPORT_URL . "\nRefund policy | " . self::REFUND_URL . "\nLearner dashboard | /local/moderncommerce/learner/dashboard.php",
+                    'links' => "Contact support | " . self::SUPPORT_URL . "\nRefund policy | " . self::REFUND_URL . "\nLearner dashboard | /local/moderncommerce/learner/index.php",
                 ],
                 [
                     'title' => 'Legal',
