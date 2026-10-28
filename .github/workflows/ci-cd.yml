@@ -53,7 +53,7 @@ jobs:
           code=$(curl -s -o page.html -w '%{http_code}' http://localhost:8080/login/index.php)
           echo "HTTP $code"
           test "$code" = "200"
-          grep -qi 'moodle' page.html
+          grep -q 'Oriskill' page.html
 
       - name: Logs en cas d'échec
         if: failure()

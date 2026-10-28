@@ -10,6 +10,8 @@ as_www() { runuser -u www-data -- "$@"; }
 if [ "${1:-}" = "cron" ]; then
     echo "[moodle] cron : exécution toutes les 60 s"
     while true; do
+        # Trace lue par le healthcheck du service cron (docker-compose.yml)
+        touch /tmp/cron-heartbeat
         as_www php admin/cli/cron.php || echo "[moodle] cron en échec, nouvel essai dans 60 s"
         sleep 60
     done

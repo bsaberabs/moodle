@@ -61,8 +61,13 @@ services:
   cron:
     <<: *moodle
     command: ["cron"]
+    # En bonne santé tant que la boucle cron tourne (trace de moins de 30 min, une tâche longue compris)
     healthcheck:
-      disable: true
+      test: ["CMD-SHELL", "find /tmp/cron-heartbeat -mmin -30 | grep -q ."]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 2m
     depends_on:
       moodle:
         condition: service_healthy
