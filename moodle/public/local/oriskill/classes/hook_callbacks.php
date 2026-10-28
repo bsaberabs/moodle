@@ -46,6 +46,35 @@ class hook_callbacks {
     }
 
     /**
+     * Offer only SecureAndPay for a trainer's courses: it is the only method that pays into the trainer's own
+     * account. Any other method (Stripe, PayPal, manual...) would collect the money on Oriskill's account.
+     *
+     * @param \local_moderncommerce\hook\filter_payment_methods $hook Hook.
+     */
+    public static function filter_payment_methods(\local_moderncommerce\hook\filter_payment_methods $hook): void {
+        global $DB;
+
+        if ($hook->order) {
+            $courseids = $DB->get_fieldset_select('local_moderncommerce_order_items', 'courseid',
+                'orderid = ? AND courseid IS NOT NULL', [$hook->order->id]);
+        } else if ($hook->userid && !isguestuser($hook->userid)) {
+            $courseids = array_column(\local_moderncommerce\api\cart_api::get_cart_items($hook->userid), 'courseid');
+        } else {
+            return;
+        }
+        foreach (array_filter(array_map('intval', $courseids)) as $courseid) {
+            if (seller_service::owner_of_course($courseid)) {
+                foreach (array_keys($hook->methods) as $gatewayid) {
+                    if ($gatewayid !== \local_secureandpay\gateway::GATEWAY) {
+                        $hook->remove($gatewayid);
+                    }
+                }
+                return;
+            }
+        }
+    }
+
+    /**
      * Route a trainer's order to the trainer's own SecureAndPay account.
      *
      * An order can only be paid into one account, so mixing courses of several sellers (trainers, or a

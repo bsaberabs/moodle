@@ -139,7 +139,7 @@ class checkout_page implements renderable, templatable {
      */
     protected function get_payment_methods(): array {
 
-        return gateway_manager::get_payment_methods();
+        return gateway_manager::get_payment_methods($this->existingorder ?: null);
     }
     /**
      * Export for template.

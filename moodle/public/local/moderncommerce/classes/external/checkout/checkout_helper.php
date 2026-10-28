@@ -122,7 +122,7 @@ class checkout_helper {
             'couponcode' => $cart['coupon']['code'],
         ];
 
-        $paymentmethods = self::payment_methods();
+        $paymentmethods = self::payment_methods($existingorder);
         $checkouturl = self::learner_app_url($existingorder ? 'checkout?orderid=' . (int)$existingorder->id : 'checkout');
 
         return [
@@ -569,11 +569,12 @@ class checkout_helper {
     /**
      * Payment methods.
      *
+     * @param \stdClass|null $existingorder Pending order being resumed, or null for the cart.
      * @return array
      */
-    private static function payment_methods(): array {
+    private static function payment_methods(?\stdClass $existingorder = null): array {
         $methods = [];
-        foreach (gateway_manager::get_payment_methods() as $id => $method) {
+        foreach (gateway_manager::get_payment_methods($existingorder) as $id => $method) {
             $methods[] = [
                 'id' => (string)$id,
                 'name' => (string)$method['name'],

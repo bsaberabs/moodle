@@ -88,7 +88,7 @@ class place_order extends external_api {
         string $country = '',
         string $zipcode = ''
     ): array {
-        global $SESSION, $USER;
+        global $DB, $SESSION, $USER;
 
         $params = self::validate_parameters(self::execute_parameters(), [
             'orderid' => $orderid,
@@ -110,7 +110,11 @@ class place_order extends external_api {
         require_capability('local/moderncommerce:purchase', $context);
 
         $paymentmethod = gateway_manager::normalize_gateway_id((string)$params['paymentmethod']);
-        if ($paymentmethod === '' || !gateway_manager::is_payment_method_available($paymentmethod)) {
+        // A pending order being resumed is checked as such; a new order as the current cart.
+        $pendingorder = (int)$params['orderid'] > 0
+            ? $DB->get_record('local_moderncommerce_orders', ['id' => (int)$params['orderid'], 'userid' => $USER->id])
+            : null;
+        if ($paymentmethod === '' || !gateway_manager::is_payment_method_available($paymentmethod, $pendingorder ?: null)) {
             throw new moodle_exception('invalidpaymentmethod', 'local_moderncommerce');
         }
 

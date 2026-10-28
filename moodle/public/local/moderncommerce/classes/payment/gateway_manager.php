@@ -210,9 +210,14 @@ class gateway_manager {
     /**
      * Get checkout-ready payment methods.
      *
+     * Other plugins may narrow the list for a given purchase (hook filter_payment_methods, Oriskill addition).
+     *
+     * @param object|null $order Order being paid, or null for the current user's cart.
      * @return array
      */
-    public static function get_payment_methods(): array {
+    public static function get_payment_methods(?object $order = null): array {
+        global $USER;
+
         $methods = [];
         $definitions = self::get_registry_definitions();
 
@@ -243,18 +248,22 @@ class gateway_manager {
             ];
         }
 
-        return $methods;
+        $hook = new \local_moderncommerce\hook\filter_payment_methods($methods,
+            (int) ($order->userid ?? $USER->id ?? 0), $order);
+        \core\di::get(\core\hook\manager::class)->dispatch($hook);
+        return $hook->methods;
     }
 
     /**
      * Determine whether a payment method is currently selectable.
      *
      * @param string $gatewayid Gateway ID.
+     * @param object|null $order Order being paid, or null for the current user's cart.
      * @return bool
      */
-    public static function is_payment_method_available(string $gatewayid): bool {
+    public static function is_payment_method_available(string $gatewayid, ?object $order = null): bool {
         $gatewayid = self::normalize_gateway_id($gatewayid);
-        $methods = self::get_payment_methods();
+        $methods = self::get_payment_methods($order);
         return isset($methods[$gatewayid]);
     }
 
@@ -559,6 +568,10 @@ class gateway_manager {
                 '',
                 $readiness->message ?: $gatewayid
             );
+        }
+        if (!self::is_payment_method_available($gatewayid, $order)) {
+            // Withdrawn for this order by another plugin (filter_payment_methods).
+            throw new moodle_exception('gatewayunavailable', 'local_moderncommerce', '', $gatewayid);
         }
 
         $gateway = self::get_gateway($gatewayid);

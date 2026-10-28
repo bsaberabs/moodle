@@ -37,4 +37,8 @@ $callbacks = [
         'hook' => \local_secureandpay\hook\resolve_merchant::class,
         'callback' => [\local_oriskill\hook_callbacks::class, 'resolve_merchant'],
     ],
+    [
+        'hook' => \local_moderncommerce\hook\filter_payment_methods::class,
+        'callback' => [\local_oriskill\hook_callbacks::class, 'filter_payment_methods'],
+    ],
 ];

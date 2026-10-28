@@ -25,11 +25,11 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'local_oriskill';
-$plugin->version = 2026103000;
+$plugin->version = 2026103001;
 $plugin->requires = 2026100500;
 $plugin->supported = [503, 503];
 $plugin->maturity = MATURITY_BETA;
-$plugin->release = '0.3.0';
+$plugin->release = '0.3.1';
 $plugin->dependencies = [
     'local_moderncommerce' => 2026081806,
     'local_secureandpay' => 2026102901,
