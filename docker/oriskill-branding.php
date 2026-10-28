@@ -4,8 +4,9 @@
 // 1. Textes : surcharge locale des chaînes de Moodle (paquets fr_local et en_local, le mécanisme officiel de
 //    « Personnalisation de la langue »). Seules les chaînes absentes sont ajoutées : une chaîne modifiée par un
 //    administrateur dans Personnalisation de la langue est conservée.
-// 2. Icône d'onglet : un monogramme Oriskill provisoire remplace le « M » de Moodle, seulement si aucune icône
-//    n'a été déposée dans Apparence > Logos.
+// 2. Logos : le logo Oriskill (docker/branding/) devient le logo du site (boutique, e-mails, page de connexion),
+//    le logo compact (barre de navigation) et l'icône d'onglet. Un fichier déposé par un administrateur dans
+//    Apparence > Logos n'est jamais remplacé : seuls une zone vide ou un fichier posé par ce script le sont.
 define('CLI_SCRIPT', true);
 require('/var/www/moodle/config.php');
 
@@ -75,32 +76,50 @@ if ($changed) {
     echo "[moodle] marque Oriskill : $changed texte(s) personnalisé(s)\n";
 }
 
-// Icône d'onglet provisoire : un « O » blanc sur le violet de la boutique (#7c3aed).
-if ((string) get_config('core_admin', 'favicon') === '' && function_exists('imagecreatetruecolor')) {
-    $size = 128;
-    $img = imagecreatetruecolor($size, $size);
-    imagesavealpha($img, true);
-    imagefill($img, 0, 0, imagecolorallocatealpha($img, 0, 0, 0, 127));
-    $violet = imagecolorallocate($img, 0x7c, 0x3a, 0xed);
-    $white = imagecolorallocate($img, 255, 255, 255);
-    $r = 28;
-    imagefilledrectangle($img, $r, 0, $size - $r, $size, $violet);
-    imagefilledrectangle($img, 0, $r, $size, $size - $r, $violet);
-    foreach ([[$r, $r], [$size - $r, $r], [$r, $size - $r], [$size - $r, $size - $r]] as [$cx, $cy]) {
-        imagefilledellipse($img, $cx, $cy, 2 * $r, 2 * $r, $violet);
+// Zone de Apparence > Logos => fichier fourni. L'empreinte de chaque fichier posé est retenue (local_oriskill,
+// brandfile_<zone>) pour le reconnaître et le mettre à jour quand le logo change.
+$brandfiles = [
+    'logo' => 'oriskill-logo.png',
+    // Barre de navigation : le logo horizontal complet reste lisible à sa hauteur (environ 35 px)
+    'logocompact' => 'oriskill-logo.png',
+    'favicon' => 'oriskill-icon.png',
+];
+$fs = get_file_storage();
+$context = context_system::instance();
+$installed = [];
+foreach ($brandfiles as $area => $filename) {
+    $source = __DIR__ . '/branding/' . $filename;
+    if (!is_readable($source)) {
+        continue;
     }
-    imagefilledellipse($img, $size / 2, $size / 2, 82, 82, $white);
-    imagefilledellipse($img, $size / 2, $size / 2, 46, 46, $violet);
-    ob_start();
-    imagepng($img);
-    $png = ob_get_clean();
-
-    $fs = get_file_storage();
-    $context = context_system::instance();
-    $fs->delete_area_files($context->id, 'core_admin', 'favicon');
-    $fs->create_file_from_string(['contextid' => $context->id, 'component' => 'core_admin', 'filearea' => 'favicon',
-        'itemid' => 0, 'filepath' => '/', 'filename' => 'favicon.png'], $png);
-    set_config('favicon', '/favicon.png', 'core_admin');
+    $current = $fs->get_area_files($context->id, 'core_admin', $area, 0, 'sortorder, id', false);
+    $current = reset($current);
+    $mine = get_config('local_oriskill', 'brandfile_' . $area);
+    // L'icône provisoire des versions précédentes de ce script (favicon.png, sans empreinte) est remplacée aussi.
+    $provisional = $area === 'favicon' && $mine === false && $current && $current->get_filename() === 'favicon.png';
+    if ($current && $current->get_contenthash() !== $mine && !$provisional) {
+        continue;
+    }
+    $contenthash = sha1_file($source);
+    if ($current && $current->get_contenthash() === $contenthash && $current->get_filename() === $filename) {
+        continue;
+    }
+    $fs->delete_area_files($context->id, 'core_admin', $area);
+    $file = $fs->create_file_from_pathname(['contextid' => $context->id, 'component' => 'core_admin',
+        'filearea' => $area, 'itemid' => 0, 'filepath' => '/', 'filename' => $filename], $source);
+    set_config($area, '/' . $filename, 'core_admin');
+    set_config('brandfile_' . $area, $file->get_contenthash(), 'local_oriskill');
+    $installed[] = $area;
+}
+// Page de connexion : le logo occuperait toute la largeur du formulaire. Ajouté une seule fois au SCSS du thème,
+// à la suite de ce qu'un administrateur y a saisi.
+$scssmarker = '/* oriskill-logo */';
+$scss = (string) get_config('theme_boost', 'scss');
+if (!str_contains($scss, $scssmarker)) {
+    set_config('scss', ltrim($scss . "\n" . $scssmarker . "\n#logoimage { max-height: 72px; width: auto; }\n"), 'theme_boost');
+    $installed[] = 'taille sur la page de connexion';
+}
+if ($installed) {
     theme_reset_all_caches();
-    echo "[moodle] marque Oriskill : icône d'onglet provisoire installée\n";
+    echo "[moodle] marque Oriskill : logo installé (" . implode(', ', $installed) . ")\n";
 }

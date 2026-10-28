@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Oriskill">
+  <rect width="64" height="64" rx="16" fill="#7c3aed"/>
+  <circle cx="28" cy="36" r="13" fill="none" stroke="#ffffff" stroke-width="6"/>
+  <path d="M47 8 C47 15 50 18 57 18 C50 18 47 21 47 28 C47 21 44 18 37 18 C44 18 47 15 47 8 Z" fill="#fbbf24"/>
+</svg>
