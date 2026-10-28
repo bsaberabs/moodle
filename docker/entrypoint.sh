@@ -44,5 +44,6 @@ fi
 
 as_www php /usr/local/bin/moodle-fr-templates.php
 as_www php /usr/local/share/oriskill/oriskill-storefront.php
+as_www php /usr/local/share/oriskill/oriskill-branding.php
 
 exec "$@"

@@ -24,10 +24,10 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['cancelinsecureandpay_body'] = 'The subscription of {$a->user} ({$a->email}) was cancelled in Moodle. SecureAndPay keeps charging it until it is stopped in the SecureAndPay back office: stop the subscription with orderID {$a->reference}.';
+$string['cancelinsecureandpay_body'] = 'The subscription of {$a->user} ({$a->email}) was cancelled on Oriskill. SecureAndPay keeps charging it until it is stopped in the SecureAndPay back office: stop the subscription with orderID {$a->reference}.';
 $string['cancelinsecureandpay_subject'] = 'Action needed: stop SecureAndPay subscription {$a->reference}';
 $string['cancelledatsecureandpay'] = 'Subscription stopped at SecureAndPay; access remains until the end of the paid period.';
-$string['cardwillbesaved'] = 'Your card will be kept securely by SecureAndPay (Moodle never sees it), for the next instalments or your next purchases.';
+$string['cardwillbesaved'] = 'Your card will be kept securely by SecureAndPay (Oriskill never sees it), for the next instalments or your next purchases.';
 $string['continuetopayment'] = 'Continue to payment';
 $string['invalidamount'] = 'The order amount is not valid for SecureAndPay.';
 $string['invalidnotification'] = 'Invalid SecureAndPay notification.';
