@@ -23,6 +23,7 @@
  */
 
 require_once(__DIR__ . '/../../config.php');
+require_once(__DIR__ . '/lib.php');
 
 use local_oriskill\creator_service;
 use local_oriskill\form\creator_form;
@@ -32,11 +33,13 @@ $url = new moodle_url('/local/oriskill/apply.php');
 $PAGE->set_context($context);
 $PAGE->set_url($url);
 
-require_login(null, false);
-if (isguestuser()) {
-    require_logout();
-    redirect(get_login_url());
+if (!isloggedin() || isguestuser()) {
+    $PAGE->set_title(get_string('becometrainer', 'local_oriskill'));
+    $PAGE->set_heading(get_string('becometrainer', 'local_oriskill'));
+    local_oriskill_visitor_page($url, html_writer::tag('p', get_string('becometrainer_intro', 'local_oriskill'),
+        ['class' => 'lead']));
 }
+require_login(null, false);
 require_capability('local/oriskill:apply', $context);
 
 $creator = $DB->get_record('local_oriskill_creators', ['userid' => $USER->id]);

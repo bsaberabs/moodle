@@ -50,3 +50,35 @@ function local_oriskill_pluginfile($course, $cm, $context, $filearea, $args, $fo
     }
     send_stored_file($file, DAYSECS, 0, $forcedownload, $options);
 }
+
+/**
+ * For a visitor who is not logged in: present the page and offer to sign up or log in, then stop.
+ *
+ * The login is required on the whole site, so without this page the visitor would land on the bare login form
+ * without knowing what they were asking for. The page is remembered and reopened after the login, or after
+ * the e-mail confirmation of a new account (Moodle keeps it with the account while it is being confirmed).
+ *
+ * @param moodle_url $url This page.
+ * @param string $intro Presentation of the page (HTML).
+ */
+function local_oriskill_visitor_page(moodle_url $url, string $intro): void {
+    global $CFG, $OUTPUT, $SESSION;
+    if (isloggedin() && !isguestuser()) {
+        return;
+    }
+    require_once($CFG->libdir . '/authlib.php');
+    $SESSION->wantsurl = $url->out(false);
+    echo $OUTPUT->header();
+    echo $intro;
+    echo html_writer::tag('p', get_string('visitor_hint', 'local_oriskill'));
+    $buttons = '';
+    if (signup_is_enabled()) {
+        $buttons .= html_writer::link(new moodle_url('/login/signup.php'), get_string('visitor_signup', 'local_oriskill'),
+            ['class' => 'btn btn-primary']) . ' ';
+    }
+    $buttons .= html_writer::link(get_login_url(), get_string('visitor_haveaccount', 'local_oriskill'),
+        ['class' => 'btn btn-outline-secondary']);
+    echo html_writer::tag('p', $buttons);
+    echo $OUTPUT->footer();
+    exit;
+}

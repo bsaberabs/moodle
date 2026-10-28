@@ -177,3 +177,6 @@ $string['sellercol'] = 'Owed by';
 $string['stat:clicks'] = 'Visits';
 $string['stat:orders'] = 'Orders';
 $string['task:approvecommissions'] = 'Validate affiliate commissions after the refund period';
+$string['visitor_haveaccount'] = 'I already have an account';
+$string['visitor_hint'] = 'To continue, create your Oriskill account or log in: you will then come back to this page.';
+$string['visitor_signup'] = 'Create my account';

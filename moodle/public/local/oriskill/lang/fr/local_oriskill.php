@@ -177,3 +177,6 @@ $string['sellercol'] = 'Due par';
 $string['stat:clicks'] = 'Visites';
 $string['stat:orders'] = 'Commandes';
 $string['task:approvecommissions'] = 'Valider les commissions d\'affiliation après le délai de remboursement';
+$string['visitor_haveaccount'] = 'J\'ai déjà un compte';
+$string['visitor_hint'] = 'Pour continuer, créez votre compte Oriskill ou connectez-vous : vous reviendrez ensuite sur cette page.';
+$string['visitor_signup'] = 'Créer mon compte';

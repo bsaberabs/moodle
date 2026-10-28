@@ -23,6 +23,7 @@
  */
 
 require_once(__DIR__ . '/../../config.php');
+require_once(__DIR__ . '/lib.php');
 
 use local_moderncommerce\services\pricing_service;
 use local_oriskill\affiliate_service;
@@ -30,13 +31,20 @@ use local_oriskill\affiliate_service;
 $url = new moodle_url('/local/oriskill/affiliate.php');
 $PAGE->set_context(context_system::instance());
 $PAGE->set_url($url);
-require_login(null, false);
-if (isguestuser()) {
-    redirect(get_login_url());
-}
 $title = get_string('affiliateprogram', 'local_oriskill');
 $PAGE->set_title($title);
 $PAGE->set_heading($title);
+
+$terms = (object) [
+    'rate' => format_float((float) get_config('local_oriskill', 'platformrate'), 2, true, true),
+    'days' => (int) get_config('local_oriskill', 'cookiedays'),
+    'validation' => (int) get_config('local_oriskill', 'validationdays'),
+];
+if (affiliate_service::enabled()) {
+    local_oriskill_visitor_page($url, html_writer::tag('p', get_string('affiliate_intro', 'local_oriskill', $terms),
+        ['class' => 'lead']) . html_writer::tag('p', get_string('affiliate_terms', 'local_oriskill', $terms)));
+}
+require_login(null, false);
 
 $affiliate = affiliate_service::get_for_user((int) $USER->id);
 
@@ -49,12 +57,6 @@ if (data_submitted() && confirm_sesskey() && affiliate_service::enabled()) {
     }
     redirect($url, get_string('changessaved'), null, \core\output\notification::NOTIFY_SUCCESS);
 }
-
-$terms = (object) [
-    'rate' => format_float((float) get_config('local_oriskill', 'platformrate'), 2, true, true),
-    'days' => (int) get_config('local_oriskill', 'cookiedays'),
-    'validation' => (int) get_config('local_oriskill', 'validationdays'),
-];
 
 echo $OUTPUT->header();
 if (!affiliate_service::enabled()) {
