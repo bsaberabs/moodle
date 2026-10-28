@@ -1,0 +1,78 @@
+{{!
+    This file is part of Moodle - https://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_oriskill/showcase
+
+    Public trainer showcase: identity, presentation and the trainer's courses on sale.
+
+    Example context (json):
+    {
+        "displayname": "Studio Data",
+        "tagline": "Formations pratiques en analyse de données",
+        "bio": "<p>Présentation du formateur.</p>",
+        "logo": "",
+        "initial": "S",
+        "hascourses": true,
+        "courses": [{"name": "Excel pour l'analyse", "summary": "Résumé", "image": "", "price": "49,00 €",
+                     "compareprice": "79,00 €", "url": "#"}]
+    }
+}}
+<div class="local-oriskill-showcase">
+    <header class="d-flex flex-column flex-md-row align-items-center gap-4 py-4 mb-4 border-bottom">
+        {{#logo}}
+            <img src="{{logo}}" alt="{{displayname}}" class="rounded" style="max-width: 140px; max-height: 140px; object-fit: contain;">
+        {{/logo}}
+        {{^logo}}
+            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fs-1 fw-bold"
+                 style="width: 120px; height: 120px;" aria-hidden="true">{{initial}}</div>
+        {{/logo}}
+        <div class="text-center text-md-start">
+            <h1 class="h2 mb-1">{{displayname}}</h1>
+            {{#tagline}}<p class="lead text-muted mb-0">{{tagline}}</p>{{/tagline}}
+        </div>
+    </header>
+
+    {{#bio}}
+        <section class="mb-5" aria-label="{{#str}}aboutcreator, local_oriskill{{/str}}">{{{bio}}}</section>
+    {{/bio}}
+
+    <section aria-labelledby="oriskill-courses-heading">
+        <h2 id="oriskill-courses-heading" class="h4 mb-3">{{#str}}creatorcourses, local_oriskill{{/str}}</h2>
+        {{#hascourses}}
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                {{#courses}}
+                    <div class="col">
+                        <article class="card h-100 shadow-sm">
+                            {{#image}}<img src="{{image}}" class="card-img-top" alt="" style="height: 180px; object-fit: cover;">{{/image}}
+                            <div class="card-body d-flex flex-column">
+                                <h3 class="h5 card-title"><a href="{{url}}" class="stretched-link text-decoration-none">{{name}}</a></h3>
+                                <p class="card-text text-muted small flex-grow-1">{{summary}}</p>
+                                <p class="mb-0">
+                                    <span class="fs-5 fw-bold">{{price}}</span>
+                                    {{#compareprice}}<s class="text-muted ms-2">{{compareprice}}</s>{{/compareprice}}
+                                </p>
+                            </div>
+                        </article>
+                    </div>
+                {{/courses}}
+            </div>
+        {{/hascourses}}
+        {{^hascourses}}
+            <p class="text-muted">{{#str}}nocourses, local_oriskill{{/str}}</p>
+        {{/hascourses}}
+    </section>
+</div>
