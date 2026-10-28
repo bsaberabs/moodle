@@ -46,6 +46,9 @@ else
     echo "[moodle] Moodle déjà installé, application des mises à jour éventuelles..."
     as_www php admin/cli/upgrade.php --non-interactive
 fi
+# Nouvelle image : les textes ajoutés ou modifiés dans les plugins sans changement de version restent sinon
+# masqués par le cache des chaînes de langue.
+as_www php admin/cli/purge_caches.php --lang
 
 as_www php /usr/local/bin/moodle-fr-templates.php
 as_www php /usr/local/share/oriskill/oriskill-storefront.php
