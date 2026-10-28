@@ -51,6 +51,42 @@ class hook_callbacks {
         if ($SCRIPT === '/index.php' && (!isloggedin() || isguestuser())) {
             redirect(new \moodle_url('/local/moderncommerce/index.php'));
         }
+        // The dashboard (where users land after logging in) is otherwise sent to the learner space by Modern
+        // Commerce: a trainer lands in their trainer space instead.
+        if ($SCRIPT === '/my/index.php' && self::current_creator()) {
+            redirect(new \moodle_url('/local/oriskill/apply.php'));
+        }
+    }
+
+    /**
+     * Add "My trainer space" to the top menu of approved trainers.
+     *
+     * @param \core\hook\navigation\primary_extend $hook Hook.
+     */
+    public static function primary_extend(\core\hook\navigation\primary_extend $hook): void {
+        if (self::current_creator()) {
+            $hook->get_primaryview()->add(get_string('editshowcase', 'local_oriskill'),
+                new \moodle_url('/local/oriskill/apply.php'), \navigation_node::TYPE_CUSTOM, null, 'oriskilltrainer');
+        }
+    }
+
+    /**
+     * Approved trainer space of the logged-in user, looked up once per request.
+     *
+     * @return \stdClass|null
+     */
+    private static function current_creator(): ?\stdClass {
+        global $DB, $USER;
+        static $creators = [];
+
+        if (!isloggedin() || isguestuser()) {
+            return null;
+        }
+        if (!array_key_exists($USER->id, $creators)) {
+            $creators[$USER->id] = $DB->get_record('local_oriskill_creators',
+                ['userid' => $USER->id, 'status' => 'active']) ?: null;
+        }
+        return $creators[$USER->id];
     }
 
     /**

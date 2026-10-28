@@ -41,4 +41,8 @@ $callbacks = [
         'hook' => \local_moderncommerce\hook\filter_payment_methods::class,
         'callback' => [\local_oriskill\hook_callbacks::class, 'filter_payment_methods'],
     ],
+    [
+        'hook' => \core\hook\navigation\primary_extend::class,
+        'callback' => [\local_oriskill\hook_callbacks::class, 'primary_extend'],
+    ],
 ];
