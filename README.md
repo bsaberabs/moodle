@@ -96,7 +96,7 @@ ssh-keygen -t ed25519 -f moodle_deploy -N '""' -C "github-actions"
 
 Ajoutez le contenu de `moodle_deploy.pub` à `~/.ssh/authorized_keys` sur le serveur.
 
-**Dans GitHub** → *Settings* → *Environments* → créez l'environnement `production`
+**Dans GitHub** → *Settings* → *Environments* → créez l'environnement `OriSkill`
 (vous pouvez y exiger une approbation manuelle avant chaque déploiement), puis
 ajoutez-y ces **secrets** :
 

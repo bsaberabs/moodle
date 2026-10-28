@@ -105,7 +105,7 @@ jobs:
     # Activé seulement quand la variable de dépôt DEPLOY_ENABLED vaut "true"
     if: vars.DEPLOY_ENABLED == 'true'
     runs-on: ubuntu-latest
-    environment: production
+    environment: OriSkill
     permissions:
       contents: read
       packages: read
