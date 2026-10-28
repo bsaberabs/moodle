@@ -72,7 +72,7 @@ foreach ($creators as $creator) {
         format_string($creator->displayname),
         html_writer::link(new moodle_url('/user/profile.php', ['id' => $user->id]), fullname($user)) . '<br>' . s($user->email),
         $creator->status === 'active'
-            ? html_writer::link(creator_service::showcase_url($creator), '/f/' . s($creator->slug)) : '/f/' . s($creator->slug),
+            ? html_writer::link(creator_service::showcase_url($creator), '/' . s($creator->slug)) : '/' . s($creator->slug),
         format_text($creator->motivation, FORMAT_PLAIN),
         get_string('status:' . $creator->status, 'local_oriskill'),
         $actions,

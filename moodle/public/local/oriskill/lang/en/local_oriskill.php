@@ -61,7 +61,7 @@ $string['field:sapsiteid'] = 'SecureAndPay site ID (IdSite)';
 $string['field:saptestmode'] = 'Test mode';
 $string['field:saptestmode_desc'] = 'Use the SecureAndPay test environment (no real payment)';
 $string['field:slug'] = 'Showcase address';
-$string['field:slug_help'] = 'Your showcase will be at oriskill.com/f/your-address (and later your-address.oriskill.com). Lowercase letters, digits and hyphens only; it cannot be changed afterwards.';
+$string['field:slug_help'] = 'Your showcase will be at oriskill.com/your-address. Lowercase letters, digits and hyphens only; it cannot be changed afterwards.';
 $string['field:tagline'] = 'Tagline';
 $string['mail:approved_body'] = 'Hello,
 

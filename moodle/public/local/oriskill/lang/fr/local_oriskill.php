@@ -61,7 +61,7 @@ $string['field:sapsiteid'] = 'Identifiant du site SecureAndPay (IdSite)';
 $string['field:saptestmode'] = 'Mode test';
 $string['field:saptestmode_desc'] = 'Utiliser l\'environnement de test SecureAndPay (aucun paiement réel)';
 $string['field:slug'] = 'Adresse de la vitrine';
-$string['field:slug_help'] = 'Votre vitrine sera à l\'adresse oriskill.com/f/votre-adresse (puis votre-adresse.oriskill.com). Lettres minuscules, chiffres et tirets uniquement ; elle ne pourra plus être modifiée.';
+$string['field:slug_help'] = 'Votre vitrine sera à l\'adresse oriskill.com/votre-adresse. Lettres minuscules, chiffres et tirets uniquement ; elle ne pourra plus être modifiée.';
 $string['field:tagline'] = 'Accroche';
 $string['mail:approved_body'] = 'Bonjour,
 

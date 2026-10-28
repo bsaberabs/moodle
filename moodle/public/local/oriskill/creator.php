@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Public trainer showcase, served at /f/{slug} (see docker/apache-moodle.conf).
+ * Public trainer showcase, served at /{slug} (see docker/apache-moodle.conf).
  *
  * @package    local_oriskill
  * @copyright  2026 Advanced TM

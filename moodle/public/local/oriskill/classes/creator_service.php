@@ -43,10 +43,15 @@ class creator_service {
     /** Parent category of all trainer categories. */
     private const PARENT_IDNUMBER = 'oriskill-creators';
 
-    /** Slugs kept for the platform (future subdomains included). */
+    /**
+     * Slugs kept for the platform. Showcases live at the site root (/slug), so every top-level Moodle
+     * file or folder is refused as well (see slug_error()), along with the router's prefixes.
+     */
     private const RESERVED = ['www', 'admin', 'api', 'app', 'mail', 'smtp', 'ftp', 'support', 'aide', 'help', 'blog',
         'shop', 'boutique', 'formation', 'formations', 'formateur', 'formateurs', 'oriskill', 'login', 'compte',
-        'static', 'cdn', 'test', 'demo', 'dev', 'staging'];
+        'static', 'cdn', 'test', 'demo', 'dev', 'staging', 'r', 'rest', 'shim', 'swagger', 'cms', 'oauth2',
+        'sections', 'create', 'f', 'healthz', 'robots', 'sitemap', 'favicon', 'contact', 'cgv', 'mentions-legales',
+        'connexion', 'inscription', 'panier', 'paiement', 'abonnement', 'abonnements', 'catalogue'];
 
     /**
      * Whether a slug can be used: lowercase letters, digits and single hyphens, 3 to 30 characters.
@@ -56,12 +61,13 @@ class creator_service {
      * @return string|null Error string key, or null if valid.
      */
     public static function slug_error(string $slug, int $exceptid = 0): ?string {
-        global $DB;
+        global $CFG, $DB;
 
         if (!preg_match('/^[a-z0-9]+(-[a-z0-9]+)*$/', $slug) || strlen($slug) < 3 || strlen($slug) > 30) {
             return 'error:slugshape';
         }
-        if (in_array($slug, self::RESERVED, true)) {
+        if (in_array($slug, self::RESERVED, true) || file_exists("$CFG->dirroot/$slug")
+                || file_exists("$CFG->dirroot/$slug.php")) {
             return 'error:slugreserved';
         }
         if ($DB->record_exists_select(self::TABLE, 'slug = ? AND id <> ?', [$slug, $exceptid])) {
@@ -219,7 +225,7 @@ class creator_service {
      * @return moodle_url
      */
     public static function showcase_url(\stdClass $creator): moodle_url {
-        return new moodle_url('/f/' . $creator->slug);
+        return new moodle_url('/' . $creator->slug);
     }
 
     /**
