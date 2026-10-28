@@ -91,9 +91,14 @@ echo $OUTPUT->header();
 if (!$creator) {
     echo html_writer::tag('p', get_string('becometrainer_intro', 'local_oriskill'), ['class' => 'lead']);
 } else {
-    echo html_writer::tag('p', html_writer::link(creator_service::showcase_url($creator),
-        get_string('viewshowcase', 'local_oriskill'), ['class' => 'btn btn-outline-primary']) . ' ' .
-        html_writer::link(new moodle_url('/course/edit.php', ['category' => $creator->categoryid]),
+    echo creator_service::space_menu($creator, '/local/oriskill/apply.php');
+    if ($blocker = \local_oriskill\seller_service::selling_blocker($creator)) {
+        echo $OUTPUT->notification(get_string($blocker, 'local_oriskill', (object) [
+            'payment' => (new moodle_url('/local/oriskill/payment.php'))->out(false),
+            'plan' => (new moodle_url('/local/moderncommerce/subscribe.php'))->out(false),
+        ]), 'warning');
+    }
+    echo html_writer::tag('p', html_writer::link(new moodle_url('/course/edit.php', ['category' => $creator->categoryid]),
         get_string('createcourse', 'local_oriskill'), ['class' => 'btn btn-outline-primary']) . ' ' .
         html_writer::link(new moodle_url('/course/index.php', ['categoryid' => $creator->categoryid]),
         get_string('mycourses', 'local_oriskill'), ['class' => 'btn btn-outline-secondary']));

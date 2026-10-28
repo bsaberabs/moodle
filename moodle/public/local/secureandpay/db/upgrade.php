@@ -29,10 +29,24 @@
  * @return bool
  */
 function xmldb_local_secureandpay_upgrade($oldversion) {
+    global $DB;
+
     if ($oldversion < 2026102801) {
         // Stop asking for a webhook secret, which SecureAndPay does not use.
         \local_secureandpay\gateway::register();
         upgrade_plugin_savepoint(true, 2026102801, 'local', 'secureandpay');
+    }
+
+    if ($oldversion < 2026102901) {
+        // Card tokens are now kept per merchant account: earlier ones were all saved on the platform's.
+        $siteid = preg_replace('/[^A-Za-z0-9]/', '', \local_secureandpay\gateway::platform_merchant()->siteid);
+        if ($siteid !== '') {
+            $DB->set_field('user_preferences', 'name', 'local_secureandpay_card_' . $siteid,
+                ['name' => 'local_secureandpay_card']);
+        } else {
+            $DB->delete_records('user_preferences', ['name' => 'local_secureandpay_card']);
+        }
+        upgrade_plugin_savepoint(true, 2026102901, 'local', 'secureandpay');
     }
     return true;
 }

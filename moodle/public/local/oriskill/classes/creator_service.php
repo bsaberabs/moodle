@@ -164,6 +164,55 @@ class creator_service {
     }
 
     /**
+     * Set up a page of the trainer space for the current user, who must be an active trainer.
+     *
+     * @param moodle_url $url Page URL.
+     * @param string $titlekey Page title string key.
+     * @return \stdClass Current user's trainer record.
+     */
+    public static function require_current_creator(moodle_url $url, string $titlekey): \stdClass {
+        global $DB, $PAGE, $USER;
+
+        $PAGE->set_context(context_system::instance());
+        $PAGE->set_url($url);
+        require_login(null, false);
+        $creator = $DB->get_record(self::TABLE, ['userid' => $USER->id, 'status' => 'active']);
+        if (!$creator) {
+            redirect(new moodle_url('/local/oriskill/apply.php'));
+        }
+        $title = get_string($titlekey, 'local_oriskill');
+        $PAGE->set_title($title);
+        $PAGE->set_heading(get_string('editshowcase', 'local_oriskill'));
+        $PAGE->set_secondary_navigation(false);
+        return $creator;
+    }
+
+    /**
+     * Links between the pages of the trainer space.
+     *
+     * @param \stdClass $creator Trainer.
+     * @param string $current Path of the current page.
+     * @return string HTML.
+     */
+    public static function space_menu(\stdClass $creator, string $current): string {
+        $items = [
+            '/local/oriskill/apply.php' => get_string('menu:profile', 'local_oriskill'),
+            '/local/oriskill/pricing.php' => get_string('pricing', 'local_oriskill'),
+            '/local/oriskill/sales.php' => get_string('sales', 'local_oriskill'),
+            '/local/oriskill/payment.php' => get_string('paymentsettings', 'local_oriskill'),
+        ];
+        $links = '';
+        foreach ($items as $path => $label) {
+            $links .= \html_writer::tag('li', \html_writer::link(new moodle_url($path), $label,
+                ['class' => 'nav-link' . ($path === $current ? ' active' : '')] +
+                ($path === $current ? ['aria-current' => 'page'] : [])), ['class' => 'nav-item']);
+        }
+        $links .= \html_writer::tag('li', \html_writer::link(self::showcase_url($creator),
+            get_string('viewshowcase', 'local_oriskill'), ['class' => 'nav-link']), ['class' => 'nav-item ms-md-auto']);
+        return \html_writer::tag('ul', $links, ['class' => 'nav nav-tabs mb-4']);
+    }
+
+    /**
      * Public showcase address.
      *
      * @param \stdClass $creator Creator.

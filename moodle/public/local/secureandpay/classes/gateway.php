@@ -93,8 +93,34 @@ class gateway implements gateway_interface {
     }
 
     public function is_enabled() {
-        $config = $this->get_config();
-        return !empty($config['enabled']) && self::site_id($config) !== '' && !empty($config['secret_key']);
+        return !empty($this->get_config()['enabled']) && self::platform_merchant()->is_configured();
+    }
+
+    /**
+     * The platform's own SecureAndPay account, from the Modern Commerce gateway settings.
+     *
+     * @return merchant
+     */
+    public static function platform_merchant(): merchant {
+        $config = gateway_manager::get_gateway_config(self::GATEWAY);
+        return new merchant(self::site_id($config), (string) ($config['secret_key'] ?? ''), !empty($config['testmode']));
+    }
+
+    /**
+     * SecureAndPay account that takes an order: the platform's, unless a plugin routes it elsewhere
+     * (see hook\resolve_merchant).
+     *
+     * @param object $order Order.
+     * @param bool $forpayment True before a payment starts: a refusal then stops the payment.
+     * @return merchant
+     */
+    public static function merchant_for_order(object $order, bool $forpayment): merchant {
+        $hook = new hook\resolve_merchant($order, $forpayment);
+        \core\di::get(\core\hook\manager::class)->dispatch($hook);
+        if ($forpayment && $hook->get_refusal() !== null) {
+            throw new moodle_exception('paymentrefused', 'local_secureandpay', '', $hook->get_refusal());
+        }
+        return $hook->get_merchant() ?? self::platform_merchant();
     }
 
     /**
@@ -202,7 +228,10 @@ class gateway implements gateway_interface {
             throw new moodle_exception('unsupportedcurrency', 'local_secureandpay', '', $currency);
         }
 
-        $config = $this->get_config();
+        $merchant = self::merchant_for_order($order, true);
+        if (!$merchant->is_configured()) {
+            throw new moodle_exception('notconfigured', 'local_secureandpay');
+        }
         $user = $DB->get_record('user', ['id' => $order->userid], '*', MUST_EXIST);
         $amount = (int) round((float) $order->total * 100);
         // Only a free trial is paid 0: SecureAndPay then just registers the card.
@@ -216,7 +245,7 @@ class gateway implements gateway_interface {
         }
 
         $data = [
-            'IdSite' => self::site_id($config),
+            'IdSite' => $merchant->siteid,
             'orderID' => $reference,
             'osc_id' => (string) $order->id,
             'Amount' => (string) $amount,
@@ -234,13 +263,13 @@ class gateway implements gateway_interface {
             'urlOk' => (new moodle_url('/local/moderncommerce/success.php', ['orderid' => $order->id]))->out(false),
             'urlNotify' => (new moodle_url('/local/secureandpay/notify.php'))->out(false),
         ];
-        $data = array_merge($data, $this->payment_mode_fields($order, $amount));
+        $data = array_merge($data, $this->payment_mode_fields($order, $amount, $merchant));
 
         $encoded = base64_encode(json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
         return [
-            'url' => !empty($config['testmode']) ? self::URL_TEST : self::URL_LIVE,
+            'url' => $merchant->testmode ? self::URL_TEST : self::URL_LIVE,
             'data' => $encoded,
-            'signature' => self::sign($encoded),
+            'signature' => $merchant->sign($encoded),
         ];
     }
 
@@ -253,9 +282,10 @@ class gateway implements gateway_interface {
      *
      * @param object $order Order.
      * @param int $amount Amount in cents.
+     * @param merchant $merchant Account taking the payment: a card token only works with the account that saved it.
      * @return array
      */
-    private function payment_mode_fields(object $order, int $amount): array {
+    private function payment_mode_fields(object $order, int $amount, merchant $merchant): array {
         $oneclick = (bool) get_config('local_secureandpay', 'oneclick');
 
         if (self::order_is_subscription($order)) {
@@ -272,7 +302,7 @@ class gateway implements gateway_interface {
             return ['Clicktopay' => 0];
         }
 
-        $token = $oneclick ? token_store::get((int) $order->userid) : null;
+        $token = $oneclick ? token_store::get((int) $order->userid, $merchant->siteid) : null;
         if ($token !== null) {
             $fields['Clicktopay'] = 2;
             $fields['token'] = $token;
@@ -348,13 +378,12 @@ class gateway implements gateway_interface {
     }
 
     /**
-     * HMAC-SHA256 of the base64 data with the merchant key.
+     * HMAC-SHA256 of the base64 data with the platform key.
      *
      * @param string $data Base64 payload.
      * @return string
      */
     public static function sign(string $data): string {
-        $config = gateway_manager::get_gateway_config(self::GATEWAY);
-        return hash_hmac('sha256', $data, (string) ($config['secret_key'] ?? ''));
+        return self::platform_merchant()->sign($data);
     }
 }

@@ -29,4 +29,8 @@ $callbacks = [
         'hook' => \core\hook\output\before_standard_head_html_generation::class,
         'callback' => [\local_oriskill\hook_callbacks::class, 'before_standard_head_html_generation'],
     ],
+    [
+        'hook' => \local_secureandpay\hook\resolve_merchant::class,
+        'callback' => [\local_oriskill\hook_callbacks::class, 'resolve_merchant'],
+    ],
 ];

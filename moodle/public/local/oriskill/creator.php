@@ -48,7 +48,8 @@ $PAGE->set_title(get_string('showcasetitle', 'local_oriskill', format_string($cr
 hook_callbacks::$headmeta = ['description' => $creator->tagline ?: format_string($creator->displayname),
     'canonical' => $url->out(false)];
 
-$courses = creator_service::showcase_courses($creator);
+// Courses are offered only while the trainer can actually take payments.
+$courses = \local_oriskill\seller_service::selling_blocker($creator) ? [] : creator_service::showcase_courses($creator);
 $logo = creator_service::logo_url($creator);
 
 echo $OUTPUT->header();

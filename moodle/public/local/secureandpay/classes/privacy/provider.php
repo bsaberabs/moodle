@@ -58,10 +58,9 @@ class provider implements
      * @param int $userid User.
      */
     public static function export_user_preferences(int $userid) {
-        $saved = json_decode((string) get_user_preferences(token_store::PREFERENCE, '', $userid), true);
-        if (!empty($saved['token'])) {
-            writer::export_user_preference('local_secureandpay', token_store::PREFERENCE,
-                get_string('savedcardexpiry', 'local_secureandpay', $saved['expiry'] ?? '-'),
+        foreach (token_store::list($userid) as $siteid => $expiry) {
+            writer::export_user_preference('local_secureandpay', token_store::PREFERENCE . '_' . $siteid,
+                get_string('savedcardexpiry', 'local_secureandpay', $expiry ?: '-'),
                 get_string('privacy:metadata:preference:card', 'local_secureandpay'));
         }
     }

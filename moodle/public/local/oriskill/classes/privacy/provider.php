@@ -45,6 +45,8 @@ class provider implements
             'bio' => 'privacy:metadata:creators:bio',
             'motivation' => 'privacy:metadata:creators:motivation',
             'status' => 'privacy:metadata:creators:status',
+            'sap_siteid' => 'privacy:metadata:creators:sapsiteid',
+            'sap_key' => 'privacy:metadata:creators:sapkey',
         ], 'privacy:metadata:creators');
         $collection->add_subsystem_link('core_files', [], 'privacy:metadata:logo');
         return $collection;
@@ -82,6 +84,9 @@ class provider implements
             'bio' => $creator->bio,
             'motivation' => $creator->motivation,
             'status' => $creator->status,
+            // The signing key is a secret: only whether one is saved is exported.
+            'sap_siteid' => $creator->sap_siteid,
+            'sap_key_saved' => !empty($creator->sap_key),
         ])->export_area_files($subcontext, 'local_oriskill', 'logo', $creator->id);
     }
 

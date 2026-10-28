@@ -16,6 +16,9 @@
         <FIELD NAME="motivation" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Application message, read by the administrator"/>
         <FIELD NAME="categoryid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Course category created on approval"/>
         <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="pending" SEQUENCE="false" COMMENT="pending, active, suspended, rejected"/>
+        <FIELD NAME="sap_siteid" TYPE="char" LENGTH="50" NOTNULL="false" SEQUENCE="false" COMMENT="Trainer's SecureAndPay IdSite: their sales are paid into their own account"/>
+        <FIELD NAME="sap_key" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Trainer's SecureAndPay signing key, encrypted with core\encryption"/>
+        <FIELD NAME="sap_testmode" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="Use the SecureAndPay test environment"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>

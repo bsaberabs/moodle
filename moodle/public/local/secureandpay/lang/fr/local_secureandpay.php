@@ -35,6 +35,7 @@ $string['invalidsignature'] = 'Signature SecureAndPay non valide.';
 $string['notconfigured'] = 'SecureAndPay n\'est pas configuré : saisissez l\'identifiant du site et la clé dans les paramètres de la passerelle de paiement.';
 $string['oneclick'] = 'Paiement en un clic (upsell)';
 $string['oneclick_desc'] = 'Le premier achat enregistre la carte de l\'acheteur chez SecureAndPay ; les achats suivants la réutilisent, l\'acheteur n\'a plus qu\'à confirmer le paiement. L\'acheteur est informé avant de payer que sa carte sera conservée.';
+$string['paymentrefused'] = 'Cette commande ne peut pas être payée : {$a}';
 $string['pluginname'] = 'SecureAndPay';
 $string['privacy:metadata:secureandpay'] = 'Pour encaisser le paiement, les informations de l\'acheteur et de la commande sont envoyées à SecureAndPay.';
 $string['privacy:metadata:secureandpay:address'] = 'Adresse postale.';

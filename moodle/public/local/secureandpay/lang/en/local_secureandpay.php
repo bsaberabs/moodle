@@ -35,6 +35,7 @@ $string['invalidsignature'] = 'Invalid SecureAndPay signature.';
 $string['notconfigured'] = 'SecureAndPay is not configured: enter the site ID and the key in the payment gateway settings.';
 $string['oneclick'] = 'One-click payment (upsell)';
 $string['oneclick_desc'] = 'The first purchase registers the buyer\'s card at SecureAndPay; later purchases reuse it, so the buyer only confirms the payment. The buyer is told before paying that the card will be kept.';
+$string['paymentrefused'] = 'This order cannot be paid: {$a}';
 $string['pluginname'] = 'SecureAndPay';
 $string['privacy:metadata:secureandpay'] = 'To take the payment, buyer and order details are sent to SecureAndPay.';
 $string['privacy:metadata:secureandpay:address'] = 'Postal address.';

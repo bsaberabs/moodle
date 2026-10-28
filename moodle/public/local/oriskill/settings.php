@@ -27,3 +27,11 @@ defined('MOODLE_INTERNAL') || die();
 $ADMIN->add('courses', new admin_externalpage('local_oriskill_manage',
     get_string('managecreators', 'local_oriskill'), new moodle_url('/local/oriskill/manage.php'),
     'local/oriskill:managecreators'));
+
+if ($hassiteconfig) {
+    $settings = new admin_settingpage('local_oriskill', get_string('pluginname', 'local_oriskill'));
+    $settings->add(new admin_setting_configtext('local_oriskill/creatorplancode',
+        get_string('creatorplancode', 'local_oriskill'), get_string('creatorplancode_desc', 'local_oriskill'),
+        '', PARAM_ALPHANUMEXT));
+    $ADMIN->add('localplugins', $settings);
+}

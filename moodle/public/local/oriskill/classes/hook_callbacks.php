@@ -29,6 +29,43 @@ class hook_callbacks {
     public static ?array $headmeta = null;
 
     /**
+     * Route a trainer's order to the trainer's own SecureAndPay account.
+     *
+     * An order can only be paid into one account, so mixing courses of several sellers (trainers, or a
+     * trainer and Oriskill) is refused at payment. Platform orders (no trainer course) are left alone.
+     *
+     * @param \local_secureandpay\hook\resolve_merchant $hook Hook.
+     */
+    public static function resolve_merchant(\local_secureandpay\hook\resolve_merchant $hook): void {
+        global $DB;
+
+        $owners = [];
+        foreach ($DB->get_records('local_moderncommerce_order_items', ['orderid' => $hook->order->id]) as $item) {
+            $owner = $item->courseid ? seller_service::owner_of_course((int) $item->courseid) : null;
+            $owners[$owner->id ?? 0] = $owner ? format_string($owner->displayname) : get_string('platformseller', 'local_oriskill');
+        }
+        if (count($owners) > 1) {
+            $hook->refuse(get_string('error:mixedsellers', 'local_oriskill', implode(', ', $owners)));
+            return;
+        }
+        $creatorid = (int) array_key_first($owners);
+        if (!$creatorid) {
+            return;
+        }
+
+        $creator = $DB->get_record('local_oriskill_creators', ['id' => $creatorid]);
+        if ($hook->forpayment && ($blocker = seller_service::selling_blocker($creator))) {
+            $hook->refuse(get_string('error:sellercannotsell', 'local_oriskill', format_string($creator->displayname)));
+            return;
+        }
+        if ($merchant = seller_service::merchant($creator)) {
+            $hook->set_merchant($merchant);
+        } else if ($hook->forpayment) {
+            $hook->refuse(get_string('error:sellercannotsell', 'local_oriskill', format_string($creator->displayname)));
+        }
+    }
+
+    /**
      * Add the showcase description and canonical address to the page head, for search engines.
      *
      * @param \core\hook\output\before_standard_head_html_generation $hook Hook.

@@ -43,6 +43,20 @@ abonnements (ClicktoPay, prélevés par SecureAndPay), essais gratuits et paieme
   de l'utilisateur (avec la date d'expiration de la carte), inclus dans l'export RGPD. Aucune
   donnée de carte n'est stockée dans Moodle.
 
+## Plusieurs comptes marchands (place de marché)
+
+Par défaut, tout est encaissé sur le compte de la plateforme (réglages de la passerelle). Un autre
+plugin peut envoyer une commande vers un autre compte SecureAndPay en écoutant le hook
+`\local_secureandpay\hook\resolve_merchant` : il désigne le compte (`set_merchant()`) ou refuse le
+paiement avec un message (`refuse()`). C'est ce que fait `local_oriskill` pour les formations de ses
+formateurs.
+
+- La demande de paiement est signée avec la clé du compte choisi, et l'IdSite de ce compte est envoyé.
+- Une notification est vérifiée avec la clé du compte qui a encaissé la commande : la commande est
+  retrouvée d'abord (lecture seule), rien n'est modifié avant la vérification de la signature.
+- Les jetons de carte (paiement en un clic) sont rangés par compte : un jeton enregistré chez un
+  vendeur ne sert jamais chez un autre.
+
 ## Limites
 
 - SecureAndPay n'a pas d'API pour arrêter un abonnement : une résiliation faite dans Moodle envoie

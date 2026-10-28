@@ -17,9 +17,10 @@
 namespace local_secureandpay;
 
 /**
- * Card token returned by SecureAndPay, kept per user for one-click payments.
+ * Card tokens returned by SecureAndPay, kept per user and per merchant account for one-click payments.
  *
- * The token only works for this merchant at SecureAndPay; no card data is stored in Moodle.
+ * A token only works with the SecureAndPay account (IdSite) that saved the card, so a buyer has one
+ * token per seller. No card data is stored in Moodle.
  *
  * @package    local_secureandpay
  * @copyright  2026 Advanced TM
@@ -27,28 +28,40 @@ namespace local_secureandpay;
  */
 class token_store {
 
-    /** User preference holding {"token": ..., "expiry": "YYMM"}. */
+    /** User preference prefix; the full name ends with the IdSite. Value: {"token": ..., "expiry": "YYMM"}. */
     public const PREFERENCE = 'local_secureandpay_card';
 
     /**
-     * Save the token of the card a user just paid with.
+     * Preference name for a merchant account.
      *
-     * @param int $userid User.
-     * @param string $token SecureAndPay token.
-     * @param string $expiry Card expiry as YYMM ('' if unknown).
+     * @param string $siteid SecureAndPay IdSite.
+     * @return string
      */
-    public static function save(int $userid, string $token, string $expiry): void {
-        set_user_preference(self::PREFERENCE, json_encode(['token' => $token, 'expiry' => $expiry]), $userid);
+    private static function name(string $siteid): string {
+        return self::PREFERENCE . '_' . preg_replace('/[^A-Za-z0-9]/', '', $siteid);
     }
 
     /**
-     * Token of the user's saved card, if the card has not expired.
+     * Save the token of the card a user just paid with on a merchant account.
      *
      * @param int $userid User.
+     * @param string $siteid SecureAndPay IdSite.
+     * @param string $token SecureAndPay token.
+     * @param string $expiry Card expiry as YYMM ('' if unknown).
+     */
+    public static function save(int $userid, string $siteid, string $token, string $expiry): void {
+        set_user_preference(self::name($siteid), json_encode(['token' => $token, 'expiry' => $expiry]), $userid);
+    }
+
+    /**
+     * Token of the user's card saved on a merchant account, if the card has not expired.
+     *
+     * @param int $userid User.
+     * @param string $siteid SecureAndPay IdSite.
      * @return string|null
      */
-    public static function get(int $userid): ?string {
-        $saved = json_decode((string) get_user_preferences(self::PREFERENCE, '', $userid), true);
+    public static function get(int $userid, string $siteid): ?string {
+        $saved = json_decode((string) get_user_preferences(self::name($siteid), '', $userid), true);
         if (empty($saved['token'])) {
             return null;
         }
@@ -60,11 +73,29 @@ class token_store {
     }
 
     /**
-     * Forget the user's saved card.
+     * All saved cards of a user: IdSite => expiry.
      *
      * @param int $userid User.
+     * @return array
      */
-    public static function delete(int $userid): void {
-        unset_user_preference(self::PREFERENCE, $userid);
+    public static function list(int $userid): array {
+        $cards = [];
+        foreach (get_user_preferences(null, null, $userid) as $name => $value) {
+            if (str_starts_with($name, self::PREFERENCE . '_')) {
+                $saved = json_decode((string) $value, true);
+                $cards[substr($name, strlen(self::PREFERENCE) + 1)] = $saved['expiry'] ?? '';
+            }
+        }
+        return $cards;
+    }
+
+    /**
+     * Forget the user's card saved on a merchant account.
+     *
+     * @param int $userid User.
+     * @param string $siteid SecureAndPay IdSite.
+     */
+    public static function delete(int $userid, string $siteid): void {
+        unset_user_preference(self::name($siteid), $userid);
     }
 }

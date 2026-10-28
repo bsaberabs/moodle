@@ -43,15 +43,18 @@ class notification_handler {
      * @return string Outcome, for logging.
      */
     public static function handle(string $rawdata, string $signature): string {
-        if ($rawdata === '' || !hash_equals(gateway::sign($rawdata), strtolower(trim($signature)))) {
-            throw new moodle_exception('invalidsignature', 'local_secureandpay');
-        }
+        // Each order is signed with the key of the account that took it (the platform or a trainer), so the
+        // order is looked up first, read-only, and nothing is changed before the signature is verified.
         $data = json_decode((string) base64_decode($rawdata, true), true);
         if (!is_array($data) || empty($data['PAYID'])) {
             throw new moodle_exception('invalidnotification', 'local_secureandpay');
         }
-
         $order = self::find_order($data);
+        $merchant = gateway::merchant_for_order($order, false);
+        if (!$merchant->is_configured() || !hash_equals($merchant->sign($rawdata), strtolower(trim($signature)))) {
+            throw new moodle_exception('invalidsignature', 'local_secureandpay');
+        }
+
         $status = (string) ($data['TransStatus'] ?? '');
         $paid = in_array($order->status, ['paid', 'completed'], true);
         $subscription = self::find_subscription($order);
@@ -59,7 +62,7 @@ class notification_handler {
         switch ($status) {
             case '00':
             case '02':
-                self::remember_card($order, $data);
+                self::remember_card($order, $data, $merchant);
                 if (!$paid) {
                     self::record($order, $data, 'success');
                     order_api::update_order_status($order->id, 'paid');
@@ -152,10 +155,12 @@ class notification_handler {
      *
      * @param object $order Order.
      * @param array $data Notification.
+     * @param merchant $merchant Account that took the payment and holds the card.
      */
-    private static function remember_card(object $order, array $data): void {
+    private static function remember_card(object $order, array $data, merchant $merchant): void {
         if (!empty($data['token']) && get_config('local_secureandpay', 'oneclick')) {
-            token_store::save((int) $order->userid, (string) $data['token'], (string) ($data['dateValidate'] ?? ''));
+            token_store::save((int) $order->userid, $merchant->siteid, (string) $data['token'],
+                (string) ($data['dateValidate'] ?? ''));
         }
     }
 
