@@ -72,6 +72,16 @@ foreach ($DB->get_records('local_moderncommerce_widget') as $widget) {
     $updated++;
 }
 
+// Menu du haut : « Tableau de bord » (core) mène au même espace apprenant que « Mon apprentissage » (ajouté par
+// ModernCommerce). Masqué une seule fois : le réglage reste ensuite celui de l'administrateur.
+if (!get_config('local_oriskill', 'navconfigured')) {
+    if ((string) get_config('local_moderncommerce', 'hideprimarynavitems') === '') {
+        set_config('hideprimarynavitems', 'myhome', 'local_moderncommerce');
+        $updated++;
+    }
+    set_config('navconfigured', 1, 'local_oriskill');
+}
+
 if ($updated > 0) {
     cache_helper::purge_all();
     echo "[moodle] vitrine Oriskill en français : $updated élément(s) mis à jour\n";
