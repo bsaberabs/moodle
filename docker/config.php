@@ -46,5 +46,11 @@ if (getenv('MOODLE_NOREPLY_ADDRESS')) {
 if (getenv('MOODLE_SUPPORT_EMAIL')) {
     $CFG->supportemail = getenv('MOODLE_SUPPORT_EMAIL');
 }
+if (getenv('MOODLE_SUPPORT_NAME')) {
+    // Nom d'expéditeur des e-mails du site (inscription, mot de passe, commandes).
+    $CFG->supportname = getenv('MOODLE_SUPPORT_NAME');
+    // Pas de « (via Oriskill) » ajouté au nom : l'expéditeur est déjà Oriskill.
+    $CFG->emailfromvia = 0;
+}
 
 require_once(__DIR__ . '/lib/setup.php');

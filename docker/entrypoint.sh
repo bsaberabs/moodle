@@ -35,8 +35,11 @@ if [ "$status" = "empty" ]; then
         --adminuser="${MOODLE_ADMIN_USER:-admin}" \
         --adminpass="${MOODLE_ADMIN_PASSWORD:?MOODLE_ADMIN_PASSWORD est requis}" \
         --adminemail="${MOODLE_ADMIN_EMAIL:-admin@example.com}" \
-        --fullname="${MOODLE_SITE_FULLNAME:-Moodle}" \
-        --shortname="${MOODLE_SITE_SHORTNAME:-moodle}"
+        --fullname="${MOODLE_SITE_FULLNAME:-Oriskill}" \
+        --shortname="${MOODLE_SITE_SHORTNAME:-Oriskill}"
+    # Inscription libre avec confirmation par e-mail : sans elle, un nouveau client ne peut pas acheter
+    # (le paiement exige un compte). Réglé une seule fois : l'administrateur peut ensuite la désactiver.
+    as_www php admin/cli/cfg.php --name=registerauth --set=email
 else
     echo "[moodle] Moodle déjà installé, application des mises à jour éventuelles..."
     as_www php admin/cli/upgrade.php --non-interactive

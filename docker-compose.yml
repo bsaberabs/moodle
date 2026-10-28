@@ -23,6 +23,7 @@ x-moodle: &moodle
     MOODLE_SMTP_PASSWORD: ${MOODLE_SMTP_PASSWORD:-}
     MOODLE_NOREPLY_ADDRESS: ${MOODLE_NOREPLY_ADDRESS:-}
     MOODLE_SUPPORT_EMAIL: ${MOODLE_SUPPORT_EMAIL:-}
+    MOODLE_SUPPORT_NAME: ${MOODLE_SUPPORT_NAME:-Oriskill}
   volumes:
     - moodledata:/var/www/moodledata
 
