@@ -180,3 +180,4 @@ $string['task:approvecommissions'] = 'Validate affiliate commissions after the r
 $string['visitor_haveaccount'] = 'I already have an account';
 $string['visitor_hint'] = 'To continue, create your Oriskill account or log in: you will then come back to this page.';
 $string['visitor_signup'] = 'Create my account';
+$string['mfarecommended'] = 'Protect your trainer account, which decides where your sales are paid: <a href="{$a}">turn on two-factor authentication</a>. A code from your phone will be asked at each login, on top of your password.';

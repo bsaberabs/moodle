@@ -101,6 +101,12 @@ if (!$creator) {
             'plan' => (new moodle_url('/local/moderncommerce/subscribe.php'))->out(false),
         ]), 'warning');
     }
+    // The trainer's account controls where their sales are paid: recommend the 2FA until they set it up.
+    if (get_config('tool_mfa', 'enabled') && !$DB->record_exists_select('tool_mfa',
+            "userid = ? AND factor IN ('totp', 'webauthn') AND revoked = 0", [$USER->id])) {
+        echo $OUTPUT->notification(get_string('mfarecommended', 'local_oriskill',
+            (new moodle_url('/admin/tool/mfa/user_preferences.php'))->out(false)), 'info');
+    }
     echo html_writer::tag('p', html_writer::link(new moodle_url('/course/edit.php', ['category' => $creator->categoryid]),
         get_string('createcourse', 'local_oriskill'), ['class' => 'btn btn-outline-primary']) . ' ' .
         html_writer::link(new moodle_url('/course/index.php', ['categoryid' => $creator->categoryid]),

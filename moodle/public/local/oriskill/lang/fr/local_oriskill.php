@@ -180,3 +180,4 @@ $string['task:approvecommissions'] = 'Valider les commissions d\'affiliation apr
 $string['visitor_haveaccount'] = 'J\'ai déjà un compte';
 $string['visitor_hint'] = 'Pour continuer, créez votre compte Oriskill ou connectez-vous : vous reviendrez ensuite sur cette page.';
 $string['visitor_signup'] = 'Créer mon compte';
+$string['mfarecommended'] = 'Protégez votre compte formateur, qui décide où sont versées vos ventes : <a href="{$a}">activez la double authentification</a>. Un code de votre téléphone vous sera demandé à chaque connexion, en plus du mot de passe.';
