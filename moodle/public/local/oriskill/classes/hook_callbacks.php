@@ -29,19 +29,27 @@ class hook_callbacks {
     public static ?array $headmeta = null;
 
     /**
-     * Remember the affiliate code of a visitor arriving with ?ref=code, on any page.
+     * Remember the affiliate code of a visitor arriving with ?ref=code, on any page, and send visitors who are not
+     * logged in from the site home page to the store (the home page itself requires login).
      *
      * @param \core\hook\after_config $hook Hook.
      */
     public static function after_config(\core\hook\after_config $hook): void {
-        if (CLI_SCRIPT || AJAX_SCRIPT || during_initial_install() || empty($_GET['ref']) || !is_string($_GET['ref'])) {
+        global $SCRIPT;
+
+        if (CLI_SCRIPT || AJAX_SCRIPT || during_initial_install()) {
             return;
         }
-        try {
-            affiliate_service::track_visit($_GET['ref']);
-        } catch (\dml_exception $e) {
-            // Plugin tables not installed yet (upgrade pending): the visit is simply not tracked.
-            debugging($e->getMessage(), DEBUG_DEVELOPER);
+        if (!empty($_GET['ref']) && is_string($_GET['ref'])) {
+            try {
+                affiliate_service::track_visit($_GET['ref']);
+            } catch (\dml_exception $e) {
+                // Plugin tables not installed yet (upgrade pending): the visit is simply not tracked.
+                debugging($e->getMessage(), DEBUG_DEVELOPER);
+            }
+        }
+        if ($SCRIPT === '/index.php' && (!isloggedin() || isguestuser())) {
+            redirect(new \moodle_url('/local/moderncommerce/index.php'));
         }
     }
 
