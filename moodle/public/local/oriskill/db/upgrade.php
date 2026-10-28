@@ -47,5 +47,20 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026102901, 'local', 'oriskill');
     }
+
+    if ($oldversion < 2026103000) {
+        // Affiliation: commission rate set by each trainer, affiliates, referred orders and commissions.
+        $table = new xmldb_table('local_oriskill_creators');
+        $field = new xmldb_field('affiliaterate', XMLDB_TYPE_NUMBER, '5, 2', null, XMLDB_NOTNULL, null, '0', 'sap_testmode');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        foreach (['local_oriskill_affiliates', 'local_oriskill_referrals', 'local_oriskill_commissions'] as $name) {
+            if (!$dbman->table_exists($name)) {
+                $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', $name);
+            }
+        }
+        upgrade_plugin_savepoint(true, 2026103000, 'local', 'oriskill');
+    }
     return true;
 }

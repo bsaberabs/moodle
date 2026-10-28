@@ -1,0 +1,47 @@
+<?php
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
+namespace local_oriskill;
+
+/**
+ * Modern Commerce order events: referral at order time, commissions once paid.
+ *
+ * @package    local_oriskill
+ * @copyright  2026 Advanced TM
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class observer {
+
+    /**
+     * The buyer placed an order: attribute it to the affiliate whose link they followed.
+     *
+     * @param \local_moderncommerce\event\order_created $event Event.
+     */
+    public static function order_created(\local_moderncommerce\event\order_created $event): void {
+        if (!empty($_COOKIE[affiliate_service::COOKIE])) {
+            affiliate_service::attribute_order((int) $event->objectid, (string) $_COOKIE[affiliate_service::COOKIE]);
+        }
+    }
+
+    /**
+     * The order is paid: create the affiliate's pending commissions.
+     *
+     * @param \local_moderncommerce\event\order_paid $event Event.
+     */
+    public static function order_paid(\local_moderncommerce\event\order_paid $event): void {
+        affiliate_service::record_commissions((int) $event->objectid);
+    }
+}

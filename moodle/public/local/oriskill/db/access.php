@@ -38,4 +38,11 @@ $capabilities = [
         'contextlevel' => CONTEXT_SYSTEM,
         'archetypes' => ['manager' => CAP_ALLOW],
     ],
+    // See all affiliate commissions, mark them paid, suspend affiliates.
+    'local/oriskill:manageaffiliates' => [
+        'riskbitmask' => RISK_PERSONAL,
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_SYSTEM,
+        'archetypes' => ['manager' => CAP_ALLOW],
+    ],
 ];

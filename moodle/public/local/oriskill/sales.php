@@ -25,11 +25,18 @@
 require_once(__DIR__ . '/../../config.php');
 
 use local_moderncommerce\services\pricing_service;
+use local_oriskill\affiliate_service;
 use local_oriskill\creator_service;
 use local_oriskill\seller_service;
 
 $url = new moodle_url('/local/oriskill/sales.php');
 $creator = creator_service::require_current_creator($url, 'sales');
+
+if (($markpaid = optional_param('markpaid', 0, PARAM_INT)) && confirm_sesskey()) {
+    // A trainer can only settle the commissions owed on their own courses.
+    affiliate_service::mark_paid($markpaid, (int) $creator->id);
+    redirect($url, get_string('changessaved'), null, \core\output\notification::NOTIFY_SUCCESS);
+}
 $sales = seller_service::sales($creator);
 
 $totals = [];
@@ -62,5 +69,32 @@ if ($sales) {
     echo html_writer::table($table);
 } else {
     echo $OUTPUT->notification(get_string('nosales', 'local_oriskill'), 'info');
+}
+
+// Commissions owed to the affiliates who brought these sales.
+$commissions = affiliate_service::commissions(['sellerid' => $creator->id]);
+if ($commissions) {
+    echo $OUTPUT->heading(get_string('commissionsowed', 'local_oriskill'), 3, 'mt-5');
+    echo html_writer::tag('p', get_string('commissionsowed_intro', 'local_oriskill'));
+    $table = new html_table();
+    $table->head = [get_string('date'), get_string('ordercol', 'local_oriskill'), get_string('affiliatecol', 'local_oriskill'),
+        get_string('payoutdetails', 'local_oriskill'), get_string('course'), get_string('commissioncol', 'local_oriskill'),
+        get_string('status'), ''];
+    foreach ($commissions as $commission) {
+        $due = $commission->status === 'approved';
+        $table->data[] = [
+            userdate($commission->timecreated, get_string('strftimedatetimeshort', 'langconfig')),
+            s($commission->ordernumber),
+            fullname($commission),
+            $due ? format_text($commission->payoutdetails ?? '', FORMAT_PLAIN) : '',
+            format_string($commission->itemname),
+            pricing_service::format_price($commission->amount, $commission->currency)
+                . ' <small class="text-muted">(' . format_float($commission->rate, 2, true, true) . ' %)</small>',
+            get_string('commission:' . $commission->status, 'local_oriskill'),
+            $due ? $OUTPUT->single_button(new moodle_url($url, ['markpaid' => $commission->id, 'sesskey' => sesskey()]),
+                get_string('markpaid', 'local_oriskill'), 'post', ['type' => 'primary']) : '',
+        ];
+    }
+    echo html_writer::table($table);
 }
 echo $OUTPUT->footer();

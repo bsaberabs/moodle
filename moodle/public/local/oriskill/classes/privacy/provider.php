@@ -49,21 +49,36 @@ class provider implements
             'sap_key' => 'privacy:metadata:creators:sapkey',
         ], 'privacy:metadata:creators');
         $collection->add_subsystem_link('core_files', [], 'privacy:metadata:logo');
+        $collection->add_database_table('local_oriskill_affiliates', [
+            'userid' => 'privacy:metadata:affiliates:userid',
+            'code' => 'privacy:metadata:affiliates:code',
+            'clicks' => 'privacy:metadata:affiliates:clicks',
+            'payoutdetails' => 'privacy:metadata:affiliates:payoutdetails',
+        ], 'privacy:metadata:affiliates');
+        $collection->add_database_table('local_oriskill_commissions', [
+            'affiliateid' => 'privacy:metadata:commissions:affiliateid',
+            'orderid' => 'privacy:metadata:commissions:orderid',
+            'amount' => 'privacy:metadata:commissions:amount',
+            'status' => 'privacy:metadata:commissions:status',
+        ], 'privacy:metadata:commissions');
+        $collection->add_cookie(\local_oriskill\affiliate_service::COOKIE, 'privacy:metadata:cookie');
         return $collection;
     }
 
     public static function get_contexts_for_userid(int $userid): contextlist {
         $contextlist = new contextlist();
         $contextlist->add_from_sql('SELECT ctx.id FROM {context} ctx
-                                      JOIN {local_oriskill_creators} c ON c.userid = :userid
-                                     WHERE ctx.contextlevel = :level',
-            ['userid' => $userid, 'level' => CONTEXT_SYSTEM]);
+                                     WHERE ctx.contextlevel = :level
+                                       AND (EXISTS (SELECT 1 FROM {local_oriskill_creators} c WHERE c.userid = :userid1)
+                                            OR EXISTS (SELECT 1 FROM {local_oriskill_affiliates} a WHERE a.userid = :userid2))',
+            ['userid1' => $userid, 'userid2' => $userid, 'level' => CONTEXT_SYSTEM]);
         return $contextlist;
     }
 
     public static function get_users_in_context(userlist $userlist) {
         if ($userlist->get_context() instanceof \context_system) {
             $userlist->add_from_sql('userid', 'SELECT userid FROM {local_oriskill_creators}', []);
+            $userlist->add_from_sql('userid', 'SELECT userid FROM {local_oriskill_affiliates}', []);
         }
     }
 
@@ -71,11 +86,23 @@ class provider implements
         global $DB;
 
         $userid = $contextlist->get_user()->id;
+        $context = context_system::instance();
+        if ($affiliate = $DB->get_record('local_oriskill_affiliates', ['userid' => $userid])) {
+            writer::with_context($context)->export_data([get_string('affiliateprogram', 'local_oriskill')], (object) [
+                'code' => $affiliate->code,
+                'status' => $affiliate->status,
+                'clicks' => $affiliate->clicks,
+                'payoutdetails' => $affiliate->payoutdetails,
+                'commissions' => array_values(array_map(fn($c) => [
+                    'item' => $c->itemname, 'amount' => $c->amount, 'currency' => $c->currency, 'rate' => $c->rate,
+                    'status' => $c->status, 'timecreated' => \core_privacy\local\request\transform::datetime($c->timecreated),
+                ], $DB->get_records('local_oriskill_commissions', ['affiliateid' => $affiliate->id]))),
+            ]);
+        }
         $creator = $DB->get_record('local_oriskill_creators', ['userid' => $userid]);
         if (!$creator) {
             return;
         }
-        $context = context_system::instance();
         $subcontext = [get_string('pluginname', 'local_oriskill')];
         writer::with_context($context)->export_data($subcontext, (object) [
             'displayname' => $creator->displayname,
@@ -96,6 +123,9 @@ class provider implements
             foreach ($DB->get_records('local_oriskill_creators') as $creator) {
                 self::delete_creator($creator);
             }
+            foreach ($DB->get_fieldset('local_oriskill_affiliates', 'userid') as $userid) {
+                self::delete_affiliate((int) $userid);
+            }
         }
     }
 
@@ -103,6 +133,21 @@ class provider implements
         global $DB;
         if ($creator = $DB->get_record('local_oriskill_creators', ['userid' => $contextlist->get_user()->id])) {
             self::delete_creator($creator);
+        }
+        self::delete_affiliate((int) $contextlist->get_user()->id);
+    }
+
+    /**
+     * Delete a user's affiliate account, with their referrals and commissions.
+     *
+     * @param int $userid User.
+     */
+    private static function delete_affiliate(int $userid): void {
+        global $DB;
+        if ($affiliate = $DB->get_record('local_oriskill_affiliates', ['userid' => $userid])) {
+            $DB->delete_records('local_oriskill_commissions', ['affiliateid' => $affiliate->id]);
+            $DB->delete_records('local_oriskill_referrals', ['affiliateid' => $affiliate->id]);
+            $DB->delete_records('local_oriskill_affiliates', ['id' => $affiliate->id]);
         }
     }
 
@@ -115,6 +160,7 @@ class provider implements
             if ($creator = $DB->get_record('local_oriskill_creators', ['userid' => $userid])) {
                 self::delete_creator($creator);
             }
+            self::delete_affiliate((int) $userid);
         }
     }
 

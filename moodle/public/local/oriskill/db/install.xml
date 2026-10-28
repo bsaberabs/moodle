@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="local/oriskill/db" VERSION="20261029" COMMENT="XMLDB file for local/oriskill"
+<XMLDB PATH="local/oriskill/db" VERSION="20261030" COMMENT="XMLDB file for local/oriskill"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -19,6 +19,7 @@
         <FIELD NAME="sap_siteid" TYPE="char" LENGTH="50" NOTNULL="false" SEQUENCE="false" COMMENT="Trainer's SecureAndPay IdSite: their sales are paid into their own account"/>
         <FIELD NAME="sap_key" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Trainer's SecureAndPay signing key, encrypted with core\encryption"/>
         <FIELD NAME="sap_testmode" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="Use the SecureAndPay test environment"/>
+        <FIELD NAME="affiliaterate" TYPE="number" LENGTH="5" NOTNULL="true" DEFAULT="0" DECIMALS="2" SEQUENCE="false" COMMENT="Commission (%) paid by the trainer to affiliates on their courses; 0 = no affiliation"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
@@ -30,6 +31,67 @@
       <INDEXES>
         <INDEX NAME="slug" UNIQUE="true" FIELDS="slug"/>
         <INDEX NAME="status" UNIQUE="false" FIELDS="status"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="local_oriskill_affiliates" COMMENT="Affiliates: users who earn a commission on the sales they bring">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="code" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false" COMMENT="Referral code, used as ?ref=code"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="active" SEQUENCE="false" COMMENT="active, suspended"/>
+        <FIELD NAME="clicks" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Visits through the affiliate's links"/>
+        <FIELD NAME="payoutdetails" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="How the affiliate wants to be paid (IBAN, PayPal...)"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="userid" TYPE="foreign-unique" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="code" UNIQUE="true" FIELDS="code"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="local_oriskill_referrals" COMMENT="Orders placed after following an affiliate link">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="orderid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="affiliateid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="orderid" TYPE="foreign-unique" FIELDS="orderid" REFTABLE="local_moderncommerce_orders" REFFIELDS="id"/>
+        <KEY NAME="affiliateid" TYPE="foreign" FIELDS="affiliateid" REFTABLE="local_oriskill_affiliates" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="local_oriskill_commissions" COMMENT="Affiliate commissions, one per paid order line">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="affiliateid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="orderid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="orderitemid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="sellerid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Trainer who owes the commission (local_oriskill_creators.id), 0 = Oriskill"/>
+        <FIELD NAME="itemname" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="base" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false" COMMENT="Amount paid for the line, before tax and after discounts"/>
+        <FIELD NAME="rate" TYPE="number" LENGTH="5" NOTNULL="true" DEFAULT="0" DECIMALS="2" SEQUENCE="false"/>
+        <FIELD NAME="amount" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="6" SEQUENCE="false" COMMENT="Commission"/>
+        <FIELD NAME="currency" TYPE="char" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="pending" SEQUENCE="false" COMMENT="pending (refund window), approved (due), paid, cancelled"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timepaid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="affiliateid" TYPE="foreign" FIELDS="affiliateid" REFTABLE="local_oriskill_affiliates" REFFIELDS="id"/>
+        <KEY NAME="orderid" TYPE="foreign" FIELDS="orderid" REFTABLE="local_moderncommerce_orders" REFFIELDS="id"/>
+        <KEY NAME="orderitemid" TYPE="foreign-unique" FIELDS="orderitemid" REFTABLE="local_moderncommerce_order_items" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="status" UNIQUE="false" FIELDS="status"/>
+        <INDEX NAME="sellerid" UNIQUE="false" FIELDS="sellerid"/>
       </INDEXES>
     </TABLE>
   </TABLES>

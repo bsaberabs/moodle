@@ -50,6 +50,12 @@ if (data_submitted() && confirm_sesskey()) {
         }
         seller_service::set_course_price($creator, $courseid, $amount, $compare, !empty($onsale[$courseid]));
     }
+    $rate = unformat_float(optional_param('affiliaterate', '0', PARAM_RAW_TRIMMED) ?: '0', true);
+    if ($rate === false || $rate < 0 || $rate > 90) {
+        $errors[] = get_string('affiliaterate', 'local_oriskill');
+    } else {
+        $DB->set_field('local_oriskill_creators', 'affiliaterate', $rate, ['id' => $creator->id]);
+    }
     redirect($url, $errors ? get_string('error:invalidprices', 'local_oriskill', implode(', ', $errors))
         : get_string('changessaved'), null,
         $errors ? \core\output\notification::NOTIFY_ERROR : \core\output\notification::NOTIFY_SUCCESS);
@@ -88,6 +94,15 @@ echo html_writer::tag('p', get_string('pricing_intro', 'local_oriskill'));
 echo html_writer::start_tag('form', ['method' => 'post', 'action' => $url->out(false)]);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
 echo html_writer::table($table);
+echo html_writer::div(
+    html_writer::tag('label', get_string('affiliaterate', 'local_oriskill'), ['for' => 'affiliaterate', 'class' => 'form-label']) .
+    html_writer::empty_tag('input', ['type' => 'text', 'id' => 'affiliaterate', 'name' => 'affiliaterate', 'size' => 5,
+        'inputmode' => 'decimal', 'class' => 'form-control', 'style' => 'max-width: 7rem',
+        'value' => format_float((float) $creator->affiliaterate, 2, true, true)]) .
+    html_writer::div(get_string('affiliaterate_desc', 'local_oriskill', (object) [
+        'link' => (new moodle_url('/local/oriskill/affiliate.php'))->out(false),
+        'days' => (int) get_config('local_oriskill', 'validationdays')]), 'form-text'),
+    'mb-3');
 echo html_writer::tag('button', get_string('savechanges'), ['type' => 'submit', 'class' => 'btn btn-primary']);
 echo html_writer::end_tag('form');
 echo $OUTPUT->footer();

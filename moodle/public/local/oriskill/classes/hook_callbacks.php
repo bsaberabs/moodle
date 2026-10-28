@@ -29,6 +29,23 @@ class hook_callbacks {
     public static ?array $headmeta = null;
 
     /**
+     * Remember the affiliate code of a visitor arriving with ?ref=code, on any page.
+     *
+     * @param \core\hook\after_config $hook Hook.
+     */
+    public static function after_config(\core\hook\after_config $hook): void {
+        if (CLI_SCRIPT || AJAX_SCRIPT || during_initial_install() || empty($_GET['ref']) || !is_string($_GET['ref'])) {
+            return;
+        }
+        try {
+            affiliate_service::track_visit($_GET['ref']);
+        } catch (\dml_exception $e) {
+            // Plugin tables not installed yet (upgrade pending): the visit is simply not tracked.
+            debugging($e->getMessage(), DEBUG_DEVELOPER);
+        }
+    }
+
+    /**
      * Route a trainer's order to the trainer's own SecureAndPay account.
      *
      * An order can only be paid into one account, so mixing courses of several sellers (trainers, or a
