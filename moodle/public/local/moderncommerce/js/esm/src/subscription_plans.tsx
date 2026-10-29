@@ -46,6 +46,10 @@ type Plan = {
     haspromo: boolean;
     isfree: boolean;
     trialdays: number;
+    // Oriskill addition: trial amount (0 = free trial) and number of payments (0 = until cancelled).
+    trialprice: number;
+    displaytrialprice: string;
+    payments: number;
     maxseats: number;
     featured: boolean;
     sortorder: number;
@@ -365,11 +369,20 @@ export default function SubscriptionPlans({methods, manageUrl, labels, layout}: 
                                     {plan.haspromo && (
                                         <div className={mcClasses("mc-plan-card__regular")}>{plan.displayregularprice}</div>
                                     )}
+                                    {!plan.isfree && plan.payments > 0 && (
+                                        <div className={mcClasses("mc-cell-muted small mt-1")}>
+                                            {(plan.billingcycle === "yearly" ? labels.payments_yearly : labels.payments_monthly)
+                                                .replace("{$a}", String(plan.payments))}
+                                        </div>
+                                    )}
                                 </div>
 
                                 {canTrial && (
                                     <div className={mcClasses("mc-badge mc-badge--success mc-plan-card__trial")}>
-                                        {labels.daytrialbadge.replace("{$a}", String(plan.trialdays))}
+                                        {plan.trialprice > 0
+                                            ? labels.paidtrialbadge.replace("{$a->days}", String(plan.trialdays))
+                                                .replace("{$a->price}", plan.displaytrialprice)
+                                            : labels.daytrialbadge.replace("{$a}", String(plan.trialdays))}
                                     </div>
                                 )}
 
@@ -385,7 +398,7 @@ export default function SubscriptionPlans({methods, manageUrl, labels, layout}: 
                                         onClick={() => runSubscribe(plan, true)}
                                         type="button"
                                     >
-                                        {labels.startfreetrial}
+                                        {plan.trialprice > 0 ? labels.starttrial_paid : labels.startfreetrial}
                                     </McButton>
                                 ) : (
                                     <McButton

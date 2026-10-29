@@ -42,7 +42,7 @@ echo creator_service::space_start($creator, '/local/oriskill/courses.php', get_s
 echo html_writer::div(
     html_writer::tag('p', get_string('courses_intro', 'local_oriskill'), ['class' => 'mb-0 text-muted']) .
     html_writer::link($newcourseurl, '<i class="fa fa-plus me-1" aria-hidden="true"></i>' .
-        get_string('createcourse', 'local_oriskill'), ['class' => 'btn btn-primary']),
+        get_string('createcourse', 'local_oriskill'), ['class' => 'btn btn-outline-secondary']),
     'd-flex flex-wrap justify-content-between align-items-center gap-3 mb-4');
 
 if (!$courses) {
@@ -72,7 +72,7 @@ foreach ($courses as $courseid => $row) {
             html_writer::div(implode('', array_map(fn($m) => html_writer::span($m), $meta)), 'oriskill-course-meta') .
             html_writer::div(
                 html_writer::link(new moodle_url('/course/view.php', ['id' => $courseid]),
-                    get_string('course:open', 'local_oriskill'), ['class' => 'btn btn-sm btn-primary']) .
+                    get_string('course:open', 'local_oriskill'), ['class' => 'btn btn-sm btn-outline-secondary']) .
                 html_writer::link(new moodle_url('/course/edit.php', ['id' => $courseid]),
                     get_string('course:settings', 'local_oriskill'), ['class' => 'btn btn-sm btn-outline-secondary']) .
                 html_writer::link(new moodle_url('/local/oriskill/learners.php', ['courseid' => $courseid]),

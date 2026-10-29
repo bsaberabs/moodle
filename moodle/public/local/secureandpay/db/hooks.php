@@ -29,4 +29,8 @@ $callbacks = [
         'hook' => \core\hook\after_config::class,
         'callback' => [\local_secureandpay\hook_callbacks::class, 'after_config'],
     ],
+    [
+        'hook' => \local_moderncommerce\hook\plan_terms::class,
+        'callback' => [\local_secureandpay\hook_callbacks::class, 'plan_terms'],
+    ],
 ];

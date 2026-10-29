@@ -374,6 +374,12 @@ class subscribe_external extends external_api {
             ];
         }
 
+        // Terms set by the plugin that bills the plan (Oriskill addition, hook plan_terms).
+        $terms = new \local_moderncommerce\hook\plan_terms($plan);
+        \core\di::get(\core\hook\manager::class)->dispatch($terms);
+        $trialdays = (int) ($plan->trial_days ?? 0);
+        $trialprice = $trialdays > 0 ? max(0.0, $terms->trialprice) : 0.0;
+
         return [
             'id' => (int) $plan->id,
             'name' => format_string($plan->name),
@@ -386,7 +392,10 @@ class subscribe_external extends external_api {
             'displayregularprice' => self::format_price($regular),
             'haspromo' => (bool) $haspromo,
             'isfree' => $effective <= 0,
-            'trialdays' => (int) ($plan->trial_days ?? 0),
+            'trialdays' => $trialdays,
+            'trialprice' => $trialprice,
+            'displaytrialprice' => self::format_price($trialprice),
+            'payments' => max(0, $terms->payments),
             'maxseats' => (int) ($plan->max_seats ?? 0),
             'featured' => !empty($plan->featured),
             'sortorder' => (int) ($plan->sortorder ?? 0),
@@ -506,6 +515,9 @@ class subscribe_external extends external_api {
             'haspromo' => new external_value(PARAM_BOOL, 'Whether a promo price is active.'),
             'isfree' => new external_value(PARAM_BOOL, 'Whether the plan is free.'),
             'trialdays' => new external_value(PARAM_INT, 'Trial days.'),
+            'trialprice' => new external_value(PARAM_FLOAT, 'Amount paid when the trial starts (0: free trial).'),
+            'displaytrialprice' => new external_value(PARAM_TEXT, 'Formatted trial amount.'),
+            'payments' => new external_value(PARAM_INT, 'Number of payments, then access stops (0: until cancelled).'),
             'maxseats' => new external_value(PARAM_INT, 'Max seats.'),
             'featured' => new external_value(PARAM_BOOL, 'Featured flag.'),
             'sortorder' => new external_value(PARAM_INT, 'Sort order.'),

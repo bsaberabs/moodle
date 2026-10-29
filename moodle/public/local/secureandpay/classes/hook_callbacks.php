@@ -46,4 +46,21 @@ class hook_callbacks {
             'planid' => optional_param('planid', 0, PARAM_INT),
         ])));
     }
+
+    /**
+     * Show buyers the terms SecureAndPay bills a plan with: the trial amount (when trials go through SecureAndPay)
+     * and the number of payments.
+     *
+     * @param \local_moderncommerce\hook\plan_terms $hook Hook.
+     */
+    public static function plan_terms(\local_moderncommerce\hook\plan_terms $hook): void {
+        if (!(new gateway())->is_enabled()) {
+            return;
+        }
+        $planid = (int) $hook->plan->id;
+        $hook->payments = gateway::plan_payments($planid);
+        if (get_config('local_secureandpay', 'trialwithcard')) {
+            $hook->trialprice = gateway::plan_trial_price($planid);
+        }
+    }
 }

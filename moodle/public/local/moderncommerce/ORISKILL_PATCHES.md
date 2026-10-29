@@ -34,3 +34,13 @@ Ces changements ne viennent pas du dépôt d'origine. À reporter après chaque 
    qui prélève elle-même (SecureAndPay ClicktoPay) n'était prévenue qu'à la fin de la période, par
    `subscription_cancelled`, et pouvait encore prélever entre les deux (fin d'un essai gratuit).
    - `classes/event/subscription_cancel_scheduled.php` (nouveau), chaîne `event:subscriptioncancelscheduled`.
+7. **Hook `plan_terms` et conditions sur la page des formules** : le plugin qui facture une formule indique le
+   montant de l'essai (0 = gratuit, ou symbolique) et le nombre de prélèvements (0 = jusqu'à résiliation).
+   - `classes/hook/plan_terms.php` (nouveau)
+   - `classes/subscription/external/subscribe_external.php` : `format_plan()` déclenche le hook ; champs
+     `trialprice`, `displaytrialprice`, `payments`.
+   - `subscribe.php` : libellés `starttrial_paid`, `paidtrialbadge`, `payments_monthly`, `payments_yearly`.
+   - `js/esm/src/subscription_plans.tsx` (+ `js/esm/build/subscription_plans.js` recompilé) : badge « 7 jours pour
+     1,00 € », bouton « Commencer l'essai » quand l'essai n'est pas gratuit, ligne « Pendant 12 mois, puis l'accès
+     s'arrête ». Compilation d'un seul composant : esbuild 0.25, `bundle: true`, `format: esm`, `jsx: automatic`,
+     `minify: true`, externes `react`, `react-dom`, `react/jsx-runtime` (reproduit le fichier d'origine à l'octet près).
