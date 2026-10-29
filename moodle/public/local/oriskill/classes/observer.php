@@ -47,5 +47,6 @@ class observer {
         instalment_service::group_buyers((int) $event->objectid);
         billing_service::issue_invoice((int) $event->objectid);
         activecampaign_service::order_paid((int) $event->objectid);
+        coupon_service::order_paid((int) $event->objectid);
     }
 }

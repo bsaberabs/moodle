@@ -153,5 +153,12 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103014, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103016) {
+        // Promo codes of the order forms.
+        if (!$dbman->table_exists('local_oriskill_coupons')) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', 'local_oriskill_coupons');
+        }
+        upgrade_plugin_savepoint(true, 2026103016, 'local', 'oriskill');
+    }
     return true;
 }

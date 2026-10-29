@@ -27,6 +27,7 @@ require_once(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/lib.php');
 
 use local_moderncommerce\services\pricing_service;
+use local_oriskill\coupon_service;
 use local_oriskill\creator_service;
 use local_oriskill\hook_callbacks;
 use local_oriskill\orderform_service;
@@ -64,14 +65,26 @@ if ($offerid) {
         redirect($formurl);
     }
     $described = orderform_service::describe_offer($offer, $currency);
-    $url = new moodle_url($formurl, ['offer' => $offerid, 'mode' => $mode]);
+    if ($mode === 'instalments' && !$described->instalments) {
+        $mode = 'once';
+    }
+    // Promo code typed by the buyer, kept in the address until payment.
+    $code = optional_param('coupon', '', PARAM_ALPHANUMEXT);
+    [$coupon, $couponerror] = $code !== '' ? coupon_service::find($form, $code, $mode) : [null, null];
+    $quote = orderform_service::quote($offer, $mode, $coupon);
+    $url = new moodle_url($formurl, array_filter(['offer' => $offerid, 'mode' => $mode, 'coupon' => $coupon->code ?? '']));
     $PAGE->set_url($url);
     $PAGE->set_pagelayout('standard');
     $PAGE->set_title(format_string($form->title));
     $PAGE->set_heading(format_string($form->title));
-    $amount = $mode === 'instalments' && $described->instalments
-        ? get_string('instalments:summary', 'local_oriskill', $described->instalments) : $described->displayprice;
-    $recap = html_writer::tag('p', html_writer::tag('strong', s($offer->label)) . ' – ' . $amount, ['class' => 'lead']) .
+    $price = $quote->instalments
+        ? get_string('instalments:summary', 'local_oriskill', (object) ['count' => $quote->instalments->count,
+            'displayamount' => $quote->displayamount, 'displaytotal' => $quote->displaytotal])
+        : $quote->displaytotal;
+    if ($quote->discount > 0) {
+        $price = html_writer::tag('s', $quote->displaybase, ['class' => 'text-muted me-2']) . $price;
+    }
+    $recap = html_writer::tag('p', html_writer::tag('strong', s($offer->label)) . ' – ' . $price, ['class' => 'lead']) .
         html_writer::tag('ul', implode('', array_map(fn($c) => html_writer::tag('li', s($c->name)), $described->courses)));
     if (!isloggedin() || isguestuser()) {
         local_oriskill_visitor_page($url, html_writer::tag('p', get_string('orderform:loginfirst', 'local_oriskill')) . $recap);
@@ -84,7 +97,7 @@ if ($offerid) {
             $error = get_string('orderform:termsmissing', 'local_oriskill');
         } else {
             try {
-                [, $payurl] = orderform_service::create_order((int) $USER->id, $form, $offer, $mode);
+                [, $payurl] = orderform_service::create_order((int) $USER->id, $form, $offer, $mode, $coupon);
                 redirect($payurl);
             } catch (moodle_exception $e) {
                 $error = $e->getMessage();
@@ -100,10 +113,34 @@ if ($offerid) {
     echo html_writer::start_div('card-body');
     echo html_writer::tag('p', get_string('orderform:recap', 'local_oriskill', s($creator->displayname)), ['class' => 'text-muted']);
     echo $recap;
-    if ($mode === 'instalments' && $described->instalments) {
-        echo html_writer::tag('p', get_string('instalments:howitworks', 'local_oriskill', $described->instalments),
-            ['class' => 'small text-muted']);
+    if ($quote->instalments) {
+        echo html_writer::tag('p', get_string('instalments:howitworks', 'local_oriskill', (object) [
+            'count' => $quote->instalments->count, 'displayamount' => $quote->displayamount]), ['class' => 'small text-muted']);
     }
+
+    // Promo code.
+    if ($coupon) {
+        echo html_writer::div(get_string('coupon:applied', 'local_oriskill', (object) ['code' => s($coupon->code),
+            'discount' => pricing_service::format_price($quote->discount, $currency)]) . ' ' .
+            html_writer::link(new moodle_url($url, ['coupon' => '']), get_string('coupon:remove', 'local_oriskill'),
+                ['class' => 'small']), 'alert alert-success py-2');
+    } else {
+        if ($couponerror) {
+            echo html_writer::div(get_string($couponerror, 'local_oriskill'), 'alert alert-warning py-2');
+        }
+        echo html_writer::tag('form',
+            html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'id', 'value' => $form->id]) .
+            html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'offer', 'value' => $offerid]) .
+            html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'mode', 'value' => $mode]) .
+            html_writer::empty_tag('input', ['type' => 'text', 'name' => 'coupon', 'class' => 'form-control form-control-sm',
+                'placeholder' => get_string('coupon:field', 'local_oriskill'), 'aria-label' => get_string('coupon:field',
+                'local_oriskill'), 'style' => 'max-width: 14rem', 'value' => s($code)]) .
+            html_writer::tag('button', get_string('coupon:apply', 'local_oriskill'),
+                ['type' => 'submit', 'class' => 'btn btn-sm btn-outline-secondary']),
+            ['method' => 'get', 'action' => (new moodle_url('/local/oriskill/order.php'))->out(false),
+             'class' => 'd-flex gap-2 mb-3']);
+    }
+
     $termslink = html_writer::link(new moodle_url('/local/moderncommerce/terms.php'),
         get_string('showcase:terms', 'local_oriskill'), ['target' => '_blank']);
     echo html_writer::tag('form',
@@ -112,8 +149,7 @@ if ($offerid) {
         ($form->termsrequired ? html_writer::div(
             html_writer::checkbox('terms', 1, false, get_string('orderform:acceptterms', 'local_oriskill', $termslink),
                 ['id' => 'orderform-terms', 'class' => 'form-check-input', 'required' => 'required']), 'form-check mb-3') : '') .
-        html_writer::tag('button', get_string('orderform:pay', 'local_oriskill',
-            $mode === 'instalments' && $described->instalments ? $described->instalments->displayamount : $described->displayprice),
+        html_writer::tag('button', get_string('orderform:pay', 'local_oriskill', $quote->displayamount),
             ['type' => 'submit', 'class' => 'btn btn-primary btn-lg']) . ' ' .
         html_writer::link($formurl, get_string('cancel'), ['class' => 'btn btn-link']),
         ['method' => 'post', 'action' => $url->out(false)]);

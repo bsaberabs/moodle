@@ -221,25 +221,68 @@ class orderform_service {
     }
 
     /**
+     * What the buyer pays for an offer, with or without a promo code.
+     *
+     * @param \stdClass $offer Offer.
+     * @param string $mode once or instalments.
+     * @param \stdClass|null $coupon Promo code that applies (see coupon_service::find()).
+     * @return \stdClass {base, discount, total, instalments: {count, amount}|null, displaybase, displaytotal,
+     *                    displayamount}
+     */
+    public static function quote(\stdClass $offer, string $mode, ?\stdClass $coupon = null): \stdClass {
+        $currency = pricing_service::get_currency_config()->currency;
+        $described = self::describe_offer($offer, $currency);
+        if ($mode === 'instalments') {
+            if (!$described->instalments) {
+                throw new \moodle_exception('error:formunavailable', 'local_oriskill');
+            }
+            $count = $described->instalments->count;
+            $base = $described->instalments->total;
+            $wanted = $base - ($coupon ? coupon_service::discount($coupon, $base) : 0);
+            // Equal monthly instalments, rounded up to the cent.
+            $amount = ceil(round($wanted * 100 / $count, 4)) / 100;
+            $total = round($amount * $count, 2);
+            $instalments = (object) ['count' => $count, 'amount' => $amount];
+        } else {
+            $base = $described->price;
+            $total = round($base - ($coupon ? coupon_service::discount($coupon, $base) : 0), 2);
+            $instalments = null;
+        }
+        return (object) [
+            'base' => $base,
+            'discount' => round($base - $total, 2),
+            'total' => $total,
+            'instalments' => $instalments,
+            'displaybase' => pricing_service::format_price($base, $currency),
+            'displaytotal' => pricing_service::format_price($total, $currency),
+            'displayamount' => pricing_service::format_price($instalments->amount ?? $total, $currency),
+        ];
+    }
+
+    /**
      * Create the order of an offer and start its payment.
      *
      * @param int $userid Buyer.
      * @param \stdClass $form Published order form.
      * @param \stdClass $offer Offer of that form.
      * @param string $mode once or instalments.
+     * @param \stdClass|null $coupon Promo code that applies (see coupon_service::find()).
      * @return array [order, moodle_url where the buyer pays]
      */
-    public static function create_order(int $userid, \stdClass $form, \stdClass $offer, string $mode): array {
+    public static function create_order(int $userid, \stdClass $form, \stdClass $offer, string $mode,
+            ?\stdClass $coupon = null): array {
         global $DB;
 
         $creator = $DB->get_record('local_oriskill_creators', ['id' => $form->creatorid], '*', MUST_EXIST);
         if ($form->status !== 'published' || (int) $offer->formid !== (int) $form->id || !self::can_sell($creator)) {
             throw new \moodle_exception('error:formunavailable', 'local_oriskill');
         }
-        $described = self::describe_offer($offer, pricing_service::get_currency_config()->currency);
-        if ($mode === 'instalments' && !$described->instalments) {
-            throw new \moodle_exception('error:formunavailable', 'local_oriskill');
+        if ($coupon && ((int) $coupon->creatorid !== (int) $creator->id
+                || coupon_service::find($form, $coupon->code, $mode)[1] !== null)) {
+            throw new \moodle_exception('error:coupon', 'local_oriskill');
         }
+        $described = self::describe_offer($offer, pricing_service::get_currency_config()->currency);
+        $quote = self::quote($offer, $mode, $coupon);
         $courseids = array_column($described->courses, 'id');
         $missing = array_filter($courseids, fn($id) => !is_enrolled(\context_course::instance($id), $userid, '', true));
         if (!$missing) {
@@ -247,13 +290,23 @@ class orderform_service {
         }
 
         $notes = ['orderform' => (int) $form->id, 'offer' => (int) $offer->id, 'returnpath' => '/local/oriskill/thanks.php'];
-        if ($mode === 'instalments') {
-            $notes['instalments'] = ['count' => $described->instalments->count, 'amount' => $described->instalments->amount];
-            $order = order_api::create_course_order($userid, $courseids, $described->instalments->total, $notes);
+        if ($coupon) {
+            $notes['coupon'] = (int) $coupon->id;
+        }
+        if ($quote->instalments) {
+            $notes['instalments'] = ['count' => $quote->instalments->count, 'amount' => $quote->instalments->amount];
+        }
+        // The order lines keep the full price; the promo code is the order's discount (shown on the invoice).
+        $order = order_api::create_course_order($userid, $courseids, $quote->base, $notes);
+        if ($quote->discount > 0) {
+            $DB->update_record('local_moderncommerce_orders', (object) ['id' => $order->id, 'subtotal' => $quote->base,
+                'discount' => $quote->discount, 'total' => $quote->total, 'couponcode' => $coupon->code]);
+            $order = order_api::get_order($order->id);
+        }
+        if ($quote->instalments) {
             $reference = gateway::start_instalments($order);
             return [$order, new moodle_url('/local/secureandpay/pay.php', ['orderid' => $order->id, 'ref' => $reference])];
         }
-        $order = order_api::create_course_order($userid, $courseids, $described->price, $notes);
         $start = gateway_manager::initialize_payment(gateway::GATEWAY, $order);
         return [$order, new moodle_url($start['authorization_url'])];
     }
