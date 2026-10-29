@@ -210,14 +210,24 @@ class orderform_service {
     }
 
     /**
-     * Whether a trainer can take orders on their forms: active, allowed to sell, with a SecureAndPay account.
+     * Whether a trainer can take orders on their forms: active, allowed to sell, with a payment account
+     * (SecureAndPay, Stripe or PayPal).
      *
      * @param \stdClass $creator Trainer.
      * @return bool
      */
     public static function can_sell(\stdClass $creator): bool {
-        return $creator->status === 'active' && !seller_service::selling_blocker($creator)
-            && seller_service::merchant($creator) !== null;
+        return $creator->status === 'active' && !seller_service::selling_blocker($creator);
+    }
+
+    /**
+     * Whether a trainer can sell in instalments: only SecureAndPay charges the instalments on its own.
+     *
+     * @param \stdClass $creator Trainer.
+     * @return bool
+     */
+    public static function can_sell_instalments(\stdClass $creator): bool {
+        return self::can_sell($creator) && seller_service::merchant($creator) !== null;
     }
 
     /**
@@ -281,6 +291,9 @@ class orderform_service {
                 || coupon_service::find($form, $coupon->code, $mode)[1] !== null)) {
             throw new \moodle_exception('error:coupon', 'local_oriskill');
         }
+        if ($mode === 'instalments' && !self::can_sell_instalments($creator)) {
+            throw new \moodle_exception('error:formunavailable', 'local_oriskill');
+        }
         $described = self::describe_offer($offer, pricing_service::get_currency_config()->currency);
         $quote = self::quote($offer, $mode, $coupon);
         $courseids = array_column($described->courses, 'id');
@@ -307,8 +320,13 @@ class orderform_service {
             $reference = gateway::start_instalments($order);
             return [$order, new moodle_url('/local/secureandpay/pay.php', ['orderid' => $order->id, 'ref' => $reference])];
         }
-        $start = gateway_manager::initialize_payment(gateway::GATEWAY, $order);
-        return [$order, new moodle_url($start['authorization_url'])];
+        // Paid at once: straight to SecureAndPay when it is the trainer's only method, else to the store's payment
+        // page, which offers the trainer's methods (Stripe, PayPal, SecureAndPay) for this order.
+        if (!seller_service::usable_gateways($creator)) {
+            $start = gateway_manager::initialize_payment(gateway::GATEWAY, $order);
+            return [$order, new moodle_url($start['authorization_url'])];
+        }
+        return [$order, new moodle_url('/local/moderncommerce/checkout.php', ['orderid' => $order->id])];
     }
 
     /**

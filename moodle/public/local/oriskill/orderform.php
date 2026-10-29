@@ -104,6 +104,9 @@ echo html_writer::div(html_writer::link($listurl, '<i class="fa fa-arrow-left me
 if (!orderform_service::can_sell($creator)) {
     echo $OUTPUT->notification(get_string('orderform:cannotsell', 'local_oriskill',
         (new moodle_url('/local/oriskill/payment.php'))->out(false)), 'warning');
+} else if (!orderform_service::can_sell_instalments($creator)) {
+    echo $OUTPUT->notification(get_string('orderform:noinstalments', 'local_oriskill',
+        (new moodle_url('/local/oriskill/payment.php'))->out(false)), 'info');
 }
 echo html_writer::start_div('oriskill-card');
 $mform->display();

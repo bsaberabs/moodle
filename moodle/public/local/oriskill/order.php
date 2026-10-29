@@ -65,7 +65,7 @@ if ($offerid) {
         redirect($formurl);
     }
     $described = orderform_service::describe_offer($offer, $currency);
-    if ($mode === 'instalments' && !$described->instalments) {
+    if ($mode === 'instalments' && (!$described->instalments || !orderform_service::can_sell_instalments($creator))) {
         $mode = 'once';
     }
     // Promo code typed by the buyer, kept in the address until payment.
@@ -182,7 +182,7 @@ foreach ($offers as $offer) {
         'highlight' => (bool) $offer->highlight,
         'buttonlabel' => format_string($form->buttonlabel ?: get_string('orderform:buttondefault', 'local_oriskill')),
         'url' => (new moodle_url($formurl, ['offer' => $offer->id, 'mode' => 'once']))->out(false),
-        'instalments' => $described->instalments ? [
+        'instalments' => $described->instalments && orderform_service::can_sell_instalments($creator) ? [
             'label' => get_string('instalments:orshort', 'local_oriskill', $described->instalments),
             'url' => (new moodle_url($formurl, ['offer' => $offer->id, 'mode' => 'instalments']))->out(false),
         ] : null,
