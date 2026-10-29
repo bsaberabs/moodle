@@ -73,6 +73,7 @@ if ($form) {
         $defaults["offerinstaltotal[$i]"] = $offer->instalcount ? format_float((float) $offer->instaltotal, 2, true) : '';
         $defaults["offerhighlight[$i]"] = $offer->highlight;
         $defaults["offeractags[$i]"] = $offer->actags;
+        $defaults["offersubprice[$i]"] = (float) $offer->subprice > 0 ? format_float((float) $offer->subprice, 2, true) : '';
     }
 }
 $mform->set_data($defaults);
@@ -98,6 +99,7 @@ if ($data = $mform->get_data()) {
             'instaltotal' => unformat_float((string) $data->offerinstaltotal[$i], true),
             'highlight' => !empty($data->offerhighlight[$i]),
             'actags' => $data->offeractags[$i] ?? '',
+            'subprice' => unformat_float((string) ($data->offersubprice[$i] ?? ''), true) ?: 0,
         ];
     }
     $saved = orderform_service::save($creator, $data);

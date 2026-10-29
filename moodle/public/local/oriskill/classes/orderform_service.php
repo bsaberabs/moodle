@@ -142,6 +142,7 @@ class orderform_service {
                 'instaltotal' => $count ? round((float) $offer->instaltotal ?: (float) $offer->price, 2) : 0,
                 'highlight' => empty($offer->highlight) ? 0 : 1,
                 'actags' => activecampaign_service::clean_tags((string) ($offer->actags ?? '')),
+                'subprice' => round(max(0, (float) ($offer->subprice ?? 0)), 2),
                 'sortorder' => $index,
             ]);
         }
@@ -190,6 +191,7 @@ class orderform_service {
      * @param \stdClass $offer Offer.
      * @param string $currency Currency.
      * @return \stdClass {price, displayprice, instalments: {count, amount, total, displayamount, displaytotal}|null,
+     *                    subscription: {amount, displayamount}|null (monthly price),
      *                    courses: [{id, name}], details: string[]}
      */
     public static function describe_offer(\stdClass $offer, string $currency): \stdClass {
@@ -209,10 +211,13 @@ class orderform_service {
                 $courses[] = (object) ['id' => (int) $courseid, 'name' => format_string($name)];
             }
         }
+        $subscription = (float) ($offer->subprice ?? 0) > 0 ? (object) ['amount' => (float) $offer->subprice,
+            'displayamount' => pricing_service::format_price((float) $offer->subprice, $currency)] : null;
         return (object) [
             'price' => (float) $offer->price,
             'displayprice' => pricing_service::format_price((float) $offer->price, $currency),
             'instalments' => $instalments,
+            'subscription' => $subscription,
             'courses' => $courses,
             'details' => array_values(array_filter(array_map('trim', explode("\n", (string) $offer->details)))),
         ];
@@ -293,6 +298,18 @@ class orderform_service {
     public static function quote(\stdClass $offer, string $mode, ?\stdClass $coupon = null, float $extra = 0): \stdClass {
         $currency = pricing_service::get_currency_config()->currency;
         $described = self::describe_offer($offer, $currency);
+        if ($mode === 'subscription') {
+            if (!$described->subscription) {
+                throw new \moodle_exception('error:formunavailable', 'local_oriskill');
+            }
+            // Monthly until cancelled: what is charged now is one month (no promo code, no extra).
+            $amount = $described->subscription->amount;
+            return (object) ['base' => $amount, 'extra' => 0, 'discount' => 0, 'total' => $amount,
+                'instalments' => (object) ['count' => 0, 'amount' => $amount, 'subscription' => true],
+                'displaybase' => pricing_service::format_price($amount, $currency),
+                'displaytotal' => pricing_service::format_price($amount, $currency),
+                'displayamount' => pricing_service::format_price($amount, $currency)];
+        }
         if ($mode === 'instalments') {
             if (!$described->instalments) {
                 throw new \moodle_exception('error:formunavailable', 'local_oriskill');
@@ -344,8 +361,12 @@ class orderform_service {
                 || coupon_service::find($form, $coupon->code, $mode)[1] !== null)) {
             throw new \moodle_exception('error:coupon', 'local_oriskill');
         }
-        if ($mode === 'instalments' && !self::can_sell_instalments($creator)) {
+        if (in_array($mode, ['instalments', 'subscription'], true) && !self::can_sell_instalments($creator)) {
             throw new \moodle_exception('error:formunavailable', 'local_oriskill');
+        }
+        if ($mode === 'subscription') {
+            $coupon = null;
+            $withextra = false;
         }
         $described = self::describe_offer($offer, pricing_service::get_currency_config()->currency);
         $courseids = array_column($described->courses, 'id');
@@ -373,7 +394,8 @@ class orderform_service {
             $notes['savecard'] = true;
         }
         if ($quote->instalments) {
-            $notes['instalments'] = ['count' => $quote->instalments->count, 'amount' => $quote->instalments->amount];
+            $notes['instalments'] = ['count' => $quote->instalments->count, 'amount' => $quote->instalments->amount]
+                + (!empty($quote->instalments->subscription) ? ['subscription' => true] : []);
         }
         // The order lines keep the full prices (offer shared over its courses, extra over its own); the promo code
         // is the order's discount (shown on the invoice).

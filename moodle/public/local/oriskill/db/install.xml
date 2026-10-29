@@ -273,6 +273,7 @@
         <FIELD NAME="instaltotal" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="2" SEQUENCE="false"/>
         <FIELD NAME="highlight" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="actags" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="ActiveCampaign tags added to buyers of this offer, comma-separated"/>
+        <FIELD NAME="subprice" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="2" SEQUENCE="false" COMMENT="Monthly subscription price, 0 when not offered"/>
         <FIELD NAME="sortorder" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>

@@ -36,7 +36,8 @@ $id = optional_param('id', 0, PARAM_INT);
 $domain = optional_param('domain', '', PARAM_HOST);
 $slug = optional_param('slug', '', PARAM_ALPHANUMEXT);
 $offerid = optional_param('offer', 0, PARAM_INT);
-$mode = optional_param('mode', 'once', PARAM_ALPHA) === 'instalments' ? 'instalments' : 'once';
+$mode = optional_param('mode', 'once', PARAM_ALPHA);
+$mode = in_array($mode, ['instalments', 'subscription'], true) ? $mode : 'once';
 
 $context = context_system::instance();
 $PAGE->set_context($context);
@@ -65,13 +66,15 @@ if ($offerid) {
         redirect($formurl);
     }
     $described = orderform_service::describe_offer($offer, $currency);
-    if ($mode === 'instalments' && (!$described->instalments || !orderform_service::can_sell_instalments($creator))) {
+    if (($mode === 'instalments' && (!$described->instalments || !orderform_service::can_sell_instalments($creator)))
+            || ($mode === 'subscription' && (!$described->subscription || !orderform_service::can_sell_instalments($creator)))) {
         $mode = 'once';
     }
     // Promo code typed by the buyer, kept in the address until payment.
-    $code = optional_param('coupon', '', PARAM_ALPHANUMEXT);
+    // A subscription takes neither promo code nor extra.
+    $code = $mode === 'subscription' ? '' : optional_param('coupon', '', PARAM_ALPHANUMEXT);
     [$coupon, $couponerror] = $code !== '' ? coupon_service::find($form, $code, $mode) : [null, null];
-    $bump = orderform_service::bump($form);
+    $bump = $mode === 'subscription' ? null : orderform_service::bump($form);
     $withextra = $bump && optional_param('extra', 0, PARAM_BOOL);
     $quote = orderform_service::quote($offer, $mode, $coupon, $withextra ? $bump->price : 0);
     $url = new moodle_url($formurl, array_filter(['offer' => $offerid, 'mode' => $mode, 'coupon' => $coupon->code ?? '',
@@ -80,10 +83,14 @@ if ($offerid) {
     $PAGE->set_pagelayout('standard');
     $PAGE->set_title(format_string($form->title));
     $PAGE->set_heading(format_string($form->title));
-    $price = $quote->instalments
-        ? get_string('instalments:summary', 'local_oriskill', (object) ['count' => $quote->instalments->count,
-            'displayamount' => $quote->displayamount, 'displaytotal' => $quote->displaytotal])
-        : $quote->displaytotal;
+    if ($mode === 'subscription') {
+        $price = get_string('subscription:summary', 'local_oriskill', $quote->displayamount);
+    } else if ($quote->instalments) {
+        $price = get_string('instalments:summary', 'local_oriskill', (object) ['count' => $quote->instalments->count,
+            'displayamount' => $quote->displayamount, 'displaytotal' => $quote->displaytotal]);
+    } else {
+        $price = $quote->displaytotal;
+    }
     if ($quote->discount > 0) {
         $price = html_writer::tag('s', $quote->displaybase, ['class' => 'text-muted me-2']) . $price;
     }
@@ -122,7 +129,10 @@ if ($offerid) {
     echo html_writer::start_div('card-body');
     echo html_writer::tag('p', get_string('orderform:recap', 'local_oriskill', s($creator->displayname)), ['class' => 'text-muted']);
     echo $recap;
-    if ($quote->instalments) {
+    if ($mode === 'subscription') {
+        echo html_writer::tag('p', get_string('subscription:howitworks', 'local_oriskill', $quote->displayamount),
+            ['class' => 'small text-muted']);
+    } else if ($quote->instalments) {
         echo html_writer::tag('p', get_string('instalments:howitworks', 'local_oriskill', (object) [
             'count' => $quote->instalments->count, 'displayamount' => $quote->displayamount]), ['class' => 'small text-muted']);
     }
@@ -142,13 +152,13 @@ if ($offerid) {
             'oriskill-bump mb-3');
     }
 
-    // Promo code.
+    // Promo code (not for a subscription).
     if ($coupon) {
         echo html_writer::div(get_string('coupon:applied', 'local_oriskill', (object) ['code' => s($coupon->code),
             'discount' => pricing_service::format_price($quote->discount, $currency)]) . ' ' .
             html_writer::link(new moodle_url($url, ['coupon' => '']), get_string('coupon:remove', 'local_oriskill'),
                 ['class' => 'small']), 'alert alert-success py-2');
-    } else {
+    } else if ($mode !== 'subscription') {
         if ($couponerror) {
             echo html_writer::div(get_string($couponerror, 'local_oriskill'), 'alert alert-warning py-2');
         }
@@ -211,6 +221,10 @@ foreach ($offers as $offer) {
         'instalments' => $described->instalments && orderform_service::can_sell_instalments($creator) ? [
             'label' => get_string('instalments:orshort', 'local_oriskill', $described->instalments),
             'url' => (new moodle_url($formurl, ['offer' => $offer->id, 'mode' => 'instalments']))->out(false),
+        ] : null,
+        'subscription' => $described->subscription && orderform_service::can_sell_instalments($creator) ? [
+            'label' => get_string('subscription:orshort', 'local_oriskill', $described->subscription->displayamount),
+            'url' => (new moodle_url($formurl, ['offer' => $offer->id, 'mode' => 'subscription']))->out(false),
         ] : null,
     ];
 }

@@ -156,13 +156,19 @@ class instalment_service {
         }
         $wassuspended = $record->status === 'suspended';
         $paid = (int) $event->other['paid'];
+        // A subscription (count 0) never completes: it runs until cancelled.
         $DB->update_record('local_oriskill_instalments', (object) [
             'id' => $record->id,
             'paid' => $paid,
-            'status' => $paid >= (int) $record->count ? 'completed' : 'active',
+            'status' => $record->count && $paid >= (int) $record->count ? 'completed'
+                : ($record->status === 'cancelled' ? 'cancelled' : 'active'),
             'latesince' => 0,
             'timemodified' => time(),
         ]);
+        if (!$record->count && $paid > 1) {
+            // Each further month of a subscription gets its own invoice.
+            billing_service::issue_invoice((int) $record->orderid, $paid);
+        }
         if ($wassuspended) {
             self::set_access($record, false);
             self::notify($record, 'restored');
@@ -187,8 +193,105 @@ class instalment_service {
      * @param \local_secureandpay\event\instalments_stopped $event Event.
      */
     public static function instalments_stopped(\local_secureandpay\event\instalments_stopped $event): void {
-        if ((int) $event->other['paid'] < (int) $event->other['count']) {
+        global $DB;
+
+        $record = $DB->get_record('local_oriskill_instalments', ['orderid' => $event->objectid]);
+        if ($record && !$record->count) {
+            // A subscription stopped at SecureAndPay: cancelled, access kept for the month paid.
+            self::end_subscription($record, false);
+        } else if ((int) $event->other['paid'] < (int) $event->other['count']) {
             self::mark_unpaid((int) $event->objectid, 'stopped', 'stopped');
+        }
+    }
+
+    /**
+     * End of the period paid so far (monthly from the first payment).
+     *
+     * @param \stdClass $record Instalment purchase or subscription.
+     * @return int
+     */
+    public static function paid_until(\stdClass $record): int {
+        return strtotime('+' . (int) $record->paid . ' month', (int) $record->timecreated);
+    }
+
+    /**
+     * Subscriptions of a learner (sold by trainers), newest first.
+     *
+     * @param int $userid Learner.
+     * @return array
+     */
+    public static function user_subscriptions(int $userid): array {
+        global $DB;
+
+        $records = $DB->get_records_sql(
+            "SELECT i.*, o.ordernumber, o.currency, o.notes
+               FROM {local_oriskill_instalments} i
+               JOIN {local_moderncommerce_orders} o ON o.id = i.orderid
+              WHERE i.userid = ? AND i.count = 0
+           ORDER BY i.timecreated DESC", [$userid]);
+        foreach ($records as $record) {
+            $notes = json_decode((string) $record->notes, true) ?: [];
+            $offer = !empty($notes['offer']) ? $DB->get_field('local_oriskill_formoffers', 'label', ['id' => $notes['offer']]) : false;
+            $record->label = $offer !== false ? format_string($offer)
+                : format_string((string) $DB->get_field('course', 'fullname', ['id' => $record->courseid]));
+            $record->paiduntil = self::paid_until($record);
+        }
+        return $records;
+    }
+
+    /**
+     * Cancel a subscription: SecureAndPay stops charging, the access stays open until the end of the month paid.
+     *
+     * @param \stdClass $record Subscription (instalment record with count 0).
+     * @param callable|null $send See gateway::stop_schedule() (tests).
+     * @return bool Whether SecureAndPay confirmed (otherwise the trainer is asked to stop it in its back-office).
+     */
+    public static function cancel_subscription(\stdClass $record, ?callable $send = null): bool {
+        global $DB;
+
+        if ($record->count || in_array($record->status, ['cancelled'], true)) {
+            throw new \moodle_exception('error:notsubscription', 'local_oriskill');
+        }
+        $order = $DB->get_record('local_moderncommerce_orders', ['id' => $record->orderid], '*', MUST_EXIST);
+        $notes = json_decode((string) $order->notes, true) ?: [];
+        [$stopped, $answer] = gateway::stop_schedule($order, (string) ($notes['instalments']['secureandpay_reference'] ?? ''),
+            $send);
+        self::end_subscription($record, !$stopped, $answer);
+        return $stopped;
+    }
+
+    /**
+     * Mark a subscription cancelled and close the access at the end of the month paid.
+     *
+     * @param \stdClass $record Subscription.
+     * @param bool $warntrainer SecureAndPay did not confirm: tell the trainer to stop it themselves.
+     * @param string $answer SecureAndPay's answer.
+     */
+    private static function end_subscription(\stdClass $record, bool $warntrainer = false, string $answer = ''): void {
+        global $DB;
+
+        if ($record->status === 'cancelled') {
+            return;
+        }
+        $until = self::paid_until($record);
+        $DB->update_record('local_oriskill_instalments', (object) ['id' => $record->id, 'status' => 'cancelled',
+            'latesince' => 0, 'timemodified' => time()]);
+        $courseids = $DB->get_fieldset_select('local_moderncommerce_order_items', 'courseid',
+            'orderid = ? AND courseid IS NOT NULL', [$record->orderid]) ?: [$record->courseid];
+        foreach (array_unique(array_map('intval', $courseids)) as $courseid) {
+            if ($course = $DB->get_record('course', ['id' => $courseid])) {
+                learning_service::set_timeend($course, (int) $record->userid, $until);
+                if ($record->status === 'suspended') {
+                    learning_service::set_suspended($course, (int) $record->userid, false);
+                }
+            }
+        }
+        $record->status = 'cancelled';
+        $record->latesince = $until;
+        self::notify($record, $warntrainer ? 'cancelledmanual' : 'cancelled');
+        if ($creator = seller_service::owner_of_course((int) $record->courseid)) {
+            log_service::add($creator, 'subscription_cancelled', ['answer' => $answer], (int) $record->courseid,
+                (int) $record->userid);
         }
     }
 
@@ -288,8 +391,11 @@ class instalment_service {
             $record->collected = round((int) $record->paid * (float) $record->amount, 2);
             $record->remaining = round(((int) $record->count - (int) $record->paid) * (float) $record->amount, 2);
             // Monthly from the first payment; once completed or stopped, nothing more is due.
-            $record->nextdue = in_array($record->status, ['completed', 'stopped'], true) || $record->paid >= $record->count
-                ? 0 : strtotime('+' . (int) $record->paid . ' month', (int) $record->timecreated);
+            $record->nextdue = in_array($record->status, ['completed', 'stopped', 'cancelled'], true)
+                || ($record->count && $record->paid >= $record->count) ? 0 : self::paid_until($record);
+            if (!$record->count) {
+                $record->remaining = 0.0;
+            }
         }
         return $records;
     }
@@ -302,9 +408,12 @@ class instalment_service {
      */
     public static function status_badge(\stdClass $record): string {
         $class = ['completed' => 'is-good', 'active' => '', 'late' => 'is-warn', 'stopped' => 'is-warn',
-            'suspended' => 'is-warn'][$record->status] ?? '';
-        return \html_writer::span(get_string('instalmentstatus:' . $record->status, 'local_oriskill', $record),
-            trim('oriskill-badge ' . $class));
+            'suspended' => 'is-warn', 'cancelled' => ''][$record->status] ?? '';
+        // Subscriptions have their own wording (no number of instalments).
+        $key = (!$record->count ? 'substatus:' : 'instalmentstatus:') . $record->status;
+        $a = clone $record;
+        $a->until = userdate(self::paid_until($record), get_string('strftimedate', 'langconfig'));
+        return \html_writer::span(get_string($key, 'local_oriskill', $a), trim('oriskill-badge ' . $class));
     }
 
     /**
@@ -376,7 +485,8 @@ class instalment_service {
             'paid' => (int) $record->paid,
             'count' => (int) $record->count,
             'days' => self::GRACE_DAYS,
-            'deadline' => userdate((int) $record->latesince + self::GRACE_DAYS * DAYSECS, get_string('strftimedate')),
+            'deadline' => userdate((int) $record->latesince + ($record->status === 'cancelled' ? 0 : self::GRACE_DAYS * DAYSECS),
+                get_string('strftimedate')),
             'url' => (new moodle_url('/local/oriskill/learner.php', ['courseid' => $course->id, 'userid' => $learner->id]))
                 ->out(false),
         ];
@@ -406,8 +516,9 @@ class instalment_service {
             return;
         }
         $plan = gateway::instalment_plan($order);
-        $name = $plan ? get_string('group:instalments', 'local_oriskill', $plan['count'])
-            : get_string('group:paidatonce', 'local_oriskill');
+        $name = !$plan ? get_string('group:paidatonce', 'local_oriskill')
+            : ($plan['subscription'] ? get_string('group:subscription', 'local_oriskill')
+                : get_string('group:instalments', 'local_oriskill', $plan['count']));
         $courseids = $DB->get_fieldset_select('local_moderncommerce_order_items', 'courseid',
             'orderid = ? AND courseid IS NOT NULL', [$orderid]);
         foreach (array_unique(array_map('intval', $courseids)) as $courseid) {

@@ -205,5 +205,14 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103020, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103021) {
+        // Offers sold as a monthly subscription.
+        $table = new xmldb_table('local_oriskill_formoffers');
+        $field = new xmldb_field('subprice', XMLDB_TYPE_NUMBER, '20, 2', null, XMLDB_NOTNULL, null, '0', 'actags');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_plugin_savepoint(true, 2026103021, 'local', 'oriskill');
+    }
     return true;
 }

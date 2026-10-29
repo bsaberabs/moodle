@@ -179,6 +179,7 @@ $string['error:mixedsellers'] = 'votre panier contient des formations de plusieu
 $string['error:noinstalments'] = 'Cette formation n\'est pas proposée en plusieurs fois pour le moment.';
 $string['error:nooffer'] = 'Ajoutez au moins une offre complète (nom, formations, prix) avant de publier.';
 $string['error:notallowed'] = 'Votre rôle dans cette équipe ne donne pas accès à cette page.';
+$string['error:notsubscription'] = 'Cet abonnement est déjà résilié.';
 $string['error:offercourses'] = 'Choisissez au moins une formation.';
 $string['error:offerprice'] = 'Indiquez un prix positif.';
 $string['error:sellercannotsell'] = 'les formations de {$a} ne peuvent pas être achetées pour le moment.';
@@ -213,6 +214,21 @@ $string['font:elegant'] = 'Élégante (avec empattements)';
 $string['font:modern'] = 'Moderne';
 $string['group:instalments'] = 'Paiement en {$a} fois';
 $string['group:paidatonce'] = 'Paiement comptant';
+$string['group:subscription'] = 'Abonnés';
+$string['instalmentmail:cancelled_learner'] = 'Bonjour {$a->learner},
+
+Votre abonnement à « {$a->course} » est résilié : plus aucun prélèvement ne sera effectué. Votre accès reste ouvert jusqu\'au {$a->deadline}.';
+$string['instalmentmail:cancelled_subject'] = 'Abonnement résilié : {$a->course}';
+$string['instalmentmail:cancelled_trainer'] = 'L\'abonnement de {$a->learner} à « {$a->course} » est résilié ({$a->paid} mois payés). Son accès reste ouvert jusqu\'au {$a->deadline}.
+
+Fiche de l\'élève : {$a->url}';
+$string['instalmentmail:cancelledmanual_learner'] = 'Bonjour {$a->learner},
+
+Votre demande de résiliation de l\'abonnement à « {$a->course} » est enregistrée. Votre accès reste ouvert jusqu\'au {$a->deadline}.';
+$string['instalmentmail:cancelledmanual_subject'] = 'Résiliation à confirmer chez SecureAndPay : {$a->course}';
+$string['instalmentmail:cancelledmanual_trainer'] = 'L\'abonnement de {$a->learner} à « {$a->course} » a été résilié sur Oriskill, mais SecureAndPay n\'a pas confirmé l\'arrêt des prélèvements. Arrêtez-le dans votre espace SecureAndPay pour éviter un nouveau prélèvement.
+
+Fiche de l\'élève : {$a->url}';
 $string['instalmentmail:failed_learner'] = 'Bonjour {$a->learner},
 
 L\'échéance de votre formation « {$a->course} » n\'a pas pu être prélevée ({$a->paid} échéance(s) sur {$a->count} payée(s)).
@@ -273,6 +289,7 @@ $string['invoice:order'] = 'Commande';
 $string['invoice:paid'] = 'Acquittée';
 $string['invoice:quantity'] = 'Qté';
 $string['invoice:siret'] = 'SIRET : {$a}';
+$string['invoice:subscription'] = 'Abonnement mensuel de {$a->amount} – mois {$a->period}. Résiliable à tout moment.';
 $string['invoice:title'] = 'Facture';
 $string['invoice:total'] = 'Total';
 $string['invoice:totalexcl'] = 'Total HT';
@@ -317,6 +334,7 @@ $string['log:price_set'] = 'Prix de « {$a->course} » : {$a->price} (en vente :
 $string['log:refund_done'] = 'Remboursement de {$a->amount} confirmé par SecureAndPay ({$a->user}) : avoir {$a->number}';
 $string['log:refund_requested'] = 'Remboursement de {$a->amount} demandé à SecureAndPay (facture {$a->invoice}, {$a->user})';
 $string['log:showcase_saved'] = 'Vitrine modifiée';
+$string['log:subscription_cancelled'] = 'Abonnement de {$a->user} à « {$a->course} » résilié';
 $string['log:webhook_added'] = 'Webhook ajouté : {$a->url}';
 $string['log:webhook_removed'] = 'Webhook supprimé : {$a->url}';
 $string['log:what'] = 'Action';
@@ -384,6 +402,8 @@ $string['orderform:offerlabel'] = 'Nom de l\'offre';
 $string['orderform:offerprice'] = 'Prix comptant TTC';
 $string['orderform:offers'] = 'Offres';
 $string['orderform:offers_intro'] = 'Chaque offre ouvre une ou plusieurs de vos formations dès le paiement. Elle peut aussi être payée en plusieurs fois (mensualités prélevées par SecureAndPay). Laissez le nom vide pour supprimer une offre.';
+$string['orderform:offersubprice'] = 'Abonnement mensuel TTC (vide = non proposé)';
+$string['orderform:offersubprice_help'] = 'Propose aussi cette offre en abonnement : la carte de l\'abonné est prélevée chaque mois par SecureAndPay jusqu\'à ce qu\'il résilie ; l\'accès reste ouvert jusqu\'à la fin du mois payé. Nécessite un compte SecureAndPay.';
 $string['orderform:orders'] = 'Commandes payées';
 $string['orderform:page'] = 'Page';
 $string['orderform:pay'] = 'Payer {$a}';
@@ -455,7 +475,7 @@ $string['schedules:amounts'] = 'Encaissé';
 $string['schedules:collected'] = 'encaissés en plusieurs fois';
 $string['schedules:collectedamount'] = '{$a} encaissés';
 $string['schedules:estimate'] = 'Prochaine échéance estimée : un mois après la précédente, à partir du premier paiement. SecureAndPay prélève automatiquement ; chaque paiement ou refus met cette page à jour.';
-$string['schedules:intro'] = 'Les achats payés en plusieurs fois : où en est chaque échéancier, ce qui est encaissé et ce qui reste à percevoir. Une échéance refusée passe l\'élève en retard ; sans paiement au bout de {$a} jours, son accès est suspendu, puis rétabli au paiement suivant.';
+$string['schedules:intro'] = 'Les achats payés en plusieurs fois et les abonnements mensuels : où en est chaque échéancier, ce qui est encaissé et ce qui reste à percevoir. Une échéance refusée passe l\'élève en retard ; sans paiement au bout de {$a} jours, son accès est suspendu, puis rétabli au paiement suivant.';
 $string['schedules:latesince'] = 'impayé depuis le {$a}';
 $string['schedules:next'] = 'Prochaine échéance';
 $string['schedules:none'] = 'Aucun échéancier pour ce filtre.';
@@ -464,6 +484,7 @@ $string['schedules:progress'] = 'Échéances';
 $string['schedules:remainingamount'] = 'reste {$a}';
 $string['schedules:running'] = 'échéanciers en cours';
 $string['schedules:status_active'] = 'À jour';
+$string['schedules:status_cancelled'] = 'Résiliés';
 $string['schedules:status_completed'] = 'Terminés';
 $string['schedules:status_late'] = 'En retard';
 $string['schedules:status_stopped'] = 'Arrêtés';
@@ -497,6 +518,25 @@ $string['status:pending'] = 'À étudier';
 $string['status:rejected'] = 'Refusé';
 $string['status:suspended'] = 'Suspendu';
 $string['submitapplication'] = 'Envoyer ma candidature';
+$string['subscription:cancel'] = 'Résilier';
+$string['subscription:cancelconfirm'] = 'Résilier cet abonnement ? Plus aucun prélèvement ne sera fait ; votre accès reste ouvert jusqu\'au {$a}.';
+$string['subscription:cancelconfirmtrainer'] = 'Résilier l\'abonnement de cet élève ? Les prélèvements s\'arrêtent ; son accès reste ouvert jusqu\'à la fin du mois payé.';
+$string['subscription:cancelled'] = 'Abonnement résilié. Votre accès reste ouvert jusqu\'au {$a}.';
+$string['subscription:cancelledmanual'] = 'Résiliation enregistrée (accès jusqu\'au {$a}). SecureAndPay n\'a pas confirmé l\'arrêt des prélèvements : le formateur en est prévenu.';
+$string['subscription:cancelledtrainer'] = 'Abonnement résilié : accès jusqu\'au {$a}.';
+$string['subscription:howitworks'] = 'Vous payez {$a} maintenant et accédez tout de suite aux formations. La même somme est ensuite prélevée automatiquement chaque mois, jusqu\'à ce que vous résiliiez (depuis « Mes abonnements », à tout moment) ; l\'accès reste alors ouvert jusqu\'à la fin du mois payé.';
+$string['subscription:mine'] = 'Mes abonnements';
+$string['subscription:months'] = '{$a} mois payés';
+$string['subscription:none'] = 'Vous n\'avez aucun abonnement.';
+$string['subscription:orshort'] = 'ou {$a}/mois';
+$string['subscription:permonth'] = '{$a} par mois';
+$string['subscription:since'] = 'depuis le {$a}';
+$string['subscription:summary'] = '{$a} par mois, résiliable à tout moment';
+$string['substatus:active'] = 'Abonné ({$a->paid} mois payés)';
+$string['substatus:cancelled'] = 'Résilié – accès jusqu\'au {$a->until}';
+$string['substatus:late'] = 'Prélèvement refusé';
+$string['substatus:stopped'] = 'Prélèvements arrêtés';
+$string['substatus:suspended'] = 'Suspendu pour impayé';
 $string['suspend'] = 'Suspendre';
 $string['task:activecampaignsync'] = 'Envoyer un acheteur dans ActiveCampaign';
 $string['task:creditrefunds'] = 'Émettre les avoirs des commandes remboursées';

@@ -28,13 +28,28 @@ use local_moderncommerce\services\pricing_service;
 use local_oriskill\creator_service;
 use local_oriskill\instalment_service;
 
-const LOCAL_ORISKILL_SCHEDULE_STATUSES = ['active', 'late', 'suspended', 'stopped', 'completed'];
+const LOCAL_ORISKILL_SCHEDULE_STATUSES = ['active', 'late', 'suspended', 'stopped', 'completed', 'cancelled'];
 
 $status = optional_param('status', '', PARAM_ALPHA);
 $status = in_array($status, LOCAL_ORISKILL_SCHEDULE_STATUSES, true) ? $status : '';
 $url = new moodle_url('/local/oriskill/schedules.php', $status ? ['status' => $status] : []);
 $creator = creator_service::require_current_creator($url, 'menu:schedules');
 
+if (($cancel = optional_param('cancel', 0, PARAM_INT)) && confirm_sesskey()) {
+    $record = null;
+    foreach (instalment_service::trainer_records($creator) as $r) {
+        if ((int) $r->id === $cancel && !$r->count) {
+            $record = $r;
+        }
+    }
+    if (!$record) {
+        throw new moodle_exception('invalidrecord', 'error');
+    }
+    $confirmed = instalment_service::cancel_subscription($record);
+    redirect($url, get_string($confirmed ? 'subscription:cancelledtrainer' : 'subscription:cancelledmanual', 'local_oriskill',
+        userdate(instalment_service::paid_until($record), get_string('strftimedate', 'langconfig'))), null,
+        \core\output\notification::NOTIFY_SUCCESS);
+}
 $all = instalment_service::trainer_records($creator);
 $records = $status === '' ? $all : array_filter($all, fn($r) => $r->status === $status);
 $dateformat = get_string('strftimedate', 'langconfig');
@@ -98,15 +113,24 @@ if (!$records) {
                 html_writer::div(s($r->user->email), 'small text-muted') : '?'),
             s($r->label) . html_writer::div(s($r->ordernumber) . ' · ' .
                 userdate($r->timecreated, $dateformat), 'small text-muted'),
-            html_writer::div(get_string('schedules:paidof', 'local_oriskill', (object) ['paid' => $r->paid,
+            ($r->count ? html_writer::div(get_string('schedules:paidof', 'local_oriskill', (object) ['paid' => $r->paid,
                 'count' => $r->count, 'amount' => pricing_service::format_price((float) $r->amount, $r->currency)]), 'small') .
-                html_writer::div(html_writer::span('', '', ['style' => "width: {$percent}%"]), 'oriskill-progress') .
+                html_writer::div(html_writer::span('', '', ['style' => "width: {$percent}%"]), 'oriskill-progress')
+                : html_writer::div(get_string('subscription:permonth', 'local_oriskill',
+                    pricing_service::format_price((float) $r->amount, $r->currency)) . ' · ' .
+                    get_string('subscription:months', 'local_oriskill', $r->paid), 'small')) .
                 html_writer::div(instalment_service::status_badge($r), 'mt-1'),
             html_writer::div(get_string('schedules:collectedamount', 'local_oriskill',
                 pricing_service::format_price($r->collected, $r->currency))) .
                 ($r->remaining > 0 ? html_writer::div(get_string('schedules:remainingamount', 'local_oriskill',
                     pricing_service::format_price($r->remaining, $r->currency)), 'small text-muted') : ''),
-            $next,
+            $next . (!$r->count && in_array($r->status, ['active', 'late', 'suspended'], true) ? html_writer::tag('form',
+                html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]) .
+                html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'cancel', 'value' => $r->id]) .
+                html_writer::tag('button', get_string('subscription:cancel', 'local_oriskill'),
+                    ['type' => 'submit', 'class' => 'btn btn-sm btn-link text-danger p-0']),
+                ['method' => 'post', 'action' => $url->out(false), 'onsubmit' => 'return confirm(' .
+                    json_encode(get_string('subscription:cancelconfirmtrainer', 'local_oriskill')) . ')']) : ''),
         ];
     }
     echo html_writer::div(html_writer::table($table), 'oriskill-card');

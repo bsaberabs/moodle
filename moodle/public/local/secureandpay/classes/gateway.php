@@ -325,11 +325,12 @@ class gateway implements gateway_interface {
         if (self::order_is_subscription($order)) {
             $fields = $this->subscription_fields($order);
         } else if ($instalments = self::instalment_plan($order)) {
-            // Monthly instalments, the first one charged now: SecureAndPay stops after the last one.
+            // Monthly instalments, the first one charged now: SecureAndPay stops after the last one (never for a
+            // subscription, stopped when cancelled).
             $fields = [
                 'Clicktopay' => 1,
                 'MontantReccurent' => (string) $amount,
-                'ReccurentNumber' => (string) $instalments['count'],
+                'ReccurentNumber' => $instalments['subscription'] ? 'X' : (string) $instalments['count'],
                 'ReccurentFrequency' => '1',
                 'ReccurentTestPeriod' => '0',
             ];
@@ -406,9 +407,11 @@ class gateway implements gateway_interface {
      *
      * @param object $order Order whose payment started the schedule.
      * @param string $reference SecureAndPay orderID of that payment.
+     * @param callable|null $send fn(string $url, array $fields): array [HTTP code, body]. Tests pass their own; by
+     *                            default the request is posted to SecureAndPay.
      * @return array [bool stopped, string SecureAndPay's answer or the error]
      */
-    public static function stop_schedule(object $order, string $reference): array {
+    public static function stop_schedule(object $order, string $reference, ?callable $send = null): array {
         global $CFG;
         require_once($CFG->libdir . '/filelib.php');
 
@@ -417,6 +420,11 @@ class gateway implements gateway_interface {
             return [false, 'merchant not configured'];
         }
         $data = base64_encode(json_encode(['IdSite' => $merchant->siteid, 'orderID' => $reference]));
+        if ($send) {
+            [$httpcode, $answer] = $send($merchant->testmode ? self::URL_UNSUBSCRIBE_TEST : self::URL_UNSUBSCRIBE_LIVE,
+                ['data' => $data, 'sig' => $merchant->sign($data)]);
+            return (int) $httpcode === 200 ? self::read_stop_answer((string) $answer) : [false, 'HTTP ' . $httpcode];
+        }
         $curl = new \curl();
         $answer = (string) $curl->post($merchant->testmode ? self::URL_UNSUBSCRIBE_TEST : self::URL_UNSUBSCRIBE_LIVE,
             ['data' => $data, 'sig' => $merchant->sign($data)], ['CURLOPT_TIMEOUT' => 20]);
@@ -446,17 +454,22 @@ class gateway implements gateway_interface {
 
     /**
      * Instalments of a purchase paid in several times: number and amount of each, or null for a single payment.
+     * A monthly subscription sold by a seller is the same with no last instalment: count 0, until cancelled.
      *
      * Set in the order notes by whoever created the order (see start_instalments()).
      *
      * @param object $order Order.
-     * @return array|null ['count' => int, 'amount' => float]
+     * @return array|null ['count' => int (0: until cancelled), 'amount' => float, 'subscription' => bool]
      */
     public static function instalment_plan(object $order): ?array {
         $notes = json_decode((string) ($order->notes ?? ''), true);
         $count = (int) ($notes['instalments']['count'] ?? 0);
         $amount = round((float) ($notes['instalments']['amount'] ?? 0), 2);
-        return $count >= 2 && $amount > 0 ? ['count' => $count, 'amount' => $amount] : null;
+        $subscription = !empty($notes['instalments']['subscription']);
+        if ($amount <= 0 || ($subscription ? $count !== 0 : $count < 2)) {
+            return null;
+        }
+        return ['count' => $count, 'amount' => $amount, 'subscription' => $subscription];
     }
 
     /**

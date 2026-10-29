@@ -64,9 +64,18 @@ class hook_callbacks {
      * @param \core\hook\navigation\primary_extend $hook Hook.
      */
     public static function primary_extend(\core\hook\navigation\primary_extend $hook): void {
+        global $DB, $USER;
+
         if (self::current_creator()) {
             $hook->get_primaryview()->add(get_string('editshowcase', 'local_oriskill'),
                 new \moodle_url('/local/oriskill/dashboard.php'), \navigation_node::TYPE_CUSTOM, null, 'oriskilltrainer');
+        }
+        // Subscribers of a trainer's offer reach their subscriptions (to see or cancel them).
+        if (isloggedin() && !isguestuser()
+                && $DB->record_exists('local_oriskill_instalments', ['userid' => $USER->id, 'count' => 0])) {
+            $hook->get_primaryview()->add(get_string('subscription:mine', 'local_oriskill'),
+                new \moodle_url('/local/oriskill/mysubscriptions.php'), \navigation_node::TYPE_CUSTOM, null,
+                'oriskillsubscriptions');
         }
     }
 

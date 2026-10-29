@@ -75,20 +75,23 @@ class billing_service {
     }
 
     /**
-     * Issue the invoice of a paid order of a trainer's courses, once.
+     * Issue the invoice of a paid order of a trainer's courses, once; a subscription gets one invoice per month paid.
      *
      * @param int $orderid Order.
+     * @param int $period Month of a subscription (1 for the first payment, and for any other order).
      * @return \stdClass|null The invoice, or null for an order that is not a trainer's (or not paid).
      */
-    public static function issue_invoice(int $orderid): ?\stdClass {
+    public static function issue_invoice(int $orderid, int $period = 1): ?\stdClass {
         global $DB;
 
         $order = $DB->get_record('local_moderncommerce_orders', ['id' => $orderid]);
         if (!$order || !in_array($order->status, ['paid', 'completed', 'refunded'], true)) {
             return null;
         }
-        if ($invoice = $DB->get_record('local_oriskill_invoices', ['orderid' => $orderid, 'type' => 'invoice'])) {
-            return $invoice;
+        $issued = array_values($DB->get_records('local_oriskill_invoices', ['orderid' => $orderid, 'type' => 'invoice'],
+            'id ASC'));
+        if (count($issued) >= $period) {
+            return $issued[$period - 1];
         }
         $sellers = seller_service::purchase_sellers($order, (int) $order->userid);
         $creator = count($sellers) === 1 ? reset($sellers) : null;
@@ -114,7 +117,12 @@ class billing_service {
         }
         $mentions = [];
         $plan = gateway::instalment_plan($order);
-        if ($plan) {
+        if ($plan && $plan['subscription']) {
+            // Each month of a subscription is invoiced when it is paid.
+            $mentions[] = get_string('invoice:subscription', 'local_oriskill', (object) ['period' => $period,
+                'amount' => pricing_service::format_price($plan['amount'], $order->currency)]);
+            $plan = null;
+        } else if ($plan) {
             $mentions[] = get_string('invoice:instalments', 'local_oriskill', (object) ['count' => $plan['count'],
                 'amount' => pricing_service::format_price($plan['amount'], $order->currency)]);
         }

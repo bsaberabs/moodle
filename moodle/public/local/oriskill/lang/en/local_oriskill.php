@@ -179,6 +179,7 @@ $string['error:mixedsellers'] = 'your cart contains courses from several sellers
 $string['error:noinstalments'] = 'This course cannot be paid in instalments at the moment.';
 $string['error:nooffer'] = 'Add at least one complete offer (name, courses, price) before publishing.';
 $string['error:notallowed'] = 'Your role in this team does not give access to this page.';
+$string['error:notsubscription'] = 'This subscription is already cancelled.';
 $string['error:offercourses'] = 'Choose at least one course.';
 $string['error:offerprice'] = 'Enter a positive price.';
 $string['error:sellercannotsell'] = 'the courses of {$a} cannot be bought at the moment.';
@@ -213,6 +214,21 @@ $string['font:elegant'] = 'Elegant (serif)';
 $string['font:modern'] = 'Modern';
 $string['group:instalments'] = 'Paid in {$a} instalments';
 $string['group:paidatonce'] = 'Paid at once';
+$string['group:subscription'] = 'Subscribers';
+$string['instalmentmail:cancelled_learner'] = 'Hello {$a->learner},
+
+Your subscription to "{$a->course}" is cancelled: nothing more will be charged. Your access stays open until {$a->deadline}.';
+$string['instalmentmail:cancelled_subject'] = 'Subscription cancelled: {$a->course}';
+$string['instalmentmail:cancelled_trainer'] = 'The subscription of {$a->learner} to "{$a->course}" is cancelled ({$a->paid} months paid). Their access stays open until {$a->deadline}.
+
+Learner page: {$a->url}';
+$string['instalmentmail:cancelledmanual_learner'] = 'Hello {$a->learner},
+
+Your request to cancel the subscription to "{$a->course}" is recorded. Your access stays open until {$a->deadline}.';
+$string['instalmentmail:cancelledmanual_subject'] = 'Cancellation to confirm at SecureAndPay: {$a->course}';
+$string['instalmentmail:cancelledmanual_trainer'] = 'The subscription of {$a->learner} to "{$a->course}" was cancelled on Oriskill, but SecureAndPay did not confirm that charges stopped. Stop it in your SecureAndPay account to avoid another charge.
+
+Learner page: {$a->url}';
 $string['instalmentmail:failed_learner'] = 'Hello {$a->learner},
 
 The instalment for your course "{$a->course}" could not be charged ({$a->paid} of {$a->count} paid).
@@ -273,6 +289,7 @@ $string['invoice:order'] = 'Order';
 $string['invoice:paid'] = 'Paid';
 $string['invoice:quantity'] = 'Qty';
 $string['invoice:siret'] = 'SIRET: {$a}';
+$string['invoice:subscription'] = 'Monthly subscription of {$a->amount} – month {$a->period}. Can be cancelled at any time.';
 $string['invoice:title'] = 'Invoice';
 $string['invoice:total'] = 'Total';
 $string['invoice:totalexcl'] = 'Total excl. VAT';
@@ -317,6 +334,7 @@ $string['log:price_set'] = 'Price of "{$a->course}": {$a->price} (on sale: {$a->
 $string['log:refund_done'] = 'Refund of {$a->amount} confirmed by SecureAndPay ({$a->user}): credit note {$a->number}';
 $string['log:refund_requested'] = 'Refund of {$a->amount} asked of SecureAndPay (invoice {$a->invoice}, {$a->user})';
 $string['log:showcase_saved'] = 'Showcase changed';
+$string['log:subscription_cancelled'] = 'Subscription of {$a->user} to "{$a->course}" cancelled';
 $string['log:webhook_added'] = 'Webhook added: {$a->url}';
 $string['log:webhook_removed'] = 'Webhook removed: {$a->url}';
 $string['log:what'] = 'Action';
@@ -384,6 +402,8 @@ $string['orderform:offerlabel'] = 'Offer name';
 $string['orderform:offerprice'] = 'Price paid at once, incl. VAT';
 $string['orderform:offers'] = 'Offers';
 $string['orderform:offers_intro'] = 'Each offer opens one or more of your courses on payment. It can also be paid in instalments (monthly charges by SecureAndPay). Leave the name empty to remove an offer.';
+$string['orderform:offersubprice'] = 'Monthly subscription incl. VAT (empty = not offered)';
+$string['orderform:offersubprice_help'] = 'Also offers this offer as a subscription: SecureAndPay charges the subscriber\'s card every month until they cancel; access stays open until the end of the month paid. Requires a SecureAndPay account.';
 $string['orderform:orders'] = 'Paid orders';
 $string['orderform:page'] = 'Page';
 $string['orderform:pay'] = 'Pay {$a}';
@@ -455,7 +475,7 @@ $string['schedules:amounts'] = 'Collected';
 $string['schedules:collected'] = 'collected in instalments';
 $string['schedules:collectedamount'] = '{$a} collected';
 $string['schedules:estimate'] = 'Next instalment estimated one month after the previous one, from the first payment. SecureAndPay charges automatically; each payment or refusal updates this page.';
-$string['schedules:intro'] = 'Purchases paid in instalments: where each schedule stands, what was collected and what is left. A refused instalment makes the learner late; without payment after {$a} days their access is suspended, then restored on the next payment.';
+$string['schedules:intro'] = 'Purchases paid in instalments and monthly subscriptions: where each schedule stands, what was collected and what is left. A refused instalment makes the learner late; without payment after {$a} days their access is suspended, then restored on the next payment.';
 $string['schedules:latesince'] = 'unpaid since {$a}';
 $string['schedules:next'] = 'Next instalment';
 $string['schedules:none'] = 'No payment schedule for this filter.';
@@ -464,6 +484,7 @@ $string['schedules:progress'] = 'Instalments';
 $string['schedules:remainingamount'] = '{$a} left';
 $string['schedules:running'] = 'running schedules';
 $string['schedules:status_active'] = 'Up to date';
+$string['schedules:status_cancelled'] = 'Cancelled';
 $string['schedules:status_completed'] = 'Completed';
 $string['schedules:status_late'] = 'Late';
 $string['schedules:status_stopped'] = 'Stopped';
@@ -497,6 +518,25 @@ $string['status:pending'] = 'To review';
 $string['status:rejected'] = 'Rejected';
 $string['status:suspended'] = 'Suspended';
 $string['submitapplication'] = 'Send my application';
+$string['subscription:cancel'] = 'Cancel';
+$string['subscription:cancelconfirm'] = 'Cancel this subscription? Nothing more will be charged; your access stays open until {$a}.';
+$string['subscription:cancelconfirmtrainer'] = 'Cancel this learner\'s subscription? Charges stop; their access stays open until the end of the month paid.';
+$string['subscription:cancelled'] = 'Subscription cancelled. Your access stays open until {$a}.';
+$string['subscription:cancelledmanual'] = 'Cancellation recorded (access until {$a}). SecureAndPay did not confirm that charges stopped: the trainer is told.';
+$string['subscription:cancelledtrainer'] = 'Subscription cancelled: access until {$a}.';
+$string['subscription:howitworks'] = 'You pay {$a} now and reach the courses right away. The same amount is then charged automatically every month until you cancel (from "My subscriptions", at any time); access then stays open until the end of the month paid.';
+$string['subscription:mine'] = 'My subscriptions';
+$string['subscription:months'] = '{$a} months paid';
+$string['subscription:none'] = 'You have no subscription.';
+$string['subscription:orshort'] = 'or {$a}/month';
+$string['subscription:permonth'] = '{$a} a month';
+$string['subscription:since'] = 'since {$a}';
+$string['subscription:summary'] = '{$a} a month, cancel at any time';
+$string['substatus:active'] = 'Subscribed ({$a->paid} months paid)';
+$string['substatus:cancelled'] = 'Cancelled – access until {$a->until}';
+$string['substatus:late'] = 'Charge refused';
+$string['substatus:stopped'] = 'Charges stopped';
+$string['substatus:suspended'] = 'Suspended for non-payment';
 $string['suspend'] = 'Suspend';
 $string['task:activecampaignsync'] = 'Send a buyer to ActiveCampaign';
 $string['task:creditrefunds'] = 'Issue credit notes for refunded orders';
