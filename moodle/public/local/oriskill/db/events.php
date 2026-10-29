@@ -45,6 +45,10 @@ $observers = [
         'callback' => '\local_oriskill\instalment_service::instalment_failed',
     ],
     [
+        'eventname' => '\local_secureandpay\event\instalment_failed',
+        'callback' => '\local_oriskill\activecampaign_service::instalment_failed',
+    ],
+    [
         'eventname' => '\local_secureandpay\event\instalments_stopped',
         'callback' => '\local_oriskill\instalment_service::instalments_stopped',
     ],

@@ -98,6 +98,7 @@ class orderform_form extends \moodleform {
             $mform->createElement('text', 'offerinstaltotal', get_string('orderform:offerinstaltotal', 'local_oriskill'),
                 ['size' => 10]),
             $mform->createElement('advcheckbox', 'offerhighlight', get_string('orderform:offerhighlight', 'local_oriskill')),
+            $mform->createElement('text', 'offeractags', get_string('orderform:offeractags', 'local_oriskill'), ['size' => 50]),
         ];
         $options = [
             'offerlabel' => ['type' => PARAM_TEXT],
@@ -105,6 +106,7 @@ class orderform_form extends \moodleform {
             'offerprice' => ['type' => PARAM_RAW_TRIMMED],
             'offerinstaltotal' => ['type' => PARAM_RAW_TRIMMED, 'hideif' => ['offerinstalcount', 'eq', 0]],
             'offercourses' => ['type' => PARAM_INT],
+            'offeractags' => ['type' => PARAM_TEXT, 'helpbutton' => ['orderform:offeractags', 'local_oriskill']],
         ];
         $this->repeat_elements($repeat, max(1, (int) $this->_customdata['offercount']), $options, 'offerrepeats',
             'offeradd', 1, get_string('orderform:addoffer', 'local_oriskill'), true);

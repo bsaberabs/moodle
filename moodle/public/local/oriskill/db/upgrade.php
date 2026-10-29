@@ -141,5 +141,17 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103013, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103014) {
+        // ActiveCampaign: trainer accounts and tags per order form offer.
+        if (!$dbman->table_exists('local_oriskill_activecampaign')) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', 'local_oriskill_activecampaign');
+        }
+        $field = new xmldb_field('actags', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'highlight');
+        $table = new xmldb_table('local_oriskill_formoffers');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_plugin_savepoint(true, 2026103014, 'local', 'oriskill');
+    }
     return true;
 }

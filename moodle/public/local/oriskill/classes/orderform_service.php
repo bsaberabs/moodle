@@ -132,6 +132,7 @@ class orderform_service {
                 'instalcount' => $count,
                 'instaltotal' => $count ? round((float) $offer->instaltotal ?: (float) $offer->price, 2) : 0,
                 'highlight' => empty($offer->highlight) ? 0 : 1,
+                'actags' => activecampaign_service::clean_tags((string) ($offer->actags ?? '')),
                 'sortorder' => $index,
             ]);
         }

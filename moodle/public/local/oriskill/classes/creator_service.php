@@ -229,6 +229,7 @@ class creator_service {
             '/local/oriskill/payment.php' => ['paymentsettings', 'bi-wallet2'],
             '/local/oriskill/apply.php' => ['menu:profile', 'bi-shop'],
             '/local/oriskill/team.php' => ['menu:team', 'bi-person-badge'],
+            '/local/oriskill/integrations.php' => ['menu:integrations', 'bi-plug'],
             '/local/oriskill/log.php' => ['menu:log', 'bi-journal-text'],
         ],
     ];

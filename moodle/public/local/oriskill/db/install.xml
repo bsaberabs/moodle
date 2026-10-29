@@ -264,11 +264,31 @@
         <FIELD NAME="instalcount" TYPE="int" LENGTH="3" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="0: no payment in instalments"/>
         <FIELD NAME="instaltotal" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="2" SEQUENCE="false"/>
         <FIELD NAME="highlight" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="actags" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="ActiveCampaign tags added to buyers of this offer, comma-separated"/>
         <FIELD NAME="sortorder" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
         <KEY NAME="formid" TYPE="foreign" FIELDS="formid" REFTABLE="local_oriskill_orderforms" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="local_oriskill_activecampaign" COMMENT="A trainer's ActiveCampaign account: buyers are added to it once paid">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="creatorid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="apiurl" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="https://account.api-us1.com"/>
+        <FIELD NAME="apikey" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Encrypted"/>
+        <FIELD NAME="listid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="List buyers are subscribed to"/>
+        <FIELD NAME="tags" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Tags added on every purchase, comma-separated"/>
+        <FIELD NAME="coursetags" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="Also tag with the name of each course bought"/>
+        <FIELD NAME="unpaidtag" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="Tag added when an instalment is unpaid"/>
+        <FIELD NAME="lastresult" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Outcome of the last call, shown to the trainer"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="creatorid" TYPE="foreign-unique" FIELDS="creatorid" REFTABLE="local_oriskill_creators" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
   </TABLES>
