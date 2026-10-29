@@ -60,8 +60,10 @@ if (!plan_api::has_available_seat($plan, (int) $USER->id)) {
         \core\output\notification::NOTIFY_ERROR);
 }
 
-$order = order_api::create_subscription_order((int) $USER->id, (int) $plan->id, 0.0,
-    get_string('trialorder', 'local_secureandpay', format_string($plan->name)), '', ['action' => 'new', 'trial' => 1]);
+// The trial starts with the card registration, free or at the plan's trial price (a token amount such as 1).
+$order = order_api::create_subscription_order((int) $USER->id, (int) $plan->id,
+    gateway::plan_trial_price((int) $plan->id), get_string('trialorder', 'local_secureandpay', format_string($plan->name)),
+    '', ['action' => 'new', 'trial' => 1]);
 $reference = (new gateway())->start_trial($order);
 
 redirect(new moodle_url('/local/secureandpay/pay.php', ['orderid' => $order->id, 'ref' => $reference]));

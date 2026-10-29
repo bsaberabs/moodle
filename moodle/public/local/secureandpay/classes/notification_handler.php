@@ -196,7 +196,7 @@ class notification_handler {
         $DB->set_field('local_moderncommerce_subscription_access', 'expires_at', $trialend,
             ['subscriptionid' => $subscription->id]);
         subscription_service::log_history((int) $subscription->id, (int) $subscription->userid, 'trial_started',
-            null, (int) $subscription->planid, null, $trialend, 0.0, (int) $order->id);
+            null, (int) $subscription->planid, null, $trialend, (float) $order->total, (int) $order->id);
     }
 
     /**
@@ -260,10 +260,13 @@ class notification_handler {
         if (!$payments || !empty($subscription->cancel_at_period_end)) {
             return false;
         }
-        // Payments actually charged: the card registration of a free trial (0) does not count.
+        // Instalments charged: the trial's own payment (the card registration, at 0 or at a token amount) is not one.
         $paid = $DB->count_records_select('local_moderncommerce_payment_events',
             'orderid = :orderid AND gateway = :gateway AND status = :status AND amount > 0',
             ['orderid' => $order->id, 'gateway' => gateway::GATEWAY, 'status' => 'success']);
+        if (gateway::is_trial_order($order) && (float) $order->total > 0) {
+            $paid--;
+        }
         if ($paid < $payments) {
             return false;
         }

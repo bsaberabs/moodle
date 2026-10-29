@@ -27,7 +27,7 @@ abonnements (ClicktoPay, prélevés par SecureAndPay), essais gratuits et paieme
 |---|---|
 | Achat simple | `Clicktopay=0`, montant de la commande |
 | Abonnement | `Clicktopay=1`, prix de la formule tous les mois (`ReccurentFrequency=1`) ou tous les ans (`12`), `ReccurentNumber=X` (jusqu'à résiliation) ou le nombre de prélèvements de la formule |
-| Essai gratuit | idem abonnement avec `Amount=0` et `ReccurentTestPeriod` = jours d'essai |
+| Essai | idem abonnement avec `Amount` = montant de l'essai (0, ou symbolique comme 1 €) et `ReccurentTestPeriod` = jours d'essai |
 | Achat, un clic activé, sans carte | `Clicktopay=1`, `ReccurentNumber=1` : carte enregistrée, débitée une seule fois |
 | Achat ou abonnement, carte enregistrée | `Clicktopay=2` + `token` : le client confirme sans ressaisir sa carte |
 
@@ -38,7 +38,7 @@ abonnements (ClicktoPay, prélevés par SecureAndPay), essais gratuits et paieme
 - **Nombre de prélèvements** (*Administration du site → Plugins → Plugins locaux → Nombre de prélèvements
   par formule*) : vide = jusqu'à résiliation ; N = N prélèvements. `ReccurentNumber` compte tous les paiements
   de l'échéancier, le premier compris : N, ou N + 1 avec un essai gratuit (le premier paiement est
-  l'enregistrement de la carte à 0 €). Après le N-ième prélèvement notifié, l'abonnement se termine à la fin de
+  l'enregistrement de la carte, à 0 € ou au montant de l'essai, qui ne compte pas parmi les N prélèvements). Après le N-ième prélèvement notifié, l'abonnement se termine à la fin de
   la période payée (`cancellation_reason = completed`), sans relance.
 - **Notification** (`notify.php`), `TransStatus` : `00`/`02` payé (ou échéance suivante d'un
   abonnement : prolongation d'un cycle, ou réactivation si Moodle l'avait expiré), `01` en

@@ -15,7 +15,8 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Number of payments of each subscription plan paid with SecureAndPay (empty: billed until cancelled).
+ * Number of payments of each subscription plan paid with SecureAndPay (empty: billed until cancelled), and the
+ * amount of its trial (0: free trial; a token amount such as 1).
  *
  * @package    local_secureandpay
  * @copyright  2026 Advanced TM
@@ -33,8 +34,20 @@ $plans = $DB->get_records('local_moderncommerce_subscription_plans', null, 'sort
 
 if (data_submitted() && confirm_sesskey()) {
     $values = optional_param_array('payments', [], PARAM_RAW_TRIMMED);
+    $trialprices = optional_param_array('trialprice', [], PARAM_RAW_TRIMMED);
     $errors = [];
     foreach ($plans as $plan) {
+        $trialprice = trim((string) ($trialprices[$plan->id] ?? ''));
+        $trialamount = $trialprice === '' ? 0.0 : unformat_float($trialprice, true);
+        if ($trialamount === false || $trialamount < 0 || $trialamount > (float) $plan->price) {
+            $errors[] = format_string($plan->name);
+            continue;
+        }
+        if ($trialamount > 0) {
+            set_config('trialprice_' . $plan->id, round($trialamount, 2), 'local_secureandpay');
+        } else {
+            unset_config('trialprice_' . $plan->id, 'local_secureandpay');
+        }
         $value = $values[$plan->id] ?? '';
         if ($value !== '' && (!ctype_digit($value) || (int) $value < 1 || (int) $value > 999)) {
             $errors[] = format_string($plan->name);
@@ -62,23 +75,31 @@ if (!$plans) {
 
 $table = new html_table();
 $table->head = [get_string('planpayments_plan', 'local_secureandpay'), get_string('planpayments_price', 'local_secureandpay'),
-    get_string('planpayments_trial', 'local_secureandpay'), get_string('planpayments_number', 'local_secureandpay'),
+    get_string('planpayments_trial', 'local_secureandpay'), get_string('planpayments_trialprice', 'local_secureandpay'),
+    get_string('planpayments_number', 'local_secureandpay'),
     get_string('planpayments_summary', 'local_secureandpay')];
 foreach ($plans as $plan) {
     $payments = gateway::plan_payments((int) $plan->id);
     $cycle = get_string('planpayments_cycle_' . ($plan->billing_cycle === 'yearly' ? 'yearly' : 'monthly'),
         'local_secureandpay');
+    $trialprice = gateway::plan_trial_price((int) $plan->id);
     $a = (object) ['payments' => $payments, 'price' => format_float((float) $plan->price, 2) . ' ' . s($plan->currency),
-        'cycle' => $cycle, 'trial' => (int) $plan->trial_days];
+        'cycle' => $cycle, 'trial' => (int) $plan->trial_days,
+        'trialprice' => format_float($trialprice, 2) . ' ' . s($plan->currency)];
     $summary = $payments ? get_string('planpayments_fixed', 'local_secureandpay', $a)
         : get_string('planpayments_unlimited', 'local_secureandpay', $a);
     if ($plan->trial_days) {
-        $summary = get_string('planpayments_withtrial', 'local_secureandpay', $a) . ' ' . $summary;
+        $summary = get_string($trialprice > 0 ? 'planpayments_withpaidtrial' : 'planpayments_withtrial',
+            'local_secureandpay', $a) . ' ' . $summary;
     }
     $table->data[] = [
         format_string($plan->name) . html_writer::div(s($plan->code), 'small text-muted'),
         $a->price . ' / ' . $cycle,
         $plan->trial_days ? get_string('numdays', '', (int) $plan->trial_days) : '–',
+        $plan->trial_days ? html_writer::empty_tag('input', ['type' => 'text', 'inputmode' => 'decimal',
+            'name' => "trialprice[{$plan->id}]", 'value' => $trialprice > 0 ? format_float($trialprice, 2, true) : '',
+            'class' => 'form-control', 'style' => 'max-width: 7rem', 'placeholder' => '0',
+            'aria-label' => get_string('planpayments_trialprice', 'local_secureandpay')]) : '–',
         html_writer::empty_tag('input', ['type' => 'number', 'min' => 1, 'max' => 999, 'step' => 1,
             'name' => "payments[{$plan->id}]", 'value' => $payments ?: '', 'class' => 'form-control',
             'style' => 'max-width: 7rem', 'placeholder' => get_string('planpayments_unlimited_short', 'local_secureandpay'),

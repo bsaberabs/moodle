@@ -334,7 +334,8 @@ class gateway implements gateway_interface {
             'Clicktopay' => 1,
             'MontantReccurent' => (string) (int) round((float) $plan->price * 100),
             // ReccurentNumber counts every payment of the schedule, the first one included (as with one-click
-            // payment, where 1 = no second charge); a trial's first payment is the card registration at 0.
+            // payment, where 1 = no second charge); a trial's first payment is the card registration, at 0 or at
+            // the plan's trial price.
             'ReccurentNumber' => $payments ? (string) ($payments + ($trial ? 1 : 0)) : 'X',
             'ReccurentFrequency' => (string) (self::CYCLE_MONTHS[$plan->billing_cycle] ?? 1),
             'ReccurentTestPeriod' => (string) ($trial ? (int) $plan->trial_days : 0),
@@ -349,6 +350,16 @@ class gateway implements gateway_interface {
      */
     public static function plan_payments(int $planid): int {
         return max(0, (int) get_config('local_secureandpay', 'payments_' . $planid));
+    }
+
+    /**
+     * Amount paid at the start of a plan's trial (0 for a free trial, or a token amount such as 1).
+     *
+     * @param int $planid Modern Commerce subscription plan.
+     * @return float
+     */
+    public static function plan_trial_price(int $planid): float {
+        return max(0.0, round((float) get_config('local_secureandpay', 'trialprice_' . $planid), 2));
     }
 
     /**
