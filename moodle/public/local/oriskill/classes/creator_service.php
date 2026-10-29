@@ -208,6 +208,8 @@ class creator_service {
         foreach ([
             '/local/oriskill/dashboard.php' => ['menu:dashboard', 'fa-gauge-high'],
             '/local/oriskill/courses.php' => ['mycourses', 'fa-graduation-cap'],
+            '/local/oriskill/learners.php' => ['menu:learners', 'fa-users'],
+            '/local/oriskill/access.php' => ['menu:access', 'fa-lock-open'],
             '/local/oriskill/videos.php' => ['menu:videos', 'fa-film'],
             '/local/oriskill/pricing.php' => ['pricing', 'fa-tags'],
             '/local/oriskill/sales.php' => ['sales', 'fa-chart-line'],
@@ -227,6 +229,39 @@ class creator_service {
             'showcase' => self::showcase_url($creator)->out(false),
             'title' => $title,
         ]);
+    }
+
+    /**
+     * Course chosen on a trainer page (the "courseid" parameter, or the first course), checked to be the trainer's.
+     *
+     * @param \stdClass $creator Trainer.
+     * @return \stdClass|null Course record, or null when the trainer has no course yet.
+     */
+    public static function selected_course(\stdClass $creator): ?\stdClass {
+        $courses = seller_service::priced_courses($creator);
+        $courseid = optional_param('courseid', 0, PARAM_INT) ?: array_key_first($courses);
+        return $courseid ? learning_service::require_own_course($creator, (int) $courseid) : null;
+    }
+
+    /**
+     * Drop-down list to switch between the trainer's courses on a page.
+     *
+     * @param \stdClass $creator Trainer.
+     * @param \stdClass $course Current course.
+     * @param moodle_url $url Page.
+     * @return string HTML.
+     */
+    public static function course_picker(\stdClass $creator, \stdClass $course, moodle_url $url): string {
+        global $OUTPUT;
+
+        $options = [];
+        foreach (seller_service::priced_courses($creator) as $courseid => $row) {
+            $options[$courseid] = format_string($row->course->fullname);
+        }
+        $select = new \single_select($url, 'courseid', $options, $course->id, null);
+        $select->set_label(get_string('picker:course', 'local_oriskill'), ['class' => 'me-2 fw-semibold']);
+        $select->class = 'oriskill-course-picker mb-4';
+        return $OUTPUT->render($select);
     }
 
     /**

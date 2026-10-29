@@ -75,6 +75,10 @@ foreach ($courses as $courseid => $row) {
                     get_string('course:open', 'local_oriskill'), ['class' => 'btn btn-sm btn-primary']) .
                 html_writer::link(new moodle_url('/course/edit.php', ['id' => $courseid]),
                     get_string('course:settings', 'local_oriskill'), ['class' => 'btn btn-sm btn-outline-secondary']) .
+                html_writer::link(new moodle_url('/local/oriskill/learners.php', ['courseid' => $courseid]),
+                    get_string('course:learners', 'local_oriskill'), ['class' => 'btn btn-sm btn-outline-secondary']) .
+                html_writer::link(new moodle_url('/local/oriskill/access.php', ['courseid' => $courseid]),
+                    get_string('course:access', 'local_oriskill'), ['class' => 'btn btn-sm btn-outline-secondary']) .
                 html_writer::link(new moodle_url('/local/oriskill/pricing.php'),
                     get_string('pricing', 'local_oriskill'), ['class' => 'btn btn-sm btn-outline-secondary']),
                 'oriskill-course-actions'),

@@ -367,6 +367,27 @@
     padding-top: .4rem;
 }
 
+/* Élèves */
+.oriskill-course-picker select {
+    max-width: 100%;
+}
+.oriskill-learners .oriskill-progress {
+    width: 90px;
+    height: 6px;
+    margin-bottom: 0;
+}
+.oriskill-learners input[type="date"],
+.oriskill-learners select {
+    min-width: 9rem;
+}
+.oriskill-facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    border-top: 1px solid var(--ori-line);
+    padding-top: 1rem;
+}
+
 /* Guide vidéo */
 .oriskill-guide h3 .fa {
     color: var(--ori-accent);
