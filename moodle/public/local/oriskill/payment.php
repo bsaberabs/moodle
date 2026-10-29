@@ -37,6 +37,7 @@ $sapform = new payment_form($url, ['haskey' => !empty($creator->sap_key)], 'post
 $sapform->set_data(['siteid' => $creator->sap_siteid, 'testmode' => $creator->sap_testmode]);
 if ($data = $sapform->get_data()) {
     seller_service::save_payment_settings($creator, $data->siteid, (string) $data->key, !empty($data->testmode));
+    \local_oriskill\log_service::add($creator, 'payment_saved', ['gateway' => 'SecureAndPay']);
     redirect($url, get_string('changessaved'), null, \core\output\notification::NOTIFY_SUCCESS);
 }
 
@@ -52,6 +53,7 @@ foreach (seller_service::GATEWAYS as $gateway) {
     if ($submitted === $gateway && ($data = $form->get_data())) {
         seller_service::save_gateway_account($creator, $gateway, !empty($data->enabled), !empty($data->testmode),
             (string) $data->publickey, (string) $data->secretkey, (string) $data->webhooksecret);
+        \local_oriskill\log_service::add($creator, 'payment_saved', ['gateway' => ['stripe' => 'Stripe', 'paypal' => 'PayPal'][$gateway]]);
         redirect(new moodle_url($url, [], 'card-' . $gateway), get_string('changessaved'), null,
             \core\output\notification::NOTIFY_SUCCESS);
     }

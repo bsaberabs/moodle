@@ -72,6 +72,8 @@ if ($course && ($action = optional_param('action', '', PARAM_ALPHA)) && confirm_
                 $type = \core\output\notification::NOTIFY_ERROR;
             }
         }
+        \local_oriskill\log_service::add($creator, 'access_' . $action,
+            $action === 'addgroup' ? ['name' => required_param('name', PARAM_TEXT)] : [], (int) $course->id);
     } catch (moodle_exception $e) {
         $message = $e->getMessage();
         $type = \core\output\notification::NOTIFY_ERROR;

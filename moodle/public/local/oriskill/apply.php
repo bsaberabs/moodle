@@ -42,7 +42,12 @@ if (!isloggedin() || isguestuser()) {
 require_login(null, false);
 require_capability('local/oriskill:apply', $context);
 
-$creator = $DB->get_record('local_oriskill_creators', ['userid' => $USER->id]);
+$space = \local_oriskill\team_service::current_space();
+if ($space && \local_oriskill\team_service::can($space['role'], '/local/oriskill/apply.php')) {
+    $creator = $space['creator'];
+} else {
+    $creator = $DB->get_record('local_oriskill_creators', ['userid' => $USER->id]);
+}
 if ($creator && $creator->status === 'active') {
     // Approved trainer: this page is "My showcase" in the trainer space.
     $PAGE->set_title(get_string('menu:profile', 'local_oriskill'));
@@ -100,6 +105,7 @@ if ($data = $form->get_data()) {
         $creatorid = (int) $creator->id;
         file_save_draft_area_files($data->banner_filemanager, $context->id, 'local_oriskill', 'banner', $creatorid,
             creator_form::BANNER_OPTIONS);
+        \local_oriskill\log_service::add($creator, 'showcase_saved');
     } else {
         $data->slug = strtolower($data->slug);
         $creatorid = creator_service::apply((int) $USER->id, $data);

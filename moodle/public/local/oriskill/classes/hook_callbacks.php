@@ -76,17 +76,8 @@ class hook_callbacks {
      * @return \stdClass|null
      */
     private static function current_creator(): ?\stdClass {
-        global $DB, $USER;
-        static $creators = [];
-
-        if (!isloggedin() || isguestuser()) {
-            return null;
-        }
-        if (!array_key_exists($USER->id, $creators)) {
-            $creators[$USER->id] = $DB->get_record('local_oriskill_creators',
-                ['userid' => $USER->id, 'status' => 'active']) ?: null;
-        }
-        return $creators[$USER->id];
+        // The trainer, or a collaborator working in the trainer's space.
+        return team_service::current_space()['creator'] ?? null;
     }
 
     /**

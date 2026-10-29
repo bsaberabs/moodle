@@ -40,6 +40,8 @@ if (optional_param('action', '', PARAM_ALPHA) === 'credit' && confirm_sesskey())
     try {
         $credit = billing_service::issue_credit_note($invoice, (float) $amount,
             trim(optional_param('reason', '', PARAM_TEXT)));
+        \local_oriskill\log_service::add($creator, 'credit_issued', ['number' => $credit->number,
+            'invoice' => $invoice->number], null, (int) $invoice->userid);
         redirect($url, get_string('credit:issued', 'local_oriskill', $credit->number), null,
             \core\output\notification::NOTIFY_SUCCESS);
     } catch (moodle_exception $e) {
@@ -58,6 +60,7 @@ $form->set_data([
 ]);
 if ($data = $form->get_data()) {
     billing_service::save_details($creator, $data);
+    \local_oriskill\log_service::add($creator, 'billing_saved');
     redirect($url, get_string('changessaved'), null, \core\output\notification::NOTIFY_SUCCESS);
 }
 

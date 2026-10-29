@@ -50,7 +50,13 @@ if (data_submitted() && confirm_sesskey()) {
             $errors[] = format_string($courses[$courseid]->course->fullname);
             continue;
         }
-        seller_service::set_course_price($creator, $courseid, $amount, $compare, !empty($onsale[$courseid]));
+        $before = $courses[$courseid];
+        if ($before->amount === null || abs($before->amount - $amount) >= 0.005 || $before->compareamount != $compare
+                || $before->onsale !== !empty($onsale[$courseid])) {
+            seller_service::set_course_price($creator, $courseid, $amount, $compare, !empty($onsale[$courseid]));
+            \local_oriskill\log_service::add($creator, 'price_set', ['price' => format_float($amount, 2, true),
+                'onsale' => get_string(!empty($onsale[$courseid]) ? 'yes' : 'no')], $courseid);
+        }
     }
     if ($caninstalments) {
         $counts = optional_param_array('instcount', [], PARAM_INT);
@@ -65,14 +71,22 @@ if (data_submitted() && confirm_sesskey()) {
                 $errors[] = format_string($courses[$courseid]->course->fullname);
                 continue;
             }
-            instalment_service::save_offer($creator, $courseid, $count, (float) $total);
+            $before = instalment_service::offer($courseid);
+            if (($before->count ?? 0) != $count || ($count && abs(($before->total ?? 0) - $total) >= 0.01)) {
+                instalment_service::save_offer($creator, $courseid, $count, (float) $total);
+                \local_oriskill\log_service::add($creator, $count ? 'instalments_set' : 'instalments_off',
+                    ['count' => $count, 'total' => format_float((float) $total, 2, true)], $courseid);
+            }
         }
     }
     $rate = unformat_float(optional_param('affiliaterate', '0', PARAM_RAW_TRIMMED) ?: '0', true);
     if ($rate === false || $rate < 0 || $rate > 90) {
         $errors[] = get_string('affiliaterate', 'local_oriskill');
     } else {
-        $DB->set_field('local_oriskill_creators', 'affiliaterate', $rate, ['id' => $creator->id]);
+        if (abs((float) $creator->affiliaterate - $rate) >= 0.005) {
+            $DB->set_field('local_oriskill_creators', 'affiliaterate', $rate, ['id' => $creator->id]);
+            \local_oriskill\log_service::add($creator, 'affiliaterate_set', ['rate' => format_float($rate, 2, true, true)]);
+        }
     }
     redirect($url, $errors ? get_string('error:invalidprices', 'local_oriskill', implode(', ', $errors))
         : get_string('changessaved'), null,

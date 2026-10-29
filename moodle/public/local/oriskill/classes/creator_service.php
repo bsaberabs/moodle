@@ -170,25 +170,42 @@ class creator_service {
     }
 
     /**
-     * Set up a page of the trainer space for the current user, who must be an active trainer.
+     * Set up a page of the trainer space for the current user: the trainer, or a collaborator whose role allows
+     * the page (see team_service::PAGE_ROLES). A "space" parameter switches to another space of the user.
      *
      * @param moodle_url $url Page URL.
      * @param string $titlekey Page title string key.
-     * @return \stdClass Current user's trainer record.
+     * @return \stdClass Trainer whose space it is.
      */
     public static function require_current_creator(moodle_url $url, string $titlekey): \stdClass {
-        global $DB, $PAGE, $USER;
+        global $PAGE;
 
         $PAGE->set_context(context_system::instance());
         $PAGE->set_url($url);
         require_login(null, false);
-        $creator = $DB->get_record(self::TABLE, ['userid' => $USER->id, 'status' => 'active']);
-        if (!$creator) {
+        if ($switch = optional_param('space', 0, PARAM_INT)) {
+            team_service::switch_space($switch);
+        }
+        $space = team_service::current_space();
+        if (!$space) {
             redirect(new moodle_url('/local/oriskill/apply.php'));
+        }
+        if (!team_service::can($space['role'], $url->get_path(false))) {
+            redirect(new moodle_url('/local/oriskill/dashboard.php'), get_string('error:notallowed', 'local_oriskill'),
+                null, \core\output\notification::NOTIFY_ERROR);
         }
         $PAGE->set_title(get_string($titlekey, 'local_oriskill'));
         self::prepare_space_page();
-        return $creator;
+        return $space['creator'];
+    }
+
+    /**
+     * Role of the current user in the trainer space they work in.
+     *
+     * @return string owner, admin, teaching or support ('' outside a trainer space).
+     */
+    public static function current_role(): string {
+        return team_service::current_space()['role'] ?? '';
     }
 
     /** Menu of the trainer space: group => [page => [string key, Bootstrap icon]]. */
@@ -210,6 +227,8 @@ class creator_service {
         'navgroup:account' => [
             '/local/oriskill/payment.php' => ['paymentsettings', 'bi-wallet2'],
             '/local/oriskill/apply.php' => ['menu:profile', 'bi-shop'],
+            '/local/oriskill/team.php' => ['menu:team', 'bi-person-badge'],
+            '/local/oriskill/log.php' => ['menu:log', 'bi-journal-text'],
         ],
     ];
 
@@ -254,26 +273,47 @@ class creator_service {
      * @return string HTML.
      */
     public static function space_end(): string {
-        global $CFG, $OUTPUT;
+        global $CFG, $OUTPUT, $USER;
 
         [$creator, $current, $title, $actionshtml] = self::$space;
         self::$space = null;
         $content = ob_get_clean();
 
+        $role = self::current_role() ?: 'owner';
         $navigation = [];
         foreach (self::SPACE_MENU as $group => $pages) {
             $items = [];
             foreach ($pages as $path => [$key, $icon]) {
+                if (!team_service::can($role, $path)) {
+                    continue;
+                }
                 $items[] = ['key' => basename($path, '.php'), 'url' => (new moodle_url($path))->out(false),
                     'label' => get_string($key, 'local_oriskill'), 'icon' => $icon,
                     'active' => $path === $current, 'current' => $path === $current];
             }
-            $navigation[] = ['key' => $group, 'label' => get_string($group, 'local_oriskill'), 'items' => $items];
+            if ($items) {
+                $navigation[] = ['key' => $group, 'label' => get_string($group, 'local_oriskill'), 'items' => $items];
+            }
         }
         $navigation[] = ['key' => 'navgroup:public', 'label' => get_string('navgroup:public', 'local_oriskill'), 'items' => [
             ['key' => 'showcase', 'url' => self::showcase_url($creator)->out(false),
                 'label' => get_string('viewshowcase', 'local_oriskill'), 'icon' => 'bi-box-arrow-up-right', 'newtab' => true],
         ]];
+        // A collaborator sees whose space it is and their role; someone in several spaces can switch.
+        $spaces = team_service::spaces_of((int) $USER->id);
+        if ($role !== 'owner' || count($spaces) > 1) {
+            $switch = '';
+            foreach ($spaces as $id => $space) {
+                if ((int) $id !== (int) $creator->id) {
+                    $switch .= \html_writer::link(new moodle_url('/local/oriskill/dashboard.php', ['space' => $id]),
+                        get_string('team:switchto', 'local_oriskill', format_string($space['creator']->displayname)),
+                        ['class' => 'ms-2']);
+                }
+            }
+            $content = \html_writer::div(get_string('team:workingin', 'local_oriskill', (object) [
+                'trainer' => format_string($creator->displayname),
+                'role' => get_string('role:' . $role, 'local_oriskill')]) . $switch, 'alert alert-info py-2') . $content;
+        }
         if ($actionshtml === '') {
             $actionshtml = \local_moderncommerce\output\admin_shell::action_group([[
                 'label' => get_string('viewshowcase', 'local_oriskill'), 'icon' => 'bi-box-arrow-up-right',

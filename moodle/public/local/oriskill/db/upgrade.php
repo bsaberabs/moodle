@@ -123,5 +123,14 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103010, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103011) {
+        // Collaborators of a trainer and the log of the trainer space.
+        foreach (['local_oriskill_members', 'local_oriskill_log'] as $name) {
+            if (!$dbman->table_exists($name)) {
+                $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', $name);
+            }
+        }
+        upgrade_plugin_savepoint(true, 2026103011, 'local', 'oriskill');
+    }
     return true;
 }

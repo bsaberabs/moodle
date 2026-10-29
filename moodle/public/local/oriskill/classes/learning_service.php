@@ -82,6 +82,9 @@ class learning_service {
               WHERE e.courseid = :courseid AND u.deleted = 0 AND u.id <> :trainer
            ORDER BY u.lastname, u.firstname, ue.id",
             ['courseid' => $course->id, 'trainer' => $creator->userid]);
+        // Collaborators enrolled to work on the course are not learners.
+        $staff = team_service::member_userids($creator);
+        $records = array_filter($records, fn($record) => !in_array((int) $record->id, $staff, true));
         if (!$records) {
             return [];
         }

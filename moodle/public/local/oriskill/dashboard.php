@@ -45,6 +45,21 @@ foreach ($revenue as $currency => $amount) {
 }
 $onsale = count(array_filter($courses, fn($row) => $row->onsale));
 $newcourseurl = new moodle_url('/course/edit.php', ['category' => $creator->categoryid]);
+// A collaborator only gets the links of the pages their role opens.
+$role = creator_service::current_role();
+$can = fn(string $path) => \local_oriskill\team_service::can($role, $path);
+// Links of the steps: a page of the trainer space, course creation (with the courses), the trainer's own
+// subscription (owner only) or the user's own two-factor setup.
+$linkallowed = function(moodle_url $link) use ($can, $role): bool {
+    $path = $link->get_path(false);
+    if (str_starts_with($path, '/local/oriskill/')) {
+        return $can($path);
+    }
+    if ($path === '/course/edit.php') {
+        return $can('/local/oriskill/courses.php');
+    }
+    return $role === 'owner' || $path === '/admin/tool/mfa/user_preferences.php';
+};
 
 // Steps to start selling, in order.
 $steps = [
@@ -73,9 +88,9 @@ echo html_writer::div(
     html_writer::div(
         html_writer::tag('h3', get_string('dashboard:hello', 'local_oriskill', s($USER->firstname))) .
         html_writer::tag('p', get_string('dashboard:intro', 'local_oriskill'))) .
-    html_writer::div(
-        html_writer::link($newcourseurl, '<i class="fa fa-plus me-1" aria-hidden="true"></i>' .
-            get_string('createcourse', 'local_oriskill'), ['class' => 'btn btn-light'])),
+    html_writer::div($can('/local/oriskill/courses.php')
+        ? html_writer::link($newcourseurl, '<i class="fa fa-plus me-1" aria-hidden="true"></i>' .
+            get_string('createcourse', 'local_oriskill'), ['class' => 'btn btn-light']) : ''),
     'oriskill-hello');
 
 // Key figures.
@@ -100,8 +115,8 @@ foreach ($steps as [$isdone, $key, $link]) {
         html_writer::span('<i class="fa fa-check" aria-hidden="true"></i>', 'oriskill-step-mark') .
         html_writer::div(
             html_writer::span(get_string($key, 'local_oriskill'), 'oriskill-step-text') .
-            ($isdone ? '' : html_writer::div(html_writer::link($link, get_string($key . '_action', 'local_oriskill')),
-                'small'))),
+            ($isdone || !$linkallowed($link) ? ''
+                : html_writer::div(html_writer::link($link, get_string($key . '_action', 'local_oriskill')), 'small'))),
         ['class' => $isdone ? 'done' : '']);
 }
 $percent = (int) round(100 * $done / count($steps));
@@ -124,8 +139,8 @@ foreach (array_slice($sales, 0, 5) as $sale) {
 }
 $salescard = html_writer::tag('h3', get_string('dashboard:latestsales', 'local_oriskill')) .
     ($rows ? html_writer::tag('ul', $rows, ['class' => 'oriskill-rows']) .
-        html_writer::div(html_writer::link(new moodle_url('/local/oriskill/sales.php'),
-            get_string('seeall', 'local_oriskill')), 'mt-2 small')
+        ($can('/local/oriskill/sales.php') ? html_writer::div(html_writer::link(new moodle_url('/local/oriskill/sales.php'),
+            get_string('seeall', 'local_oriskill')), 'mt-2 small') : '')
     : html_writer::div('<i class="fa fa-chart-line" aria-hidden="true"></i>' . get_string('nosales', 'local_oriskill'),
         'oriskill-empty'));
 echo html_writer::div(html_writer::div($stepscard, 'oriskill-card') . html_writer::div($salescard, 'oriskill-card'),
@@ -144,8 +159,8 @@ foreach (array_slice($courses, 0, 5, true) as $courseid => $row) {
 }
 echo html_writer::div(html_writer::tag('h3', get_string('mycourses', 'local_oriskill')) .
     ($rows ? html_writer::tag('ul', $rows, ['class' => 'oriskill-rows']) .
-        html_writer::div(html_writer::link(new moodle_url('/local/oriskill/courses.php'),
-            get_string('seeall', 'local_oriskill')), 'mt-2 small')
+        ($can('/local/oriskill/courses.php') ? html_writer::div(html_writer::link(new moodle_url('/local/oriskill/courses.php'),
+            get_string('seeall', 'local_oriskill')), 'mt-2 small') : '')
     : html_writer::div('<i class="fa fa-graduation-cap" aria-hidden="true"></i>' .
         get_string('nocoursesyet', 'local_oriskill', $newcourseurl->out(false)), 'oriskill-empty')),
     'oriskill-card');

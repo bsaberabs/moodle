@@ -78,6 +78,10 @@ if ($course && ($action = optional_param('action', '', PARAM_ALPHA)) && confirm_
                 $message = get_string('accessremoved', 'local_oriskill');
                 break;
         }
+        \local_oriskill\log_service::add($creator, 'learner_' . $action, $action === 'setend'
+            ? ['date' => ($end = local_oriskill_end_of_day(optional_param('timeend', '', PARAM_RAW_TRIMMED)))
+                ? userdate($end, get_string('strftimedate', 'langconfig')) : get_string('learner:unlimited', 'local_oriskill')]
+            : [], (int) $course->id, $action === 'offer' ? (int) $user->id : $userid);
     } catch (moodle_exception $e) {
         $message = $e->getMessage();
         $type = \core\output\notification::NOTIFY_ERROR;

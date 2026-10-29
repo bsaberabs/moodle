@@ -167,6 +167,9 @@ class instalment_service {
             $course = get_course((int) $record->courseid);
             learning_service::set_suspended($course, (int) $record->userid, false);
             self::notify($record, 'restored');
+            if ($creator = seller_service::owner_of_course((int) $record->courseid)) {
+                log_service::add($creator, 'learner_paidrestored', [], (int) $record->courseid, (int) $record->userid);
+            }
         }
     }
 
@@ -209,6 +212,9 @@ class instalment_service {
             $DB->update_record('local_oriskill_instalments',
                 (object) ['id' => $record->id, 'status' => 'suspended', 'timemodified' => $now]);
             self::notify($record, 'suspended');
+            if ($creator = seller_service::owner_of_course((int) $record->courseid)) {
+                log_service::add($creator, 'learner_unpaidsuspended', [], (int) $record->courseid, (int) $record->userid);
+            }
         }
         return count($records);
     }
@@ -332,7 +338,9 @@ class instalment_service {
      * @param int $orderid Paid order.
      */
     public static function group_buyers(int $orderid): void {
-        global $DB;
+        global $CFG, $DB;
+        // Run from payment notifications, where the groups library is not loaded.
+        require_once($CFG->dirroot . '/group/lib.php');
 
         $order = $DB->get_record('local_moderncommerce_orders', ['id' => $orderid]);
         if (!$order) {

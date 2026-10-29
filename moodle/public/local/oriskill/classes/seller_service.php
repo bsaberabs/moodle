@@ -308,13 +308,15 @@ class seller_service {
             return [];
         }
         [$insql, $params] = $DB->get_in_or_equal($courseids, SQL_PARAMS_NAMED);
-        $params['trainer'] = $creator->userid;
+        // Neither the trainer nor their collaborators are learners.
+        [$staffsql, $staffparams] = $DB->get_in_or_equal(
+            array_merge([(int) $creator->userid], team_service::member_userids($creator)), SQL_PARAMS_NAMED, 'staff', false);
         return $DB->get_records_sql_menu(
             "SELECT e.courseid, COUNT(DISTINCT ue.userid)
                FROM {user_enrolments} ue
                JOIN {enrol} e ON e.id = ue.enrolid
-              WHERE e.courseid $insql AND ue.userid <> :trainer
-           GROUP BY e.courseid", $params);
+              WHERE e.courseid $insql AND ue.userid $staffsql
+           GROUP BY e.courseid", $params + $staffparams);
     }
 
     /**
