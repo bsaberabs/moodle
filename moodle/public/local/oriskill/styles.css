@@ -734,3 +734,10 @@
     font-size: .75rem;
     color: #6b7280;
 }
+
+/* Three cards side by side (teaching tools), one per line on small screens. */
+.oriskill-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+}
