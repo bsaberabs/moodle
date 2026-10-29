@@ -31,4 +31,6 @@ if ($hassiteconfig) {
     $settings->add(new admin_setting_configcheckbox('local_secureandpay/oneclick',
         get_string('oneclick', 'local_secureandpay'), get_string('oneclick_desc', 'local_secureandpay'), 0));
     $ADMIN->add('localplugins', $settings);
+    $ADMIN->add('localplugins', new admin_externalpage('local_secureandpay_plans',
+        get_string('planpayments', 'local_secureandpay'), new moodle_url('/local/secureandpay/plans.php')));
 }

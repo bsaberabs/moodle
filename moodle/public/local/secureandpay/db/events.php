@@ -29,4 +29,8 @@ $observers = [
         'eventname' => '\local_moderncommerce\event\subscription_cancelled',
         'callback' => '\local_secureandpay\observer::subscription_cancelled',
     ],
+    [
+        'eventname' => '\local_moderncommerce\event\subscription_cancel_scheduled',
+        'callback' => '\local_secureandpay\observer::subscription_cancel_scheduled',
+    ],
 ];

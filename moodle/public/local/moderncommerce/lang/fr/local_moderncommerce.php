@@ -1880,6 +1880,7 @@ $string['event:storepagecreated'] = 'Page de boutique créée';
 $string['event:storepagedeleted'] = 'Page de boutique supprimée';
 $string['event:storepageupdated'] = 'Page de boutique mise à jour';
 $string['event:subscriptioncancelled'] = 'Abonnement résilié';
+$string['event:subscriptioncancelscheduled'] = 'Résiliation d\'abonnement programmée';
 $string['event:subscriptioncreated'] = 'Abonnement créé';
 $string['event:subscriptionexpired'] = 'Abonnement expiré';
 $string['event:subscriptionextended'] = 'Abonnement prolongé';

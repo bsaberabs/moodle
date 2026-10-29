@@ -1880,6 +1880,7 @@ $string['event:storepagecreated'] = 'Store page created';
 $string['event:storepagedeleted'] = 'Store page deleted';
 $string['event:storepageupdated'] = 'Store page updated';
 $string['event:subscriptioncancelled'] = 'Subscription cancelled';
+$string['event:subscriptioncancelscheduled'] = 'Subscription cancellation scheduled';
 $string['event:subscriptioncreated'] = 'Subscription created';
 $string['event:subscriptionexpired'] = 'Subscription expired';
 $string['event:subscriptionextended'] = 'Subscription extended';

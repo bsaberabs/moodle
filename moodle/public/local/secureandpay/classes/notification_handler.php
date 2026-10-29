@@ -43,6 +43,8 @@ class notification_handler {
      * @return string Outcome, for logging.
      */
     public static function handle(string $rawdata, string $signature): string {
+        global $DB;
+
         // Each order is signed with the key of the account that took it (the platform or a trainer), so the
         // order is looked up first, read-only, and nothing is changed before the signature is verified.
         $data = json_decode((string) base64_decode($rawdata, true), true);
@@ -71,6 +73,9 @@ class notification_handler {
                         self::start_trial($order);
                         return 'trial_started';
                     }
+                    if ($subscription = self::find_subscription($order)) {
+                        self::end_after_last_payment($order, $subscription);
+                    }
                     return 'paid';
                 }
                 if ($subscription && !self::record($order, $data, 'success')->duplicate) {
@@ -81,7 +86,8 @@ class notification_handler {
                     } else {
                         subscription_service::reactivate((int) $subscription->id, (int) $order->id);
                     }
-                    return 'renewed';
+                    $subscription = $DB->get_record('local_moderncommerce_user_subscriptions', ['id' => $subscription->id]);
+                    return self::end_after_last_payment($order, $subscription) ? 'last_payment' : 'renewed';
                 }
                 return 'duplicate';
 
@@ -102,7 +108,6 @@ class notification_handler {
                 if (!$paid) {
                     order_api::update_order_status($order->id, 'failed');
                 } else if ($subscription) {
-                    global $DB;
                     $DB->set_field('local_moderncommerce_user_subscriptions', 'payment_failed_count',
                         (int) $subscription->payment_failed_count + 1, ['id' => $subscription->id]);
                     $DB->set_field('local_moderncommerce_user_subscriptions', 'last_payment_attempt',
@@ -241,6 +246,40 @@ class notification_handler {
     }
 
     /**
+     * A plan billed for a fixed number of payments: once the last one is paid, SecureAndPay stops billing and
+     * the subscription ends with the period that payment covers (no renewal reminder or failed-payment notice).
+     *
+     * @param object $order Order whose payment started the schedule.
+     * @param object $subscription Subscription.
+     * @return bool Whether this was the last payment.
+     */
+    private static function end_after_last_payment(object $order, object $subscription): bool {
+        global $DB;
+
+        $payments = gateway::plan_payments((int) $subscription->planid);
+        if (!$payments || !empty($subscription->cancel_at_period_end)) {
+            return false;
+        }
+        // Payments actually charged: the card registration of a free trial (0) does not count.
+        $paid = $DB->count_records_select('local_moderncommerce_payment_events',
+            'orderid = :orderid AND gateway = :gateway AND status = :status AND amount > 0',
+            ['orderid' => $order->id, 'gateway' => gateway::GATEWAY, 'status' => 'success']);
+        if ($paid < $payments) {
+            return false;
+        }
+        $DB->update_record('local_moderncommerce_user_subscriptions', (object) [
+            'id' => $subscription->id,
+            'cancel_at_period_end' => 1,
+            'auto_renew' => 0,
+            'cancellation_reason' => 'completed',
+            'timemodified' => time(),
+        ]);
+        subscription_service::log_history((int) $subscription->id, (int) $subscription->userid, 'payments_completed',
+            null, null, null, null, null, null, get_string('lastpaymentreceived', 'local_secureandpay', $payments));
+        return true;
+    }
+
+    /**
      * SecureAndPay stopped billing: keep access until the paid period ends, then let it expire.
      *
      * @param object $subscription Subscription.
@@ -258,7 +297,7 @@ class notification_handler {
             'cancellation_reason' => 'secureandpay',
             'timemodified' => time(),
         ]);
-        subscription_service::log_history((int) $subscription->id, (int) $subscription->userid, 'cancel_scheduled',
+        subscription_service::log_history((int) $subscription->id, (int) $subscription->userid, 'gateway_stopped',
             null, null, null, null, null, null, get_string('cancelledatsecureandpay', 'local_secureandpay'));
     }
 }

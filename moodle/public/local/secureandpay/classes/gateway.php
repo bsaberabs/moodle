@@ -50,11 +50,15 @@ class gateway implements gateway_interface {
     private const URL_LIVE = 'https://www.secureandpay.com/demandePaiement.php';
     private const URL_TEST = 'https://www.secureandpay.com:4443/demandePaiement.php';
 
+    /** Web service stopping a ClicktoPay schedule (IdSite + orderID). */
+    private const URL_UNSUBSCRIBE_LIVE = 'https://www.secureandpay.com/desabonnerWs.php';
+    private const URL_UNSUBSCRIBE_TEST = 'https://www.secureandpay.com:4443/desabonnerWs.php';
+
     /** Currencies accepted by SecureAndPay. */
     private const CURRENCIES = ['EUR', 'USD', 'GBP'];
 
-    /** Days between two instalments, per Modern Commerce billing cycle. */
-    private const CYCLE_DAYS = ['monthly' => 30, 'yearly' => 365];
+    /** Months between two instalments (ReccurentFrequency), per Modern Commerce billing cycle. */
+    private const CYCLE_MONTHS = ['monthly' => 1, 'yearly' => 12];
 
     /**
      * Register (or refresh) the gateway row in the Modern Commerce registry.
@@ -311,8 +315,8 @@ class gateway implements gateway_interface {
     }
 
     /**
-     * ClicktoPay fields: SecureAndPay charges the plan price every cycle until cancelled,
-     * after the plan's free trial when the order starts one.
+     * ClicktoPay fields: SecureAndPay charges the plan price every cycle, until cancelled or for the plan's
+     * number of payments, after the plan's free trial when the order starts one.
      *
      * @param object $order Subscription order.
      * @return array
@@ -323,14 +327,60 @@ class gateway implements gateway_interface {
         $notes = json_decode((string) $order->notes, true);
         $planid = (int) ($notes['subscription']['planid'] ?? 0);
         $plan = $DB->get_record('local_moderncommerce_subscription_plans', ['id' => $planid], '*', MUST_EXIST);
+        $trial = self::is_trial_order($order);
+        $payments = self::plan_payments($planid);
 
         return [
             'Clicktopay' => 1,
             'MontantReccurent' => (string) (int) round((float) $plan->price * 100),
-            'ReccurentNumber' => 'X',
-            'ReccurentFrequency' => (string) (self::CYCLE_DAYS[$plan->billing_cycle] ?? 30),
-            'ReccurentTestPeriod' => (string) (self::is_trial_order($order) ? (int) $plan->trial_days : 0),
+            // ReccurentNumber counts every payment of the schedule, the first one included (as with one-click
+            // payment, where 1 = no second charge); a trial's first payment is the card registration at 0.
+            'ReccurentNumber' => $payments ? (string) ($payments + ($trial ? 1 : 0)) : 'X',
+            'ReccurentFrequency' => (string) (self::CYCLE_MONTHS[$plan->billing_cycle] ?? 1),
+            'ReccurentTestPeriod' => (string) ($trial ? (int) $plan->trial_days : 0),
         ];
+    }
+
+    /**
+     * Number of payments a subscription plan is billed for (then it ends), or 0 for billing until cancelled.
+     *
+     * @param int $planid Modern Commerce subscription plan.
+     * @return int
+     */
+    public static function plan_payments(int $planid): int {
+        return max(0, (int) get_config('local_secureandpay', 'payments_' . $planid));
+    }
+
+    /**
+     * Ask SecureAndPay to stop a ClicktoPay schedule (web service desabonnerWs.php).
+     *
+     * @param object $order Order whose payment started the schedule.
+     * @param string $reference SecureAndPay orderID of that payment.
+     * @return array [bool stopped, string SecureAndPay's answer or the error]
+     */
+    public static function stop_schedule(object $order, string $reference): array {
+        global $CFG;
+        require_once($CFG->libdir . '/filelib.php');
+
+        $merchant = self::merchant_for_order($order, false);
+        if (!$merchant->is_configured()) {
+            return [false, 'merchant not configured'];
+        }
+        $data = base64_encode(json_encode(['IdSite' => $merchant->siteid, 'orderID' => $reference]));
+        $curl = new \curl();
+        $answer = (string) $curl->post($merchant->testmode ? self::URL_UNSUBSCRIBE_TEST : self::URL_UNSUBSCRIBE_LIVE,
+            ['data' => $data, 'sig' => $merchant->sign($data)], ['CURLOPT_TIMEOUT' => 20]);
+        $info = $curl->get_info();
+        $code = (int) ($info['http_code'] ?? 0);
+        if ($curl->get_errno() || $code !== 200) {
+            return [false, $curl->error ?: 'HTTP ' . $code];
+        }
+        // The answer's format is not documented: an explicit failure word is treated as a refusal.
+        $decoded = json_decode($answer, true);
+        $refused = (is_array($decoded) && (($decoded['status'] ?? $decoded['success'] ?? true) === false
+                || in_array(strtolower((string) ($decoded['status'] ?? '')), ['ko', 'error', 'erreur'], true)))
+            || preg_match('/\b(erreur|error|ko|invalid)\b/i', $answer);
+        return [!$refused, trim($answer)];
     }
 
     /**

@@ -226,6 +226,14 @@ class change_subscription extends external_api {
             'auto_renew' => $cancel ? 0 : (int)$subscription->auto_renew,
             'timemodified' => time(),
         ]);
+        if ($cancel) {
+            // Oriskill addition: a gateway billing on its own stops now (see subscription_cancel_scheduled).
+            \local_moderncommerce\event\subscription_cancel_scheduled::create([
+                'objectid' => (int)$subscription->id,
+                'context' => \context_system::instance(),
+                'relateduserid' => (int)$subscription->userid,
+            ])->trigger();
+        }
 
         $enddate = !empty($subscription->end_date)
             ? userdate((int)$subscription->end_date, get_string('strftimedateshort'))

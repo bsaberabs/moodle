@@ -26,7 +26,7 @@ abonnements (ClicktoPay, prélevés par SecureAndPay), essais gratuits et paieme
 | Cas | Envoyé à SecureAndPay |
 |---|---|
 | Achat simple | `Clicktopay=0`, montant de la commande |
-| Abonnement | `Clicktopay=1`, prix de la formule tous les 30 j (mensuel) ou 365 j (annuel), `ReccurentNumber=X` |
+| Abonnement | `Clicktopay=1`, prix de la formule tous les mois (`ReccurentFrequency=1`) ou tous les ans (`12`), `ReccurentNumber=X` (jusqu'à résiliation) ou le nombre de prélèvements de la formule |
 | Essai gratuit | idem abonnement avec `Amount=0` et `ReccurentTestPeriod` = jours d'essai |
 | Achat, un clic activé, sans carte | `Clicktopay=1`, `ReccurentNumber=1` : carte enregistrée, débitée une seule fois |
 | Achat ou abonnement, carte enregistrée | `Clicktopay=2` + `token` : le client confirme sans ressaisir sa carte |
@@ -35,6 +35,11 @@ abonnements (ClicktoPay, prélevés par SecureAndPay), essais gratuits et paieme
   `trial.php`, qui crée une commande à 0 €. À la notification, l'abonnement passe en essai ; il
   devient actif au premier prélèvement de SecureAndPay. L'essai Moodle dure un jour de plus que
   celui de SecureAndPay, pour ne pas expirer avant que ce prélèvement soit notifié.
+- **Nombre de prélèvements** (*Administration du site → Plugins → Plugins locaux → Nombre de prélèvements
+  par formule*) : vide = jusqu'à résiliation ; N = N prélèvements. `ReccurentNumber` compte tous les paiements
+  de l'échéancier, le premier compris : N, ou N + 1 avec un essai gratuit (le premier paiement est
+  l'enregistrement de la carte à 0 €). Après le N-ième prélèvement notifié, l'abonnement se termine à la fin de
+  la période payée (`cancellation_reason = completed`), sans relance.
 - **Notification** (`notify.php`), `TransStatus` : `00`/`02` payé (ou échéance suivante d'un
   abonnement : prolongation d'un cycle, ou réactivation si Moodle l'avait expiré), `01` en
   attente, `03` remboursé, `04` impayé (chargeback), `05` refusé, `06` abonnement arrêté
@@ -59,7 +64,8 @@ formateurs.
 
 ## Limites
 
-- SecureAndPay n'a pas d'API pour arrêter un abonnement : une résiliation faite dans Moodle envoie
-  un e-mail aux administrateurs, qui doivent l'arrêter dans le back-office SecureAndPay.
-- Fréquence en jours : un abonnement « mensuel » est prélevé tous les 30 jours.
+- Résiliation dans Moodle : l'échéancier est arrêté par le web service `desabonnerWs.php` (`IdSite` +
+  `orderID`, envoyés comme les autres appels : `data` en base64 + `sig` HMAC-SHA256). Si SecureAndPay ne
+  confirme pas, les administrateurs reçoivent un e-mail pour l'arrêter dans le back-office.
+- Fréquence en mois (`ReccurentFrequency`) : 1 = mensuel, 12 = annuel.
 - Devises : EUR, USD, GBP.

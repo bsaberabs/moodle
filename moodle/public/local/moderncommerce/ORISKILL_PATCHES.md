@@ -29,3 +29,8 @@ Ces changements ne viennent pas du dépôt d'origine. À reporter après chaque 
    `classes/services/invoice_service.php`, `classes/services/program_progress_service.php`. Une fois
    `paypal_gateway.php` chargé, l'autoloader Composer du plugin (`vendor/`) inclut ces fichiers sans `$CFG` : la
    validation d'une commande payée par PayPal échouait (« Failed opening required '/local/moderncommerce/lib.php' »).
+6. **Événement `subscription_cancel_scheduled`** : déclenché quand l'abonné résilie « à la fin de la période »
+   (`classes/external/learner/change_subscription.php`, `set_cancel_at_period_end()`). Sans lui, une passerelle
+   qui prélève elle-même (SecureAndPay ClicktoPay) n'était prévenue qu'à la fin de la période, par
+   `subscription_cancelled`, et pouvait encore prélever entre les deux (fin d'un essai gratuit).
+   - `classes/event/subscription_cancel_scheduled.php` (nouveau), chaîne `event:subscriptioncancelscheduled`.
