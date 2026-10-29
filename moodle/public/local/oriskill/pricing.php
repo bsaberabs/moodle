@@ -62,7 +62,7 @@ if (data_submitted() && confirm_sesskey()) {
 }
 
 echo $OUTPUT->header();
-echo creator_service::space_menu($creator, '/local/oriskill/pricing.php');
+echo creator_service::space_start($creator, '/local/oriskill/pricing.php', get_string('pricing', 'local_oriskill'));
 if ($blocker = seller_service::selling_blocker($creator)) {
     echo $OUTPUT->notification(get_string($blocker, 'local_oriskill', (object) [
         'payment' => (new moodle_url('/local/oriskill/payment.php'))->out(false),
@@ -72,6 +72,7 @@ if ($blocker = seller_service::selling_blocker($creator)) {
 if (!$courses) {
     echo $OUTPUT->notification(get_string('nocoursesyet', 'local_oriskill',
         (new moodle_url('/course/edit.php', ['category' => $creator->categoryid]))->out(false)), 'info');
+    echo creator_service::space_end();
     echo $OUTPUT->footer();
     exit;
 }
@@ -105,4 +106,5 @@ echo html_writer::div(
     'mb-3');
 echo html_writer::tag('button', get_string('savechanges'), ['type' => 'submit', 'class' => 'btn btn-primary']);
 echo html_writer::end_tag('form');
+echo creator_service::space_end();
 echo $OUTPUT->footer();

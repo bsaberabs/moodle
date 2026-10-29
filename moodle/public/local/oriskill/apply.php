@@ -94,7 +94,7 @@ echo $OUTPUT->header();
 if (!$creator) {
     echo html_writer::tag('p', get_string('becometrainer_intro', 'local_oriskill'), ['class' => 'lead']);
 } else {
-    echo creator_service::space_menu($creator, '/local/oriskill/apply.php');
+    echo creator_service::space_start($creator, '/local/oriskill/apply.php', get_string('menu:profile', 'local_oriskill'));
     if ($blocker = \local_oriskill\seller_service::selling_blocker($creator)) {
         echo $OUTPUT->notification(get_string($blocker, 'local_oriskill', (object) [
             'payment' => (new moodle_url('/local/oriskill/payment.php'))->out(false),
@@ -107,10 +107,9 @@ if (!$creator) {
         echo $OUTPUT->notification(get_string('mfarecommended', 'local_oriskill',
             (new moodle_url('/admin/tool/mfa/user_preferences.php'))->out(false)), 'info');
     }
-    echo html_writer::tag('p', html_writer::link(new moodle_url('/course/edit.php', ['category' => $creator->categoryid]),
-        get_string('createcourse', 'local_oriskill'), ['class' => 'btn btn-outline-primary']) . ' ' .
-        html_writer::link(new moodle_url('/course/index.php', ['categoryid' => $creator->categoryid]),
-        get_string('mycourses', 'local_oriskill'), ['class' => 'btn btn-outline-secondary']));
 }
 $form->display();
+if ($creator) {
+    echo creator_service::space_end();
+}
 echo $OUTPUT->footer();

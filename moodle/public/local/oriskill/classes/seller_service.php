@@ -164,6 +164,29 @@ class seller_service {
     }
 
     /**
+     * Number of learners in each of the trainer's courses (the trainer excluded).
+     *
+     * @param \stdClass $creator Trainer.
+     * @param int[] $courseids Courses of the trainer.
+     * @return array courseid => number of learners
+     */
+    public static function learner_counts(\stdClass $creator, array $courseids): array {
+        global $DB;
+
+        if (!$courseids) {
+            return [];
+        }
+        [$insql, $params] = $DB->get_in_or_equal($courseids, SQL_PARAMS_NAMED);
+        $params['trainer'] = $creator->userid;
+        return $DB->get_records_sql_menu(
+            "SELECT e.courseid, COUNT(DISTINCT ue.userid)
+               FROM {user_enrolments} ue
+               JOIN {enrol} e ON e.id = ue.enrolid
+              WHERE e.courseid $insql AND ue.userid <> :trainer
+           GROUP BY e.courseid", $params);
+    }
+
+    /**
      * Set the price of one of the trainer's courses, creating its Modern Commerce product on first use.
      *
      * @param \stdClass $creator Trainer.

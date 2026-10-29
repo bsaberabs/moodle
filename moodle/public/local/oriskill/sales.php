@@ -59,7 +59,7 @@ foreach ($sales as $sale) {
 }
 
 echo $OUTPUT->header();
-echo creator_service::space_menu($creator, '/local/oriskill/sales.php');
+echo creator_service::space_start($creator, '/local/oriskill/sales.php', get_string('sales', 'local_oriskill'));
 echo html_writer::tag('p', get_string('sales_intro', 'local_oriskill'));
 if ($sales) {
     foreach ($totals as $currency => $total) {
@@ -97,4 +97,5 @@ if ($commissions) {
     }
     echo html_writer::table($table);
 }
+echo creator_service::space_end();
 echo $OUTPUT->footer();

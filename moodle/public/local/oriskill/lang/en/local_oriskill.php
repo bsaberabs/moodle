@@ -181,3 +181,59 @@ $string['visitor_haveaccount'] = 'I already have an account';
 $string['visitor_hint'] = 'To continue, create your Oriskill account or log in: you will then come back to this page.';
 $string['visitor_signup'] = 'Create my account';
 $string['mfarecommended'] = 'Protect your trainer account, which decides where your sales are paid: <a href="{$a}">turn on two-factor authentication</a>. A code from your phone will be asked at each login, on top of your password.';
+$string['course:open'] = 'Open';
+$string['course:settings'] = 'Settings';
+$string['courses_intro'] = 'Create your courses, add your lessons and videos, then set their price to put them on sale.';
+$string['coursestatus:draft'] = 'Draft';
+$string['coursestatus:hidden'] = 'Hidden from learners';
+$string['coursestatus:noprice'] = 'No price';
+$string['dashboard:hello'] = 'Hello {$a}!';
+$string['dashboard:intro'] = 'Here is the activity of your trainer space.';
+$string['dashboard:latestsales'] = 'Latest sales';
+$string['dashboard:steps'] = 'Getting started ({$a->done}/{$a->total})';
+$string['learnerscount'] = '{$a} learner(s)';
+$string['menu:dashboard'] = 'Dashboard';
+$string['menu:videos'] = 'Add videos';
+$string['seeall'] = 'See all';
+$string['stat:courses'] = 'course(s), {$a} on sale';
+$string['stat:learners'] = 'enrolled learner(s)';
+$string['stat:revenue'] = 'collected';
+$string['stat:sales'] = 'sale(s)';
+$string['step:course'] = 'Create your first course';
+$string['step:course_action'] = 'Create a course';
+$string['step:mfa'] = 'Protect your account with two-factor authentication';
+$string['step:mfa_action'] = 'Turn it on';
+$string['step:onsale'] = 'Put a course on sale';
+$string['step:onsale_action'] = 'Set prices';
+$string['step:payment'] = 'Enter your SecureAndPay payment account';
+$string['step:payment_action'] = 'Set up payments';
+$string['step:plan'] = 'Subscribe to the trainer plan';
+$string['step:plan_action'] = 'Subscribe';
+$string['step:profile'] = 'Complete your showcase (tagline and presentation)';
+$string['step:profile_action'] = 'Edit my showcase';
+$string['videos:intro'] = 'Two ways to add a video to a lesson: upload it to Oriskill, or embed a YouTube or Vimeo video.';
+$string['videos:link'] = '<p>Handy for very long videos or videos already online.</p>
+<ol>
+<li>Publish the video on YouTube as <strong>"Unlisted"</strong>, or on Vimeo with embedding restricted to oriskill.com (paid Vimeo plan).</li>
+<li>Copy the video address.</li>
+<li>In your lesson (a <strong>Page</strong>), click the editor\'s <strong>Multimedia</strong> button and paste the address in <strong>"Or add via URL"</strong>. You can also paste the address alone on a line: the player appears automatically.</li>
+</ol>
+<p class="text-muted small">Note: an "unlisted" YouTube video can still be watched by anyone who has the link. For paid content, prefer uploading to Oriskill, or Vimeo with a domain restriction.</p>';
+$string['videos:link_title'] = 'Embed a YouTube or Vimeo video';
+$string['videos:tips'] = '<ul>
+<li><strong>Format</strong>: MP4 (H.264 video, AAC audio), played by all browsers and phones. Other formats (MOV, AVI...) may not play.</li>
+<li><strong>Quality and size</strong>: 720p or 1080p is enough. The free HandBrake software greatly reduces a video\'s size with no visible loss ("Fast 1080p30" preset). Limit per file: {$a->maxsize}.</li>
+<li><strong>Length</strong>: prefer 5 to 15 minute videos, one per topic, rather than one long video.</li>
+<li><strong>Accessibility</strong>: add subtitles (.vtt file) from the Multimedia button, and a short written summary under the video.</li>
+<li><strong>Tracking</strong>: in the page settings, add the completion condition "View the activity" to follow progress.</li>
+</ul>';
+$string['videos:tips_title'] = 'Tips for good videos';
+$string['videos:upload'] = '<p>Recommended for your paid courses: only your enrolled learners can watch the video.</p>
+<ol>
+<li>Open your course and turn on <strong>Edit mode</strong> (top right).</li>
+<li>In the section you want, click <strong>"Add an activity or resource"</strong>, then choose <strong>Page</strong>.</li>
+<li>In the page content, click the editor\'s <strong>Multimedia</strong> button (film icon), then <strong>"Browse repositories..."</strong> and <strong>"Upload a file"</strong>: choose your video.</li>
+<li>Add a title and a few lines of explanation, then click <strong>"Save and display"</strong>.</li>
+</ol>
+<p class="text-muted small">Maximum size per video: {$a->maxsize}.</p>';
+$string['videos:upload_title'] = 'Upload the video to Oriskill';

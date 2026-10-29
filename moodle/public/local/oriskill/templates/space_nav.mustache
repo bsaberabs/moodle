@@ -1,0 +1,55 @@
+{{!
+    This file is part of Moodle - https://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_oriskill/space_nav
+
+    Side menu of the trainer space and opening of the content column (closed by creator_service::space_end()).
+
+    Example context (json):
+    {
+        "name": "ABS", "person": "Ahmed Ben Saber", "logo": null, "initials": "A",
+        "items": [{"url": "#", "label": "Tableau de bord", "icon": "fa-gauge-high", "active": true}],
+        "showcase": "#", "title": "Tableau de bord"
+    }
+}}
+<div class="oriskill-space">
+    <aside class="oriskill-space-nav">
+        <div class="oriskill-space-brand">
+            {{#logo}}<img src="{{logo}}" alt="" class="oriskill-space-avatar">{{/logo}}
+            {{^logo}}<span class="oriskill-space-avatar oriskill-space-initials" aria-hidden="true">{{initials}}</span>{{/logo}}
+            <div class="oriskill-space-who">
+                <div class="oriskill-space-name">{{name}}</div>
+                <div class="oriskill-space-person">{{person}}</div>
+            </div>
+        </div>
+        <nav aria-label="{{#str}}editshowcase, local_oriskill{{/str}}">
+            <ul class="oriskill-space-menu">
+                {{#items}}
+                <li>
+                    <a href="{{url}}"{{#active}} class="active" aria-current="page"{{/active}}>
+                        <i class="fa {{icon}} fa-fw" aria-hidden="true"></i><span>{{label}}</span>
+                    </a>
+                </li>
+                {{/items}}
+            </ul>
+        </nav>
+        <a class="oriskill-space-showcase" href="{{showcase}}" target="_blank" rel="noopener">
+            <i class="fa fa-arrow-up-right-from-square fa-fw" aria-hidden="true"></i><span>{{#str}}viewshowcase, local_oriskill{{/str}}</span>
+        </a>
+    </aside>
+    <div class="oriskill-space-main">
+        <h2 class="oriskill-space-title">{{title}}</h2>

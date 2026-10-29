@@ -194,28 +194,65 @@ class creator_service {
     }
 
     /**
-     * Links between the pages of the trainer space.
+     * Opening of a trainer space page: side menu, then the page content column (closed by space_end()).
      *
      * @param \stdClass $creator Trainer.
      * @param string $current Path of the current page.
+     * @param string $title Title of the page content.
      * @return string HTML.
      */
-    public static function space_menu(\stdClass $creator, string $current): string {
-        $items = [
-            '/local/oriskill/apply.php' => get_string('menu:profile', 'local_oriskill'),
-            '/local/oriskill/pricing.php' => get_string('pricing', 'local_oriskill'),
-            '/local/oriskill/sales.php' => get_string('sales', 'local_oriskill'),
-            '/local/oriskill/payment.php' => get_string('paymentsettings', 'local_oriskill'),
-        ];
-        $links = '';
-        foreach ($items as $path => $label) {
-            $links .= \html_writer::tag('li', \html_writer::link(new moodle_url($path), $label,
-                ['class' => 'nav-link' . ($path === $current ? ' active' : '')] +
-                ($path === $current ? ['aria-current' => 'page'] : [])), ['class' => 'nav-item']);
+    public static function space_start(\stdClass $creator, string $current, string $title): string {
+        global $OUTPUT, $USER;
+
+        $items = [];
+        foreach ([
+            '/local/oriskill/dashboard.php' => ['menu:dashboard', 'fa-gauge-high'],
+            '/local/oriskill/courses.php' => ['mycourses', 'fa-graduation-cap'],
+            '/local/oriskill/videos.php' => ['menu:videos', 'fa-film'],
+            '/local/oriskill/pricing.php' => ['pricing', 'fa-tags'],
+            '/local/oriskill/sales.php' => ['sales', 'fa-chart-line'],
+            '/local/oriskill/payment.php' => ['paymentsettings', 'fa-wallet'],
+            '/local/oriskill/apply.php' => ['menu:profile', 'fa-store'],
+        ] as $path => [$key, $icon]) {
+            $items[] = ['url' => (new moodle_url($path))->out(false), 'label' => get_string($key, 'local_oriskill'),
+                'icon' => $icon, 'active' => $path === $current];
         }
-        $links .= \html_writer::tag('li', \html_writer::link(self::showcase_url($creator),
-            get_string('viewshowcase', 'local_oriskill'), ['class' => 'nav-link']), ['class' => 'nav-item ms-md-auto']);
-        return \html_writer::tag('ul', $links, ['class' => 'nav nav-tabs mb-4']);
+        $name = format_string($creator->displayname);
+        return $OUTPUT->render_from_template('local_oriskill/space_nav', [
+            'name' => $name,
+            'person' => fullname($USER),
+            'logo' => ($logo = self::logo_url($creator)) ? $logo->out(false) : null,
+            'initials' => \core_text::strtoupper(\core_text::substr($name, 0, 1)),
+            'items' => $items,
+            'showcase' => self::showcase_url($creator)->out(false),
+            'title' => $title,
+        ]);
+    }
+
+    /**
+     * Sale state of a trainer's course, as a badge.
+     *
+     * @param \stdClass $row Course row from seller_service::priced_courses().
+     * @return string HTML.
+     */
+    public static function course_status_badge(\stdClass $row): string {
+        if ($row->amount === null) {
+            [$key, $class] = ['coursestatus:noprice', 'is-warn'];
+        } else if ($row->onsale) {
+            [$key, $class] = ['onsale', 'is-good'];
+        } else {
+            [$key, $class] = ['coursestatus:draft', ''];
+        }
+        return \html_writer::span(get_string($key, 'local_oriskill'), trim('oriskill-badge ' . $class));
+    }
+
+    /**
+     * Closing of a trainer space page opened by space_start().
+     *
+     * @return string HTML.
+     */
+    public static function space_end(): string {
+        return '</div></div>';
     }
 
     /**

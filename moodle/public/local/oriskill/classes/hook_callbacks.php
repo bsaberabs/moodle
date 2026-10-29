@@ -54,7 +54,7 @@ class hook_callbacks {
         // The dashboard (where users land after logging in) is otherwise sent to the learner space by Modern
         // Commerce: a trainer lands in their trainer space instead.
         if ($SCRIPT === '/my/index.php' && self::current_creator()) {
-            redirect(new \moodle_url('/local/oriskill/apply.php'));
+            redirect(new \moodle_url('/local/oriskill/dashboard.php'));
         }
     }
 
@@ -66,7 +66,7 @@ class hook_callbacks {
     public static function primary_extend(\core\hook\navigation\primary_extend $hook): void {
         if (self::current_creator()) {
             $hook->get_primaryview()->add(get_string('editshowcase', 'local_oriskill'),
-                new \moodle_url('/local/oriskill/apply.php'), \navigation_node::TYPE_CUSTOM, null, 'oriskilltrainer');
+                new \moodle_url('/local/oriskill/dashboard.php'), \navigation_node::TYPE_CUSTOM, null, 'oriskilltrainer');
         }
     }
 

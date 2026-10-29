@@ -39,11 +39,12 @@ if ($data = $form->get_data()) {
 }
 
 echo $OUTPUT->header();
-echo creator_service::space_menu($creator, '/local/oriskill/payment.php');
+echo creator_service::space_start($creator, '/local/oriskill/payment.php', get_string('paymentsettings', 'local_oriskill'));
 echo html_writer::tag('p', get_string('paymentsettings_intro', 'local_oriskill'));
 echo $OUTPUT->notification(get_string('paymentsettings_support', 'local_oriskill', (object) [
     'site' => (new moodle_url('/'))->out(false),
     'notify' => (new moodle_url('/local/secureandpay/notify.php'))->out(false),
 ]), 'info');
 $form->display();
+echo creator_service::space_end();
 echo $OUTPUT->footer();

@@ -1,0 +1,407 @@
+/* Espace formateur Oriskill : menu latéral, cartes de chiffres, liste de démarrage, cartes de formations. */
+
+.oriskill-space {
+    --ori-accent: #7c3aed;
+    --ori-accent-soft: #f3eefe;
+    --ori-ink: #1e1b4b;
+    --ori-muted: #6b7280;
+    --ori-line: #e5e7eb;
+    --ori-good: #16a34a;
+    --ori-good-soft: #e8f7ee;
+    --ori-warn: #b45309;
+    --ori-warn-soft: #fef3e2;
+    display: grid;
+    grid-template-columns: 250px minmax(0, 1fr);
+    gap: 1.75rem;
+    align-items: start;
+}
+
+/* Menu latéral */
+.oriskill-space-nav {
+    position: sticky;
+    top: 5rem;
+    background: #fff;
+    border: 1px solid var(--ori-line);
+    border-radius: 14px;
+    padding: 1rem .75rem;
+}
+.oriskill-space-brand {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .25rem .5rem 1rem;
+    margin-bottom: .5rem;
+    border-bottom: 1px solid var(--ori-line);
+}
+.oriskill-space-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    object-fit: cover;
+    flex: none;
+}
+.oriskill-space-initials {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--ori-accent);
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.2rem;
+}
+.oriskill-space-who {
+    min-width: 0;
+}
+.oriskill-space-name {
+    font-weight: 700;
+    color: var(--ori-ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.oriskill-space-person {
+    font-size: .8rem;
+    color: var(--ori-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.oriskill-space-menu {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.oriskill-space-menu a,
+.oriskill-space-showcase {
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+    padding: .6rem .75rem;
+    border-radius: 10px;
+    color: #374151;
+    text-decoration: none;
+    font-weight: 500;
+}
+.oriskill-space-menu a .fa,
+.oriskill-space-showcase .fa {
+    color: var(--ori-muted);
+}
+.oriskill-space-menu a:hover,
+.oriskill-space-showcase:hover {
+    background: #f6f6f8;
+    color: var(--ori-ink);
+    text-decoration: none;
+}
+.oriskill-space-menu a.active {
+    background: var(--ori-accent-soft);
+    color: var(--ori-accent);
+    font-weight: 600;
+}
+.oriskill-space-menu a.active .fa {
+    color: var(--ori-accent);
+}
+.oriskill-space-showcase {
+    margin-top: .5rem;
+    border-top: 1px solid var(--ori-line);
+    border-radius: 0 0 10px 10px;
+    padding-top: .9rem;
+}
+
+/* Contenu */
+.oriskill-space-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--ori-ink);
+    margin-bottom: 1.25rem;
+}
+.oriskill-card {
+    background: #fff;
+    border: 1px solid var(--ori-line);
+    border-radius: 14px;
+    padding: 1.25rem;
+}
+.oriskill-card h3 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--ori-ink);
+    margin-bottom: 1rem;
+}
+
+/* Bandeau d'accueil */
+.oriskill-hello {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    background: linear-gradient(135deg, #7c3aed, #5b21b6);
+    color: #fff;
+    border-radius: 14px;
+    padding: 1.4rem 1.5rem;
+    margin-bottom: 1.25rem;
+}
+.oriskill-hello h3 {
+    color: #fff;
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin: 0 0 .25rem;
+}
+.oriskill-hello p {
+    margin: 0;
+    opacity: .9;
+}
+.oriskill-hello .btn-light {
+    color: var(--ori-accent);
+    font-weight: 600;
+}
+.oriskill-hello .btn-outline-light:hover {
+    color: var(--ori-accent);
+}
+
+/* Chiffres clés */
+.oriskill-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+.oriskill-stat {
+    display: flex;
+    gap: .9rem;
+    align-items: center;
+}
+.oriskill-stat-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--ori-accent-soft);
+    color: var(--ori-accent);
+    font-size: 1.15rem;
+    flex: none;
+}
+.oriskill-stat-value {
+    font-size: 1.45rem;
+    font-weight: 700;
+    color: var(--ori-ink);
+    line-height: 1.1;
+}
+.oriskill-stat-label {
+    font-size: .85rem;
+    color: var(--ori-muted);
+}
+
+.oriskill-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 1.25rem;
+}
+
+/* Liste « Pour bien démarrer » */
+.oriskill-steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.oriskill-steps li {
+    display: flex;
+    gap: .75rem;
+    align-items: flex-start;
+    padding: .6rem 0;
+    border-bottom: 1px solid var(--ori-line);
+}
+.oriskill-steps li:last-child {
+    border-bottom: 0;
+}
+.oriskill-step-mark {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .75rem;
+    border: 2px solid #d1d5db;
+    color: transparent;
+    margin-top: .1rem;
+}
+.oriskill-steps li.done .oriskill-step-mark {
+    background: var(--ori-good);
+    border-color: var(--ori-good);
+    color: #fff;
+}
+.oriskill-steps li.done .oriskill-step-text {
+    color: var(--ori-muted);
+    text-decoration: line-through;
+}
+.oriskill-progress {
+    height: 8px;
+    background: #eee;
+    border-radius: 99px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+.oriskill-progress > span {
+    display: block;
+    height: 100%;
+    background: var(--ori-accent);
+}
+
+/* Listes simples (ventes, formations) */
+.oriskill-rows {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.oriskill-rows li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: .6rem 0;
+    border-bottom: 1px solid var(--ori-line);
+}
+.oriskill-rows li:last-child {
+    border-bottom: 0;
+}
+.oriskill-rows .oriskill-row-main {
+    min-width: 0;
+}
+.oriskill-rows .oriskill-row-title {
+    font-weight: 600;
+    color: var(--ori-ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.oriskill-rows .oriskill-row-sub {
+    font-size: .82rem;
+    color: var(--ori-muted);
+}
+.oriskill-empty {
+    text-align: center;
+    color: var(--ori-muted);
+    padding: 1.25rem .5rem;
+}
+.oriskill-empty .fa {
+    font-size: 1.8rem;
+    color: #c4b5fd;
+    display: block;
+    margin-bottom: .5rem;
+}
+
+/* Pastilles d'état */
+.oriskill-badge {
+    display: inline-block;
+    font-size: .75rem;
+    font-weight: 600;
+    padding: .2rem .55rem;
+    border-radius: 99px;
+    white-space: nowrap;
+    background: #f1f1f4;
+    color: #4b5563;
+}
+.oriskill-badge.is-good {
+    background: var(--ori-good-soft);
+    color: var(--ori-good);
+}
+.oriskill-badge.is-warn {
+    background: var(--ori-warn-soft);
+    color: var(--ori-warn);
+}
+
+/* Cartes de formations */
+.oriskill-courses {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.25rem;
+}
+.oriskill-course {
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border: 1px solid var(--ori-line);
+    border-radius: 14px;
+    overflow: hidden;
+}
+.oriskill-course-image {
+    aspect-ratio: 16 / 9;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+.oriskill-course-image .oriskill-badge {
+    position: absolute;
+    top: .75rem;
+    left: .75rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .15);
+}
+.oriskill-course-body {
+    padding: 1rem 1.1rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+}
+.oriskill-course-title {
+    font-weight: 700;
+    color: var(--ori-ink);
+    line-height: 1.3;
+}
+.oriskill-course-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem 1rem;
+    font-size: .85rem;
+    color: var(--ori-muted);
+}
+.oriskill-course-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin-top: auto;
+    padding-top: .4rem;
+}
+
+/* Guide vidéo */
+.oriskill-guide h3 .fa {
+    color: var(--ori-accent);
+    margin-right: .4rem;
+}
+.oriskill-guide ol li,
+.oriskill-guide ul li {
+    margin-bottom: .35rem;
+}
+
+@media (max-width: 991.98px) {
+    .oriskill-space {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 1rem;
+    }
+    .oriskill-space-nav {
+        position: static;
+        padding: .5rem;
+    }
+    .oriskill-space-brand {
+        display: none;
+    }
+    .oriskill-space-nav nav {
+        overflow-x: auto;
+    }
+    .oriskill-space-menu {
+        display: flex;
+        gap: .25rem;
+    }
+    .oriskill-space-menu a {
+        white-space: nowrap;
+    }
+    .oriskill-space-showcase {
+        border-top: 0;
+        margin-top: .25rem;
+        padding-top: .6rem;
+    }
+}

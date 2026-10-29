@@ -181,3 +181,59 @@ $string['visitor_haveaccount'] = 'J\'ai déjà un compte';
 $string['visitor_hint'] = 'Pour continuer, créez votre compte Oriskill ou connectez-vous : vous reviendrez ensuite sur cette page.';
 $string['visitor_signup'] = 'Créer mon compte';
 $string['mfarecommended'] = 'Protégez votre compte formateur, qui décide où sont versées vos ventes : <a href="{$a}">activez la double authentification</a>. Un code de votre téléphone vous sera demandé à chaque connexion, en plus du mot de passe.';
+$string['course:open'] = 'Ouvrir';
+$string['course:settings'] = 'Paramètres';
+$string['courses_intro'] = 'Créez vos formations, ajoutez vos leçons et vos vidéos, puis fixez leur prix pour les mettre en vente.';
+$string['coursestatus:draft'] = 'Brouillon';
+$string['coursestatus:hidden'] = 'Masquée aux apprenants';
+$string['coursestatus:noprice'] = 'Sans prix';
+$string['dashboard:hello'] = 'Bonjour {$a} !';
+$string['dashboard:intro'] = 'Voici l\'activité de votre espace formateur.';
+$string['dashboard:latestsales'] = 'Dernières ventes';
+$string['dashboard:steps'] = 'Pour bien démarrer ({$a->done}/{$a->total})';
+$string['learnerscount'] = '{$a} apprenant(s)';
+$string['menu:dashboard'] = 'Tableau de bord';
+$string['menu:videos'] = 'Ajouter des vidéos';
+$string['seeall'] = 'Tout voir';
+$string['stat:courses'] = 'formation(s), dont {$a} en vente';
+$string['stat:learners'] = 'apprenant(s) inscrit(s)';
+$string['stat:revenue'] = 'encaissés';
+$string['stat:sales'] = 'vente(s)';
+$string['step:course'] = 'Créer votre première formation';
+$string['step:course_action'] = 'Créer une formation';
+$string['step:mfa'] = 'Protéger votre compte par la double authentification';
+$string['step:mfa_action'] = 'L\'activer';
+$string['step:onsale'] = 'Mettre une formation en vente';
+$string['step:onsale_action'] = 'Fixer les prix';
+$string['step:payment'] = 'Renseigner votre compte de paiement SecureAndPay';
+$string['step:payment_action'] = 'Configurer les paiements';
+$string['step:plan'] = 'Souscrire l\'abonnement formateur';
+$string['step:plan_action'] = 'S\'abonner';
+$string['step:profile'] = 'Compléter votre vitrine (accroche et présentation)';
+$string['step:profile_action'] = 'Modifier ma vitrine';
+$string['videos:intro'] = 'Deux façons d\'ajouter une vidéo à une leçon : la déposer sur Oriskill, ou intégrer une vidéo YouTube ou Vimeo.';
+$string['videos:link'] = '<p>Pratique pour les vidéos très longues ou déjà en ligne.</p>
+<ol>
+<li>Publiez la vidéo sur YouTube en <strong>« Non répertoriée »</strong>, ou sur Vimeo en limitant son intégration au domaine oriskill.com (offre Vimeo payante).</li>
+<li>Copiez l\'adresse de la vidéo.</li>
+<li>Dans votre leçon (une <strong>Page</strong>), cliquez sur le bouton <strong>Multimédia</strong> de l\'éditeur et collez l\'adresse dans <strong>« Ou ajouter par URL »</strong>. Vous pouvez aussi coller l\'adresse seule sur une ligne : le lecteur s\'affiche automatiquement.</li>
+</ol>
+<p class="text-muted small">Attention : une vidéo YouTube « non répertoriée » reste visible par toute personne qui a le lien. Pour un contenu payant, préférez le dépôt sur Oriskill, ou Vimeo avec restriction de domaine.</p>';
+$string['videos:link_title'] = 'Intégrer une vidéo YouTube ou Vimeo';
+$string['videos:tips'] = '<ul>
+<li><strong>Format</strong> : MP4 (vidéo H.264, son AAC), lu par tous les navigateurs et téléphones. Les autres formats (MOV, AVI…) peuvent ne pas être lus.</li>
+<li><strong>Qualité et poids</strong> : 720p ou 1080p suffisent. Le logiciel gratuit HandBrake réduit fortement le poids d\'une vidéo sans perte visible (préréglage « Fast 1080p30 »). Limite par fichier : {$a->maxsize}.</li>
+<li><strong>Durée</strong> : préférez des vidéos de 5 à 15 minutes, une par notion, plutôt qu\'une longue vidéo.</li>
+<li><strong>Accessibilité</strong> : ajoutez des sous-titres (fichier .vtt) depuis le bouton Multimédia, et un court résumé écrit sous la vidéo.</li>
+<li><strong>Suivi</strong> : dans les paramètres de la page, ajoutez la condition d\'achèvement « Afficher l\'activité » pour suivre la progression.</li>
+</ul>';
+$string['videos:tips_title'] = 'Conseils pour des vidéos réussies';
+$string['videos:upload'] = '<p>Recommandé pour vos formations payantes : seuls vos apprenants inscrits peuvent voir la vidéo.</p>
+<ol>
+<li>Ouvrez votre formation et activez le <strong>Mode édition</strong> (en haut à droite).</li>
+<li>Dans la section voulue, cliquez sur <strong>« Ajouter une activité ou ressource »</strong>, puis choisissez <strong>Page</strong>.</li>
+<li>Dans le contenu de la page, cliquez sur le bouton <strong>Multimédia</strong> de l\'éditeur (icône de film), puis sur <strong>« Parcourir les dépôts… »</strong> et <strong>« Déposer un fichier »</strong> : choisissez votre vidéo.</li>
+<li>Ajoutez un titre et quelques lignes d\'explication, puis cliquez sur <strong>« Enregistrer et afficher »</strong>.</li>
+</ol>
+<p class="text-muted small">Taille maximale par vidéo : {$a->maxsize}.</p>';
+$string['videos:upload_title'] = 'Déposer la vidéo sur Oriskill';
