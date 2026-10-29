@@ -382,16 +382,27 @@ class gateway implements gateway_interface {
         $answer = (string) $curl->post($merchant->testmode ? self::URL_UNSUBSCRIBE_TEST : self::URL_UNSUBSCRIBE_LIVE,
             ['data' => $data, 'sig' => $merchant->sign($data)], ['CURLOPT_TIMEOUT' => 20]);
         $info = $curl->get_info();
-        $code = (int) ($info['http_code'] ?? 0);
-        if ($curl->get_errno() || $code !== 200) {
-            return [false, $curl->error ?: 'HTTP ' . $code];
+        $httpcode = (int) ($info['http_code'] ?? 0);
+        if ($curl->get_errno() || $httpcode !== 200) {
+            return [false, $curl->error ?: 'HTTP ' . $httpcode];
         }
-        // The answer's format is not documented: an explicit failure word is treated as a refusal.
+        return self::read_stop_answer($answer);
+    }
+
+    /**
+     * Read the answer of desabonnerWs.php.
+     *
+     * {"code": 200, "msg": "..."} when the schedule is stopped; 201 missing data, 202 unknown orderID, 203 wrong
+     * IdSite, 204 bad signature, 205 schedule not active (already stopped or finished: nothing more will be charged).
+     *
+     * @param string $answer Response body.
+     * @return array [bool nothing more will be charged, string code and message]
+     */
+    public static function read_stop_answer(string $answer): array {
         $decoded = json_decode($answer, true);
-        $refused = (is_array($decoded) && (($decoded['status'] ?? $decoded['success'] ?? true) === false
-                || in_array(strtolower((string) ($decoded['status'] ?? '')), ['ko', 'error', 'erreur'], true)))
-            || preg_match('/\b(erreur|error|ko|invalid)\b/i', $answer);
-        return [!$refused, trim($answer)];
+        $code = is_array($decoded) ? (int) ($decoded['code'] ?? 0) : 0;
+        $message = is_array($decoded) ? trim((string) ($decoded['msg'] ?? '')) : trim($answer);
+        return [in_array($code, [200, 205], true), trim($code . ' ' . $message)];
     }
 
     /**

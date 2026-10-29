@@ -65,7 +65,9 @@ formateurs.
 ## Limites
 
 - Résiliation dans Moodle : l'échéancier est arrêté par le web service `desabonnerWs.php` (`IdSite` +
-  `orderID`, envoyés comme les autres appels : `data` en base64 + `sig` HMAC-SHA256). Si SecureAndPay ne
-  confirme pas, les administrateurs reçoivent un e-mail pour l'arrêter dans le back-office.
+  `orderID`, envoyés comme les autres appels : `data` en base64 + `sig` HMAC-SHA256), dès que l'abonné
+  résilie. Réponse `{"code": 200, "msg": …}` = arrêté ; 205 (abonnement non actif) = plus rien à prélever ;
+  201 à 204 = refus (données, orderID, IdSite, signature) : les administrateurs reçoivent alors un e-mail pour
+  l'arrêter dans le back-office.
 - Fréquence en mois (`ReccurentFrequency`) : 1 = mensuel, 12 = annuel.
 - Devises : EUR, USD, GBP.
