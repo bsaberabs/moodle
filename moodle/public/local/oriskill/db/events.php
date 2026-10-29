@@ -57,4 +57,21 @@ $observers = [
         'eventname' => '\local_secureandpay\event\payment_refunded',
         'callback' => '\local_oriskill\billing_service::payment_refunded',
     ],
+    // Webhooks of the trainers.
+    [
+        'eventname' => '\local_secureandpay\event\instalment_paid',
+        'callback' => '\local_oriskill\webhook_service::secureandpay_event',
+    ],
+    [
+        'eventname' => '\local_secureandpay\event\instalment_failed',
+        'callback' => '\local_oriskill\webhook_service::secureandpay_event',
+    ],
+    [
+        'eventname' => '\local_secureandpay\event\instalments_stopped',
+        'callback' => '\local_oriskill\webhook_service::secureandpay_event',
+    ],
+    [
+        'eventname' => '\local_secureandpay\event\payment_refunded',
+        'callback' => '\local_oriskill\webhook_service::secureandpay_event',
+    ],
 ];

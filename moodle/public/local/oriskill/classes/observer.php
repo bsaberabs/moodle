@@ -48,5 +48,6 @@ class observer {
         billing_service::issue_invoice((int) $event->objectid);
         activecampaign_service::order_paid((int) $event->objectid);
         coupon_service::order_paid((int) $event->objectid);
+        webhook_service::order_event((int) $event->objectid, 'order.paid');
     }
 }

@@ -160,5 +160,12 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103016, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103017) {
+        // Webhooks of the trainers.
+        if (!$dbman->table_exists('local_oriskill_webhooks')) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', 'local_oriskill_webhooks');
+        }
+        upgrade_plugin_savepoint(true, 2026103017, 'local', 'oriskill');
+    }
     return true;
 }

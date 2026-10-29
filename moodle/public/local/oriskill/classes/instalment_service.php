@@ -209,6 +209,7 @@ class instalment_service {
             $DB->update_record('local_oriskill_instalments',
                 (object) ['id' => $record->id, 'status' => 'suspended', 'timemodified' => $now]);
             self::notify($record, 'suspended');
+            webhook_service::order_event((int) $record->orderid, 'access.suspended');
             if ($creator = seller_service::owner_of_course((int) $record->courseid)) {
                 log_service::add($creator, 'learner_unpaidsuspended', [], (int) $record->courseid, (int) $record->userid);
             }
