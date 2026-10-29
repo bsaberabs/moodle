@@ -164,8 +164,7 @@ class instalment_service {
             'timemodified' => time(),
         ]);
         if ($wassuspended) {
-            $course = get_course((int) $record->courseid);
-            learning_service::set_suspended($course, (int) $record->userid, false);
+            self::set_access($record, false);
             self::notify($record, 'restored');
             if ($creator = seller_service::owner_of_course((int) $record->courseid)) {
                 log_service::add($creator, 'learner_paidrestored', [], (int) $record->courseid, (int) $record->userid);
@@ -206,9 +205,7 @@ class instalment_service {
         $records = $DB->get_records_select('local_oriskill_instalments',
             "status IN ('late', 'stopped') AND latesince > 0 AND latesince <= ?", [$now - self::GRACE_DAYS * DAYSECS]);
         foreach ($records as $record) {
-            if ($course = $DB->get_record('course', ['id' => $record->courseid])) {
-                learning_service::set_suspended($course, (int) $record->userid, true);
-            }
+            self::set_access($record, true);
             $DB->update_record('local_oriskill_instalments',
                 (object) ['id' => $record->id, 'status' => 'suspended', 'timemodified' => $now]);
             self::notify($record, 'suspended');
@@ -217,6 +214,24 @@ class instalment_service {
             }
         }
         return count($records);
+    }
+
+    /**
+     * Suspend or restore the learner's access to every course of the purchase (an order form offer may open several).
+     *
+     * @param \stdClass $record Instalment purchase.
+     * @param bool $suspend Suspend (true) or restore (false).
+     */
+    private static function set_access(\stdClass $record, bool $suspend): void {
+        global $DB;
+
+        $courseids = $DB->get_fieldset_select('local_moderncommerce_order_items', 'courseid',
+            'orderid = ? AND courseid IS NOT NULL', [$record->orderid]) ?: [$record->courseid];
+        foreach (array_unique(array_map('intval', $courseids)) as $courseid) {
+            if ($course = $DB->get_record('course', ['id' => $courseid])) {
+                learning_service::set_suspended($course, (int) $record->userid, $suspend);
+            }
+        }
     }
 
     /**

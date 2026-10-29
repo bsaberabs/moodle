@@ -590,3 +590,61 @@
 .path-local-moderncommerce .oriskill-space table.table.oriskill-documents:not(.mc-table) td:last-child {
     min-width: 15rem;
 }
+
+/* Offers of an order form (inside the trainer's brand, see .oriskill-vitrine). */
+.oriskill-offer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.5rem;
+    align-items: start;
+}
+.oriskill-offer {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    padding: 1.75rem 1.5rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    background: #fff;
+}
+.oriskill-offer.is-highlight {
+    border: 2px solid var(--v-primary);
+    box-shadow: 0 12px 30px rgba(17, 24, 39, .12);
+}
+.oriskill-offer-flag {
+    position: absolute;
+    top: -.8rem;
+    left: 1.5rem;
+    padding: .2rem .75rem;
+    border-radius: 999px;
+    background: var(--v-primary);
+    color: var(--v-on-primary);
+    font-size: .8rem;
+    font-weight: 700;
+}
+.oriskill-offer h3 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin: 0;
+}
+.oriskill-offer-price {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--v-ink);
+}
+.oriskill-offer ul {
+    margin: 0;
+    padding-left: 1.1rem;
+    color: #4b5563;
+}
+.oriskill-offer .oriskill-vitrine-cta {
+    margin-top: .5rem;
+    text-align: center;
+}
+.oriskill-offer-instalments {
+    text-align: center;
+    font-weight: 600;
+    color: var(--v-ink);
+}

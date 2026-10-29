@@ -266,7 +266,7 @@ class gateway implements gateway_interface {
             'CustCountry' => (string) $user->country,
             'Language' => strpos(current_language(), 'fr') === 0 ? 'fr' : 'en',
             'orderProducts' => implode(', ', array_filter($products)) ?: $order->ordernumber,
-            'urlOk' => (new moodle_url('/local/moderncommerce/success.php', ['orderid' => $order->id]))->out(false),
+            'urlOk' => self::return_url($order)->out(false),
             'urlNotify' => (new moodle_url('/local/secureandpay/notify.php'))->out(false),
         ];
         $data = array_merge($data, $this->payment_mode_fields($order, $amount, $merchant));
@@ -277,6 +277,22 @@ class gateway implements gateway_interface {
             'data' => $encoded,
             'signature' => $merchant->sign($encoded),
         ];
+    }
+
+    /**
+     * Page the buyer comes back to after paying: the store's confirmation, or the page named in the order notes
+     * ("returnpath", a page of the site, such as the thank-you page of an order form).
+     *
+     * @param object $order Order.
+     * @return moodle_url
+     */
+    public static function return_url(object $order): moodle_url {
+        $notes = json_decode((string) ($order->notes ?? ''), true);
+        $path = (string) ($notes['returnpath'] ?? '');
+        if (preg_match('~^/local/[a-z0-9_/]+\.php$~', $path)) {
+            return new moodle_url($path, ['orderid' => $order->id]);
+        }
+        return new moodle_url('/local/moderncommerce/success.php', ['orderid' => $order->id]);
     }
 
     /**

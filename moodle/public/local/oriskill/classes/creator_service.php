@@ -219,6 +219,7 @@ class creator_service {
             '/local/oriskill/courses.php' => ['mycourses', 'bi-mortarboard'],
             '/local/oriskill/videos.php' => ['menu:videos', 'bi-camera-video'],
             '/local/oriskill/pricing.php' => ['pricing', 'bi-tag'],
+            '/local/oriskill/orderforms.php' => ['menu:orderforms', 'bi-file-earmark-text'],
         ],
         'navgroup:learners' => [
             '/local/oriskill/learners.php' => ['menu:learners', 'bi-people'],

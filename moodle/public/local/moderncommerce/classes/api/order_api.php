@@ -254,26 +254,36 @@ class order_api {
     }
 
     /**
-     * Create a pending order for one course, outside the cart (Oriskill patch 8: payment in instalments).
+     * Create a pending order for one or several courses, outside the cart (Oriskill patch 8: payment in
+     * instalments, order forms).
      *
-     * The buyer is enrolled when the order is paid, as for a cart order. The notes carry what the payment
-     * gateway needs (for example the instalment schedule).
+     * The buyer is enrolled in each course when the order is paid, as for a cart order. With several courses, the
+     * total is spread over them (one order line per course). The notes carry what the payment gateway or the
+     * selling plugin needs (for example the instalment schedule).
      *
      * @param int $userid Buyer user ID.
-     * @param int $courseid Course.
+     * @param int|int[] $courseids Course, or courses.
      * @param float $total Order total.
      * @param array $notes Order notes, stored as JSON.
      * @return object Created order record (with id).
      */
-    public static function create_course_order(int $userid, int $courseid, float $total, array $notes): object {
+    public static function create_course_order(int $userid, $courseids, float $total, array $notes): object {
         global $DB, $USER;
 
-        $price = price_resolver::resolve_for_course($courseid, 1, true);
-        if (!$price) {
+        $courseids = array_values(array_unique(array_map('intval', (array) $courseids)));
+        if (!$courseids) {
             throw new \moodle_exception('error:ordercreationfailed', 'local_moderncommerce');
         }
-        $course = $DB->get_record('course', ['id' => $courseid], 'id, fullname', MUST_EXIST);
         $total = max(0, round($total, 2));
+        // Store product of each course, when it has one (a course sold only in an offer may have none).
+        $courses = [];
+        $currency = '';
+        foreach ($courseids as $courseid) {
+            $course = $DB->get_record('course', ['id' => $courseid], 'id, fullname', MUST_EXIST);
+            $course->price = price_resolver::resolve_for_course($courseid, 1, false);
+            $currency = $currency ?: (string) ($course->price->currency ?? '');
+            $courses[] = $course;
+        }
 
         $transaction = $DB->start_delegated_transaction();
         try {
@@ -290,7 +300,7 @@ class order_api {
                 'fees' => 0,
                 'total' => $total,
                 'refundedtotal' => 0,
-                'currency' => $price->currency ?: self::get_currency(),
+                'currency' => $currency ?: self::get_currency(),
                 'exchangerate' => 1,
                 'couponcode' => null,
                 'customeremail' => $USER->email ?? null,
@@ -308,21 +318,27 @@ class order_api {
             $order->id = (int) $DB->insert_record('local_moderncommerce_orders',
                 self::filter_record_fields('local_moderncommerce_orders', $order));
 
-            self::insert_order_item($order->id, (object) [
-                'itemtype' => 'course',
-                'courseid' => $courseid,
-                'productid' => $price->productid ?? null,
-                'priceid' => $price->priceid ?? null,
-                'itemname' => format_string($course->fullname),
-                'unitprice' => $total,
-                'quantity' => 1,
-            ], (string) $order->currency);
+            $left = $total;
+            foreach ($courses as $index => $course) {
+                // Equal shares, the last line taking the rounding difference.
+                $share = $index === count($courses) - 1 ? $left : round($total / count($courses), 2);
+                $left = round($left - $share, 2);
+                self::insert_order_item($order->id, (object) [
+                    'itemtype' => 'course',
+                    'courseid' => $course->id,
+                    'productid' => $course->price->productid ?? null,
+                    'priceid' => $course->price->priceid ?? null,
+                    'itemname' => format_string($course->fullname),
+                    'unitprice' => $share,
+                    'quantity' => 1,
+                ], (string) $order->currency);
+            }
             self::create_order_operational($order->id, null);
             self::log_audit($userid, 'order_created', 'order', $order->id, null, [
                 'ordernumber' => $ordernumber,
                 'total' => $total,
                 'currency' => $order->currency,
-                'courseid' => $courseid,
+                'courseids' => implode(',', $courseids),
             ]);
             $transaction->allow_commit();
         } catch (\Throwable $e) {

@@ -147,12 +147,22 @@ https:// {
             header_up Host oriskill.com
         }
     }
+    # Ses bons de commande : /bdc/nom-du-bon.
+    @bdc path_regexp bdc ^/bdc/([a-z0-9-]+)/?$
+    handle @bdc {
+        rewrite * /local/oriskill/order.php?domain={host}&slug={re.bdc.1}
+        reverse_proxy 127.0.0.1:8080 {
+            header_up Host oriskill.com
+        }
+    }
     # Tout le reste (formations, paiement, connexion) se passe sur oriskill.com.
     handle {
         redir https://oriskill.com{uri} 301
     }
 }
 ```
+
+Le choix d'une offre, la connexion et le paiement se font ensuite sur oriskill.com.
 
 Puis `sudo systemctl reload caddy`. Le formulaire du formateur indique si le domaine pointe déjà
 vers le serveur.

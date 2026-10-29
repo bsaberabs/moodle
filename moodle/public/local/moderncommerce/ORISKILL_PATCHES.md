@@ -44,9 +44,10 @@ Ces changements ne viennent pas du dépôt d'origine. À reporter après chaque 
      1,00 € », bouton « Commencer l'essai » quand l'essai n'est pas gratuit, ligne « Pendant 12 mois, puis l'accès
      s'arrête ». Compilation d'un seul composant : esbuild 0.25, `bundle: true`, `format: esm`, `jsx: automatic`,
      `minify: true`, externes `react`, `react-dom`, `react/jsx-runtime` (reproduit le fichier d'origine à l'octet près).
-8. **`order_api::create_course_order()`** : crée la commande d'une seule formation sans passer par le panier, avec
-   des notes JSON libres. Sert au paiement en plusieurs fois des formations des formateurs (local_oriskill et
-   local_secureandpay) : l'inscription se fait au paiement, comme pour une commande du panier.
+8. **`order_api::create_course_order()`** : crée la commande d'une ou plusieurs formations sans passer par le
+   panier, avec des notes JSON libres (une ligne par formation, le total réparti à parts égales). Sert au paiement
+   en plusieurs fois et aux bons de commande des formateurs (local_oriskill et local_secureandpay) : l'inscription
+   se fait au paiement, comme pour une commande du panier.
    - `classes/api/order_api.php` (nouvelle méthode publique, après `create_subscription_order()`).
 9. **Hook `order_document`** : un plugin peut fournir le PDF (facture ou reçu) d'une commande, par exemple une
    facture au nom du formateur qui a vendu la formation, numérotée par ce formateur.

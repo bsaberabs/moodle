@@ -37,14 +37,17 @@
 function local_oriskill_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = []) {
     global $DB;
 
-    if ($context->contextlevel !== CONTEXT_SYSTEM || !in_array($filearea, ['logo', 'banner'], true)) {
+    if ($context->contextlevel !== CONTEXT_SYSTEM || !in_array($filearea, ['logo', 'banner', 'orderform'], true)) {
         return false;
     }
-    $creatorid = (int) array_shift($args);
+    // Logo and banner belong to a trainer, an order form image to one of their forms.
+    $itemid = (int) array_shift($args);
+    $creatorid = $filearea === 'orderform'
+        ? (int) $DB->get_field('local_oriskill_orderforms', 'creatorid', ['id' => $itemid]) : $itemid;
     if (!$DB->record_exists('local_oriskill_creators', ['id' => $creatorid, 'status' => 'active'])) {
         return false;
     }
-    $file = get_file_storage()->get_file($context->id, 'local_oriskill', $filearea, $creatorid, '/', array_pop($args));
+    $file = get_file_storage()->get_file($context->id, 'local_oriskill', $filearea, $itemid, '/', array_pop($args));
     if (!$file || $file->is_directory()) {
         return false;
     }
