@@ -227,7 +227,7 @@ class notification_handler {
      * @param merchant $merchant Account that took the payment and holds the card.
      */
     private static function remember_card(object $order, array $data, merchant $merchant): void {
-        if (!empty($data['token']) && get_config('local_secureandpay', 'oneclick')) {
+        if (!empty($data['token']) && gateway::saves_card($order)) {
             token_store::save((int) $order->userid, $merchant->siteid, (string) $data['token'],
                 (string) ($data['dateValidate'] ?? ''));
         }

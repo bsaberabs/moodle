@@ -167,5 +167,27 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103017, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103018) {
+        // Order forms: extra at the order step (order bump) and offer after payment (upsell).
+        $table = new xmldb_table('local_oriskill_orderforms');
+        $previous = 'termsrequired';
+        foreach ([
+            new xmldb_field('bumplabel', XMLDB_TYPE_CHAR, '255', null, null, null, null),
+            new xmldb_field('bumptext', XMLDB_TYPE_TEXT, null, null, null, null, null),
+            new xmldb_field('bumpcourseids', XMLDB_TYPE_CHAR, '255', null, null, null, null),
+            new xmldb_field('bumpprice', XMLDB_TYPE_NUMBER, '20, 2', null, XMLDB_NOTNULL, null, '0'),
+            new xmldb_field('upselllabel', XMLDB_TYPE_CHAR, '255', null, null, null, null),
+            new xmldb_field('upselltext', XMLDB_TYPE_TEXT, null, null, null, null, null),
+            new xmldb_field('upsellcourseids', XMLDB_TYPE_CHAR, '255', null, null, null, null),
+            new xmldb_field('upsellprice', XMLDB_TYPE_NUMBER, '20, 2', null, XMLDB_NOTNULL, null, '0'),
+        ] as $field) {
+            $field->setPrevious($previous);
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+            $previous = $field->getName();
+        }
+        upgrade_plugin_savepoint(true, 2026103018, 'local', 'oriskill');
+    }
     return true;
 }

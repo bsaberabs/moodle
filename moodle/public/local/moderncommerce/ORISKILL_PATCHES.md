@@ -45,7 +45,8 @@ Ces changements ne viennent pas du dépôt d'origine. À reporter après chaque 
      s'arrête ». Compilation d'un seul composant : esbuild 0.25, `bundle: true`, `format: esm`, `jsx: automatic`,
      `minify: true`, externes `react`, `react-dom`, `react/jsx-runtime` (reproduit le fichier d'origine à l'octet près).
 8. **`order_api::create_course_order()`** : crée la commande d'une ou plusieurs formations sans passer par le
-   panier, avec des notes JSON libres (une ligne par formation, le total réparti à parts égales). Sert au paiement
+   panier, avec des notes JSON libres (une ligne par formation, au prix donné pour chacune ou le total réparti à parts
+   égales). Sert au paiement
    en plusieurs fois et aux bons de commande des formateurs (local_oriskill et local_secureandpay) : l'inscription
    se fait au paiement, comme pour une commande du panier.
    - `classes/api/order_api.php` (nouvelle méthode publique, après `create_subscription_order()`).

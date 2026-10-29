@@ -655,3 +655,17 @@
     white-space: normal;
     min-width: 11rem;
 }
+
+/* Order step extra and thank-you page offer. */
+.oriskill-bump {
+    padding: .9rem 1rem;
+    border: 2px dashed #f59e0b;
+    border-radius: 10px;
+    background: #fffbeb;
+}
+.oriskill-upsell {
+    padding: 1.25rem;
+    border: 2px solid #7c3aed;
+    border-radius: 12px;
+    background: #f5f3ff;
+}

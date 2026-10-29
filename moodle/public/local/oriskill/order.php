@@ -71,8 +71,11 @@ if ($offerid) {
     // Promo code typed by the buyer, kept in the address until payment.
     $code = optional_param('coupon', '', PARAM_ALPHANUMEXT);
     [$coupon, $couponerror] = $code !== '' ? coupon_service::find($form, $code, $mode) : [null, null];
-    $quote = orderform_service::quote($offer, $mode, $coupon);
-    $url = new moodle_url($formurl, array_filter(['offer' => $offerid, 'mode' => $mode, 'coupon' => $coupon->code ?? '']));
+    $bump = orderform_service::bump($form);
+    $withextra = $bump && optional_param('extra', 0, PARAM_BOOL);
+    $quote = orderform_service::quote($offer, $mode, $coupon, $withextra ? $bump->price : 0);
+    $url = new moodle_url($formurl, array_filter(['offer' => $offerid, 'mode' => $mode, 'coupon' => $coupon->code ?? '',
+        'extra' => $withextra ? 1 : 0]));
     $PAGE->set_url($url);
     $PAGE->set_pagelayout('standard');
     $PAGE->set_title(format_string($form->title));
@@ -83,6 +86,9 @@ if ($offerid) {
         : $quote->displaytotal;
     if ($quote->discount > 0) {
         $price = html_writer::tag('s', $quote->displaybase, ['class' => 'text-muted me-2']) . $price;
+    }
+    if ($withextra) {
+        $price .= html_writer::div(get_string('orderform:extraincluded', 'local_oriskill', s($bump->label)), 'small text-muted');
     }
     $recap = html_writer::tag('p', html_writer::tag('strong', s($offer->label)) . ' – ' . $price, ['class' => 'lead']) .
         html_writer::tag('ul', implode('', array_map(fn($c) => html_writer::tag('li', s($c->name)), $described->courses)));
@@ -97,7 +103,7 @@ if ($offerid) {
             $error = get_string('orderform:termsmissing', 'local_oriskill');
         } else {
             try {
-                [, $payurl] = orderform_service::create_order((int) $USER->id, $form, $offer, $mode, $coupon);
+                [, $payurl] = orderform_service::create_order((int) $USER->id, $form, $offer, $mode, $coupon, $withextra);
                 redirect($payurl);
             } catch (moodle_exception $e) {
                 $error = $e->getMessage();
@@ -118,6 +124,21 @@ if ($offerid) {
             'count' => $quote->instalments->count, 'displayamount' => $quote->displayamount]), ['class' => 'small text-muted']);
     }
 
+    // Extra (order bump): ticking or unticking reloads the step with the new price.
+    if ($bump) {
+        $toggle = new moodle_url($url, ['extra' => $withextra ? 0 : 1]);
+        echo html_writer::div(
+            html_writer::div(
+                html_writer::empty_tag('input', ['type' => 'checkbox', 'id' => 'orderform-extra', 'class' => 'form-check-input',
+                    'onchange' => 'window.location.href = ' . json_encode($toggle->out(false))] +
+                    ($withextra ? ['checked' => 'checked'] : [])) .
+                html_writer::tag('label', html_writer::tag('strong', get_string('orderform:extraadd', 'local_oriskill',
+                    (object) ['label' => s($bump->label), 'price' => pricing_service::format_price($bump->price, $currency)])),
+                    ['for' => 'orderform-extra', 'class' => 'form-check-label']), 'form-check') .
+            ($bump->text !== '' ? html_writer::div(s($bump->text), 'small mt-1') : ''),
+            'oriskill-bump mb-3');
+    }
+
     // Promo code.
     if ($coupon) {
         echo html_writer::div(get_string('coupon:applied', 'local_oriskill', (object) ['code' => s($coupon->code),
@@ -132,6 +153,7 @@ if ($offerid) {
             html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'id', 'value' => $form->id]) .
             html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'offer', 'value' => $offerid]) .
             html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'mode', 'value' => $mode]) .
+            html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'extra', 'value' => $withextra ? 1 : 0]) .
             html_writer::empty_tag('input', ['type' => 'text', 'name' => 'coupon', 'class' => 'form-control form-control-sm',
                 'placeholder' => get_string('coupon:field', 'local_oriskill'), 'aria-label' => get_string('coupon:field',
                 'local_oriskill'), 'style' => 'max-width: 14rem', 'value' => s($code)]) .

@@ -111,6 +111,22 @@ class orderform_form extends \moodleform {
         $this->repeat_elements($repeat, max(1, (int) $this->_customdata['offercount']), $options, 'offerrepeats',
             'offeradd', 1, get_string('orderform:addoffer', 'local_oriskill'), true);
 
+        // Extra at the order step (order bump) and offer after payment (upsell).
+        foreach (['bump', 'upsell'] as $kind) {
+            $mform->addElement('header', $kind . 'hdr', get_string('orderform:' . $kind, 'local_oriskill'));
+            $mform->addElement('static', $kind . 'intro', '', get_string('orderform:' . $kind . '_intro', 'local_oriskill'));
+            $mform->addElement('text', $kind . 'label', get_string('orderform:extralabel', 'local_oriskill'), ['size' => 60]);
+            $mform->setType($kind . 'label', PARAM_TEXT);
+            $mform->addElement('textarea', $kind . 'text', get_string('orderform:extratext', 'local_oriskill'),
+                ['rows' => 2, 'cols' => 60]);
+            $mform->setType($kind . 'text', PARAM_TEXT);
+            $mform->addElement('autocomplete', $kind . 'courseids', get_string('orderform:offercourses', 'local_oriskill'),
+                $this->_customdata['courses'], ['multiple' => true]);
+            $mform->setType($kind . 'courseids', PARAM_INT);
+            $mform->addElement('text', $kind . 'price', get_string('orderform:extraprice', 'local_oriskill'), ['size' => 10]);
+            $mform->setType($kind . 'price', PARAM_RAW_TRIMMED);
+        }
+
         $this->add_action_buttons(true, get_string('savechanges'));
     }
 
@@ -138,6 +154,18 @@ class orderform_form extends \moodleform {
                 $errors["offerinstaltotal[$i]"] = get_string('error:offerprice', 'local_oriskill');
             }
             $valid++;
+        }
+        foreach (['bump', 'upsell'] as $kind) {
+            if (trim((string) ($data[$kind . 'label'] ?? '')) === '') {
+                continue;
+            }
+            $price = unformat_float((string) ($data[$kind . 'price'] ?? ''), true);
+            if (!$price || $price <= 0) {
+                $errors[$kind . 'price'] = get_string('error:offerprice', 'local_oriskill');
+            }
+            if (empty($data[$kind . 'courseids'])) {
+                $errors[$kind . 'courseids'] = get_string('error:offercourses', 'local_oriskill');
+            }
         }
         if (!$valid && ($data['status'] ?? '') === 'published') {
             $errors['status'] = get_string('error:nooffer', 'local_oriskill');

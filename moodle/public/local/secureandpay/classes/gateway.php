@@ -280,6 +280,18 @@ class gateway implements gateway_interface {
     }
 
     /**
+     * Whether SecureAndPay keeps the buyer's card for later purchases: when one-click payment is on for the site, or
+     * when the order asks for it ("savecard" in its notes, for example an order form offering an extra after payment).
+     *
+     * @param object $order Order.
+     * @return bool
+     */
+    public static function saves_card(object $order): bool {
+        $notes = json_decode((string) ($order->notes ?? ''), true);
+        return (bool) get_config('local_secureandpay', 'oneclick') || !empty($notes['savecard']);
+    }
+
+    /**
      * Page the buyer comes back to after paying: the store's confirmation, or the page named in the order notes
      * ("returnpath", a page of the site, such as the thank-you page of an order form).
      *
@@ -308,7 +320,7 @@ class gateway implements gateway_interface {
      * @return array
      */
     private function payment_mode_fields(object $order, int $amount, merchant $merchant): array {
-        $oneclick = (bool) get_config('local_secureandpay', 'oneclick');
+        $oneclick = self::saves_card($order);
 
         if (self::order_is_subscription($order)) {
             $fields = $this->subscription_fields($order);

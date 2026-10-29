@@ -40,6 +40,13 @@ $PAGE->set_title(format_string($form->title));
 $PAGE->set_heading(format_string($form->title));
 $paid = in_array($order->status, ['paid', 'completed'], true);
 
+// The buyer takes the offer after payment: pay it (with the saved card on SecureAndPay).
+if ($paid && optional_param('upsell', 0, PARAM_BOOL) && confirm_sesskey()) {
+    [, $payurl] = orderform_service::take_upsell($order);
+    redirect($payurl);
+}
+$upsell = $paid ? orderform_service::upsell_for_order($order) : null;
+
 echo $OUTPUT->header();
 echo html_writer::start_div('card mx-auto', ['style' => 'max-width: 38rem']);
 echo html_writer::start_div('card-body');
@@ -56,6 +63,25 @@ if ($paid) {
         }
     }
     echo html_writer::tag('p', get_string('orderform:accessopen', 'local_oriskill')) . html_writer::tag('ul', $links);
+    if ($upsell) {
+        [, $offer] = $upsell;
+        $currency = $order->currency;
+        echo html_writer::div(
+            html_writer::tag('h3', get_string('orderform:upselltitle', 'local_oriskill'), ['class' => 'h5']) .
+            html_writer::tag('p', html_writer::tag('strong', s($offer->label))) .
+            ($offer->text !== '' ? html_writer::tag('p', nl2br(s($offer->text))) : '') .
+            html_writer::tag('form',
+                html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]) .
+                html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'upsell', 'value' => 1]) .
+                html_writer::tag('button', get_string('orderform:upsellyes', 'local_oriskill',
+                    \local_moderncommerce\services\pricing_service::format_price($offer->price, $currency)),
+                    ['type' => 'submit', 'class' => 'btn btn-primary']) . ' ' .
+                html_writer::link(new moodle_url('/local/moderncommerce/learner/index.php'),
+                    get_string('orderform:upsellno', 'local_oriskill'), ['class' => 'btn btn-link']),
+                ['method' => 'post', 'action' => $PAGE->url->out(false)]) .
+            html_writer::div(get_string('orderform:upsellcard', 'local_oriskill'), 'small text-muted mt-2'),
+            'oriskill-upsell mt-4');
+    }
 } else {
     // SecureAndPay notifies the payment on its own, usually within seconds of the buyer's return.
     echo html_writer::tag('p', get_string('orderform:waiting', 'local_oriskill'));

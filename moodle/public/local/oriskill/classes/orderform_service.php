@@ -102,6 +102,15 @@ class orderform_service {
             'buttonlabel' => trim((string) $data->buttonlabel),
             'thankyou' => trim((string) $data->thankyou),
             'termsrequired' => empty($data->termsrequired) ? 0 : 1,
+            'bumplabel' => trim((string) ($data->bumplabel ?? '')),
+            'bumptext' => trim((string) ($data->bumptext ?? '')),
+            'bumpcourseids' => implode(',', array_intersect(array_map('intval', (array) ($data->bumpcourseids ?? [])), $own)),
+            'bumpprice' => round(max(0, (float) ($data->bumpprice ?? 0)), 2),
+            'upselllabel' => trim((string) ($data->upselllabel ?? '')),
+            'upselltext' => trim((string) ($data->upselltext ?? '')),
+            'upsellcourseids' => implode(',', array_intersect(array_map('intval', (array) ($data->upsellcourseids ?? [])),
+                $own)),
+            'upsellprice' => round(max(0, (float) ($data->upsellprice ?? 0)), 2),
             'status' => $data->status === 'published' ? 'published' : 'draft',
             'timemodified' => $now,
         ];
@@ -231,15 +240,57 @@ class orderform_service {
     }
 
     /**
-     * What the buyer pays for an offer, with or without a promo code.
+     * Extra of an order form offered at the order step (order bump), if it has a complete one.
+     *
+     * @param \stdClass $form Order form.
+     * @return \stdClass|null {label, text, courseids, price}
+     */
+    public static function bump(\stdClass $form): ?\stdClass {
+        return self::extra($form, 'bump');
+    }
+
+    /**
+     * Offer of an order form shown after payment (upsell), if it has a complete one.
+     *
+     * @param \stdClass $form Order form.
+     * @return \stdClass|null {label, text, courseids, price}
+     */
+    public static function upsell(\stdClass $form): ?\stdClass {
+        return self::extra($form, 'upsell');
+    }
+
+    /**
+     * Bump or upsell of a form.
+     *
+     * @param \stdClass $form Order form.
+     * @param string $kind bump or upsell.
+     * @return \stdClass|null
+     */
+    private static function extra(\stdClass $form, string $kind): ?\stdClass {
+        $courseids = array_values(array_filter(array_map('intval', explode(',', (string) ($form->{$kind . 'courseids'} ?? '')))));
+        $label = trim((string) ($form->{$kind . 'label'} ?? ''));
+        $price = (float) ($form->{$kind . 'price'} ?? 0);
+        if ($label === '' || !$courseids || $price <= 0) {
+            return null;
+        }
+        return (object) ['label' => $label, 'text' => (string) $form->{$kind . 'text'}, 'courseids' => $courseids,
+            'price' => round($price, 2)];
+    }
+
+    /**
+     * What the buyer pays for an offer, with or without a promo code and the form's extra.
+     *
+     * The promo code applies to the offer; the extra is added at its own price (spread over the instalments when
+     * paying in instalments).
      *
      * @param \stdClass $offer Offer.
      * @param string $mode once or instalments.
      * @param \stdClass|null $coupon Promo code that applies (see coupon_service::find()).
-     * @return \stdClass {base, discount, total, instalments: {count, amount}|null, displaybase, displaytotal,
+     * @param float $extra Price of the extra the buyer added, 0 for none.
+     * @return \stdClass {base, extra, discount, total, instalments: {count, amount}|null, displaybase, displaytotal,
      *                    displayamount}
      */
-    public static function quote(\stdClass $offer, string $mode, ?\stdClass $coupon = null): \stdClass {
+    public static function quote(\stdClass $offer, string $mode, ?\stdClass $coupon = null, float $extra = 0): \stdClass {
         $currency = pricing_service::get_currency_config()->currency;
         $described = self::describe_offer($offer, $currency);
         if ($mode === 'instalments') {
@@ -248,22 +299,23 @@ class orderform_service {
             }
             $count = $described->instalments->count;
             $base = $described->instalments->total;
-            $wanted = $base - ($coupon ? coupon_service::discount($coupon, $base) : 0);
+            $wanted = $base - ($coupon ? coupon_service::discount($coupon, $base) : 0) + $extra;
             // Equal monthly instalments, rounded up to the cent.
             $amount = ceil(round($wanted * 100 / $count, 4)) / 100;
             $total = round($amount * $count, 2);
             $instalments = (object) ['count' => $count, 'amount' => $amount];
         } else {
             $base = $described->price;
-            $total = round($base - ($coupon ? coupon_service::discount($coupon, $base) : 0), 2);
+            $total = round($base - ($coupon ? coupon_service::discount($coupon, $base) : 0) + $extra, 2);
             $instalments = null;
         }
         return (object) [
             'base' => $base,
-            'discount' => round($base - $total, 2),
+            'extra' => $extra,
+            'discount' => round(max(0, $base + $extra - $total), 2),
             'total' => $total,
             'instalments' => $instalments,
-            'displaybase' => pricing_service::format_price($base, $currency),
+            'displaybase' => pricing_service::format_price($base + $extra, $currency),
             'displaytotal' => pricing_service::format_price($total, $currency),
             'displayamount' => pricing_service::format_price($instalments->amount ?? $total, $currency),
         ];
@@ -277,10 +329,11 @@ class orderform_service {
      * @param \stdClass $offer Offer of that form.
      * @param string $mode once or instalments.
      * @param \stdClass|null $coupon Promo code that applies (see coupon_service::find()).
+     * @param bool $withextra The buyer ticked the form's extra (order bump).
      * @return array [order, moodle_url where the buyer pays]
      */
     public static function create_order(int $userid, \stdClass $form, \stdClass $offer, string $mode,
-            ?\stdClass $coupon = null): array {
+            ?\stdClass $coupon = null, bool $withextra = false): array {
         global $DB;
 
         $creator = $DB->get_record('local_oriskill_creators', ['id' => $form->creatorid], '*', MUST_EXIST);
@@ -295,38 +348,121 @@ class orderform_service {
             throw new \moodle_exception('error:formunavailable', 'local_oriskill');
         }
         $described = self::describe_offer($offer, pricing_service::get_currency_config()->currency);
-        $quote = self::quote($offer, $mode, $coupon);
         $courseids = array_column($described->courses, 'id');
-        $missing = array_filter($courseids, fn($id) => !is_enrolled(\context_course::instance($id), $userid, '', true));
-        if (!$missing) {
+        $enrolled = fn($id) => is_enrolled(\context_course::instance($id), $userid, '', true);
+        if (!array_filter($courseids, fn($id) => !$enrolled($id))) {
             throw new \moodle_exception('error:alreadyhascourses', 'local_oriskill');
         }
+        // The extra only when it brings a course the buyer does not have yet.
+        $bump = $withextra ? self::bump($form) : null;
+        $bumpcourses = $bump ? array_values(array_diff($bump->courseids, $courseids)) : [];
+        if ($bump && !array_filter($bumpcourses, fn($id) => !$enrolled($id))) {
+            $bump = null;
+        }
+        $quote = self::quote($offer, $mode, $coupon, $bump ? $bump->price : 0);
 
         $notes = ['orderform' => (int) $form->id, 'offer' => (int) $offer->id, 'returnpath' => '/local/oriskill/thanks.php'];
         if ($coupon) {
             $notes['coupon'] = (int) $coupon->id;
         }
+        if ($bump) {
+            $notes['bump'] = true;
+        }
+        if (self::upsell($form) && seller_service::merchant($creator)) {
+            // SecureAndPay keeps the card, so the offer after payment is paid without typing it again.
+            $notes['savecard'] = true;
+        }
         if ($quote->instalments) {
             $notes['instalments'] = ['count' => $quote->instalments->count, 'amount' => $quote->instalments->amount];
         }
-        // The order lines keep the full price; the promo code is the order's discount (shown on the invoice).
-        $order = order_api::create_course_order($userid, $courseids, $quote->base, $notes);
-        if ($quote->discount > 0) {
-            $DB->update_record('local_moderncommerce_orders', (object) ['id' => $order->id, 'subtotal' => $quote->base,
-                'discount' => $quote->discount, 'total' => $quote->total, 'couponcode' => $coupon->code]);
+        // The order lines keep the full prices (offer shared over its courses, extra over its own); the promo code
+        // is the order's discount (shown on the invoice).
+        $prices = [];
+        foreach ($courseids as $id) {
+            $prices[$id] = round($quote->base / count($courseids), 2);
+        }
+        foreach ($bumpcourses as $id) {
+            $prices[$id] = round($bump->price / count($bumpcourses), 2);
+        }
+        $order = order_api::create_course_order($userid, array_keys($prices), $quote->base + $quote->extra, $notes, $prices);
+        if (abs($quote->total - ($quote->base + $quote->extra)) >= 0.005) {
+            $DB->update_record('local_moderncommerce_orders', (object) ['id' => $order->id,
+                'subtotal' => $quote->base + $quote->extra, 'discount' => $quote->discount, 'total' => $quote->total,
+                'couponcode' => $coupon->code ?? null]);
             $order = order_api::get_order($order->id);
         }
         if ($quote->instalments) {
             $reference = gateway::start_instalments($order);
             return [$order, new moodle_url('/local/secureandpay/pay.php', ['orderid' => $order->id, 'ref' => $reference])];
         }
-        // Paid at once: straight to SecureAndPay when it is the trainer's only method, else to the store's payment
-        // page, which offers the trainer's methods (Stripe, PayPal, SecureAndPay) for this order.
+        return [$order, self::payment_url($creator, $order)];
+    }
+
+    /**
+     * The offer after payment that a buyer can still take for a paid order of a form, if any.
+     *
+     * @param \stdClass $order Paid order placed on the form (not itself an upsell).
+     * @return array|null [form, upsell, course ids the buyer does not have yet]
+     */
+    public static function upsell_for_order(\stdClass $order): ?array {
+        global $DB;
+
+        $notes = json_decode((string) $order->notes, true) ?: [];
+        $form = self::form_of_order($order);
+        if (!$form || !empty($notes['upsellof']) || !in_array($order->status, ['paid', 'completed'], true)) {
+            return null;
+        }
+        $upsell = self::upsell($form);
+        $creator = $DB->get_record('local_oriskill_creators', ['id' => $form->creatorid]);
+        if (!$upsell || !$creator || !self::can_sell($creator)) {
+            return null;
+        }
+        $missing = array_values(array_filter($upsell->courseids,
+            fn($id) => !is_enrolled(\context_course::instance($id), $order->userid, '', true)));
+        // Taken already (paid or being paid).
+        if (!$missing || $DB->record_exists_select('local_moderncommerce_orders',
+                "userid = ? AND status IN ('paid', 'completed', 'pending') AND " . $DB->sql_like('notes', '?'),
+                [$order->userid, '%"upsellof":' . (int) $order->id . ',%'])) {
+            return null;
+        }
+        return [$form, $upsell, $missing];
+    }
+
+    /**
+     * The buyer takes the offer after payment: order it and pay with the saved card when SecureAndPay has it.
+     *
+     * @param \stdClass $order Paid order of the buyer on the form.
+     * @return array [upsell order, moodle_url where the buyer pays]
+     */
+    public static function take_upsell(\stdClass $order): array {
+        global $DB;
+
+        $found = self::upsell_for_order($order);
+        if (!$found) {
+            throw new \moodle_exception('error:formunavailable', 'local_oriskill');
+        }
+        [$form, $upsell, $courseids] = $found;
+        $creator = $DB->get_record('local_oriskill_creators', ['id' => $form->creatorid], '*', MUST_EXIST);
+        $upsellorder = order_api::create_course_order((int) $order->userid, $courseids, $upsell->price, [
+            'orderform' => (int) $form->id, 'upsellof' => (int) $order->id, 'returnpath' => '/local/oriskill/thanks.php',
+            'savecard' => true]);
+        return [$upsellorder, self::payment_url($creator, $upsellorder)];
+    }
+
+    /**
+     * Where a buyer pays an order paid at once: straight to SecureAndPay when it is the trainer's only method (with
+     * the saved card if it has one), else the store's payment page, which offers the trainer's methods.
+     *
+     * @param \stdClass $creator Trainer.
+     * @param \stdClass $order Order.
+     * @return moodle_url
+     */
+    private static function payment_url(\stdClass $creator, \stdClass $order): moodle_url {
         if (!seller_service::usable_gateways($creator)) {
             $start = gateway_manager::initialize_payment(gateway::GATEWAY, $order);
-            return [$order, new moodle_url($start['authorization_url'])];
+            return new moodle_url($start['authorization_url']);
         }
-        return [$order, new moodle_url('/local/moderncommerce/checkout.php', ['orderid' => $order->id])];
+        return new moodle_url('/local/moderncommerce/checkout.php', ['orderid' => $order->id]);
     }
 
     /**

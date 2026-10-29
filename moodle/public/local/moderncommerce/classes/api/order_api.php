@@ -265,9 +265,11 @@ class order_api {
      * @param int|int[] $courseids Course, or courses.
      * @param float $total Order total.
      * @param array $notes Order notes, stored as JSON.
+     * @param array $prices Price of each course (courseid => price); without it, the total is spread equally.
      * @return object Created order record (with id).
      */
-    public static function create_course_order(int $userid, $courseids, float $total, array $notes): object {
+    public static function create_course_order(int $userid, $courseids, float $total, array $notes,
+            array $prices = []): object {
         global $DB, $USER;
 
         $courseids = array_values(array_unique(array_map('intval', (array) $courseids)));
@@ -320,8 +322,9 @@ class order_api {
 
             $left = $total;
             foreach ($courses as $index => $course) {
-                // Equal shares, the last line taking the rounding difference.
-                $share = $index === count($courses) - 1 ? $left : round($total / count($courses), 2);
+                // Given prices, or equal shares; the last line takes the rounding difference.
+                $share = $index === count($courses) - 1 ? $left
+                    : round(isset($prices[$course->id]) ? (float) $prices[$course->id] : $total / count($courses), 2);
                 $left = round($left - $share, 2);
                 self::insert_order_item($order->id, (object) [
                     'itemtype' => 'course',

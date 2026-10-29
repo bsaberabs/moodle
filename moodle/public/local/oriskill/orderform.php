@@ -55,6 +55,14 @@ if ($form) {
         'thankyou' => $form->thankyou,
         'termsrequired' => $form->termsrequired,
         'status' => $form->status,
+        'bumplabel' => $form->bumplabel,
+        'bumptext' => $form->bumptext,
+        'bumpcourseids' => array_filter(array_map('intval', explode(',', (string) $form->bumpcourseids))),
+        'bumpprice' => (float) $form->bumpprice > 0 ? format_float((float) $form->bumpprice, 2, true) : '',
+        'upselllabel' => $form->upselllabel,
+        'upselltext' => $form->upselltext,
+        'upsellcourseids' => array_filter(array_map('intval', explode(',', (string) $form->upsellcourseids))),
+        'upsellprice' => (float) $form->upsellprice > 0 ? format_float((float) $form->upsellprice, 2, true) : '',
     ];
     foreach ($offers as $i => $offer) {
         $defaults["offerlabel[$i]"] = $offer->label;
@@ -75,6 +83,10 @@ if ($mform->is_cancelled()) {
 if ($data = $mform->get_data()) {
     $data->description = $data->description_editor['text'];
     $data->descriptionformat = $data->description_editor['format'];
+    foreach (['bump', 'upsell'] as $kind) {
+        $data->{$kind . 'price'} = unformat_float((string) $data->{$kind . 'price'}, true) ?: 0;
+        $data->{$kind . 'courseids'} = $data->{$kind . 'courseids'} ?? [];
+    }
     $data->offers = [];
     foreach (array_keys($data->offerlabel ?? []) as $i) {
         $data->offers[] = (object) [
