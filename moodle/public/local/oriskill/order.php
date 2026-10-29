@@ -92,6 +92,9 @@ if ($offerid) {
     }
     $recap = html_writer::tag('p', html_writer::tag('strong', s($offer->label)) . ' – ' . $price, ['class' => 'lead']) .
         html_writer::tag('ul', implode('', array_map(fn($c) => html_writer::tag('li', s($c->name)), $described->courses)));
+    if (!optional_param('confirm', 0, PARAM_BOOL)) {
+        \local_oriskill\formstats_service::track($form, (int) $offerid, 'checkout');
+    }
     if (!isloggedin() || isguestuser()) {
         local_oriskill_visitor_page($url, html_writer::tag('p', get_string('orderform:loginfirst', 'local_oriskill')) . $recap);
     }
@@ -182,6 +185,7 @@ if ($offerid) {
 }
 
 // The order form page, in the trainer's brand.
+\local_oriskill\formstats_service::track($form, 0, 'view');
 $PAGE->set_url($formurl);
 $PAGE->set_pagelayout('embedded');
 $PAGE->add_body_class('oriskill-vitrine-page');

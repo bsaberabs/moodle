@@ -189,5 +189,12 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103018, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103019) {
+        // Visits of the order forms.
+        if (!$dbman->table_exists('local_oriskill_formstats')) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', 'local_oriskill_formstats');
+        }
+        upgrade_plugin_savepoint(true, 2026103019, 'local', 'oriskill');
+    }
     return true;
 }

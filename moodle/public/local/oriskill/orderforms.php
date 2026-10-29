@@ -48,13 +48,15 @@ if (!$forms) {
     echo html_writer::div('<i class="fa fa-file-lines" aria-hidden="true"></i>' .
         get_string('orderforms:none', 'local_oriskill'), 'oriskill-card oriskill-empty');
 } else {
-    $paid = orderform_service::paid_counts($creator);
+    $currency = \local_moderncommerce\services\pricing_service::get_currency_config()->currency;
     $table = new html_table();
     $table->attributes['class'] = 'table align-middle oriskill-documents';
     $table->head = [get_string('orderform:title', 'local_oriskill'), get_string('orderform:address', 'local_oriskill'),
-        get_string('orderform:offers', 'local_oriskill'), get_string('orderform:orders', 'local_oriskill'), ''];
+        get_string('stats:views30', 'local_oriskill'), get_string('stats:orders', 'local_oriskill'),
+        get_string('stats:conversion', 'local_oriskill'), get_string('stats:revenue', 'local_oriskill'), ''];
     foreach ($forms as $form) {
         $public = orderform_service::url($form, $creator)->out(false);
+        $figures = \local_oriskill\formstats_service::figures($form, 30);
         $published = $form->status === 'published';
         $table->data[] = [
             html_writer::span(format_string($form->title), 'fw-semibold') . ' ' .
@@ -62,8 +64,12 @@ if (!$forms) {
                     'oriskill-badge ' . ($published ? 'is-good' : '')),
             $published ? html_writer::link($public, s($public), ['target' => '_blank', 'rel' => 'noopener', 'class' => 'small'])
                 : html_writer::span(get_string('orderform:notpublished', 'local_oriskill'), 'small text-muted'),
-            count(orderform_service::offers($form)),
-            (int) ($paid[$form->id] ?? 0),
+            $figures->views,
+            $figures->orders,
+            format_float($figures->conversion, 1, true, true) . ' %',
+            \local_moderncommerce\services\pricing_service::format_price($figures->revenue, $currency),
+            html_writer::link(new moodle_url('/local/oriskill/orderformstats.php', ['id' => $form->id]),
+                get_string('stats:title', 'local_oriskill'), ['class' => 'btn btn-sm btn-outline-secondary']) . ' ' .
             html_writer::link(new moodle_url('/local/oriskill/orderform.php', ['id' => $form->id]),
                 get_string('edit'), ['class' => 'btn btn-sm btn-outline-secondary']),
         ];
