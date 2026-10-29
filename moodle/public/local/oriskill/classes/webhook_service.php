@@ -201,7 +201,8 @@ class webhook_service {
             'offer' => !empty($notes['offer']) ? (string) $DB->get_field('local_oriskill_formoffers', 'label',
                 ['id' => $notes['offer']]) : null,
             'instalments' => $instalments ? ['paid' => (int) $instalments->paid, 'count' => (int) $instalments->count,
-                'amount' => (float) $instalments->amount, 'status' => $instalments->status] : null,
+                'amount' => (float) $instalments->amount, 'first' => (float) ($instalments->firstamount ?: $instalments->amount),
+                'status' => $instalments->status] : null,
         ]];
     }
 

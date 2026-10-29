@@ -237,9 +237,9 @@ class gateway implements gateway_interface {
             throw new moodle_exception('notconfigured', 'local_secureandpay');
         }
         $user = $DB->get_record('user', ['id' => $order->userid], '*', MUST_EXIST);
-        // A purchase in instalments is charged one instalment now, the others by SecureAndPay.
+        // A purchase in instalments is charged its first instalment now, the others by SecureAndPay.
         $instalments = self::instalment_plan($order);
-        $amount = (int) round((float) ($instalments ? $instalments['amount'] : $order->total) * 100);
+        $amount = (int) round((float) ($instalments ? $instalments['first'] : $order->total) * 100);
         // Only a free trial is paid 0: SecureAndPay then just registers the card.
         if ($amount < 0 || ($amount === 0 && !self::is_trial_order($order))) {
             throw new moodle_exception('invalidamount', 'local_secureandpay');
@@ -325,11 +325,12 @@ class gateway implements gateway_interface {
         if (self::order_is_subscription($order)) {
             $fields = $this->subscription_fields($order);
         } else if ($instalments = self::instalment_plan($order)) {
-            // Monthly instalments, the first one charged now: SecureAndPay stops after the last one (never for a
-            // subscription, stopped when cancelled).
+            // Monthly instalments, the first one charged now (Amount, possibly a deposit of its own), the following
+            // ones at MontantReccurent: SecureAndPay stops after the last one (never for a subscription, stopped
+            // when cancelled).
             $fields = [
                 'Clicktopay' => 1,
-                'MontantReccurent' => (string) $amount,
+                'MontantReccurent' => (string) (int) round($instalments['amount'] * 100),
                 'ReccurentNumber' => $instalments['subscription'] ? 'X' : (string) $instalments['count'],
                 'ReccurentFrequency' => '1',
                 'ReccurentTestPeriod' => '0',
@@ -459,7 +460,8 @@ class gateway implements gateway_interface {
      * Set in the order notes by whoever created the order (see start_instalments()).
      *
      * @param object $order Order.
-     * @return array|null ['count' => int (0: until cancelled), 'amount' => float, 'subscription' => bool]
+     * @return array|null ['count' => int (0: until cancelled), 'amount' => float (each instalment),
+     *                    'first' => float (the first one: a deposit of its own, or the same amount), 'subscription' => bool]
      */
     public static function instalment_plan(object $order): ?array {
         $notes = json_decode((string) ($order->notes ?? ''), true);
@@ -469,7 +471,9 @@ class gateway implements gateway_interface {
         if ($amount <= 0 || ($subscription ? $count !== 0 : $count < 2)) {
             return null;
         }
-        return ['count' => $count, 'amount' => $amount, 'subscription' => $subscription];
+        $first = round((float) ($notes['instalments']['first'] ?? 0), 2);
+        return ['count' => $count, 'amount' => $amount, 'first' => $first > 0 && !$subscription ? $first : $amount,
+            'subscription' => $subscription];
     }
 
     /**

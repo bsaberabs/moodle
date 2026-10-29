@@ -132,6 +132,10 @@ class orderform_service {
                 continue;
             }
             $count = in_array((int) $offer->instalcount, instalment_service::COUNTS, true) ? (int) $offer->instalcount : 0;
+            $instaltotal = $count ? round((float) $offer->instaltotal ?: (float) $offer->price, 2) : 0;
+            // A first instalment of its own only makes sense below the total, the rest being spread over the others.
+            $instalfirst = round(max(0, (float) ($offer->instalfirst ?? 0)), 2);
+            $instalfirst = $count && $instalfirst < $instaltotal ? $instalfirst : 0;
             $DB->insert_record('local_oriskill_formoffers', (object) [
                 'formid' => $record->id,
                 'label' => trim($offer->label),
@@ -139,7 +143,8 @@ class orderform_service {
                 'courseids' => implode(',', $courseids),
                 'price' => round((float) $offer->price, 2),
                 'instalcount' => $count,
-                'instaltotal' => $count ? round((float) $offer->instaltotal ?: (float) $offer->price, 2) : 0,
+                'instaltotal' => $instaltotal,
+                'instalfirst' => $instalfirst,
                 'highlight' => empty($offer->highlight) ? 0 : 1,
                 'actags' => activecampaign_service::clean_tags((string) ($offer->actags ?? '')),
                 'subprice' => round(max(0, (float) ($offer->subprice ?? 0)), 2),
@@ -190,7 +195,8 @@ class orderform_service {
      *
      * @param \stdClass $offer Offer.
      * @param string $currency Currency.
-     * @return \stdClass {price, displayprice, instalments: {count, amount, total, displayamount, displaytotal}|null,
+     * @return \stdClass {price, displayprice, instalments: {count, first, amount, total, displayfirst, displayamount,
+     *                    displaytotal}|null (first: 0 when all instalments are equal),
      *                    subscription: {amount, displayamount}|null (monthly price),
      *                    courses: [{id, name}], details: string[]}
      */
@@ -199,11 +205,8 @@ class orderform_service {
 
         $instalments = null;
         if ($offer->instalcount && (float) $offer->instaltotal > 0) {
-            $count = (int) $offer->instalcount;
-            $amount = ceil(round((float) $offer->instaltotal * 100 / $count, 4)) / 100;
-            $instalments = (object) ['count' => $count, 'amount' => $amount, 'total' => round($amount * $count, 2),
-                'displayamount' => pricing_service::format_price($amount, $currency),
-                'displaytotal' => pricing_service::format_price($amount * $count, $currency)];
+            $instalments = self::split((int) $offer->instalcount, (float) $offer->instaltotal,
+                (float) ($offer->instalfirst ?? 0), $currency);
         }
         $courses = [];
         foreach (array_filter(explode(',', $offer->courseids)) as $courseid) {
@@ -221,6 +224,30 @@ class orderform_service {
             'courses' => $courses,
             'details' => array_values(array_filter(array_map('trim', explode("\n", (string) $offer->details)))),
         ];
+    }
+
+    /**
+     * Instalments of a total: an optional first instalment of its own, the rest in equal monthly instalments
+     * rounded up to the cent.
+     *
+     * @param int $count Number of instalments, the first one included.
+     * @param float $total Total to collect.
+     * @param float $first First instalment (a deposit), 0 for equal instalments; ignored when not below the total.
+     * @param string $currency Currency.
+     * @return \stdClass {count, first, amount, total, displayfirst, displayamount, displaytotal, label}
+     */
+    public static function split(int $count, float $total, float $first, string $currency): \stdClass {
+        $first = $first > 0 && $first < $total && $count > 1 ? round($first, 2) : 0.0;
+        $amount = ceil(round(($total - $first) * 100 / ($first ? $count - 1 : $count), 4)) / 100;
+        $collected = round($first ? $first + $amount * ($count - 1) : $amount * $count, 2);
+        $split = (object) ['count' => $count, 'first' => $first, 'amount' => $amount, 'total' => $collected,
+            'displayfirst' => pricing_service::format_price($first, $currency),
+            'displayamount' => pricing_service::format_price($amount, $currency),
+            'displaytotal' => pricing_service::format_price($collected, $currency),
+            'others' => $count - 1];
+        // How the offer reads: "3 × 70,00 €", or "300,00 € then 5 × 439,40 €".
+        $split->label = get_string($first ? 'instalments:splitfirst' : 'instalments:split', 'local_oriskill', $split);
+        return $split;
     }
 
     /**
@@ -314,13 +341,11 @@ class orderform_service {
             if (!$described->instalments) {
                 throw new \moodle_exception('error:formunavailable', 'local_oriskill');
             }
-            $count = $described->instalments->count;
             $base = $described->instalments->total;
             $wanted = $base - ($coupon ? coupon_service::discount($coupon, $base) : 0) + $extra;
-            // Equal monthly instalments, rounded up to the cent.
-            $amount = ceil(round($wanted * 100 / $count, 4)) / 100;
-            $total = round($amount * $count, 2);
-            $instalments = (object) ['count' => $count, 'amount' => $amount];
+            // The first instalment stays as set; the promo code and the extra change the following ones.
+            $instalments = self::split($described->instalments->count, $wanted, $described->instalments->first, $currency);
+            $total = $instalments->total;
         } else {
             $base = $described->price;
             $total = round($base - ($coupon ? coupon_service::discount($coupon, $base) : 0) + $extra, 2);
@@ -395,6 +420,7 @@ class orderform_service {
         }
         if ($quote->instalments) {
             $notes['instalments'] = ['count' => $quote->instalments->count, 'amount' => $quote->instalments->amount]
+                + (!empty($quote->instalments->first) ? ['first' => $quote->instalments->first] : [])
                 + (!empty($quote->instalments->subscription) ? ['subscription' => true] : []);
         }
         // The order lines keep the full prices (offer shared over its courses, extra over its own); the promo code

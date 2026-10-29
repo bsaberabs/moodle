@@ -86,8 +86,8 @@ if ($offerid) {
     if ($mode === 'subscription') {
         $price = get_string('subscription:summary', 'local_oriskill', $quote->displayamount);
     } else if ($quote->instalments) {
-        $price = get_string('instalments:summary', 'local_oriskill', (object) ['count' => $quote->instalments->count,
-            'displayamount' => $quote->displayamount, 'displaytotal' => $quote->displaytotal]);
+        $price = get_string($quote->instalments->first ? 'instalments:summaryfirst' : 'instalments:summary',
+            'local_oriskill', $quote->instalments);
     } else {
         $price = $quote->displaytotal;
     }
@@ -133,8 +133,8 @@ if ($offerid) {
         echo html_writer::tag('p', get_string('subscription:howitworks', 'local_oriskill', $quote->displayamount),
             ['class' => 'small text-muted']);
     } else if ($quote->instalments) {
-        echo html_writer::tag('p', get_string('instalments:howitworks', 'local_oriskill', (object) [
-            'count' => $quote->instalments->count, 'displayamount' => $quote->displayamount]), ['class' => 'small text-muted']);
+        echo html_writer::tag('p', get_string($quote->instalments->first ? 'instalments:howitworksfirst'
+            : 'instalments:howitworks', 'local_oriskill', $quote->instalments), ['class' => 'small text-muted']);
     }
 
     // Extra (order bump): ticking or unticking reloads the step with the new price.
@@ -219,7 +219,7 @@ foreach ($offers as $offer) {
         'buttonlabel' => format_string($form->buttonlabel ?: get_string('orderform:buttondefault', 'local_oriskill')),
         'url' => (new moodle_url($formurl, ['offer' => $offer->id, 'mode' => 'once']))->out(false),
         'instalments' => $described->instalments && orderform_service::can_sell_instalments($creator) ? [
-            'label' => get_string('instalments:orshort', 'local_oriskill', $described->instalments),
+            'label' => get_string('instalments:or', 'local_oriskill', $described->instalments->label),
             'url' => (new moodle_url($formurl, ['offer' => $offer->id, 'mode' => 'instalments']))->out(false),
         ] : null,
         'subscription' => $described->subscription && orderform_service::can_sell_instalments($creator) ? [

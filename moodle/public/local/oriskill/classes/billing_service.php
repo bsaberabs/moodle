@@ -123,7 +123,9 @@ class billing_service {
                 'amount' => pricing_service::format_price($plan['amount'], $order->currency)]);
             $plan = null;
         } else if ($plan) {
-            $mentions[] = get_string('invoice:instalments', 'local_oriskill', (object) ['count' => $plan['count'],
+            $mentions[] = get_string($plan['first'] != $plan['amount'] ? 'invoice:instalmentsfirst' : 'invoice:instalments',
+                'local_oriskill', (object) ['count' => $plan['count'], 'others' => $plan['count'] - 1,
+                'first' => pricing_service::format_price($plan['first'], $order->currency),
                 'amount' => pricing_service::format_price($plan['amount'], $order->currency)]);
         }
         return self::issue($creator, $order, 'invoice', null, $total, round($tax, 2), [

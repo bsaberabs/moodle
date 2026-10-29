@@ -146,6 +146,7 @@
         <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="count" TYPE="int" LENGTH="3" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="amount" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="2" SEQUENCE="false" COMMENT="Each instalment"/>
+        <FIELD NAME="firstamount" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="2" SEQUENCE="false" COMMENT="First instalment when it differs from the others, 0 when equal"/>
         <FIELD NAME="paid" TYPE="int" LENGTH="3" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Instalments received"/>
         <FIELD NAME="status" TYPE="char" LENGTH="15" NOTNULL="true" DEFAULT="active" SEQUENCE="false" COMMENT="active, late (refused, grace period), suspended (access suspended), stopped (schedule ended unpaid, grace period), completed"/>
         <FIELD NAME="latesince" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="First unpaid instalment, 0 when up to date"/>
@@ -274,6 +275,7 @@
         <FIELD NAME="highlight" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="actags" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="ActiveCampaign tags added to buyers of this offer, comma-separated"/>
         <FIELD NAME="subprice" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="2" SEQUENCE="false" COMMENT="Monthly subscription price, 0 when not offered"/>
+        <FIELD NAME="instalfirst" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="2" SEQUENCE="false" COMMENT="First instalment when it differs from the others (a deposit), 0 for equal instalments"/>
         <FIELD NAME="sortorder" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>

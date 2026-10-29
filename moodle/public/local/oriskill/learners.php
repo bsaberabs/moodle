@@ -77,6 +77,12 @@ if ($course && ($action = optional_param('action', '', PARAM_ALPHA)) && confirm_
                 learning_service::remove_offered($course, $userid);
                 $message = get_string('accessremoved', 'local_oriskill');
                 break;
+            case 'loginas':
+                // Moodle's own "log in as", limited to this course, with its banner and its event in the logs.
+                require_capability('moodle/user:loginas', context_course::instance($course->id));
+                \local_oriskill\log_service::add($creator, 'learner_loginas', [], (int) $course->id, $userid);
+                redirect(new moodle_url('/course/loginas.php', ['id' => $course->id, 'user' => $userid,
+                    'sesskey' => sesskey()]));
         }
         \local_oriskill\log_service::add($creator, 'learner_' . $action, $action === 'setend'
             ? ['date' => ($end = local_oriskill_end_of_day(optional_param('timeend', '', PARAM_RAW_TRIMMED)))
@@ -92,6 +98,7 @@ if ($course && ($action = optional_param('action', '', PARAM_ALPHA)) && confirm_
 $learners = $course ? learning_service::learners($creator, $course) : [];
 $groups = $course ? groups_get_all_groups($course->id) : [];
 $dateformat = get_string('strftimedate', 'langconfig');
+$canloginas = $course && has_capability('moodle/user:loginas', context_course::instance($course->id));
 
 // CSV export.
 if ($course && optional_param('download', '', PARAM_ALPHA) === 'csv') {
@@ -225,6 +232,14 @@ foreach ($learners as $userid => $learner) {
             'oriskill-progress mb-1') . html_writer::span(round($learner->progress) . ' %', 'small text-muted');
     $actions = html_writer::link($ficheurl, get_string('learner:details', 'local_oriskill'),
         ['class' => 'btn btn-sm btn-outline-primary']);
+    if ($canloginas && !$learner->suspended && !is_siteadmin($userid)) {
+        $actions .= html_writer::tag('form', $hidden('loginas', $userid) .
+            html_writer::tag('button', get_string('learner:loginas', 'local_oriskill'),
+                ['type' => 'submit', 'class' => 'btn btn-sm btn-outline-secondary']),
+            ['method' => 'post', 'action' => $url->out(false), 'class' => 'd-inline',
+             'onsubmit' => 'return confirm(' . json_encode(get_string('learner:loginas_confirm', 'local_oriskill',
+                 fullname($learner))) . ')']);
+    }
     $toggle = $learner->suspended ? 'reactivate' : 'suspend';
     $actions .= html_writer::tag('form', $hidden($toggle, $userid) .
         html_writer::tag('button', get_string('learner:' . $toggle, 'local_oriskill'),

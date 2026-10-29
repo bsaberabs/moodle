@@ -71,6 +71,7 @@ if ($form) {
         $defaults["offerprice[$i]"] = format_float((float) $offer->price, 2, true);
         $defaults["offerinstalcount[$i]"] = $offer->instalcount;
         $defaults["offerinstaltotal[$i]"] = $offer->instalcount ? format_float((float) $offer->instaltotal, 2, true) : '';
+        $defaults["offerinstalfirst[$i]"] = (float) $offer->instalfirst > 0 ? format_float((float) $offer->instalfirst, 2, true) : '';
         $defaults["offerhighlight[$i]"] = $offer->highlight;
         $defaults["offeractags[$i]"] = $offer->actags;
         $defaults["offersubprice[$i]"] = (float) $offer->subprice > 0 ? format_float((float) $offer->subprice, 2, true) : '';
@@ -97,6 +98,7 @@ if ($data = $mform->get_data()) {
             'price' => unformat_float($data->offerprice[$i], true),
             'instalcount' => (int) $data->offerinstalcount[$i],
             'instaltotal' => unformat_float((string) $data->offerinstaltotal[$i], true),
+            'instalfirst' => unformat_float((string) ($data->offerinstalfirst[$i] ?? ''), true) ?: 0,
             'highlight' => !empty($data->offerhighlight[$i]),
             'actags' => $data->offeractags[$i] ?? '',
             'subprice' => unformat_float((string) ($data->offersubprice[$i] ?? ''), true) ?: 0,

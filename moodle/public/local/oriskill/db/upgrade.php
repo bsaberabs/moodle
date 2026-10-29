@@ -214,5 +214,25 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103021, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103023) {
+        // Payment in instalments with a first instalment of its own (a deposit).
+        $field = new xmldb_field('instalfirst', XMLDB_TYPE_NUMBER, '20, 2', null, XMLDB_NOTNULL, null, '0', 'subprice');
+        $table = new xmldb_table('local_oriskill_formoffers');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        $field = new xmldb_field('firstamount', XMLDB_TYPE_NUMBER, '20, 2', null, XMLDB_NOTNULL, null, '0', 'amount');
+        $table = new xmldb_table('local_oriskill_instalments');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_plugin_savepoint(true, 2026103023, 'local', 'oriskill');
+    }
+    if ($oldversion < 2026103024) {
+        // Trainers (teachers of their courses) may log in as one of their learners, limited to that course.
+        require_once(__DIR__ . '/install.php');
+        local_oriskill_allow_trainer_loginas();
+        upgrade_plugin_savepoint(true, 2026103024, 'local', 'oriskill');
+    }
     return true;
 }

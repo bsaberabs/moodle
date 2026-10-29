@@ -97,6 +97,8 @@ class orderform_form extends \moodleform {
             $mform->createElement('select', 'offerinstalcount', get_string('instalments:countcol', 'local_oriskill'), $counts),
             $mform->createElement('text', 'offerinstaltotal', get_string('orderform:offerinstaltotal', 'local_oriskill'),
                 ['size' => 10]),
+            $mform->createElement('text', 'offerinstalfirst', get_string('orderform:offerinstalfirst', 'local_oriskill'),
+                ['size' => 10]),
             $mform->createElement('text', 'offersubprice', get_string('orderform:offersubprice', 'local_oriskill'), ['size' => 10]),
             $mform->createElement('advcheckbox', 'offerhighlight', get_string('orderform:offerhighlight', 'local_oriskill')),
             $mform->createElement('text', 'offeractags', get_string('orderform:offeractags', 'local_oriskill'), ['size' => 50]),
@@ -106,6 +108,8 @@ class orderform_form extends \moodleform {
             'offerdetails' => ['type' => PARAM_TEXT],
             'offerprice' => ['type' => PARAM_RAW_TRIMMED],
             'offerinstaltotal' => ['type' => PARAM_RAW_TRIMMED, 'hideif' => ['offerinstalcount', 'eq', 0]],
+            'offerinstalfirst' => ['type' => PARAM_RAW_TRIMMED, 'hideif' => ['offerinstalcount', 'eq', 0],
+                'helpbutton' => ['orderform:offerinstalfirst', 'local_oriskill']],
             'offercourses' => ['type' => PARAM_INT],
             'offeractags' => ['type' => PARAM_TEXT, 'helpbutton' => ['orderform:offeractags', 'local_oriskill']],
             'offersubprice' => ['type' => PARAM_RAW_TRIMMED, 'helpbutton' => ['orderform:offersubprice', 'local_oriskill']],
@@ -154,6 +158,15 @@ class orderform_form extends \moodleform {
             if (!empty($data['offerinstalcount'][$i]) && $total !== ''
                     && (!($t = unformat_float($total, true)) || $t <= 0)) {
                 $errors["offerinstaltotal[$i]"] = get_string('error:offerprice', 'local_oriskill');
+            }
+            // A deposit is below the total paid in instalments (the total, or the price when it is empty).
+            $first = trim((string) ($data['offerinstalfirst'][$i] ?? ''));
+            if (!empty($data['offerinstalcount'][$i]) && $first !== '') {
+                $f = unformat_float($first, true);
+                $limit = $total !== '' ? unformat_float($total, true) : $price;
+                if (!$f || $f <= 0 || ($limit && $f >= $limit)) {
+                    $errors["offerinstalfirst[$i]"] = get_string('error:instalfirst', 'local_oriskill');
+                }
             }
             $valid++;
         }

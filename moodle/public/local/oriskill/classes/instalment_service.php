@@ -36,7 +36,7 @@ use moodle_url;
 class instalment_service {
 
     /** Numbers of instalments a trainer can offer. */
-    const COUNTS = [2, 3, 4, 6, 10, 12];
+    const COUNTS = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
     /** Days between a refused instalment and the suspension of the access. */
     const GRACE_DAYS = 7;
@@ -388,8 +388,11 @@ class instalment_service {
             $offer = !empty($notes['offer'])
                 ? $DB->get_field('local_oriskill_formoffers', 'label', ['id' => $notes['offer']]) : false;
             $record->label = $offer !== false ? format_string($offer) : format_string($record->coursename);
-            $record->collected = round((int) $record->paid * (float) $record->amount, 2);
-            $record->remaining = round(((int) $record->count - (int) $record->paid) * (float) $record->amount, 2);
+            // The first instalment can be a deposit of its own (firstamount), the others are equal.
+            $first = (float) $record->firstamount > 0 ? (float) $record->firstamount : (float) $record->amount;
+            $record->collected = $record->paid ? round($first + ((int) $record->paid - 1) * (float) $record->amount, 2) : 0.0;
+            $record->remaining = round(((int) $record->count - max(1, (int) $record->paid)) * (float) $record->amount
+                + ($record->paid ? 0 : $first), 2);
             // Monthly from the first payment; once completed or stopped, nothing more is due.
             $record->nextdue = in_array($record->status, ['completed', 'stopped', 'cancelled'], true)
                 || ($record->count && $record->paid >= $record->count) ? 0 : self::paid_until($record);
@@ -437,7 +440,8 @@ class instalment_service {
         }
         $now = time();
         $record = (object) ['orderid' => $orderid, 'userid' => (int) $order->userid, 'courseid' => $courseid,
-            'count' => $plan['count'], 'amount' => $plan['amount'], 'paid' => 0, 'status' => 'active', 'latesince' => 0,
+            'count' => $plan['count'], 'amount' => $plan['amount'],
+            'firstamount' => $plan['first'] != $plan['amount'] ? $plan['first'] : 0, 'paid' => 0, 'status' => 'active', 'latesince' => 0,
             'timecreated' => $now, 'timemodified' => $now];
         $record->id = $DB->insert_record('local_oriskill_instalments', $record);
         return $record;

@@ -114,7 +114,9 @@ if (!$records) {
             s($r->label) . html_writer::div(s($r->ordernumber) . ' · ' .
                 userdate($r->timecreated, $dateformat), 'small text-muted'),
             ($r->count ? html_writer::div(get_string('schedules:paidof', 'local_oriskill', (object) ['paid' => $r->paid,
-                'count' => $r->count, 'amount' => pricing_service::format_price((float) $r->amount, $r->currency)]), 'small') .
+                'count' => $r->count, 'amount' => pricing_service::format_price((float) $r->amount, $r->currency)]) .
+                ((float) $r->firstamount > 0 ? ' ' . get_string('schedules:firstamount', 'local_oriskill',
+                    pricing_service::format_price((float) $r->firstamount, $r->currency)) : ''), 'small') .
                 html_writer::div(html_writer::span('', '', ['style' => "width: {$percent}%"]), 'oriskill-progress')
                 : html_writer::div(get_string('subscription:permonth', 'local_oriskill',
                     pricing_service::format_price((float) $r->amount, $r->currency)) . ' · ' .

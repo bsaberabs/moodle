@@ -22,7 +22,7 @@ COPY docker/config.php /var/www/moodle/config.php
 COPY docker/db-status.php /usr/local/bin/moodle-db-status.php
 COPY docker/moderncommerce-fr-templates.php /usr/local/bin/moodle-fr-templates.php
 COPY docker/oriskill-storefront.php docker/oriskill-storefront-fr.json docker/oriskill-branding.php docker/oriskill-mfa.php \
-    /usr/local/share/oriskill/
+    docker/oriskill-security.php /usr/local/share/oriskill/
 COPY docker/branding/ /usr/local/share/oriskill/branding/
 COPY --chmod=755 docker/entrypoint.sh /usr/local/bin/moodle-entrypoint
 
