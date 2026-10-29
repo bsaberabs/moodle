@@ -20,6 +20,10 @@
         <FIELD NAME="sap_key" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Trainer's SecureAndPay signing key, encrypted with core\encryption"/>
         <FIELD NAME="sap_testmode" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="Use the SecureAndPay test environment"/>
         <FIELD NAME="affiliaterate" TYPE="number" LENGTH="5" NOTNULL="true" DEFAULT="0" DECIMALS="2" SEQUENCE="false" COMMENT="Commission (%) paid by the trainer to affiliates on their courses; 0 = no affiliation"/>
+        <FIELD NAME="primarycolor" TYPE="char" LENGTH="7" NOTNULL="false" SEQUENCE="false" COMMENT="Showcase main colour (#rrggbb); empty = Oriskill's"/>
+        <FIELD NAME="accentcolor" TYPE="char" LENGTH="7" NOTNULL="false" SEQUENCE="false" COMMENT="Showcase accent colour (#rrggbb)"/>
+        <FIELD NAME="fontstyle" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false" COMMENT="Showcase typeface: modern, elegant or classic"/>
+        <FIELD NAME="customdomain" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Own domain that opens the showcase (lowercase, no www)"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
@@ -31,6 +35,7 @@
       <INDEXES>
         <INDEX NAME="slug" UNIQUE="true" FIELDS="slug"/>
         <INDEX NAME="status" UNIQUE="false" FIELDS="status"/>
+        <INDEX NAME="customdomain" UNIQUE="false" FIELDS="customdomain"/>
       </INDEXES>
     </TABLE>
     <TABLE NAME="local_oriskill_affiliates" COMMENT="Affiliates: users who earn a commission on the sales they bring">

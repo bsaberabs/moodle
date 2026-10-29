@@ -202,5 +202,9 @@ class hook_callbacks {
         }
         $hook->add_html(\html_writer::empty_tag('meta', ['name' => 'description', 'content' => self::$headmeta['description']]));
         $hook->add_html(\html_writer::empty_tag('link', ['rel' => 'canonical', 'href' => self::$headmeta['canonical']]));
+        // The trainer's logo replaces the Oriskill icon in the browser tab (declared after it, so browsers use it).
+        if (!empty(self::$headmeta['icon'])) {
+            $hook->add_html(\html_writer::empty_tag('link', ['rel' => 'icon', 'href' => self::$headmeta['icon']]));
+        }
     }
 }

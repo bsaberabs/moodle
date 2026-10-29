@@ -64,11 +64,20 @@ $form = new creator_form($url, ['creator' => $creator ?: null]);
 $draftitemid = file_get_submitted_draft_itemid('logo_filemanager');
 file_prepare_draft_area($draftitemid, $context->id, 'local_oriskill', 'logo', $creator->id ?? 0, creator_form::LOGO_OPTIONS);
 if ($creator) {
+    $bannerdraft = file_get_submitted_draft_itemid('banner_filemanager');
+    file_prepare_draft_area($bannerdraft, $context->id, 'local_oriskill', 'banner', $creator->id,
+        creator_form::BANNER_OPTIONS);
+    $style = creator_service::showcase_style($creator);
     $form->set_data([
         'displayname' => $creator->displayname,
         'tagline' => $creator->tagline,
         'bio_editor' => ['text' => $creator->bio, 'format' => $creator->bioformat],
         'logo_filemanager' => $draftitemid,
+        'primarycolor' => $style['primary'],
+        'accentcolor' => $style['accent'],
+        'fontstyle' => $creator->fontstyle ?: 'modern',
+        'banner_filemanager' => $bannerdraft,
+        'customdomain' => $creator->customdomain,
     ]);
 } else {
     $form->set_data(['logo_filemanager' => $draftitemid]);
@@ -82,9 +91,15 @@ if ($data = $form->get_data()) {
             'tagline' => $data->tagline,
             'bio' => $data->bio_editor['text'],
             'bioformat' => $data->bio_editor['format'],
+            'primarycolor' => creator_service::valid_color($data->primarycolor),
+            'accentcolor' => creator_service::valid_color($data->accentcolor),
+            'fontstyle' => isset(creator_service::FONTS[$data->fontstyle]) ? $data->fontstyle : 'modern',
+            'customdomain' => creator_service::normalise_domain((string) $data->customdomain),
             'timemodified' => time(),
         ]);
         $creatorid = (int) $creator->id;
+        file_save_draft_area_files($data->banner_filemanager, $context->id, 'local_oriskill', 'banner', $creatorid,
+            creator_form::BANNER_OPTIONS);
     } else {
         $data->slug = strtolower($data->slug);
         $creatorid = creator_service::apply((int) $USER->id, $data);

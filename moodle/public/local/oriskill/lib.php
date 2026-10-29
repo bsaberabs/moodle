@@ -37,14 +37,14 @@
 function local_oriskill_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = []) {
     global $DB;
 
-    if ($context->contextlevel !== CONTEXT_SYSTEM || $filearea !== 'logo') {
+    if ($context->contextlevel !== CONTEXT_SYSTEM || !in_array($filearea, ['logo', 'banner'], true)) {
         return false;
     }
     $creatorid = (int) array_shift($args);
     if (!$DB->record_exists('local_oriskill_creators', ['id' => $creatorid, 'status' => 'active'])) {
         return false;
     }
-    $file = get_file_storage()->get_file($context->id, 'local_oriskill', 'logo', $creatorid, '/', array_pop($args));
+    $file = get_file_storage()->get_file($context->id, 'local_oriskill', $filearea, $creatorid, '/', array_pop($args));
     if (!$file || $file->is_directory()) {
         return false;
     }

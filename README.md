@@ -119,6 +119,44 @@ le pipeline à la main depuis l'onglet Actions (*Run workflow*).
 Placez un reverse proxy (Caddy, Nginx, Traefik) devant le port de Moodle, puis dans
 le `.env` du serveur : `MOODLE_WWWROOT=https://...` et `MOODLE_SSLPROXY=true`.
 
+### Domaine personnalisé d'une vitrine formateur
+
+Un formateur peut relier son propre domaine à sa vitrine (Mon espace formateur → Ma vitrine →
+« Nom de domaine personnalisé »). Il fait pointer le domaine et `www` vers l'IP du serveur
+(enregistrements A), et Caddy sert la vitrine sur ce domaine avec un certificat créé à la demande.
+
+À ajouter une fois dans le `Caddyfile` du serveur (à côté du bloc `oriskill.com` existant) :
+
+```caddyfile
+{
+    on_demand_tls {
+        # Certificat seulement pour le domaine d'un formateur actif (200), sinon refus (404).
+        ask https://oriskill.com/local/oriskill/domaincheck.php
+    }
+}
+
+https:// {
+    tls {
+        on_demand
+    }
+    # La page d'accueil du domaine est la vitrine du formateur.
+    @root path /
+    handle @root {
+        rewrite * /local/oriskill/creator.php?domain={host}
+        reverse_proxy 127.0.0.1:8080 {
+            header_up Host oriskill.com
+        }
+    }
+    # Tout le reste (formations, paiement, connexion) se passe sur oriskill.com.
+    handle {
+        redir https://oriskill.com{uri} 301
+    }
+}
+```
+
+Puis `sudo systemctl reload caddy`. Le formulaire du formateur indique si le domaine pointe déjà
+vers le serveur.
+
 ## Changer de version de Moodle
 
 Remplacez le contenu du dossier `moodle/` par la nouvelle version (sans y laisser de

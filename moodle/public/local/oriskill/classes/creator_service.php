@@ -356,11 +356,160 @@ class creator_service {
      * @return moodle_url|null
      */
     public static function logo_url(\stdClass $creator): ?moodle_url {
-        $files = get_file_storage()->get_area_files(context_system::instance()->id, 'local_oriskill', 'logo',
+        return self::image_url($creator, 'logo');
+    }
+
+    /**
+     * Showcase banner URL, if one was uploaded.
+     *
+     * @param \stdClass $creator Creator.
+     * @return moodle_url|null
+     */
+    public static function banner_url(\stdClass $creator): ?moodle_url {
+        return self::image_url($creator, 'banner');
+    }
+
+    /**
+     * URL of a trainer's image (logo or banner).
+     *
+     * @param \stdClass $creator Creator.
+     * @param string $area File area.
+     * @return moodle_url|null
+     */
+    private static function image_url(\stdClass $creator, string $area): ?moodle_url {
+        $files = get_file_storage()->get_area_files(context_system::instance()->id, 'local_oriskill', $area,
             $creator->id, 'filename', false);
         $file = reset($files);
-        return $file ? moodle_url::make_pluginfile_url($file->get_contextid(), 'local_oriskill', 'logo',
+        return $file ? moodle_url::make_pluginfile_url($file->get_contextid(), 'local_oriskill', $area,
             $creator->id, '/', $file->get_filename()) : null;
+    }
+
+    /** Showcase typefaces: key => CSS font stack (system fonts only, nothing loaded from elsewhere). */
+    const FONTS = [
+        'modern' => 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+        'elegant' => 'Georgia, "Times New Roman", serif',
+        'classic' => '"Helvetica Neue", Helvetica, Arial, sans-serif',
+    ];
+
+    /** Oriskill colours, used when the trainer chose none. */
+    const DEFAULT_PRIMARY = '#7c3aed';
+    const DEFAULT_ACCENT = '#fbbf24';
+
+    /**
+     * Appearance of a trainer's showcase: colours, text colour readable on each, typeface.
+     *
+     * @param \stdClass $creator Creator.
+     * @return array primary, onprimary, accent, onaccent, font, and ink: the primary colour, or a dark one when
+     *     the primary colour would not read on white (prices, links)
+     */
+    public static function showcase_style(\stdClass $creator): array {
+        $primary = self::valid_color($creator->primarycolor ?? '') ?? self::DEFAULT_PRIMARY;
+        $accent = self::valid_color($creator->accentcolor ?? '') ?? self::DEFAULT_ACCENT;
+        return [
+            'primary' => $primary,
+            'onprimary' => self::readable_on($primary),
+            'accent' => $accent,
+            'onaccent' => self::readable_on($accent),
+            'ink' => self::readable_on($primary) === '#ffffff' ? $primary : '#111827',
+            'font' => self::FONTS[$creator->fontstyle ?? ''] ?? self::FONTS['modern'],
+        ];
+    }
+
+    /**
+     * A colour as #rrggbb in lowercase, or null when it is not one.
+     *
+     * @param string $color Colour.
+     * @return string|null
+     */
+    public static function valid_color(string $color): ?string {
+        $color = strtolower(trim($color));
+        return preg_match('/^#[0-9a-f]{6}$/', $color) ? $color : null;
+    }
+
+    /**
+     * Black or white, whichever reads better on a background colour (WCAG relative luminance).
+     *
+     * @param string $color Background #rrggbb.
+     * @return string #ffffff or #111827
+     */
+    public static function readable_on(string $color): string {
+        $channel = function(string $hex): float {
+            $c = hexdec($hex) / 255;
+            return $c <= 0.03928 ? $c / 12.92 : (($c + 0.055) / 1.055) ** 2.4;
+        };
+        $luminance = 0.2126 * $channel(substr($color, 1, 2)) + 0.7152 * $channel(substr($color, 3, 2))
+            + 0.0722 * $channel(substr($color, 5, 2));
+        // Contrast with white (1.05 / (L + 0.05)) against contrast with near-black ((L + 0.05) / 0.0603).
+        return 1.05 / ($luminance + 0.05) >= ($luminance + 0.05) / 0.0603 ? '#ffffff' : '#111827';
+    }
+
+    /**
+     * A domain as stored: lowercase, without scheme, path, port or leading "www.", or null when it is not one.
+     *
+     * @param string $domain Domain as typed (wsmacademy.com, https://www.wsmacademy.com/...).
+     * @return string|null
+     */
+    public static function normalise_domain(string $domain): ?string {
+        $domain = strtolower(trim($domain));
+        $domain = preg_replace('~^[a-z]+://~', '', $domain);
+        $domain = preg_replace('~[/:?#].*$~', '', $domain);
+        $domain = preg_replace('/^www\./', '', $domain);
+        if (!preg_match('/^(?=.{4,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/', $domain)) {
+            return null;
+        }
+        return $domain;
+    }
+
+    /**
+     * Why a domain cannot be attached to a trainer's showcase, or null if it can.
+     *
+     * @param string $domain Normalised domain.
+     * @param int $creatorid The trainer attaching it.
+     * @return string|null Language string key.
+     */
+    public static function domain_error(string $domain, int $creatorid): ?string {
+        global $CFG, $DB;
+
+        $site = strtolower((string) parse_url($CFG->wwwroot, PHP_URL_HOST));
+        $site = preg_replace('/^www\./', '', $site);
+        if ($domain === $site || str_ends_with($domain, '.' . $site)) {
+            return 'error:domainsite';
+        }
+        if ($DB->record_exists_select(self::TABLE, 'customdomain = ? AND id <> ?', [$domain, $creatorid])) {
+            return 'error:domaintaken';
+        }
+        return null;
+    }
+
+    /**
+     * Active trainer whose showcase a domain opens (with or without "www.").
+     *
+     * @param string $domain Host of the request.
+     * @return \stdClass|null
+     */
+    public static function creator_by_domain(string $domain): ?\stdClass {
+        global $DB;
+
+        $domain = self::normalise_domain($domain);
+        return $domain ? ($DB->get_record(self::TABLE, ['customdomain' => $domain, 'status' => 'active']) ?: null) : null;
+    }
+
+    /** Public address of the Oriskill server, which a trainer's domain must point to. */
+    const SERVER_IPV4 = '91.214.190.221';
+
+    /**
+     * Whether a domain and its "www." already point to the Oriskill server.
+     *
+     * @param string $domain Normalised domain.
+     * @return bool
+     */
+    public static function domain_points_here(string $domain): bool {
+        foreach ([$domain, 'www.' . $domain] as $host) {
+            if (!in_array(self::SERVER_IPV4, gethostbynamel($host) ?: [], true)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

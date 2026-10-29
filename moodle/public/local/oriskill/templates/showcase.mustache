@@ -17,7 +17,7 @@
 {{!
     @template local_oriskill/showcase
 
-    Public trainer showcase: identity, presentation and the trainer's courses on sale.
+    Public trainer showcase, in the trainer's brand: their logo, name, colours, typeface and banner.
 
     Example context (json):
     {
@@ -25,54 +25,79 @@
         "tagline": "Formations pratiques en analyse de données",
         "bio": "<p>Présentation du formateur.</p>",
         "logo": "",
+        "banner": "",
         "initial": "S",
+        "style": {"primary": "#7c3aed", "onprimary": "#ffffff", "accent": "#fbbf24", "onaccent": "#111827", "ink": "#7c3aed",
+                  "font": "Georgia, serif"},
+        "accounturl": "#",
+        "accountlabel": "Se connecter",
+        "year": "2026",
+        "links": [{"url": "#", "label": "Conditions générales"}],
         "hascourses": true,
         "courses": [{"name": "Excel pour l'analyse", "summary": "Résumé", "image": "", "price": "49,00 €",
                      "compareprice": "79,00 €", "url": "#"}]
     }
 }}
-<div class="local-oriskill-showcase">
-    <header class="d-flex flex-column flex-md-row align-items-center gap-4 py-4 mb-4 border-bottom">
-        {{#logo}}
-            <img src="{{logo}}" alt="{{displayname}}" class="rounded" style="max-width: 140px; max-height: 140px; object-fit: contain;">
-        {{/logo}}
-        {{^logo}}
-            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fs-1 fw-bold"
-                 style="width: 120px; height: 120px;" aria-hidden="true">{{initial}}</div>
-        {{/logo}}
-        <div class="text-center text-md-start">
-            <h1 class="h2 mb-1">{{displayname}}</h1>
-            {{#tagline}}<p class="lead text-muted mb-0">{{tagline}}</p>{{/tagline}}
-        </div>
+<div class="oriskill-vitrine" style="--v-primary: {{style.primary}}; --v-on-primary: {{style.onprimary}}; --v-accent: {{style.accent}}; --v-on-accent: {{style.onaccent}}; --v-ink: {{style.ink}}; --v-font: {{style.font}};">
+    <header class="oriskill-vitrine-bar">
+        <a href="#top" class="oriskill-vitrine-brand">
+            {{#logo}}<img src="{{logo}}" alt="" class="oriskill-vitrine-logo">{{/logo}}
+            {{^logo}}<span class="oriskill-vitrine-initial" aria-hidden="true">{{initial}}</span>{{/logo}}
+            <span>{{displayname}}</span>
+        </a>
+        <nav class="oriskill-vitrine-nav" aria-label="{{displayname}}">
+            <a href="#oriskill-courses">{{#str}}creatorcourses, local_oriskill{{/str}}</a>
+            <a href="{{accounturl}}" class="oriskill-vitrine-account">{{accountlabel}}</a>
+        </nav>
     </header>
 
-    {{#bio}}
-        <section class="mb-5" aria-label="{{#str}}aboutcreator, local_oriskill{{/str}}">{{{bio}}}</section>
-    {{/bio}}
+    <section id="top" class="oriskill-vitrine-hero{{#banner}} has-banner{{/banner}}"
+        {{#banner}}style="background-image: url('{{banner}}');"{{/banner}}>
+        <div class="oriskill-vitrine-hero-inner">
+            <h1>{{displayname}}</h1>
+            {{#tagline}}<p class="oriskill-vitrine-tagline">{{tagline}}</p>{{/tagline}}
+            {{#hascourses}}<a href="#oriskill-courses" class="oriskill-vitrine-cta">{{#str}}showcase:seecourses, local_oriskill{{/str}}</a>{{/hascourses}}
+        </div>
+    </section>
 
-    <section aria-labelledby="oriskill-courses-heading">
-        <h2 id="oriskill-courses-heading" class="h4 mb-3">{{#str}}creatorcourses, local_oriskill{{/str}}</h2>
-        {{#hascourses}}
-            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-                {{#courses}}
-                    <div class="col">
-                        <article class="card h-100 shadow-sm">
-                            {{#image}}<img src="{{image}}" class="card-img-top" alt="" style="height: 180px; object-fit: cover;">{{/image}}
-                            <div class="card-body d-flex flex-column">
-                                <h3 class="h5 card-title"><a href="{{url}}" class="stretched-link text-decoration-none">{{name}}</a></h3>
-                                <p class="card-text text-muted small flex-grow-1">{{summary}}</p>
-                                <p class="mb-0">
-                                    <span class="fs-5 fw-bold">{{price}}</span>
-                                    {{#compareprice}}<s class="text-muted ms-2">{{compareprice}}</s>{{/compareprice}}
+    <main class="oriskill-vitrine-main">
+        {{#bio}}
+            <section class="oriskill-vitrine-about" aria-labelledby="oriskill-about-heading">
+                <h2 id="oriskill-about-heading">{{#str}}aboutcreator, local_oriskill{{/str}}</h2>
+                <div>{{{bio}}}</div>
+            </section>
+        {{/bio}}
+
+        <section id="oriskill-courses" aria-labelledby="oriskill-courses-heading">
+            <h2 id="oriskill-courses-heading">{{#str}}creatorcourses, local_oriskill{{/str}}</h2>
+            {{#hascourses}}
+                <div class="oriskill-vitrine-grid">
+                    {{#courses}}
+                        <article class="oriskill-vitrine-card">
+                            {{#image}}<img src="{{image}}" alt="">{{/image}}
+                            {{^image}}<div class="oriskill-vitrine-card-placeholder" aria-hidden="true"></div>{{/image}}
+                            <div class="oriskill-vitrine-card-body">
+                                <h3><a href="{{url}}">{{name}}</a></h3>
+                                <p>{{summary}}</p>
+                                <p class="oriskill-vitrine-price">
+                                    <strong>{{price}}</strong>
+                                    {{#compareprice}}<s>{{compareprice}}</s>{{/compareprice}}
                                 </p>
                             </div>
                         </article>
-                    </div>
-                {{/courses}}
-            </div>
-        {{/hascourses}}
-        {{^hascourses}}
-            <p class="text-muted">{{#str}}nocourses, local_oriskill{{/str}}</p>
-        {{/hascourses}}
-    </section>
+                    {{/courses}}
+                </div>
+            {{/hascourses}}
+            {{^hascourses}}
+                <p class="oriskill-vitrine-empty">{{#str}}nocourses, local_oriskill{{/str}}</p>
+            {{/hascourses}}
+        </section>
+    </main>
+
+    <footer class="oriskill-vitrine-footer">
+        <span>© {{year}} {{displayname}}</span>
+        <nav aria-label="{{#str}}showcase:legal, local_oriskill{{/str}}">
+            {{#links}}<a href="{{url}}">{{label}}</a>{{/links}}
+        </nav>
+    </footer>
 </div>

@@ -69,5 +69,27 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103005, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103008) {
+        // Showcase appearance (colours, typeface) and own domain.
+        $table = new xmldb_table('local_oriskill_creators');
+        $previous = 'affiliaterate';
+        foreach ([
+            new xmldb_field('primarycolor', XMLDB_TYPE_CHAR, '7', null, null, null, null),
+            new xmldb_field('accentcolor', XMLDB_TYPE_CHAR, '7', null, null, null, null),
+            new xmldb_field('fontstyle', XMLDB_TYPE_CHAR, '20', null, null, null, null),
+            new xmldb_field('customdomain', XMLDB_TYPE_CHAR, '255', null, null, null, null),
+        ] as $field) {
+            $field->setPrevious($previous);
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+            $previous = $field->getName();
+        }
+        $index = new xmldb_index('customdomain', XMLDB_INDEX_NOTUNIQUE, ['customdomain']);
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+        upgrade_plugin_savepoint(true, 2026103008, 'local', 'oriskill');
+    }
     return true;
 }

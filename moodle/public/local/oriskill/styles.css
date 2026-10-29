@@ -322,3 +322,239 @@
 .oriskill-guide ul li {
     margin-bottom: .35rem;
 }
+
+/* Trainer showcase, in the trainer's brand (colours and typeface set by creator.php as --v-* variables). */
+.oriskill-vitrine-page #page,
+.oriskill-vitrine-page #page-wrapper,
+.oriskill-vitrine-page #region-main-box,
+.oriskill-vitrine-page #region-main {
+    margin: 0;
+    padding: 0;
+    max-width: none;
+}
+.oriskill-vitrine {
+    font-family: var(--v-font);
+    color: #1f2937;
+    background: #fff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+.oriskill-vitrine h1,
+.oriskill-vitrine h2,
+.oriskill-vitrine h3 {
+    font-family: var(--v-font);
+}
+.oriskill-vitrine-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding: .75rem clamp(1rem, 4vw, 3rem);
+    background: #fff;
+    border-bottom: 1px solid #e5e7eb;
+}
+.oriskill-vitrine-brand {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #111827;
+    text-decoration: none;
+}
+.oriskill-vitrine-brand:hover {
+    color: var(--v-ink);
+    text-decoration: none;
+}
+.oriskill-vitrine-logo {
+    height: 44px;
+    max-width: 160px;
+    object-fit: contain;
+}
+.oriskill-vitrine-initial {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--v-primary);
+    color: var(--v-on-primary);
+}
+.oriskill-vitrine-nav {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+}
+.oriskill-vitrine-nav a {
+    color: #374151;
+    font-weight: 600;
+    text-decoration: none;
+}
+.oriskill-vitrine-nav a.oriskill-vitrine-account {
+    padding: .5rem 1rem;
+    border-radius: 999px;
+    background: var(--v-primary);
+    color: var(--v-on-primary);
+}
+.oriskill-vitrine-hero {
+    background: var(--v-primary);
+    color: var(--v-on-primary);
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    padding: clamp(3rem, 9vw, 7rem) 0;
+}
+.oriskill-vitrine-hero.has-banner {
+    color: #fff;
+}
+.oriskill-vitrine-hero.has-banner::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(0, 0, 0, .65), rgba(0, 0, 0, .25));
+}
+.oriskill-vitrine-hero-inner {
+    position: relative;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 clamp(1rem, 4vw, 3rem);
+}
+.oriskill-vitrine-hero h1 {
+    font-size: clamp(2rem, 5vw, 3.25rem);
+    font-weight: 800;
+    margin-bottom: .75rem;
+    color: inherit;
+}
+.oriskill-vitrine-tagline {
+    font-size: clamp(1.05rem, 2vw, 1.35rem);
+    max-width: 40rem;
+    opacity: .92;
+}
+.oriskill-vitrine-cta {
+    display: inline-block;
+    margin-top: 1.25rem;
+    padding: .8rem 1.6rem;
+    border-radius: 999px;
+    background: var(--v-accent);
+    color: var(--v-on-accent);
+    font-weight: 700;
+    text-decoration: none;
+}
+.oriskill-vitrine-cta:hover {
+    color: var(--v-on-accent);
+    filter: brightness(1.05);
+    text-decoration: none;
+}
+.oriskill-vitrine-main {
+    flex: 1;
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 3rem clamp(1rem, 4vw, 3rem);
+}
+.oriskill-vitrine-main h2 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 1.25rem;
+}
+.oriskill-vitrine-main h2::after {
+    content: "";
+    display: block;
+    width: 3rem;
+    height: 4px;
+    margin-top: .5rem;
+    border-radius: 2px;
+    background: var(--v-accent);
+}
+.oriskill-vitrine-about {
+    margin-bottom: 3rem;
+    font-size: 1.05rem;
+    line-height: 1.7;
+}
+.oriskill-vitrine-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.5rem;
+}
+.oriskill-vitrine-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #fff;
+    transition: box-shadow .2s, transform .2s;
+}
+.oriskill-vitrine-card:hover {
+    box-shadow: 0 12px 30px rgba(17, 24, 39, .12);
+    transform: translateY(-2px);
+}
+.oriskill-vitrine-card img,
+.oriskill-vitrine-card-placeholder {
+    width: 100%;
+    height: 170px;
+    object-fit: cover;
+}
+.oriskill-vitrine-card-placeholder {
+    background: linear-gradient(135deg, var(--v-primary), var(--v-accent));
+}
+.oriskill-vitrine-card-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 1.1rem 1.25rem 1.25rem;
+}
+.oriskill-vitrine-card h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+.oriskill-vitrine-card h3 a {
+    color: #111827;
+    text-decoration: none;
+}
+.oriskill-vitrine-card h3 a::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+}
+.oriskill-vitrine-card-body p {
+    color: #6b7280;
+    font-size: .95rem;
+    flex: 1;
+}
+.oriskill-vitrine-card-body p.oriskill-vitrine-price {
+    flex: 0;
+    margin: 0;
+    color: var(--v-ink);
+    font-size: 1.25rem;
+}
+.oriskill-vitrine-price s {
+    margin-left: .5rem;
+    color: #9ca3af;
+    font-size: 1rem;
+}
+.oriskill-vitrine-empty {
+    color: #6b7280;
+}
+.oriskill-vitrine-footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.5rem clamp(1rem, 4vw, 3rem);
+    background: #111827;
+    color: #d1d5db;
+    font-size: .9rem;
+}
+.oriskill-vitrine-footer nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+}
+.oriskill-vitrine-footer a {
+    color: #d1d5db;
+}

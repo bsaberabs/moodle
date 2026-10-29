@@ -27,13 +27,21 @@ require_once(__DIR__ . '/../../config.php');
 use local_oriskill\creator_service;
 use local_oriskill\hook_callbacks;
 
-$slug = required_param('slug', PARAM_ALPHANUMEXT);
-$creator = $DB->get_record('local_oriskill_creators', ['slug' => $slug, 'status' => 'active']);
+// A trainer's own domain reaches this page through the proxy as ?domain= (see README, "Domaine personnalisé").
+$domain = optional_param('domain', '', PARAM_HOST);
+if ($domain !== '') {
+    $creator = creator_service::creator_by_domain($domain);
+    $notfoundurl = new moodle_url('/local/oriskill/creator.php', ['domain' => $domain]);
+} else {
+    $slug = required_param('slug', PARAM_ALPHANUMEXT);
+    $creator = $DB->get_record('local_oriskill_creators', ['slug' => $slug, 'status' => 'active']);
+    $notfoundurl = new moodle_url('/local/oriskill/creator.php', ['slug' => $slug]);
+}
 
 $PAGE->set_context(context_system::instance());
-$PAGE->set_pagelayout('standard');
 if (!$creator) {
-    $PAGE->set_url(new moodle_url('/local/oriskill/creator.php', ['slug' => $slug]));
+    $PAGE->set_pagelayout('standard');
+    $PAGE->set_url($notfoundurl);
     send_header_404();
     $PAGE->set_title(get_string('showcasenotfound', 'local_oriskill'));
     echo $OUTPUT->header();
@@ -42,24 +50,43 @@ if (!$creator) {
     exit;
 }
 
+// The showcase carries the trainer's brand only: no Oriskill header, menu or footer around it.
+$PAGE->set_pagelayout('embedded');
+$PAGE->add_body_class('oriskill-vitrine-page');
 $url = creator_service::showcase_url($creator);
 $PAGE->set_url($url);
-$PAGE->set_title(get_string('showcasetitle', 'local_oriskill', format_string($creator->displayname)));
-hook_callbacks::$headmeta = ['description' => $creator->tagline ?: format_string($creator->displayname),
-    'canonical' => $url->out(false)];
+$name = format_string($creator->displayname);
+$PAGE->set_title(get_string('showcasetitle', 'local_oriskill', $name), false);
+$canonical = $domain !== '' ? 'https://' . $creator->customdomain . '/' : $url->out(false);
+$logo = creator_service::logo_url($creator);
+hook_callbacks::$headmeta = ['description' => $creator->tagline ?: $name, 'canonical' => $canonical,
+    'icon' => $logo ? $logo->out(false) : ''];
 
 // Courses are offered only while the trainer can actually take payments.
 $courses = \local_oriskill\seller_service::selling_blocker($creator) ? [] : creator_service::showcase_courses($creator);
-$logo = creator_service::logo_url($creator);
+$banner = creator_service::banner_url($creator);
+$style = creator_service::showcase_style($creator);
+$loggedin = isloggedin() && !isguestuser();
 
 echo $OUTPUT->header();
 echo $OUTPUT->render_from_template('local_oriskill/showcase', [
-    'displayname' => format_string($creator->displayname),
+    'displayname' => $name,
     'tagline' => format_string($creator->tagline),
     'bio' => format_text($creator->bio, $creator->bioformat, ['context' => context_system::instance()]),
     'logo' => $logo ? $logo->out(false) : '',
+    'banner' => $banner ? $banner->out(false) : '',
     'initial' => core_text::strtoupper(core_text::substr($creator->displayname, 0, 1)),
     'courses' => $courses,
     'hascourses' => !empty($courses),
+    'style' => $style,
+    'accounturl' => (new moodle_url($loggedin ? '/local/moderncommerce/learner/index.php' : '/login/index.php'))->out(false),
+    'accountlabel' => get_string($loggedin ? 'showcase:mylearning' : 'showcase:login', 'local_oriskill'),
+    'year' => userdate(time(), '%Y'),
+    'links' => [
+        ['url' => (new moodle_url('/local/moderncommerce/terms.php'))->out(false),
+         'label' => get_string('showcase:terms', 'local_oriskill')],
+        ['url' => (new moodle_url('/local/moderncommerce/privacy.php'))->out(false),
+         'label' => get_string('showcase:privacy', 'local_oriskill')],
+    ],
 ]);
 echo $OUTPUT->footer();
