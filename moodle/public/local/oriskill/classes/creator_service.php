@@ -213,6 +213,7 @@ class creator_service {
         'navgroup:overview' => [
             '/local/oriskill/dashboard.php' => ['menu:dashboard', 'bi-speedometer2'],
             '/local/oriskill/sales.php' => ['sales', 'bi-graph-up-arrow'],
+            '/local/oriskill/schedules.php' => ['menu:schedules', 'bi-calendar-check'],
             '/local/oriskill/invoices.php' => ['menu:invoices', 'bi-receipt'],
         ],
         'navgroup:courses' => [

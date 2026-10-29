@@ -648,3 +648,10 @@
     font-weight: 600;
     color: var(--v-ink);
 }
+
+/* Payment schedules: the learner and course cells wrap so the status stays in view. */
+.path-local-moderncommerce .oriskill-space table.table.oriskill-schedules:not(.mc-table) td:nth-child(1),
+.path-local-moderncommerce .oriskill-space table.table.oriskill-schedules:not(.mc-table) td:nth-child(2) {
+    white-space: normal;
+    min-width: 11rem;
+}

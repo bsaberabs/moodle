@@ -251,6 +251,49 @@ class instalment_service {
     }
 
     /**
+     * A trainer's purchases in instalments, newest first, with what they bring and when the next instalment is due.
+     *
+     * @param \stdClass $creator Trainer.
+     * @param string $status Only this status ('' for all).
+     * @return array of records with: user, coursename (or offer), collected, remaining, nextdue (0 when none is due)
+     */
+    public static function trainer_records(\stdClass $creator, string $status = ''): array {
+        global $DB;
+
+        $courseids = array_keys(seller_service::priced_courses($creator));
+        if (!$courseids) {
+            return [];
+        }
+        [$insql, $params] = $DB->get_in_or_equal($courseids, SQL_PARAMS_NAMED);
+        $where = "i.courseid $insql";
+        if ($status !== '') {
+            $where .= ' AND i.status = :status';
+            $params['status'] = $status;
+        }
+        $records = $DB->get_records_sql(
+            "SELECT i.*, o.notes, o.ordernumber, o.currency, c.fullname AS coursename
+               FROM {local_oriskill_instalments} i
+               JOIN {local_moderncommerce_orders} o ON o.id = i.orderid
+               JOIN {course} c ON c.id = i.courseid
+              WHERE $where
+           ORDER BY i.timecreated DESC, i.id DESC", $params);
+        foreach ($records as $record) {
+            $record->user = \core_user::get_user($record->userid);
+            $notes = json_decode((string) $record->notes, true) ?: [];
+            // An order form offer can open several courses: show the offer's name.
+            $offer = !empty($notes['offer'])
+                ? $DB->get_field('local_oriskill_formoffers', 'label', ['id' => $notes['offer']]) : false;
+            $record->label = $offer !== false ? format_string($offer) : format_string($record->coursename);
+            $record->collected = round((int) $record->paid * (float) $record->amount, 2);
+            $record->remaining = round(((int) $record->count - (int) $record->paid) * (float) $record->amount, 2);
+            // Monthly from the first payment; once completed or stopped, nothing more is due.
+            $record->nextdue = in_array($record->status, ['completed', 'stopped'], true) || $record->paid >= $record->count
+                ? 0 : strtotime('+' . (int) $record->paid . ' month', (int) $record->timecreated);
+        }
+        return $records;
+    }
+
+    /**
      * Badge showing where a learner's instalments stand.
      *
      * @param \stdClass $record Instalment purchase.
