@@ -14,14 +14,20 @@
 }
 
 /* Boutons aux couleurs de l'administration */
-.oriskill-space .btn-primary {
+/* Texte blanc forcé : les styles de l'administration colorent aussi les liens en forme de bouton. */
+.oriskill-space .btn-primary,
+.oriskill-space a.btn-primary {
     background-color: var(--ori-accent);
     border-color: var(--ori-accent);
+    color: #fff;
 }
 .oriskill-space .btn-primary:hover,
-.oriskill-space .btn-primary:focus {
+.oriskill-space .btn-primary:focus,
+.oriskill-space a.btn-primary:hover,
+.oriskill-space a.btn-primary:focus {
     background-color: #6d28d9;
     border-color: #6d28d9;
+    color: #fff;
 }
 .oriskill-space .btn-outline-primary {
     color: var(--ori-accent);
