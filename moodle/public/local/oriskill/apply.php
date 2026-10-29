@@ -43,9 +43,14 @@ require_login(null, false);
 require_capability('local/oriskill:apply', $context);
 
 $creator = $DB->get_record('local_oriskill_creators', ['userid' => $USER->id]);
-$title = get_string($creator && $creator->status === 'active' ? 'editshowcase' : 'becometrainer', 'local_oriskill');
-$PAGE->set_title($title);
-$PAGE->set_heading($title);
+if ($creator && $creator->status === 'active') {
+    // Approved trainer: this page is "My showcase" in the trainer space.
+    $PAGE->set_title(get_string('menu:profile', 'local_oriskill'));
+    creator_service::prepare_space_page();
+} else {
+    $PAGE->set_title(get_string('becometrainer', 'local_oriskill'));
+    $PAGE->set_heading(get_string('becometrainer', 'local_oriskill'));
+}
 
 // Only an approved trainer edits their space; other states just show where the application stands.
 if ($creator && $creator->status !== 'active') {

@@ -75,9 +75,7 @@ echo html_writer::div(
         html_writer::tag('p', get_string('dashboard:intro', 'local_oriskill'))) .
     html_writer::div(
         html_writer::link($newcourseurl, '<i class="fa fa-plus me-1" aria-hidden="true"></i>' .
-            get_string('createcourse', 'local_oriskill'), ['class' => 'btn btn-light me-2']) .
-        html_writer::link(creator_service::showcase_url($creator), get_string('viewshowcase', 'local_oriskill'),
-            ['class' => 'btn btn-outline-light', 'target' => '_blank', 'rel' => 'noopener'])),
+            get_string('createcourse', 'local_oriskill'), ['class' => 'btn btn-light'])),
     'oriskill-hello');
 
 // Key figures.

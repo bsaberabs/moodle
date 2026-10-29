@@ -1,4 +1,5 @@
-/* Espace formateur Oriskill : menu latéral, cartes de chiffres, liste de démarrage, cartes de formations. */
+/* Espace formateur Oriskill (dans la mise en page de l'administration Modern Commerce) : cartes de chiffres,
+   liste de démarrage, cartes de formations. */
 
 .oriskill-space {
     --ori-accent: #7c3aed;
@@ -10,110 +11,28 @@
     --ori-good-soft: #e8f7ee;
     --ori-warn: #b45309;
     --ori-warn-soft: #fef3e2;
-    display: grid;
-    grid-template-columns: 250px minmax(0, 1fr);
-    gap: 1.75rem;
-    align-items: start;
 }
 
-/* Menu latéral */
-.oriskill-space-nav {
-    position: sticky;
-    top: 5rem;
-    background: #fff;
-    border: 1px solid var(--ori-line);
-    border-radius: 14px;
-    padding: 1rem .75rem;
+/* Boutons aux couleurs de l'administration */
+.oriskill-space .btn-primary {
+    background-color: var(--ori-accent);
+    border-color: var(--ori-accent);
 }
-.oriskill-space-brand {
-    display: flex;
-    align-items: center;
-    gap: .75rem;
-    padding: .25rem .5rem 1rem;
-    margin-bottom: .5rem;
-    border-bottom: 1px solid var(--ori-line);
+.oriskill-space .btn-primary:hover,
+.oriskill-space .btn-primary:focus {
+    background-color: #6d28d9;
+    border-color: #6d28d9;
 }
-.oriskill-space-avatar {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    object-fit: cover;
-    flex: none;
+.oriskill-space .btn-outline-primary {
+    color: var(--ori-accent);
+    border-color: var(--ori-accent);
 }
-.oriskill-space-initials {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--ori-accent);
+.oriskill-space .btn-outline-primary:hover {
+    background-color: var(--ori-accent);
     color: #fff;
-    font-weight: 700;
-    font-size: 1.2rem;
-}
-.oriskill-space-who {
-    min-width: 0;
-}
-.oriskill-space-name {
-    font-weight: 700;
-    color: var(--ori-ink);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-.oriskill-space-person {
-    font-size: .8rem;
-    color: var(--ori-muted);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-.oriskill-space-menu {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-.oriskill-space-menu a,
-.oriskill-space-showcase {
-    display: flex;
-    align-items: center;
-    gap: .7rem;
-    padding: .6rem .75rem;
-    border-radius: 10px;
-    color: #374151;
-    text-decoration: none;
-    font-weight: 500;
-}
-.oriskill-space-menu a .fa,
-.oriskill-space-showcase .fa {
-    color: var(--ori-muted);
-}
-.oriskill-space-menu a:hover,
-.oriskill-space-showcase:hover {
-    background: #f6f6f8;
-    color: var(--ori-ink);
-    text-decoration: none;
-}
-.oriskill-space-menu a.active {
-    background: var(--ori-accent-soft);
-    color: var(--ori-accent);
-    font-weight: 600;
-}
-.oriskill-space-menu a.active .fa {
-    color: var(--ori-accent);
-}
-.oriskill-space-showcase {
-    margin-top: .5rem;
-    border-top: 1px solid var(--ori-line);
-    border-radius: 0 0 10px 10px;
-    padding-top: .9rem;
 }
 
 /* Contenu */
-.oriskill-space-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--ori-ink);
-    margin-bottom: 1.25rem;
-}
 .oriskill-card {
     background: #fff;
     border: 1px solid var(--ori-line);
@@ -161,7 +80,7 @@
 /* Chiffres clés */
 .oriskill-stats {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(170px, 100%), 1fr));
     gap: 1rem;
     margin-bottom: 1.25rem;
 }
@@ -195,7 +114,7 @@
 
 .oriskill-grid-2 {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
     gap: 1.25rem;
     margin-bottom: 1.25rem;
 }
@@ -317,7 +236,7 @@
 /* Cartes de formations */
 .oriskill-courses {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
     gap: 1.25rem;
 }
 .oriskill-course {
@@ -382,7 +301,7 @@
 }
 .oriskill-facts {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
     gap: 1rem;
     border-top: 1px solid var(--ori-line);
     padding-top: 1rem;
@@ -396,33 +315,4 @@
 .oriskill-guide ol li,
 .oriskill-guide ul li {
     margin-bottom: .35rem;
-}
-
-@media (max-width: 991.98px) {
-    .oriskill-space {
-        grid-template-columns: minmax(0, 1fr);
-        gap: 1rem;
-    }
-    .oriskill-space-nav {
-        position: static;
-        padding: .5rem;
-    }
-    .oriskill-space-brand {
-        display: none;
-    }
-    .oriskill-space-nav nav {
-        overflow-x: auto;
-    }
-    .oriskill-space-menu {
-        display: flex;
-        gap: .25rem;
-    }
-    .oriskill-space-menu a {
-        white-space: nowrap;
-    }
-    .oriskill-space-showcase {
-        border-top: 0;
-        margin-top: .25rem;
-        padding-top: .6rem;
-    }
 }

@@ -186,48 +186,106 @@ class creator_service {
         if (!$creator) {
             redirect(new moodle_url('/local/oriskill/apply.php'));
         }
-        $title = get_string($titlekey, 'local_oriskill');
-        $PAGE->set_title($title);
-        $PAGE->set_heading(get_string('editshowcase', 'local_oriskill'));
-        $PAGE->set_secondary_navigation(false);
+        $PAGE->set_title(get_string($titlekey, 'local_oriskill'));
+        self::prepare_space_page();
         return $creator;
     }
 
+    /** Menu of the trainer space: group => [page => [string key, Bootstrap icon]]. */
+    const SPACE_MENU = [
+        'navgroup:overview' => [
+            '/local/oriskill/dashboard.php' => ['menu:dashboard', 'bi-speedometer2'],
+            '/local/oriskill/sales.php' => ['sales', 'bi-graph-up-arrow'],
+        ],
+        'navgroup:courses' => [
+            '/local/oriskill/courses.php' => ['mycourses', 'bi-mortarboard'],
+            '/local/oriskill/videos.php' => ['menu:videos', 'bi-camera-video'],
+            '/local/oriskill/pricing.php' => ['pricing', 'bi-tag'],
+        ],
+        'navgroup:learners' => [
+            '/local/oriskill/learners.php' => ['menu:learners', 'bi-people'],
+            '/local/oriskill/access.php' => ['menu:access', 'bi-unlock'],
+        ],
+        'navgroup:account' => [
+            '/local/oriskill/payment.php' => ['paymentsettings', 'bi-wallet2'],
+            '/local/oriskill/apply.php' => ['menu:profile', 'bi-shop'],
+        ],
+    ];
+
+    /** @var array|null Trainer space page being built: [creator, current path, title, actions]. */
+    protected static ?array $space = null;
+
     /**
-     * Opening of a trainer space page: side menu, then the page content column (closed by space_end()).
+     * Before the page header: the trainer space uses the Modern Commerce administration layout and styles.
+     */
+    public static function prepare_space_page(): void {
+        global $PAGE;
+
+        $PAGE->set_pagelayout('admin');
+        $PAGE->set_secondary_navigation(false);
+        // The administration styles apply to Modern Commerce pages (body class of their path).
+        $PAGE->add_body_class('path-local-moderncommerce');
+        $revision = (int) get_config('local_moderncommerce', 'version');
+        foreach (['/local/moderncommerce/styles/design-system.css', '/local/moderncommerce/styles/bundles/admin.css'] as $css) {
+            $PAGE->requires->css(new moodle_url($css, ['rev' => $revision]));
+        }
+    }
+
+    /**
+     * Opening of a trainer space page: the content echoed until space_end() goes into the administration layout
+     * (side menu grouped by section, title strip).
      *
      * @param \stdClass $creator Trainer.
-     * @param string $current Path of the current page.
-     * @param string $title Title of the page content.
+     * @param string $current Path of the current page, for the menu.
+     * @param string $title Page title.
+     * @param string $actionshtml Buttons of the title strip (default: see my showcase).
+     * @return string Nothing: the page is rendered by space_end().
+     */
+    public static function space_start(\stdClass $creator, string $current, string $title, string $actionshtml = ''): string {
+        self::$space = [$creator, $current, $title, $actionshtml];
+        ob_start();
+        return '';
+    }
+
+    /**
+     * Closing of a trainer space page opened by space_start(): renders the whole space.
+     *
      * @return string HTML.
      */
-    public static function space_start(\stdClass $creator, string $current, string $title): string {
-        global $OUTPUT, $USER;
+    public static function space_end(): string {
+        global $CFG, $OUTPUT;
 
-        $items = [];
-        foreach ([
-            '/local/oriskill/dashboard.php' => ['menu:dashboard', 'fa-gauge-high'],
-            '/local/oriskill/courses.php' => ['mycourses', 'fa-graduation-cap'],
-            '/local/oriskill/learners.php' => ['menu:learners', 'fa-users'],
-            '/local/oriskill/access.php' => ['menu:access', 'fa-lock-open'],
-            '/local/oriskill/videos.php' => ['menu:videos', 'fa-film'],
-            '/local/oriskill/pricing.php' => ['pricing', 'fa-tags'],
-            '/local/oriskill/sales.php' => ['sales', 'fa-chart-line'],
-            '/local/oriskill/payment.php' => ['paymentsettings', 'fa-wallet'],
-            '/local/oriskill/apply.php' => ['menu:profile', 'fa-store'],
-        ] as $path => [$key, $icon]) {
-            $items[] = ['url' => (new moodle_url($path))->out(false), 'label' => get_string($key, 'local_oriskill'),
-                'icon' => $icon, 'active' => $path === $current];
+        [$creator, $current, $title, $actionshtml] = self::$space;
+        self::$space = null;
+        $content = ob_get_clean();
+
+        $navigation = [];
+        foreach (self::SPACE_MENU as $group => $pages) {
+            $items = [];
+            foreach ($pages as $path => [$key, $icon]) {
+                $items[] = ['key' => basename($path, '.php'), 'url' => (new moodle_url($path))->out(false),
+                    'label' => get_string($key, 'local_oriskill'), 'icon' => $icon,
+                    'active' => $path === $current, 'current' => $path === $current];
+            }
+            $navigation[] = ['key' => $group, 'label' => get_string($group, 'local_oriskill'), 'items' => $items];
         }
-        $name = format_string($creator->displayname);
-        return $OUTPUT->render_from_template('local_oriskill/space_nav', [
-            'name' => $name,
-            'person' => fullname($USER),
-            'logo' => ($logo = self::logo_url($creator)) ? $logo->out(false) : null,
-            'initials' => \core_text::strtoupper(\core_text::substr($name, 0, 1)),
-            'items' => $items,
-            'showcase' => self::showcase_url($creator)->out(false),
+        $navigation[] = ['key' => 'navgroup:public', 'label' => get_string('navgroup:public', 'local_oriskill'), 'items' => [
+            ['key' => 'showcase', 'url' => self::showcase_url($creator)->out(false),
+                'label' => get_string('viewshowcase', 'local_oriskill'), 'icon' => 'bi-box-arrow-up-right', 'newtab' => true],
+        ]];
+        if ($actionshtml === '') {
+            $actionshtml = \local_moderncommerce\output\admin_shell::action_group([[
+                'label' => get_string('viewshowcase', 'local_oriskill'), 'icon' => 'bi-box-arrow-up-right',
+                'url' => self::showcase_url($creator), 'attributes' => ['target' => '_blank', 'rel' => 'noopener'],
+            ]]);
+        }
+        return $OUTPUT->render_from_template('local_moderncommerce/shell', [
             'title' => $title,
+            'actionshtml' => $actionshtml,
+            'contenthtml' => \html_writer::div($content, 'oriskill-space'),
+            'navigation' => $navigation,
+            'hasnavigation' => true,
+            'config' => ['wwwroot' => $CFG->wwwroot],
         ]);
     }
 
@@ -279,15 +337,6 @@ class creator_service {
             [$key, $class] = ['coursestatus:draft', ''];
         }
         return \html_writer::span(get_string($key, 'local_oriskill'), trim('oriskill-badge ' . $class));
-    }
-
-    /**
-     * Closing of a trainer space page opened by space_start().
-     *
-     * @return string HTML.
-     */
-    public static function space_end(): string {
-        return '</div></div>';
     }
 
     /**
