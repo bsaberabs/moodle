@@ -147,6 +147,14 @@ https:// {
             header_up Host oriskill.com
         }
     }
+    # Ses pages de capture : /p/nom-de-la-page (le formulaire y est renvoyé, même adresse).
+    @capture path_regexp capture ^/p/([a-z0-9-]+)/?$
+    handle @capture {
+        rewrite * /local/oriskill/capture.php?domain={host}&slug={re.capture.1}
+        reverse_proxy 127.0.0.1:8080 {
+            header_up Host oriskill.com
+        }
+    }
     # Ses bons de commande : /bdc/nom-du-bon.
     @bdc path_regexp bdc ^/bdc/([a-z0-9-]+)/?$
     handle @bdc {

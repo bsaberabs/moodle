@@ -196,5 +196,14 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103019, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103020) {
+        // Capture pages and their sign-ups.
+        foreach (['local_oriskill_capturepages', 'local_oriskill_leads'] as $name) {
+            if (!$dbman->table_exists($name)) {
+                $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', $name);
+            }
+        }
+        upgrade_plugin_savepoint(true, 2026103020, 'local', 'oriskill');
+    }
     return true;
 }

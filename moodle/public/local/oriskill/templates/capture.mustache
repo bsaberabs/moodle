@@ -1,0 +1,95 @@
+{{!
+    This file is part of Moodle - https://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_oriskill/capture
+
+    Public capture page of a trainer, in the trainer's brand: free courses in exchange for an e-mail address.
+
+    Example context (json):
+    {
+        "displayname": "Studio Data", "logo": "", "initial": "S", "showcaseurl": "#",
+        "style": {"primary": "#7c3aed", "onprimary": "#ffffff", "accent": "#fbbf24", "onaccent": "#111827",
+                  "ink": "#7c3aed", "font": "Georgia, serif"},
+        "title": "Mini-formation offerte", "headline": "5 vidéos pour démarrer", "description": "<p>Texte</p>",
+        "image": "", "courses": [{"name": "Excel"}], "formaction": "", "sesskey": "x", "buttonlabel": "Je m'inscris",
+        "error": "", "done": false, "thankyou": "", "doneintro": "", "courselinks": [], "redirect": null,
+        "values": {"firstname": "", "lastname": "", "email": ""}, "consentlabel": "J'accepte", "year": "2026",
+        "links": [{"url": "#", "label": "Conditions générales"}]
+    }
+}}
+<div class="oriskill-vitrine" style="--v-primary: {{style.primary}}; --v-on-primary: {{style.onprimary}}; --v-accent: {{style.accent}}; --v-on-accent: {{style.onaccent}}; --v-ink: {{style.ink}}; --v-font: {{style.font}};">
+    <header class="oriskill-vitrine-bar">
+        <a href="{{showcaseurl}}" class="oriskill-vitrine-brand">
+            {{#logo}}<img src="{{logo}}" alt="" class="oriskill-vitrine-logo">{{/logo}}
+            {{^logo}}<span class="oriskill-vitrine-initial" aria-hidden="true">{{initial}}</span>{{/logo}}
+            <span>{{displayname}}</span>
+        </a>
+    </header>
+
+    <section class="oriskill-vitrine-hero{{#image}} has-banner{{/image}}"
+        {{#image}}style="background-image: url('{{image}}');"{{/image}}>
+        <div class="oriskill-vitrine-hero-inner">
+            <h1>{{title}}</h1>
+            {{#headline}}<p class="oriskill-vitrine-tagline">{{headline}}</p>{{/headline}}
+        </div>
+    </section>
+
+    <main class="oriskill-vitrine-main oriskill-capture">
+        <div class="oriskill-capture-text">
+            {{#description}}<div class="oriskill-vitrine-about">{{{description}}}</div>{{/description}}
+            <ul class="oriskill-capture-courses">
+                {{#courses}}<li>{{name}}</li>{{/courses}}
+            </ul>
+        </div>
+        <div class="oriskill-capture-card">
+            {{#done}}
+                <h2>{{#str}}capture:thanks, local_oriskill{{/str}}</h2>
+                {{#thankyou}}<p>{{thankyou}}</p>{{/thankyou}}
+                <p>{{doneintro}}</p>
+                <ul>{{#courselinks}}<li><a href="{{url}}">{{name}}</a></li>{{/courselinks}}</ul>
+                {{#redirect}}<a href="{{url}}" class="oriskill-vitrine-cta">{{label}}</a>{{/redirect}}
+            {{/done}}
+            {{^done}}
+                <form method="post" action="{{formaction}}">
+                    <input type="hidden" name="sesskey" value="{{sesskey}}">
+                    <div class="oriskill-capture-hp" aria-hidden="true">
+                        <label>Website <input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+                    </div>
+                    {{#error}}<p class="oriskill-capture-error" role="alert">{{error}}</p>{{/error}}
+                    <label for="capture-firstname">{{#str}}firstname{{/str}}</label>
+                    <input type="text" id="capture-firstname" name="firstname" required maxlength="100" value="{{values.firstname}}">
+                    <label for="capture-lastname">{{#str}}lastname{{/str}}</label>
+                    <input type="text" id="capture-lastname" name="lastname" required maxlength="100" value="{{values.lastname}}">
+                    <label for="capture-email">{{#str}}email{{/str}}</label>
+                    <input type="email" id="capture-email" name="email" required maxlength="100" value="{{values.email}}">
+                    <label class="oriskill-capture-consent">
+                        <input type="checkbox" name="consent" value="1"> {{consentlabel}}
+                    </label>
+                    <button type="submit" class="oriskill-vitrine-cta">{{buttonlabel}}</button>
+                    <p class="oriskill-capture-legal">{{#str}}capture:legal, local_oriskill{{/str}}</p>
+                </form>
+            {{/done}}
+        </div>
+    </main>
+
+    <footer class="oriskill-vitrine-footer">
+        <span>© {{year}} {{displayname}}</span>
+        <nav aria-label="{{#str}}showcase:legal, local_oriskill{{/str}}">
+            {{#links}}<a href="{{url}}">{{label}}</a>{{/links}}
+        </nav>
+    </footer>
+</div>

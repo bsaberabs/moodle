@@ -356,5 +356,53 @@
         <INDEX NAME="formofferdaykind" UNIQUE="true" FIELDS="formid, offerid, day, kind"/>
       </INDEXES>
     </TABLE>
+    <TABLE NAME="local_oriskill_capturepages" COMMENT="Capture pages of a trainer: free courses in exchange for an e-mail address">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="creatorid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="slug" TYPE="char" LENGTH="60" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="title" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="headline" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="description" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="descriptionformat" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="buttonlabel" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="courseids" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Free courses opened on sign-up"/>
+        <FIELD NAME="accessdays" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="0: unlimited access"/>
+        <FIELD NAME="thankyou" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="redirectformid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Order form shown after sign-up"/>
+        <FIELD NAME="actags" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="10" NOTNULL="true" DEFAULT="draft" SEQUENCE="false"/>
+        <FIELD NAME="views" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Visitors (once a day each)"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="creatorid" TYPE="foreign" FIELDS="creatorid" REFTABLE="local_oriskill_creators" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="creatorslug" UNIQUE="true" FIELDS="creatorid, slug"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="local_oriskill_leads" COMMENT="People who signed up on a trainer's capture page">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="pageid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="creatorid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="email" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="firstname" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="consent" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Agreed to receive the trainer's e-mails"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="pageid" TYPE="foreign" FIELDS="pageid" REFTABLE="local_oriskill_capturepages" REFFIELDS="id"/>
+        <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="pageuser" UNIQUE="true" FIELDS="pageid, userid"/>
+      </INDEXES>
+    </TABLE>
   </TABLES>
 </XMLDB>

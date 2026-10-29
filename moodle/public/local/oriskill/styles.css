@@ -669,3 +669,68 @@
     border-radius: 12px;
     background: #f5f3ff;
 }
+
+/* Capture page: text on the left, sign-up form on the right. */
+.oriskill-vitrine-main.oriskill-capture {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 380px);
+    gap: 2.5rem;
+    align-items: start;
+}
+@media (max-width: 760px) {
+    .oriskill-vitrine-main.oriskill-capture {
+        grid-template-columns: 1fr;
+    }
+}
+.oriskill-capture-courses {
+    font-weight: 600;
+}
+.oriskill-capture-card {
+    padding: 1.5rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 12px 30px rgba(17, 24, 39, .08);
+}
+.oriskill-capture-card h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+.oriskill-capture-card form {
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+}
+.oriskill-capture-card label {
+    font-weight: 600;
+    font-size: .9rem;
+}
+.oriskill-capture-card input[type=text],
+.oriskill-capture-card input[type=email] {
+    padding: .6rem .75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    margin-bottom: .5rem;
+}
+.oriskill-capture-card label.oriskill-capture-consent {
+    font-weight: 400;
+    font-size: .85rem;
+    margin: .25rem 0 .75rem;
+}
+.oriskill-capture-card .oriskill-vitrine-cta {
+    border: 0;
+    text-align: center;
+}
+.oriskill-capture-hp {
+    position: absolute;
+    left: -9999px;
+}
+.oriskill-capture-error {
+    color: #b91c1c;
+    font-weight: 600;
+}
+.oriskill-capture-legal {
+    margin-top: .75rem;
+    font-size: .75rem;
+    color: #6b7280;
+}

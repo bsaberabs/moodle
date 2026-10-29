@@ -222,6 +222,7 @@ class creator_service {
             '/local/oriskill/pricing.php' => ['pricing', 'bi-tag'],
             '/local/oriskill/orderforms.php' => ['menu:orderforms', 'bi-file-earmark-text'],
             '/local/oriskill/coupons.php' => ['menu:coupons', 'bi-ticket-perforated'],
+            '/local/oriskill/capturepages.php' => ['menu:capturepages', 'bi-envelope-paper'],
         ],
         'navgroup:learners' => [
             '/local/oriskill/learners.php' => ['menu:learners', 'bi-people'],

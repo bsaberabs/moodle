@@ -34,7 +34,7 @@ class webhook_service {
 
     /** Events a webhook can receive. */
     const EVENTS = ['order.paid', 'instalment.paid', 'instalment.failed', 'instalments.stopped', 'refund.done',
-        'access.suspended'];
+        'access.suspended', 'lead.created'];
 
     /**
      * Webhooks of a trainer.
