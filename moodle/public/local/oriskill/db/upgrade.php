@@ -100,5 +100,28 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103009, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103010) {
+        // Invoices and credit notes in the trainer's name.
+        $table = new xmldb_table('local_oriskill_creators');
+        $previous = 'customdomain';
+        foreach ([
+            new xmldb_field('legalname', XMLDB_TYPE_CHAR, '255', null, null, null, null),
+            new xmldb_field('legaladdress', XMLDB_TYPE_TEXT, null, null, null, null, null),
+            new xmldb_field('siret', XMLDB_TYPE_CHAR, '30', null, null, null, null),
+            new xmldb_field('vatnumber', XMLDB_TYPE_CHAR, '30', null, null, null, null),
+            new xmldb_field('vatrate', XMLDB_TYPE_NUMBER, '5, 2', null, null, null, null),
+            new xmldb_field('invoicenotes', XMLDB_TYPE_TEXT, null, null, null, null, null),
+        ] as $field) {
+            $field->setPrevious($previous);
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+            $previous = $field->getName();
+        }
+        if (!$dbman->table_exists('local_oriskill_invoices')) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', 'local_oriskill_invoices');
+        }
+        upgrade_plugin_savepoint(true, 2026103010, 'local', 'oriskill');
+    }
     return true;
 }

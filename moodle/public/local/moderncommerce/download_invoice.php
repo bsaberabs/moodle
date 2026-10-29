@@ -75,5 +75,13 @@ if ($type === 'receipt' && $order->status !== 'paid') {
     throw new moodle_exception('orderpending', 'local_moderncommerce');
 }
 
+// A plugin may supply its own document, such as an invoice in a seller's name (Oriskill patch 9).
+$hook = new \local_moderncommerce\hook\order_document($order, $type);
+\core\di::get(\core\hook\manager::class)->dispatch($hook);
+if ($document = $hook->get_document()) {
+    [$filename, $content] = $document;
+    send_file($content, $filename, 0, 0, true, true, 'application/pdf');
+}
+
 // Generate and download PDF.
 invoice_service::download($orderid, $type);

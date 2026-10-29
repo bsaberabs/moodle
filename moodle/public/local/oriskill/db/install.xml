@@ -24,6 +24,12 @@
         <FIELD NAME="accentcolor" TYPE="char" LENGTH="7" NOTNULL="false" SEQUENCE="false" COMMENT="Showcase accent colour (#rrggbb)"/>
         <FIELD NAME="fontstyle" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false" COMMENT="Showcase typeface: modern, elegant or classic"/>
         <FIELD NAME="customdomain" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Own domain that opens the showcase (lowercase, no www)"/>
+        <FIELD NAME="legalname" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Seller name on invoices (company or person)"/>
+        <FIELD NAME="legaladdress" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="siret" TYPE="char" LENGTH="30" NOTNULL="false" SEQUENCE="false" COMMENT="SIRET or other registration number"/>
+        <FIELD NAME="vatnumber" TYPE="char" LENGTH="30" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="vatrate" TYPE="number" LENGTH="5" NOTNULL="false" DECIMALS="2" SEQUENCE="false" COMMENT="VAT included in prices, in %; null or 0: not subject to VAT (franchise)"/>
+        <FIELD NAME="invoicenotes" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Mentions printed at the bottom of invoices"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
@@ -154,6 +160,32 @@
       </KEYS>
       <INDEXES>
         <INDEX NAME="status" UNIQUE="false" FIELDS="status"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="local_oriskill_invoices" COMMENT="Invoices and credit notes issued in a trainer's name, numbered per trainer">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="creatorid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="orderid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Buyer"/>
+        <FIELD NAME="type" TYPE="char" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="invoice or credit"/>
+        <FIELD NAME="sequence" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Continuous number per trainer and type"/>
+        <FIELD NAME="number" TYPE="char" LENGTH="40" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="parentid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Invoice a credit note cancels"/>
+        <FIELD NAME="total" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="2" SEQUENCE="false" COMMENT="Amount including VAT, positive for both types"/>
+        <FIELD NAME="tax" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="2" SEQUENCE="false"/>
+        <FIELD NAME="currency" TYPE="char" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="data" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="JSON snapshot: seller, buyer, lines, mentions (a document never changes once issued)"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="creatorid" TYPE="foreign" FIELDS="creatorid" REFTABLE="local_oriskill_creators" REFFIELDS="id"/>
+        <KEY NAME="orderid" TYPE="foreign" FIELDS="orderid" REFTABLE="local_moderncommerce_orders" REFFIELDS="id"/>
+        <KEY NAME="parentid" TYPE="foreign" FIELDS="parentid" REFTABLE="local_oriskill_invoices" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="creatortypesequence" UNIQUE="true" FIELDS="creatorid, type, sequence"/>
       </INDEXES>
     </TABLE>
   </TABLES>

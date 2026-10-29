@@ -17,7 +17,7 @@
 namespace local_oriskill;
 
 /**
- * Modern Commerce order events: referral at order time, commissions and payment groups once paid.
+ * Modern Commerce order events: referral at order time, commissions, payment groups and the trainer's invoice once paid.
  *
  * @package    local_oriskill
  * @copyright  2026 Advanced TM
@@ -45,5 +45,6 @@ class observer {
     public static function order_paid(\local_moderncommerce\event\order_paid $event): void {
         affiliate_service::record_commissions((int) $event->objectid);
         instalment_service::group_buyers((int) $event->objectid);
+        billing_service::issue_invoice((int) $event->objectid);
     }
 }

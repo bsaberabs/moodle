@@ -233,4 +233,16 @@ class hook_callbacks {
                 'oriskill-instalment-bar'));
         }
     }
+
+    /**
+     * The invoice or receipt of an order of a trainer's courses is the invoice in the trainer's name.
+     *
+     * @param \local_moderncommerce\hook\order_document $hook Hook.
+     */
+    public static function order_document(\local_moderncommerce\hook\order_document $hook): void {
+        if ($invoice = billing_service::issue_invoice((int) $hook->order->id)) {
+            [$filename, $content] = billing_service::pdf($invoice);
+            $hook->provide($filename, $content);
+        }
+    }
 }

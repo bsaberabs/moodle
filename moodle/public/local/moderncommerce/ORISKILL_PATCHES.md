@@ -48,3 +48,8 @@ Ces changements ne viennent pas du dépôt d'origine. À reporter après chaque 
    des notes JSON libres. Sert au paiement en plusieurs fois des formations des formateurs (local_oriskill et
    local_secureandpay) : l'inscription se fait au paiement, comme pour une commande du panier.
    - `classes/api/order_api.php` (nouvelle méthode publique, après `create_subscription_order()`).
+9. **Hook `order_document`** : un plugin peut fournir le PDF (facture ou reçu) d'une commande, par exemple une
+   facture au nom du formateur qui a vendu la formation, numérotée par ce formateur.
+   - `classes/hook/order_document.php` (nouveau)
+   - `download_invoice.php` : déclenche le hook une fois les droits vérifiés ; sans document fourni, le PDF de la
+     boutique est envoyé comme avant.

@@ -38,6 +38,10 @@ $callbacks = [
         'callback' => [\local_oriskill\hook_callbacks::class, 'before_standard_top_of_body_html_generation'],
     ],
     [
+        'hook' => \local_moderncommerce\hook\order_document::class,
+        'callback' => [\local_oriskill\hook_callbacks::class, 'order_document'],
+    ],
+    [
         'hook' => \local_secureandpay\hook\resolve_merchant::class,
         'callback' => [\local_oriskill\hook_callbacks::class, 'resolve_merchant'],
     ],
