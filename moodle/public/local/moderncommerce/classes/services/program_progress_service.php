@@ -26,6 +26,7 @@ namespace local_moderncommerce\services;
 
 defined('MOODLE_INTERNAL') || die();
 
+global $CFG;
 require_once($CFG->libdir . '/completionlib.php');
 require_once($CFG->libdir . '/gradelib.php');
 require_once($CFG->dirroot . '/grade/querylib.php');

@@ -42,6 +42,10 @@ $callbacks = [
         'callback' => [\local_oriskill\hook_callbacks::class, 'filter_payment_methods'],
     ],
     [
+        'hook' => \local_moderncommerce\hook\resolve_gateway_config::class,
+        'callback' => [\local_oriskill\hook_callbacks::class, 'resolve_gateway_config'],
+    ],
+    [
         'hook' => \core\hook\navigation\primary_extend::class,
         'callback' => [\local_oriskill\hook_callbacks::class, 'primary_extend'],
     ],

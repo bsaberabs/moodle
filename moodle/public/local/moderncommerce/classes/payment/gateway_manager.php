@@ -17,6 +17,7 @@
 namespace local_moderncommerce\payment;
 
 
+use local_moderncommerce\hook\resolve_gateway_config;
 use local_moderncommerce\services\pricing_service;
 use moodle_exception;
 use moodle_url;
@@ -42,6 +43,79 @@ class gateway_manager {
 
     /** @var string Webhook events table name. */
     private const TABLE_WEBHOOKS = 'local_moderncommerce_webhook_events';
+
+    /**
+     * @var array|null Purchase being paid (Oriskill addition, see resolve_gateway_config):
+     *                 ['order' => ?object, 'userid' => int, 'webhookaccount' => ?string].
+     */
+    private static ?array $paymentcontext = null;
+
+    /**
+     * Set the purchase being paid, so that gateway settings follow the account collecting it (Oriskill addition).
+     *
+     * @param object|null $order Order being paid, or null for the buyer's cart.
+     * @param int $userid Buyer (defaults to the order's).
+     * @param string|null $webhookaccount Account named in a webhook address.
+     * @return array|null Previous context, to give back to restore_payment_context().
+     */
+    public static function set_payment_context(?object $order, int $userid = 0, ?string $webhookaccount = null): ?array {
+        $previous = self::$paymentcontext;
+        self::$paymentcontext = ['order' => $order, 'userid' => $userid ?: (int) ($order->userid ?? 0),
+            'webhookaccount' => $webhookaccount];
+        return $previous;
+    }
+
+    /**
+     * Restore the payment context saved by set_payment_context().
+     *
+     * @param array|null $previous Previous context.
+     */
+    public static function restore_payment_context(?array $previous): void {
+        self::$paymentcontext = $previous;
+    }
+
+    /**
+     * Account an order is collected on with a gateway ('' for the store's own account).
+     *
+     * @param string $gatewayid Gateway ID.
+     * @param object $order Order.
+     * @return string
+     */
+    public static function order_account(string $gatewayid, object $order): string {
+        $hook = new resolve_gateway_config(self::normalize_gateway_id($gatewayid), [], $order, (int) ($order->userid ?? 0));
+        \core\di::get(\core\hook\manager::class)->dispatch($hook);
+        return $hook->get_account();
+    }
+
+    /**
+     * Account of the current payment context, or null when there is no context.
+     *
+     * @param string $gatewayid Gateway ID.
+     * @return string|null
+     */
+    private static function context_account(string $gatewayid): ?string {
+        if (self::$paymentcontext === null) {
+            return null;
+        }
+        if (self::$paymentcontext['webhookaccount'] !== null) {
+            return self::$paymentcontext['webhookaccount'];
+        }
+        return self::$paymentcontext['order'] ? self::order_account($gatewayid, self::$paymentcontext['order']) : '';
+    }
+
+    /**
+     * Whether a gateway is enabled for the current purchase on another account than the store's.
+     *
+     * @param string $gatewayid Gateway ID.
+     * @return bool|null Enabled on that account, or null when the purchase uses the store's account.
+     */
+    private static function enabled_on_other_account(string $gatewayid): ?bool {
+        if (self::$paymentcontext === null) {
+            return null;
+        }
+        $config = self::get_gateway_config($gatewayid);
+        return ($config['_account'] ?? '') === '' ? null : !empty($config['enabled']);
+    }
 
     /**
      * Built-in gateway definitions.
@@ -225,8 +299,31 @@ class gateway_manager {
             return ((int)$a['displayorder'] <=> (int)$b['displayorder']) ?: strcmp($a['gateway'], $b['gateway']);
         });
 
+        $previous = self::set_payment_context($order, (int) ($order->userid ?? $USER->id ?? 0));
+        try {
+            $methods = self::collect_payment_methods($definitions);
+        } finally {
+            self::restore_payment_context($previous);
+        }
+
+        $hook = new \local_moderncommerce\hook\filter_payment_methods($methods,
+            (int) ($order->userid ?? $USER->id ?? 0), $order);
+        \core\di::get(\core\hook\manager::class)->dispatch($hook);
+        return $hook->methods;
+    }
+
+    /**
+     * Checkout-ready methods among the gateway definitions, the payment context being set.
+     *
+     * @param array $definitions Gateway definitions, in display order.
+     * @return array
+     */
+    private static function collect_payment_methods(array $definitions): array {
+        $methods = [];
         foreach ($definitions as $id => $definition) {
-            if (!self::is_definition_enabled($definition)) {
+            // A purchase collected on another account offers the gateway when that account accepts it.
+            $other = self::enabled_on_other_account($id);
+            if ($other === false || ($other === null && !self::is_definition_enabled($definition))) {
                 continue;
             }
 
@@ -247,11 +344,7 @@ class gateway_manager {
                 'methodtype' => $definition['methodtype'],
             ];
         }
-
-        $hook = new \local_moderncommerce\hook\filter_payment_methods($methods,
-            (int) ($order->userid ?? $USER->id ?? 0), $order);
-        \core\di::get(\core\hook\manager::class)->dispatch($hook);
-        return $hook->methods;
+        return $methods;
     }
 
     /**
@@ -289,6 +382,9 @@ class gateway_manager {
         $methodtype = (string)($definition['methodtype'] ?? 'redirect');
         $hosted = $methodtype === 'redirect';
         $enabled = $definition !== null && self::is_definition_enabled($definition);
+        if ($definition !== null && ($other = self::enabled_on_other_account($gatewayid)) !== null) {
+            $enabled = $other;
+        }
         $supported = [];
         $reasoncode = '';
         $message = '';
@@ -472,6 +568,15 @@ class gateway_manager {
             }
         }
 
+        // Purchase collected on another account (resolve_gateway_config): that account's settings replace the store's.
+        if (self::$paymentcontext !== null) {
+            $hook = new resolve_gateway_config($gatewayid, $config, self::$paymentcontext['order'],
+                self::$paymentcontext['userid'], self::$paymentcontext['webhookaccount']);
+            \core\di::get(\core\hook\manager::class)->dispatch($hook);
+            $config = $hook->config;
+            $config['_account'] = $hook->get_account();
+        }
+
         return $config;
     }
 
@@ -559,7 +664,22 @@ class gateway_manager {
      */
     public static function initialize_payment(string $gatewayid, object $order): array {
         $gatewayid = self::normalize_gateway_id($gatewayid);
+        $previous = self::set_payment_context($order);
+        try {
+            return self::initialize_payment_in_context($gatewayid, $order);
+        } finally {
+            self::restore_payment_context($previous);
+        }
+    }
 
+    /**
+     * Start a payment, the payment context being set.
+     *
+     * @param string $gatewayid Gateway ID.
+     * @param object $order Order record.
+     * @return array Gateway initialization result.
+     */
+    private static function initialize_payment_in_context(string $gatewayid, object $order): array {
         $readiness = self::get_gateway_readiness($gatewayid, $order);
         if (!$readiness->ready) {
             throw new moodle_exception(
@@ -589,6 +709,13 @@ class gateway_manager {
      * @return \stdClass Normalized payment result.
      */
     public static function process_return(string $gatewayid, array $params): stdClass {
+        global $DB;
+
+        // The browser return is a request of its own: the context stays set for the payment recorded after it,
+        // which must then be an order of the account of the returned order (record_payment_result()).
+        $order = !empty($params['orderid'])
+            ? ($DB->get_record('local_moderncommerce_orders', ['id' => (int) $params['orderid']]) ?: null) : null;
+        self::set_payment_context($order);
         $gateway = self::get_gateway($gatewayid);
         if (!$gateway instanceof gateway_return_interface) {
             throw new moodle_exception('gatewayreturnunsupported', 'local_moderncommerce', '', $gatewayid);
@@ -604,15 +731,42 @@ class gateway_manager {
      * @param array $payload Webhook payload.
      * @param string|null $rawpayload Raw request body.
      * @param array $headers Request headers.
+     * @param string|null $account Account named in the webhook address (Oriskill addition), none for the store's.
      * @return bool
      */
     public static function process_webhook(
         string $gatewayid,
         array $payload,
         ?string $rawpayload = null,
-        array $headers = []
+        array $headers = [],
+        ?string $account = null
     ): bool {
         $gatewayid = self::normalize_gateway_id($gatewayid);
+        // The webhook address names the account it belongs to (none: the store's): its settings verify the call,
+        // and only its orders can be recorded as paid.
+        $previous = self::set_payment_context(null, 0, (string) $account);
+        try {
+            return self::process_webhook_in_context($gatewayid, $payload, $rawpayload, $headers);
+        } finally {
+            self::restore_payment_context($previous);
+        }
+    }
+
+    /**
+     * Process a webhook payload, the payment context being set.
+     *
+     * @param string $gatewayid Gateway ID.
+     * @param array $payload Webhook payload.
+     * @param string|null $rawpayload Raw request body.
+     * @param array $headers Request headers.
+     * @return bool
+     */
+    private static function process_webhook_in_context(
+        string $gatewayid,
+        array $payload,
+        ?string $rawpayload,
+        array $headers
+    ): bool {
         $gateway = self::get_gateway($gatewayid);
 
         try {
@@ -720,6 +874,11 @@ class gateway_manager {
         global $DB;
 
         $gatewayid = self::normalize_gateway_id($gatewayid);
+        // A payment received on one account (the store's or a seller's) only settles an order of that account.
+        $expected = self::context_account($gatewayid);
+        if ($expected !== null && self::order_account($gatewayid, $order) !== $expected) {
+            throw new moodle_exception('accessdenied', 'admin');
+        }
         $referencecandidates = [
             $result->reference ?? null,
             $result->orderreference ?? null,
@@ -902,12 +1061,14 @@ class gateway_manager {
      * Build the generic webhook URL.
      *
      * @param string $gatewayid Gateway ID.
+     * @param string $account Account the webhook belongs to (Oriskill addition), '' for the store's.
      * @return moodle_url
      */
-    public static function webhook_url(string $gatewayid): moodle_url {
-        return new moodle_url('/local/moderncommerce/payment/webhook.php', [
+    public static function webhook_url(string $gatewayid, string $account = ''): moodle_url {
+        return new moodle_url('/local/moderncommerce/payment/webhook.php', array_filter([
             'gateway' => self::normalize_gateway_id($gatewayid),
-        ]);
+            'account' => $account,
+        ]));
     }
 
     /**

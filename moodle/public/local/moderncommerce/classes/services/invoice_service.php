@@ -18,6 +18,7 @@ namespace local_moderncommerce\services;
 
 defined('MOODLE_INTERNAL') || die();
 
+global $CFG;
 require_once($CFG->libdir . '/pdflib.php');
 
 use pdf;

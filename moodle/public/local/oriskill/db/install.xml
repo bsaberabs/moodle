@@ -94,5 +94,25 @@
         <INDEX NAME="sellerid" UNIQUE="false" FIELDS="sellerid"/>
       </INDEXES>
     </TABLE>
+    <TABLE NAME="local_oriskill_gateways" COMMENT="Trainers' own Stripe and PayPal accounts, used for their courses">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="creatorid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="gateway" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false" COMMENT="stripe or paypal"/>
+        <FIELD NAME="enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="testmode" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="Stripe test keys / PayPal sandbox"/>
+        <FIELD NAME="publickey" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Stripe publishable key or PayPal client ID"/>
+        <FIELD NAME="secretkey" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Stripe secret key or PayPal secret, encrypted"/>
+        <FIELD NAME="webhooksecret" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Stripe signing secret (encrypted) or PayPal webhook ID"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="creatorid" TYPE="foreign" FIELDS="creatorid" REFTABLE="local_oriskill_creators" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="creatorgateway" UNIQUE="true" FIELDS="creatorid, gateway"/>
+      </INDEXES>
+    </TABLE>
   </TABLES>
 </XMLDB>

@@ -32,7 +32,7 @@ $string['applicationstatus:suspended'] = 'Votre espace formateur est suspendu. C
 $string['amountcol'] = 'Montant';
 $string['approve'] = 'Valider';
 $string['blocker:inactive'] = 'Votre espace formateur n\'est pas actif.';
-$string['blocker:nopayment'] = 'Vos formations ne peuvent pas encore être achetées : renseignez votre compte SecureAndPay dans <a href="{$a->payment}">Paiements</a>.';
+$string['blocker:nopayment'] = 'Vos formations ne peuvent pas encore être achetées : configurez au moins un moyen de paiement (SecureAndPay, Stripe ou PayPal) dans <a href="{$a->payment}">Paiements</a>.';
 $string['blocker:nosubscription'] = 'Vos formations ne peuvent pas encore être achetées : un abonnement formateur est nécessaire. <a href="{$a->plan}">S\'abonner</a>.';
 $string['buyercol'] = 'Acheteur';
 $string['comparecol'] = 'Prix barré ({$a})';
@@ -87,7 +87,7 @@ $string['ordercol'] = 'Commande';
 $string['oriskill:apply'] = 'Candidater pour un espace formateur';
 $string['oriskill:managecreators'] = 'Gérer les candidatures et les espaces formateurs';
 $string['paymentsettings'] = 'Paiements';
-$string['paymentsettings_intro'] = 'Les ventes de vos formations sont versées directement sur votre propre compte SecureAndPay.';
+$string['paymentsettings_intro'] = 'Les ventes de vos formations sont versées directement sur vos propres comptes. Activez les moyens de paiement que vous souhaitez proposer à vos acheteurs : au moins un est nécessaire pour vendre.';
 $string['paymentsettings_support'] = 'Avant votre première vente, demandez au support SecureAndPay (webmaster@secureandpay.com) de déclarer le site {$a->site} et l\'adresse de notification {$a->notify} sur votre compte.';
 $string['platformseller'] = 'Oriskill';
 $string['pluginname'] = 'Formateurs Oriskill';
@@ -308,3 +308,42 @@ $string['state:notracking'] = 'Sans suivi';
 $string['state:todo'] = 'À faire';
 $string['learner:grade'] = 'Note';
 $string['picker:course'] = 'Formation';
+$string['gw:enabled_desc'] = 'Vos acheteurs peuvent payer vos formations avec ce moyen.';
+$string['gw:howto'] = 'Comment obtenir ces informations ?';
+$string['gw:keep'] = 'Déjà enregistré : laissez vide pour le conserver.';
+$string['gw:paypal:desc'] = 'Paiement par compte PayPal ou carte, versé sur votre compte PayPal Business.';
+$string['gw:paypal:enabled'] = 'Proposer PayPal';
+$string['gw:paypal:howto'] = '<ol>
+<li>Connectez-vous sur <strong>developer.paypal.com</strong> avec votre compte PayPal Business, ouvrez <strong>Apps &amp; Credentials</strong> et créez une application (choisissez <em>Sandbox</em> pour tester, <em>Live</em> pour vendre).</li>
+<li>Copiez le <strong>Client ID</strong> et le <strong>Secret</strong> de l\'application ci-dessous.</li>
+<li>Dans l\'application, ajoutez un <strong>webhook</strong> avec l\'adresse :<br><code>{$a->webhook}</code><br>et les événements <code>CHECKOUT.ORDER.APPROVED</code>, <code>PAYMENT.CAPTURE.COMPLETED</code>, <code>PAYMENT.CAPTURE.DENIED</code> et <code>PAYMENT.CAPTURE.REFUNDED</code>.</li>
+<li>Copiez le <strong>Webhook ID</strong> affiché par PayPal ci-dessous.</li>
+</ol>';
+$string['gw:paypal:publickey'] = 'Client ID';
+$string['gw:paypal:publickey_invalid'] = 'Client ID non valide.';
+$string['gw:paypal:secretkey'] = 'Secret';
+$string['gw:paypal:secretkey_invalid'] = 'Secret non valide.';
+$string['gw:paypal:testmode'] = 'Sandbox';
+$string['gw:paypal:testmode_desc'] = 'Application PayPal « Sandbox » : aucun vrai paiement, pour tester.';
+$string['gw:paypal:webhooksecret'] = 'Webhook ID';
+$string['gw:paypal:webhooksecret_invalid'] = 'Webhook ID non valide.';
+$string['gw:secureandpay:desc'] = 'Paiement par carte bancaire, versé sur votre compte SecureAndPay.';
+$string['gw:stripe:desc'] = 'Paiement par carte bancaire (et Apple Pay / Google Pay selon votre compte), versé sur votre compte Stripe.';
+$string['gw:stripe:enabled'] = 'Proposer Stripe';
+$string['gw:stripe:howto'] = '<ol>
+<li>Connectez-vous sur <strong>dashboard.stripe.com</strong>. Pour tester, activez le <strong>mode test</strong> (interrupteur en haut).</li>
+<li>Dans <strong>Développeurs → Clés API</strong>, copiez la <strong>clé secrète</strong> (<code>sk_test_…</code> en test, <code>sk_live_…</code> en production) ci-dessous.</li>
+<li>Dans <strong>Développeurs → Webhooks</strong>, ajoutez un endpoint avec l\'adresse :<br><code>{$a->webhook}</code><br>et les événements <code>checkout.session.completed</code>, <code>charge.succeeded</code>, <code>charge.failed</code> et <code>charge.refunded</code>.</li>
+<li>Ouvrez l\'endpoint créé et copiez son <strong>secret de signature</strong> (<code>whsec_…</code>) ci-dessous.</li>
+</ol>';
+$string['gw:stripe:publickey'] = 'Clé publiable (facultative)';
+$string['gw:stripe:publickey_invalid'] = 'Clé publiable attendue : pk_test_… en mode test, pk_live_… sinon.';
+$string['gw:stripe:secretkey'] = 'Clé secrète';
+$string['gw:stripe:secretkey_invalid'] = 'Clé secrète attendue : sk_test_… (ou rk_test_…) en mode test, sk_live_… (ou rk_live_…) sinon.';
+$string['gw:stripe:testmode'] = 'Mode test';
+$string['gw:stripe:testmode_desc'] = 'Clés de test Stripe : aucun vrai paiement, pour tester.';
+$string['gw:stripe:webhooksecret'] = 'Secret de signature du webhook';
+$string['gw:stripe:webhooksecret_invalid'] = 'Le secret de signature commence par whsec_.';
+$string['gwstate:incomplete'] = 'Incomplet';
+$string['gwstate:off'] = 'Désactivé';
+$string['gwstate:on'] = 'Actif';

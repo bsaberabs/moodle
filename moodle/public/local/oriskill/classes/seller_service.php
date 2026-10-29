@@ -19,16 +19,20 @@ namespace local_oriskill;
 use local_secureandpay\merchant;
 
 /**
- * A trainer as a seller: their SecureAndPay account, whether they may sell, their prices and their sales.
+ * A trainer as a seller: their payment accounts, whether they may sell, their prices and their sales.
  *
- * Trainers are paid directly into their own SecureAndPay account. Oriskill earns through a trainer
- * subscription plan (setting local_oriskill/creatorplancode), required to sell when it is set.
+ * Trainers are paid directly into their own accounts: SecureAndPay, and Stripe or PayPal if they choose to
+ * (local_oriskill_gateways). Oriskill earns through a trainer subscription plan (setting
+ * local_oriskill/creatorplancode), required to sell when it is set.
  *
  * @package    local_oriskill
  * @copyright  2026 Advanced TM
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class seller_service {
+
+    /** Gateways a trainer can connect with their own account, besides SecureAndPay. */
+    const GATEWAYS = ['stripe', 'paypal'];
 
     /**
      * Trainer whose category holds a course, or null for a platform course.
@@ -83,6 +87,133 @@ class seller_service {
     }
 
     /**
+     * The trainer's account for a gateway (Stripe or PayPal), if saved.
+     *
+     * @param \stdClass $creator Trainer.
+     * @param string $gateway Gateway ID.
+     * @return \stdClass|null
+     */
+    public static function gateway_account(\stdClass $creator, string $gateway): ?\stdClass {
+        global $DB;
+        return $DB->get_record('local_oriskill_gateways', ['creatorid' => $creator->id, 'gateway' => $gateway]) ?: null;
+    }
+
+    /**
+     * Whether a saved gateway account has everything needed to take payments.
+     *
+     * @param \stdClass|null $account Account from gateway_account().
+     * @return bool
+     */
+    public static function gateway_account_complete(?\stdClass $account): bool {
+        return $account && !empty($account->secretkey) && !empty($account->webhooksecret)
+            && ($account->gateway !== 'paypal' || !empty($account->publickey));
+    }
+
+    /**
+     * Stripe / PayPal gateways the trainer has turned on with a complete account.
+     *
+     * @param \stdClass $creator Trainer.
+     * @return string[] Gateway IDs.
+     */
+    public static function usable_gateways(\stdClass $creator): array {
+        return array_values(array_filter(self::GATEWAYS, function($gateway) use ($creator) {
+            $account = self::gateway_account($creator, $gateway);
+            return $account && $account->enabled && self::gateway_account_complete($account);
+        }));
+    }
+
+    /**
+     * Save the trainer's account for a gateway. Secrets are stored encrypted; an empty secret keeps the saved one.
+     *
+     * @param \stdClass $creator Trainer.
+     * @param string $gateway Gateway ID (stripe or paypal).
+     * @param bool $enabled Offer this gateway on the trainer's courses.
+     * @param bool $testmode Test keys (Stripe) or sandbox (PayPal).
+     * @param string $publickey Stripe publishable key or PayPal client ID.
+     * @param string $secretkey Stripe secret key or PayPal secret, '' to keep.
+     * @param string $webhooksecret Stripe signing secret or PayPal webhook ID, '' to keep.
+     */
+    public static function save_gateway_account(\stdClass $creator, string $gateway, bool $enabled, bool $testmode,
+            string $publickey, string $secretkey, string $webhooksecret): void {
+        global $DB;
+
+        if (!in_array($gateway, self::GATEWAYS)) {
+            throw new \coding_exception('Unknown gateway ' . $gateway);
+        }
+        $record = ['enabled' => (int) $enabled, 'testmode' => (int) $testmode, 'publickey' => trim($publickey),
+            'timemodified' => time()];
+        if (trim($secretkey) !== '') {
+            $record['secretkey'] = \core\encryption::encrypt(trim($secretkey));
+        }
+        if (trim($webhooksecret) !== '') {
+            $record['webhooksecret'] = \core\encryption::encrypt(trim($webhooksecret));
+        }
+        if ($current = self::gateway_account($creator, $gateway)) {
+            $DB->update_record('local_oriskill_gateways', (object) (['id' => $current->id] + $record));
+        } else {
+            $DB->insert_record('local_oriskill_gateways', (object) (['creatorid' => $creator->id, 'gateway' => $gateway]
+                + $record));
+        }
+    }
+
+    /**
+     * Gateway settings for a purchase of the trainer's courses (local_moderncommerce resolve_gateway_config).
+     *
+     * The store's keys are never kept: without a usable account of the trainer the gateway is turned off.
+     *
+     * @param \stdClass $creator Trainer.
+     * @param string $gateway Gateway ID.
+     * @param array $storeconfig The store's settings for the gateway (currencies and other options are kept).
+     * @return array
+     */
+    public static function gateway_config(\stdClass $creator, string $gateway, array $storeconfig): array {
+        $account = in_array($gateway, self::GATEWAYS) ? self::gateway_account($creator, $gateway) : null;
+        $usable = $account && $account->enabled && self::gateway_account_complete($account)
+            && self::selling_blocker($creator) === null;
+        $secret = $usable ? \core\encryption::decrypt($account->secretkey) : '';
+        $webhook = $usable ? \core\encryption::decrypt($account->webhooksecret) : '';
+        $testmode = (bool) ($account->testmode ?? true);
+        return array_merge($storeconfig, [
+            'enabled' => $usable,
+            'testmode' => $testmode,
+            'sandbox_mode' => $testmode,
+            'public_key' => $usable ? (string) $account->publickey : '',
+            'client_id' => $usable ? (string) $account->publickey : '',
+            'merchantid' => $usable ? (string) $account->publickey : '',
+            'secret_key' => $secret,
+            'webhook_secret' => $webhook,
+            'webhook_id' => $webhook,
+            'secret_hash' => $webhook,
+        ]);
+    }
+
+    /**
+     * Sellers of a purchase: trainer id => trainer record, 0 => null for Oriskill's own courses.
+     *
+     * @param object|null $order Order, or null for the buyer's cart.
+     * @param int $userid Buyer, for the cart.
+     * @return array
+     */
+    public static function purchase_sellers(?object $order, int $userid): array {
+        global $DB;
+
+        if ($order) {
+            $courseids = $DB->get_fieldset_select('local_moderncommerce_order_items', 'courseid',
+                'orderid = ? AND courseid IS NOT NULL', [$order->id]);
+        } else if ($userid && !isguestuser($userid)) {
+            $courseids = array_column(\local_moderncommerce\api\cart_api::get_cart_items($userid), 'courseid');
+        } else {
+            return [];
+        }
+        $sellers = [];
+        foreach (array_filter(array_map('intval', $courseids)) as $courseid) {
+            $owner = self::owner_of_course($courseid);
+            $sellers[$owner->id ?? 0] = $owner;
+        }
+        return $sellers;
+    }
+
+    /**
      * Why a trainer cannot sell right now, or null if they can.
      *
      * @param \stdClass $creator Trainer.
@@ -92,7 +223,7 @@ class seller_service {
         if ($creator->status !== 'active') {
             return 'blocker:inactive';
         }
-        if (!self::merchant($creator)) {
+        if (!self::merchant($creator) && !self::usable_gateways($creator)) {
             return 'blocker:nopayment';
         }
         $plan = self::creator_plan();

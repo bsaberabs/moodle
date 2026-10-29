@@ -26,6 +26,7 @@ namespace local_moderncommerce;
 
 defined('MOODLE_INTERNAL') || die();
 
+global $CFG;
 require_once($CFG->dirroot . '/local/moderncommerce/lib.php');
 
 use local_moderncommerce\services\commerce_settings_service;

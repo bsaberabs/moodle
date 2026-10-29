@@ -90,32 +90,66 @@ class hook_callbacks {
     }
 
     /**
-     * Offer only SecureAndPay for a trainer's courses: it is the only method that pays into the trainer's own
-     * account. Any other method (Stripe, PayPal, manual...) would collect the money on Oriskill's account.
+     * For a trainer's courses, offer only the methods that pay into the trainer's own accounts: SecureAndPay when
+     * they entered it, Stripe and PayPal when they turned them on (resolve_gateway_config already leaves them out
+     * otherwise). Any other method (manual, Paystack...) would collect the money on Oriskill's account.
      *
      * @param \local_moderncommerce\hook\filter_payment_methods $hook Hook.
      */
     public static function filter_payment_methods(\local_moderncommerce\hook\filter_payment_methods $hook): void {
-        global $DB;
-
-        if ($hook->order) {
-            $courseids = $DB->get_fieldset_select('local_moderncommerce_order_items', 'courseid',
-                'orderid = ? AND courseid IS NOT NULL', [$hook->order->id]);
-        } else if ($hook->userid && !isguestuser($hook->userid)) {
-            $courseids = array_column(\local_moderncommerce\api\cart_api::get_cart_items($hook->userid), 'courseid');
-        } else {
+        $sellers = array_filter(seller_service::purchase_sellers($hook->order, $hook->userid));
+        if (!$sellers) {
             return;
         }
-        foreach (array_filter(array_map('intval', $courseids)) as $courseid) {
-            if (seller_service::owner_of_course($courseid)) {
-                foreach (array_keys($hook->methods) as $gatewayid) {
-                    if ($gatewayid !== \local_secureandpay\gateway::GATEWAY) {
-                        $hook->remove($gatewayid);
-                    }
-                }
-                return;
+        $creator = reset($sellers);
+        $keep = seller_service::GATEWAYS;
+        // SecureAndPay stays when the trainer entered it, and also when the purchase cannot be paid at all (several
+        // sellers, trainer without any payment method): its refusal then tells the buyer why.
+        if (count($sellers) > 1 || seller_service::merchant($creator) || !seller_service::usable_gateways($creator)) {
+            $keep[] = \local_secureandpay\gateway::GATEWAY;
+        }
+        foreach (array_keys($hook->methods) as $gatewayid) {
+            if (!in_array($gatewayid, $keep)) {
+                $hook->remove($gatewayid);
             }
         }
+    }
+
+    /**
+     * Collect a purchase of a trainer's courses with Stripe or PayPal on the trainer's own account.
+     *
+     * The account is "creator-<id>" (also in the address of the trainer's webhooks). A purchase mixing several
+     * sellers gets no account it could be paid on.
+     *
+     * @param \local_moderncommerce\hook\resolve_gateway_config $hook Hook.
+     */
+    public static function resolve_gateway_config(\local_moderncommerce\hook\resolve_gateway_config $hook): void {
+        global $DB;
+
+        // SecureAndPay has its own routing (resolve_merchant); other gateways are withdrawn by filter_payment_methods.
+        if (!in_array($hook->gatewayid, seller_service::GATEWAYS)) {
+            return;
+        }
+        if ($hook->webhookaccount !== null) {
+            if ($hook->webhookaccount === '') {
+                return;
+            }
+            $creator = preg_match('/^creator-(\d+)$/', $hook->webhookaccount, $m)
+                ? $DB->get_record('local_oriskill_creators', ['id' => (int) $m[1]]) : null;
+            $account = $hook->webhookaccount;
+        } else {
+            $sellers = seller_service::purchase_sellers($hook->order, $hook->userid);
+            if (!array_filter($sellers)) {
+                return;
+            }
+            $creator = count($sellers) === 1 ? reset($sellers) : null;
+            $account = $creator ? 'creator-' . $creator->id : 'mixed';
+        }
+        // Unknown account or several sellers: the gateway is off and none of the store's keys may be used.
+        $hook->use_account($account, $creator
+            ? seller_service::gateway_config($creator, $hook->gatewayid, $hook->config)
+            : array_merge($hook->config, ['enabled' => false, 'secret_key' => '', 'public_key' => '', 'client_id' => '',
+                'merchantid' => '', 'webhook_secret' => '', 'webhook_id' => '', 'secret_hash' => '']));
     }
 
     /**

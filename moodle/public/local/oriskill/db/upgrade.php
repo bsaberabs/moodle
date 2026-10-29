@@ -62,5 +62,12 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103000, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103005) {
+        // Trainers' own Stripe and PayPal accounts.
+        if (!$dbman->table_exists('local_oriskill_gateways')) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', 'local_oriskill_gateways');
+        }
+        upgrade_plugin_savepoint(true, 2026103005, 'local', 'oriskill');
+    }
     return true;
 }

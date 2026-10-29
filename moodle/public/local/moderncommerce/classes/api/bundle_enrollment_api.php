@@ -26,6 +26,7 @@ namespace local_moderncommerce\api;
 
 defined('MOODLE_INTERNAL') || die();
 
+global $CFG;
 require_once($CFG->dirroot . '/lib/enrollib.php');
 require_once($CFG->libdir . '/completionlib.php');
 require_once($CFG->dirroot . '/enrol/moderncommerce/lib.php');

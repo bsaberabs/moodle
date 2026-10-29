@@ -51,7 +51,8 @@ $steps = [
     [trim((string) $creator->tagline) !== '' && trim(html_to_text((string) $creator->bio, 0)) !== '',
         'step:profile', new moodle_url('/local/oriskill/apply.php')],
     [(bool) $courses, 'step:course', $newcourseurl],
-    [seller_service::merchant($creator) !== null, 'step:payment', new moodle_url('/local/oriskill/payment.php')],
+    [seller_service::merchant($creator) !== null || seller_service::usable_gateways($creator), 'step:payment',
+        new moodle_url('/local/oriskill/payment.php')],
 ];
 if (seller_service::creator_plan()) {
     $steps[] = [seller_service::selling_blocker($creator) !== 'blocker:nosubscription', 'step:plan',

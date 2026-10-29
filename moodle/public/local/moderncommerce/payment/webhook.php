@@ -54,7 +54,9 @@ if (!is_array($payload)) {
 }
 
 try {
-    $success = gateway_manager::process_webhook($gatewayid, $payload, $input, $headers);
+    // Address of a seller's own account (Oriskill addition): ...&account=<account>.
+    $success = gateway_manager::process_webhook($gatewayid, $payload, $input, $headers,
+        optional_param('account', null, PARAM_ALPHANUMEXT));
     if ($success) {
         http_response_code(200);
         echo json_encode(['status' => 'success']);
