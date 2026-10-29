@@ -52,8 +52,10 @@ $string['error:color'] = 'Enter a colour as #rrggbb, for example #7c3aed.';
 $string['error:domainshape'] = 'This domain name is not valid. Example: my-academy.com';
 $string['error:domainsite'] = 'Choose your own domain name, not an Oriskill address.';
 $string['error:domaintaken'] = 'This domain name is already linked to another showcase.';
+$string['error:instalments'] = 'Choose one of the offered numbers of instalments and a positive total price.';
 $string['error:invalidprices'] = 'These prices were not saved (the price must be positive, the crossed-out price higher): {$a}';
 $string['error:mixedsellers'] = 'your cart contains courses from several sellers ({$a}). Each seller is paid separately: buy their courses in separate orders.';
+$string['error:noinstalments'] = 'This course cannot be paid in instalments at the moment.';
 $string['error:sellercannotsell'] = 'the courses of {$a} cannot be bought at the moment.';
 $string['error:slugreserved'] = 'This address is reserved. Choose another one.';
 $string['error:slugshape'] = 'Use 3 to 30 lowercase letters, digits and single hyphens, for example jane-smith.';
@@ -82,6 +84,57 @@ $string['field:tagline'] = 'Tagline';
 $string['font:classic'] = 'Classic (Helvetica)';
 $string['font:elegant'] = 'Elegant (serif)';
 $string['font:modern'] = 'Modern';
+$string['group:instalments'] = 'Paid in {$a} instalments';
+$string['group:paidatonce'] = 'Paid at once';
+$string['instalmentmail:failed_learner'] = 'Hello {$a->learner},
+
+The instalment for your course "{$a->course}" could not be charged ({$a->paid} of {$a->count} paid).
+
+Check your card or contact {$a->trainer}. If the payment is not settled by {$a->deadline}, your access to the course will be suspended; it is restored as soon as a charge succeeds.';
+$string['instalmentmail:failed_subject'] = 'Unpaid instalment: {$a->course}';
+$string['instalmentmail:failed_trainer'] = 'The instalment of {$a->learner} for "{$a->course}" was refused ({$a->paid} of {$a->count} paid). Unless it is settled by {$a->deadline}, their access will be suspended automatically.
+
+Learner page: {$a->url}';
+$string['instalmentmail:restored_learner'] = 'Hello {$a->learner},
+
+We received your payment: your access to the course "{$a->course}" is restored.';
+$string['instalmentmail:restored_subject'] = 'Access restored: {$a->course}';
+$string['instalmentmail:restored_trainer'] = 'The payment of {$a->learner} for "{$a->course}" was received: their access is restored.
+
+Learner page: {$a->url}';
+$string['instalmentmail:stopped_learner'] = 'Hello {$a->learner},
+
+The instalments for your course "{$a->course}" were stopped with {$a->paid} of {$a->count} paid. Contact {$a->trainer} to pay the balance; unless it is settled by {$a->deadline}, your access will be suspended.';
+$string['instalmentmail:stopped_subject'] = 'Payment interrupted: {$a->course}';
+$string['instalmentmail:stopped_trainer'] = 'The instalments of {$a->learner} for "{$a->course}" were stopped at SecureAndPay ({$a->paid} of {$a->count} paid). Unless it is settled by {$a->deadline}, their access will be suspended automatically.
+
+Learner page: {$a->url}';
+$string['instalmentmail:suspended_learner'] = 'Hello {$a->learner},
+
+As a payment is missing, your access to the course "{$a->course}" is suspended. It is restored once the payment is received. Contact {$a->trainer} if needed.';
+$string['instalmentmail:suspended_subject'] = 'Access suspended: {$a->course}';
+$string['instalmentmail:suspended_trainer'] = 'The access of {$a->learner} to "{$a->course}" was suspended: an instalment has been unpaid for {$a->days} days. You can reactivate it yourself from their page: {$a->url}';
+$string['instalments:available'] = 'This course can be paid in {$a->count} instalments: {$a->count} × {$a->displayamount}';
+$string['instalments:buytitle'] = 'Pay {$a} in instalments';
+$string['instalments:choose'] = 'Pay in instalments';
+$string['instalments:countcol'] = 'In instalments';
+$string['instalments:howitworks'] = 'You pay the first instalment now and get access to the course right away. The {$a->count} instalments of {$a->displayamount} are then charged automatically every month to the same card, then the charges stop.';
+$string['instalments:intro'] = 'Payment in instalments: choose the number of monthly instalments and the total price paid that way (the same as the full price or a little more). SecureAndPay charges the learner\'s card every month. If an instalment is unpaid, the learner and you are told, and their access is suspended after {$a->days} days without payment.';
+$string['instalments:needsap'] = 'To offer payment in instalments, <a href="{$a->payment}">set up your SecureAndPay account</a>: it charges the instalments every month.';
+$string['instalments:none'] = 'No';
+$string['instalments:orshort'] = 'or {$a->count} × {$a->displayamount}';
+$string['instalments:pay'] = 'Pay the 1st instalment ({$a->displayamount})';
+$string['instalments:payatonce'] = 'Pay at once';
+$string['instalments:preview'] = '{$a->count} × {$a->amount}';
+$string['instalments:summary'] = '{$a->count} monthly instalments of {$a->displayamount}, {$a->displaytotal} in all.';
+$string['instalments:times'] = '{$a} times';
+$string['instalments:totalcol'] = 'Total price in instalments ({$a})';
+$string['instalmentstatus:active'] = '{$a->paid}/{$a->count} instalments paid';
+$string['instalmentstatus:completed'] = 'Paid in {$a->count} instalments';
+$string['instalmentstatus:late'] = 'Unpaid instalment ({$a->paid}/{$a->count})';
+$string['instalmentstatus:stopped'] = 'Instalments stopped ({$a->paid}/{$a->count})';
+$string['instalmentstatus:suspended'] = 'Suspended for non-payment ({$a->paid}/{$a->count})';
+$string['learner:payment'] = 'Payment';
 $string['mail:approved_body'] = 'Hello,
 
 Your trainer space "{$a->name}" is open.
@@ -144,6 +197,7 @@ $string['status:rejected'] = 'Rejected';
 $string['status:suspended'] = 'Suspended';
 $string['submitapplication'] = 'Send my application';
 $string['suspend'] = 'Suspend';
+$string['task:suspendunpaid'] = 'Suspend access for unpaid instalments';
 $string['viewshowcase'] = 'View my showcase';
 
 // Affiliation.

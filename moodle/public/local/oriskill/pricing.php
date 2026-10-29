@@ -26,11 +26,13 @@ require_once(__DIR__ . '/../../config.php');
 
 use local_moderncommerce\services\pricing_service;
 use local_oriskill\creator_service;
+use local_oriskill\instalment_service;
 use local_oriskill\seller_service;
 
 $url = new moodle_url('/local/oriskill/pricing.php');
 $creator = creator_service::require_current_creator($url, 'pricing');
 $courses = seller_service::priced_courses($creator);
+$caninstalments = instalment_service::can_offer($creator);
 
 if (data_submitted() && confirm_sesskey()) {
     $prices = optional_param_array('price', [], PARAM_RAW_TRIMMED);
@@ -49,6 +51,22 @@ if (data_submitted() && confirm_sesskey()) {
             continue;
         }
         seller_service::set_course_price($creator, $courseid, $amount, $compare, !empty($onsale[$courseid]));
+    }
+    if ($caninstalments) {
+        $counts = optional_param_array('instcount', [], PARAM_INT);
+        $totals = optional_param_array('insttotal', [], PARAM_RAW_TRIMMED);
+        foreach ($counts as $courseid => $count) {
+            $courseid = (int) $courseid;
+            if (!isset($courses[$courseid])) {
+                continue;
+            }
+            $total = $count ? unformat_float($totals[$courseid] ?? '', true) : 0;
+            if ($count && (!in_array($count, instalment_service::COUNTS, true) || !$total || $total <= 0)) {
+                $errors[] = format_string($courses[$courseid]->course->fullname);
+                continue;
+            }
+            instalment_service::save_offer($creator, $courseid, $count, (float) $total);
+        }
     }
     $rate = unformat_float(optional_param('affiliaterate', '0', PARAM_RAW_TRIMMED) ?: '0', true);
     if ($rate === false || $rate < 0 || $rate > 90) {
@@ -81,8 +99,16 @@ $currency = pricing_service::get_currency_config()->currency;
 $table = new html_table();
 $table->head = [get_string('course'), get_string('pricecol', 'local_oriskill', $currency),
     get_string('comparecol', 'local_oriskill', $currency), get_string('onsale', 'local_oriskill')];
+if ($caninstalments) {
+    $table->head[] = get_string('instalments:countcol', 'local_oriskill');
+    $table->head[] = get_string('instalments:totalcol', 'local_oriskill', $currency);
+}
+$countoptions = [0 => get_string('instalments:none', 'local_oriskill')];
+foreach (instalment_service::COUNTS as $count) {
+    $countoptions[$count] = get_string('instalments:times', 'local_oriskill', $count);
+}
 foreach ($courses as $courseid => $row) {
-    $table->data[] = [
+    $cells = [
         html_writer::link(new moodle_url('/course/view.php', ['id' => $courseid]), format_string($row->course->fullname)),
         html_writer::empty_tag('input', ['type' => 'text', 'name' => "price[$courseid]", 'size' => 8, 'class' => 'form-control',
             'inputmode' => 'decimal', 'value' => $row->amount !== null ? format_float($row->amount, 2, true) : '']),
@@ -90,8 +116,23 @@ foreach ($courses as $courseid => $row) {
             'inputmode' => 'decimal', 'value' => $row->compareamount ? format_float($row->compareamount, 2, true) : '']),
         html_writer::checkbox("onsale[$courseid]", 1, $row->onsale, '', ['class' => 'form-check-input']),
     ];
+    if ($caninstalments) {
+        $offer = instalment_service::offer($courseid);
+        $cells[] = html_writer::select($countoptions, "instcount[$courseid]", $offer->count ?? 0, false,
+            ['class' => 'form-select']);
+        $cells[] = html_writer::empty_tag('input', ['type' => 'text', 'name' => "insttotal[$courseid]", 'size' => 8,
+            'class' => 'form-control', 'inputmode' => 'decimal',
+            'value' => $offer ? format_float($offer->total, 2, true) : '']) .
+            ($offer ? html_writer::div(get_string('instalments:preview', 'local_oriskill', (object) [
+                'count' => $offer->count, 'amount' => pricing_service::format_price($offer->amount, $currency)]),
+                'form-text') : '');
+    }
+    $table->data[] = $cells;
 }
 echo html_writer::tag('p', get_string('pricing_intro', 'local_oriskill'));
+echo html_writer::tag('p', get_string($caninstalments ? 'instalments:intro' : 'instalments:needsap', 'local_oriskill',
+    (object) ['days' => instalment_service::GRACE_DAYS,
+        'payment' => (new moodle_url('/local/oriskill/payment.php'))->out(false)]), ['class' => 'text-muted']);
 echo html_writer::start_tag('form', ['method' => 'post', 'action' => $url->out(false)]);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
 echo html_writer::table($table);

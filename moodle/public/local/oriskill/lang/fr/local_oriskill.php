@@ -52,8 +52,10 @@ $string['error:color'] = 'Indiquez une couleur au format #rrggbb, par exemple #7
 $string['error:domainshape'] = 'Ce nom de domaine n\'est pas valide. Exemple : mon-academie.com';
 $string['error:domainsite'] = 'Choisissez votre propre nom de domaine, pas une adresse d\'Oriskill.';
 $string['error:domaintaken'] = 'Ce nom de domaine est déjà relié à une autre vitrine.';
+$string['error:instalments'] = 'Choisissez un nombre d\'échéances proposé et un prix total positif.';
 $string['error:invalidprices'] = 'Ces prix n\'ont pas été enregistrés (le prix doit être positif, le prix barré supérieur) : {$a}';
 $string['error:mixedsellers'] = 'votre panier contient des formations de plusieurs vendeurs ({$a}). Chaque vendeur est payé séparément : achetez leurs formations dans des commandes distinctes.';
+$string['error:noinstalments'] = 'Cette formation n\'est pas proposée en plusieurs fois pour le moment.';
 $string['error:sellercannotsell'] = 'les formations de {$a} ne peuvent pas être achetées pour le moment.';
 $string['error:slugreserved'] = 'Cette adresse est réservée. Choisissez-en une autre.';
 $string['error:slugshape'] = 'Utilisez de 3 à 30 lettres minuscules, chiffres et tirets simples, par exemple jean-dupont.';
@@ -82,6 +84,57 @@ $string['field:tagline'] = 'Accroche';
 $string['font:classic'] = 'Classique (Helvetica)';
 $string['font:elegant'] = 'Élégante (avec empattements)';
 $string['font:modern'] = 'Moderne';
+$string['group:instalments'] = 'Paiement en {$a} fois';
+$string['group:paidatonce'] = 'Paiement comptant';
+$string['instalmentmail:failed_learner'] = 'Bonjour {$a->learner},
+
+L\'échéance de votre formation « {$a->course} » n\'a pas pu être prélevée ({$a->paid} échéance(s) sur {$a->count} payée(s)).
+
+Vérifiez votre carte bancaire ou contactez {$a->trainer}. Si le paiement n\'est pas régularisé d\'ici le {$a->deadline}, votre accès à la formation sera suspendu ; il sera rétabli dès le prochain prélèvement réussi.';
+$string['instalmentmail:failed_subject'] = 'Échéance impayée : {$a->course}';
+$string['instalmentmail:failed_trainer'] = 'L\'échéance de {$a->learner} pour « {$a->course} » a été refusée ({$a->paid} sur {$a->count} payée(s)). Sans régularisation d\'ici le {$a->deadline}, son accès sera suspendu automatiquement.
+
+Fiche de l\'élève : {$a->url}';
+$string['instalmentmail:restored_learner'] = 'Bonjour {$a->learner},
+
+Nous avons bien reçu votre paiement : votre accès à la formation « {$a->course} » est rétabli.';
+$string['instalmentmail:restored_subject'] = 'Accès rétabli : {$a->course}';
+$string['instalmentmail:restored_trainer'] = 'Le paiement de {$a->learner} pour « {$a->course} » a été reçu : son accès est rétabli.
+
+Fiche de l\'élève : {$a->url}';
+$string['instalmentmail:stopped_learner'] = 'Bonjour {$a->learner},
+
+Les prélèvements de votre formation « {$a->course} » ont été arrêtés alors que {$a->paid} échéance(s) sur {$a->count} ont été payées. Contactez {$a->trainer} pour régler le solde ; sans régularisation d\'ici le {$a->deadline}, votre accès sera suspendu.';
+$string['instalmentmail:stopped_subject'] = 'Paiement interrompu : {$a->course}';
+$string['instalmentmail:stopped_trainer'] = 'Les prélèvements de {$a->learner} pour « {$a->course} » ont été arrêtés chez SecureAndPay ({$a->paid} sur {$a->count} payée(s)). Sans régularisation d\'ici le {$a->deadline}, son accès sera suspendu automatiquement.
+
+Fiche de l\'élève : {$a->url}';
+$string['instalmentmail:suspended_learner'] = 'Bonjour {$a->learner},
+
+Faute de paiement, votre accès à la formation « {$a->course} » est suspendu. Il sera rétabli dès réception du paiement. Contactez {$a->trainer} si besoin.';
+$string['instalmentmail:suspended_subject'] = 'Accès suspendu : {$a->course}';
+$string['instalmentmail:suspended_trainer'] = 'L\'accès de {$a->learner} à « {$a->course} » a été suspendu : échéance impayée depuis {$a->days} jours. Vous pouvez le réactiver vous-même depuis sa fiche : {$a->url}';
+$string['instalments:available'] = 'Cette formation est disponible en {$a->count} fois : {$a->count} × {$a->displayamount}';
+$string['instalments:buytitle'] = 'Payer {$a} en plusieurs fois';
+$string['instalments:choose'] = 'Payer en plusieurs fois';
+$string['instalments:countcol'] = 'En plusieurs fois';
+$string['instalments:howitworks'] = 'Vous payez la première échéance maintenant et accédez tout de suite à la formation. Les {$a->count} échéances de {$a->displayamount} sont ensuite prélevées automatiquement chaque mois sur la même carte, puis les prélèvements s\'arrêtent.';
+$string['instalments:intro'] = 'Paiement en plusieurs fois : choisissez le nombre d\'échéances mensuelles et le prix total payé ainsi (égal au prix comptant ou un peu plus élevé). La carte de l\'élève est prélevée chaque mois par SecureAndPay. En cas d\'échéance impayée, l\'élève et vous êtes prévenus, et son accès est suspendu au bout de {$a->days} jours sans régularisation.';
+$string['instalments:needsap'] = 'Pour proposer le paiement en plusieurs fois, <a href="{$a->payment}">configurez votre compte SecureAndPay</a> : c\'est lui qui prélève les échéances chaque mois.';
+$string['instalments:none'] = 'Non';
+$string['instalments:orshort'] = 'ou {$a->count} × {$a->displayamount}';
+$string['instalments:pay'] = 'Payer la 1re échéance ({$a->displayamount})';
+$string['instalments:payatonce'] = 'Payer en une fois';
+$string['instalments:preview'] = '{$a->count} × {$a->amount}';
+$string['instalments:summary'] = '{$a->count} mensualités de {$a->displayamount}, soit {$a->displaytotal} au total.';
+$string['instalments:times'] = '{$a} fois';
+$string['instalments:totalcol'] = 'Prix total en plusieurs fois ({$a})';
+$string['instalmentstatus:active'] = '{$a->paid}/{$a->count} échéances payées';
+$string['instalmentstatus:completed'] = 'Payé en {$a->count} fois';
+$string['instalmentstatus:late'] = 'Échéance impayée ({$a->paid}/{$a->count})';
+$string['instalmentstatus:stopped'] = 'Prélèvements arrêtés ({$a->paid}/{$a->count})';
+$string['instalmentstatus:suspended'] = 'Suspendu pour impayé ({$a->paid}/{$a->count})';
+$string['learner:payment'] = 'Paiement';
 $string['mail:approved_body'] = 'Bonjour,
 
 Votre espace formateur « {$a->name} » est ouvert.
@@ -144,6 +197,7 @@ $string['status:rejected'] = 'Refusé';
 $string['status:suspended'] = 'Suspendu';
 $string['submitapplication'] = 'Envoyer ma candidature';
 $string['suspend'] = 'Suspendre';
+$string['task:suspendunpaid'] = 'Suspendre les accès des échéances impayées';
 $string['viewshowcase'] = 'Voir ma vitrine';
 
 // Affiliation.

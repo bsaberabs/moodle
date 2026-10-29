@@ -38,6 +38,7 @@ if (!$learner) {
 }
 $backurl = new moodle_url('/local/oriskill/learners.php', ['courseid' => $course->id]);
 $dateformat = get_string('strftimedate', 'langconfig');
+$instalments = \local_oriskill\instalment_service::course_records((int) $course->id);
 
 echo $OUTPUT->header();
 echo creator_service::space_start($creator, '/local/oriskill/learners.php', fullname($learner));
@@ -71,6 +72,10 @@ foreach ([
     [get_string('learner:completed', 'local_oriskill'), $learner->completed ? userdate($learner->completed, $dateformat) : '–'],
 ] as [$label, $value]) {
     $facts .= html_writer::div(html_writer::div($label, 'oriskill-stat-label') . html_writer::div(s($value), 'fw-semibold'));
+}
+if (isset($instalments[$userid])) {
+    $facts .= html_writer::div(html_writer::div(get_string('learner:payment', 'local_oriskill'), 'oriskill-stat-label') .
+        html_writer::div(\local_oriskill\instalment_service::status_badge($instalments[$userid])));
 }
 echo html_writer::div($summary . html_writer::div($facts, 'oriskill-facts'), 'oriskill-card mb-4');
 

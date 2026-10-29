@@ -34,4 +34,13 @@ $tasks = [
         'month' => '*',
         'dayofweek' => '*',
     ],
+    [
+        'classname' => '\local_oriskill\task\suspend_unpaid',
+        'blocking' => 0,
+        'minute' => '43',
+        'hour' => '*',
+        'day' => '*',
+        'month' => '*',
+        'dayofweek' => '*',
+    ],
 ];

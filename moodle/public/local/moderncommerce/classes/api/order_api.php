@@ -254,6 +254,92 @@ class order_api {
     }
 
     /**
+     * Create a pending order for one course, outside the cart (Oriskill patch 8: payment in instalments).
+     *
+     * The buyer is enrolled when the order is paid, as for a cart order. The notes carry what the payment
+     * gateway needs (for example the instalment schedule).
+     *
+     * @param int $userid Buyer user ID.
+     * @param int $courseid Course.
+     * @param float $total Order total.
+     * @param array $notes Order notes, stored as JSON.
+     * @return object Created order record (with id).
+     */
+    public static function create_course_order(int $userid, int $courseid, float $total, array $notes): object {
+        global $DB, $USER;
+
+        $price = price_resolver::resolve_for_course($courseid, 1, true);
+        if (!$price) {
+            throw new \moodle_exception('error:ordercreationfailed', 'local_moderncommerce');
+        }
+        $course = $DB->get_record('course', ['id' => $courseid], 'id, fullname', MUST_EXIST);
+        $total = max(0, round($total, 2));
+
+        $transaction = $DB->start_delegated_transaction();
+        try {
+            $now = time();
+            $ordernumber = self::generate_order_number();
+            $order = (object) [
+                'userid' => $userid,
+                'ordernumber' => $ordernumber,
+                'ordertype' => 'purchase',
+                'status' => 'pending',
+                'subtotal' => $total,
+                'discount' => 0,
+                'tax' => 0,
+                'fees' => 0,
+                'total' => $total,
+                'refundedtotal' => 0,
+                'currency' => $price->currency ?: self::get_currency(),
+                'exchangerate' => 1,
+                'couponcode' => null,
+                'customeremail' => $USER->email ?? null,
+                'ipaddress' => getremoteaddr(),
+                'useragent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
+                'referrer' => $_SERVER['HTTP_REFERER'] ?? '',
+                'notes' => json_encode($notes),
+                'adminnotes' => null,
+                'createdby' => $USER->id ?? $userid,
+                'modifiedby' => $USER->id ?? $userid,
+                'timecreated' => $now,
+                'timemodified' => $now,
+            ];
+            pricing_service::apply_currency_snapshot($order);
+            $order->id = (int) $DB->insert_record('local_moderncommerce_orders',
+                self::filter_record_fields('local_moderncommerce_orders', $order));
+
+            self::insert_order_item($order->id, (object) [
+                'itemtype' => 'course',
+                'courseid' => $courseid,
+                'productid' => $price->productid ?? null,
+                'priceid' => $price->priceid ?? null,
+                'itemname' => format_string($course->fullname),
+                'unitprice' => $total,
+                'quantity' => 1,
+            ], (string) $order->currency);
+            self::create_order_operational($order->id, null);
+            self::log_audit($userid, 'order_created', 'order', $order->id, null, [
+                'ordernumber' => $ordernumber,
+                'total' => $total,
+                'currency' => $order->currency,
+                'courseid' => $courseid,
+            ]);
+            $transaction->allow_commit();
+        } catch (\Throwable $e) {
+            $transaction->rollback($e);
+            throw new \moodle_exception('error:ordercreationfailed', 'local_moderncommerce', '', null, $e->getMessage());
+        }
+
+        \local_moderncommerce\event\order_created::create([
+            'objectid' => $order->id,
+            'context' => \context_system::instance(),
+            'userid' => $userid,
+            'other' => ['ordernumber' => $ordernumber],
+        ])->trigger();
+        return $order;
+    }
+
+    /**
      * Create manual invoice by admin.
      *
      * @param int $userid

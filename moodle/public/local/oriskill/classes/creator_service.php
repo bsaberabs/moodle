@@ -558,6 +558,7 @@ class creator_service {
                 'compareprice' => !empty($price->on_sale)
                     ? pricing_service::format_price($price->regularprice, $price->currency) : '',
                 'url' => (new moodle_url('/local/moderncommerce/course_details.php', ['id' => $course->id]))->out(false),
+                'instalments' => instalment_service::buyable_offer((int) $course->id),
             ];
         }
         return $courses;

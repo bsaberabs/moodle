@@ -91,5 +91,14 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103008, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103009) {
+        // Payment in instalments: offers per course and purchases being paid.
+        foreach (['local_oriskill_instoffers', 'local_oriskill_instalments'] as $name) {
+            if (!$dbman->table_exists($name)) {
+                $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', $name);
+            }
+        }
+        upgrade_plugin_savepoint(true, 2026103009, 'local', 'oriskill');
+    }
     return true;
 }

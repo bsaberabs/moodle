@@ -35,7 +35,8 @@
         "links": [{"url": "#", "label": "Conditions générales"}],
         "hascourses": true,
         "courses": [{"name": "Excel pour l'analyse", "summary": "Résumé", "image": "", "price": "49,00 €",
-                     "compareprice": "79,00 €", "url": "#"}]
+                     "compareprice": "79,00 €", "url": "#",
+                     "instalments": {"label": "ou 3 × 33,00 €", "url": "#"}}]
     }
 }}
 <div class="oriskill-vitrine" style="--v-primary: {{style.primary}}; --v-on-primary: {{style.onprimary}}; --v-accent: {{style.accent}}; --v-on-accent: {{style.onaccent}}; --v-ink: {{style.ink}}; --v-font: {{style.font}};">
@@ -83,6 +84,9 @@
                                     <strong>{{price}}</strong>
                                     {{#compareprice}}<s>{{compareprice}}</s>{{/compareprice}}
                                 </p>
+                                {{#instalments}}
+                                    <a href="{{url}}" class="oriskill-vitrine-instalments">{{label}}</a>
+                                {{/instalments}}
                             </div>
                         </article>
                     {{/courses}}

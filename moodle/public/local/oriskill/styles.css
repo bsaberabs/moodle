@@ -537,6 +537,14 @@
     color: #9ca3af;
     font-size: 1rem;
 }
+.oriskill-vitrine-instalments {
+    position: relative;
+    z-index: 1;
+    margin-top: .35rem;
+    font-size: .9rem;
+    font-weight: 600;
+    color: var(--v-ink);
+}
 .oriskill-vitrine-empty {
     color: #6b7280;
 }
@@ -557,4 +565,15 @@
 }
 .oriskill-vitrine-footer a {
     color: #d1d5db;
+}
+
+/* Offer to pay a trainer course in instalments, above its store page. */
+.oriskill-instalment-bar {
+    position: relative;
+    z-index: 1100;
+    padding: .6rem 1rem;
+    background: #7c3aed;
+    color: #fff;
+    text-align: center;
+    font-weight: 600;
 }

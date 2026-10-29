@@ -237,7 +237,9 @@ class gateway implements gateway_interface {
             throw new moodle_exception('notconfigured', 'local_secureandpay');
         }
         $user = $DB->get_record('user', ['id' => $order->userid], '*', MUST_EXIST);
-        $amount = (int) round((float) $order->total * 100);
+        // A purchase in instalments is charged one instalment now, the others by SecureAndPay.
+        $instalments = self::instalment_plan($order);
+        $amount = (int) round((float) ($instalments ? $instalments['amount'] : $order->total) * 100);
         // Only a free trial is paid 0: SecureAndPay then just registers the card.
         if ($amount < 0 || ($amount === 0 && !self::is_trial_order($order))) {
             throw new moodle_exception('invalidamount', 'local_secureandpay');
@@ -294,6 +296,15 @@ class gateway implements gateway_interface {
 
         if (self::order_is_subscription($order)) {
             $fields = $this->subscription_fields($order);
+        } else if ($instalments = self::instalment_plan($order)) {
+            // Monthly instalments, the first one charged now: SecureAndPay stops after the last one.
+            $fields = [
+                'Clicktopay' => 1,
+                'MontantReccurent' => (string) $amount,
+                'ReccurentNumber' => (string) $instalments['count'],
+                'ReccurentFrequency' => '1',
+                'ReccurentTestPeriod' => '0',
+            ];
         } else if ($oneclick) {
             $fields = [
                 'Clicktopay' => 1,
@@ -406,6 +417,54 @@ class gateway implements gateway_interface {
     }
 
     /**
+     * Instalments of a purchase paid in several times: number and amount of each, or null for a single payment.
+     *
+     * Set in the order notes by whoever created the order (see start_instalments()).
+     *
+     * @param object $order Order.
+     * @return array|null ['count' => int, 'amount' => float]
+     */
+    public static function instalment_plan(object $order): ?array {
+        $notes = json_decode((string) ($order->notes ?? ''), true);
+        $count = (int) ($notes['instalments']['count'] ?? 0);
+        $amount = round((float) ($notes['instalments']['amount'] ?? 0), 2);
+        return $count >= 2 && $amount > 0 ? ['count' => $count, 'amount' => $amount] : null;
+    }
+
+    /**
+     * SecureAndPay orderID of a purchase in instalments, kept in its notes: the buyer goes straight to pay.php.
+     *
+     * @param object $order Order with an instalment plan.
+     * @return string SecureAndPay orderID.
+     */
+    public static function start_instalments(object $order): string {
+        global $DB;
+
+        $reference = self::build_reference($order, 1);
+        $notes = json_decode((string) $order->notes, true) ?: [];
+        $notes['instalments']['secureandpay_reference'] = $reference;
+        $DB->set_field('local_moderncommerce_orders', 'notes', json_encode($notes), ['id' => $order->id]);
+        return $reference;
+    }
+
+    /**
+     * Charges received for an order (refused or refunded ones are not counted, nor a card registration at 0).
+     *
+     * Counted from SecureAndPay's own status: Modern Commerce keeps an order's payment "success" once it was paid,
+     * and records later notifications of that order (a refused instalment included) with that status.
+     *
+     * @param object $order Order.
+     * @return int
+     */
+    public static function instalments_paid(object $order): int {
+        global $DB;
+
+        return $DB->count_records_select('local_moderncommerce_payment_events',
+            "orderid = :orderid AND gateway = :gateway AND eventtype IN ('secureandpay.00', 'secureandpay.02')
+             AND amount > 0", ['orderid' => $order->id, 'gateway' => self::GATEWAY]);
+    }
+
+    /**
      * Whether a subscription order starts a free trial (created by trial.php).
      *
      * @param object $order Order.
@@ -419,8 +478,8 @@ class gateway implements gateway_interface {
     /**
      * Whether a SecureAndPay orderID belongs to this order.
      *
-     * Paid orders get theirs from the Modern Commerce payment attempt; free trials, which
-     * Modern Commerce cannot send to a gateway, keep it in the order notes.
+     * Paid orders get theirs from the Modern Commerce payment attempt; free trials and purchases in instalments,
+     * which do not go through Modern Commerce's checkout, keep it in the order notes.
      *
      * @param object $order Order.
      * @param string $reference SecureAndPay orderID.
@@ -434,7 +493,8 @@ class gateway implements gateway_interface {
             return true;
         }
         $notes = json_decode((string) ($order->notes ?? ''), true);
-        return ($notes['subscription']['secureandpay_reference'] ?? null) === $reference;
+        return ($notes['subscription']['secureandpay_reference'] ?? null) === $reference
+            || ($notes['instalments']['secureandpay_reference'] ?? null) === $reference;
     }
 
     /**

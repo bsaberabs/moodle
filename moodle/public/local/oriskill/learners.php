@@ -190,6 +190,7 @@ $table->attributes['class'] = 'table oriskill-learners align-middle';
 $table->head = [get_string('learner', 'local_oriskill'), get_string('learner:access', 'local_oriskill'),
     get_string('learner:until', 'local_oriskill'), get_string('group'), get_string('learner:progress', 'local_oriskill'),
     get_string('learner:grade', 'local_oriskill'), get_string('learner:lastaccess', 'local_oriskill'), ''];
+$instalments = \local_oriskill\instalment_service::course_records((int) $course->id);
 foreach ($learners as $userid => $learner) {
     $ficheurl = new moodle_url('/local/oriskill/learner.php', ['courseid' => $course->id, 'userid' => $userid]);
     $badges = html_writer::span(get_string('source:' . $learner->source, 'local_oriskill'),
@@ -201,6 +202,9 @@ foreach ($learners as $userid => $learner) {
     }
     if ($learner->completed) {
         $badges .= ' ' . html_writer::span(get_string('learner:completed', 'local_oriskill'), 'oriskill-badge is-good');
+    }
+    if (isset($instalments[$userid])) {
+        $badges .= ' ' . \local_oriskill\instalment_service::status_badge($instalments[$userid]);
     }
     $endform = html_writer::tag('form', $hidden('setend', $userid) .
         html_writer::empty_tag('input', ['type' => 'date', 'name' => 'timeend', 'class' => 'form-control form-control-sm',

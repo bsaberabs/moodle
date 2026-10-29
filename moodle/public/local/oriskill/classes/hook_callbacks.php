@@ -207,4 +207,30 @@ class hook_callbacks {
             $hook->add_html(\html_writer::empty_tag('link', ['rel' => 'icon', 'href' => self::$headmeta['icon']]));
         }
     }
+
+    /**
+     * On the store page of a trainer course sold in instalments, offer to pay that way.
+     *
+     * The page itself is rendered by Modern Commerce's React application, so the offer comes as a bar above it.
+     *
+     * @param \core\hook\output\before_standard_top_of_body_html_generation $hook Hook.
+     */
+    public static function before_standard_top_of_body_html_generation(
+        \core\hook\output\before_standard_top_of_body_html_generation $hook
+    ): void {
+        global $PAGE;
+
+        if (during_initial_install() || !$PAGE->has_set_url()
+                || $PAGE->url->get_path() !== (new \moodle_url('/local/moderncommerce/course_details.php'))->get_path()) {
+            return;
+        }
+        $offer = instalment_service::buyable_offer((int) $PAGE->url->get_param('id'));
+        if ($offer) {
+            $hook->add_html(\html_writer::div(
+                \html_writer::span(get_string('instalments:available', 'local_oriskill', $offer)) . ' ' .
+                \html_writer::link($offer->url, get_string('instalments:choose', 'local_oriskill'),
+                    ['class' => 'btn btn-sm btn-light ms-2']),
+                'oriskill-instalment-bar'));
+        }
+    }
 }

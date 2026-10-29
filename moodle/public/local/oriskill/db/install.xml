@@ -119,5 +119,42 @@
         <INDEX NAME="creatorgateway" UNIQUE="true" FIELDS="creatorid, gateway"/>
       </INDEXES>
     </TABLE>
+    <TABLE NAME="local_oriskill_instoffers" COMMENT="Payment in instalments offered by a trainer for a course">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="count" TYPE="int" LENGTH="3" NOTNULL="true" SEQUENCE="false" COMMENT="Monthly instalments"/>
+        <FIELD NAME="total" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="2" SEQUENCE="false" COMMENT="Total price paid in instalments"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="courseid" TYPE="foreign-unique" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="local_oriskill_instalments" COMMENT="Purchases of a trainer course paid in instalments, and where their payments stand">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="orderid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="count" TYPE="int" LENGTH="3" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="amount" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="2" SEQUENCE="false" COMMENT="Each instalment"/>
+        <FIELD NAME="paid" TYPE="int" LENGTH="3" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Instalments received"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="15" NOTNULL="true" DEFAULT="active" SEQUENCE="false" COMMENT="active, late (refused, grace period), suspended (access suspended), stopped (schedule ended unpaid, grace period), completed"/>
+        <FIELD NAME="latesince" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="First unpaid instalment, 0 when up to date"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="orderid" TYPE="foreign-unique" FIELDS="orderid" REFTABLE="local_moderncommerce_orders" REFFIELDS="id"/>
+        <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="status" UNIQUE="false" FIELDS="status"/>
+      </INDEXES>
+    </TABLE>
   </TABLES>
 </XMLDB>

@@ -76,7 +76,17 @@ class notification_handler {
                     if ($subscription = self::find_subscription($order)) {
                         self::end_after_last_payment($order, $subscription);
                     }
+                    if (gateway::instalment_plan($order)) {
+                        self::instalment_event('instalment_paid', $order);
+                    }
                     return 'paid';
+                }
+                if (gateway::instalment_plan($order)) {
+                    if (self::record($order, $data, 'success')->duplicate) {
+                        return 'duplicate';
+                    }
+                    self::instalment_event('instalment_paid', $order);
+                    return 'instalment_paid';
                 }
                 if ($subscription && !self::record($order, $data, 'success')->duplicate) {
                     // A later ClicktoPay instalment: extend the subscription by one cycle, or bring it
@@ -98,7 +108,8 @@ class notification_handler {
             case '03':
             case '04':
                 self::record($order, $data, 'refunded');
-                if (!$subscription) {
+                // One instalment refunded does not refund the whole purchase.
+                if (!$subscription && !gateway::instalment_plan($order)) {
                     order_api::update_order_status($order->id, 'refunded');
                 }
                 return $status === '03' ? 'refunded' : 'chargeback';
@@ -107,6 +118,8 @@ class notification_handler {
                 self::record($order, $data, 'failed');
                 if (!$paid) {
                     order_api::update_order_status($order->id, 'failed');
+                } else if (gateway::instalment_plan($order)) {
+                    self::instalment_event('instalment_failed', $order);
                 } else if ($subscription) {
                     $DB->set_field('local_moderncommerce_user_subscriptions', 'payment_failed_count',
                         (int) $subscription->payment_failed_count + 1, ['id' => $subscription->id]);
@@ -118,6 +131,9 @@ class notification_handler {
             case '06':
                 if ($subscription) {
                     self::end_at_period_end($subscription);
+                }
+                if (gateway::instalment_plan($order)) {
+                    self::instalment_event('instalments_stopped', $order);
                 }
                 return 'subscription_cancelled';
         }
@@ -153,6 +169,23 @@ class notification_handler {
             throw new moodle_exception('invalidorder', 'local_moderncommerce');
         }
         return order_api::get_order($orderid);
+    }
+
+    /**
+     * Tell other plugins about a purchase in instalments: one paid, one refused, or the schedule stopped.
+     *
+     * @param string $name Event class in local_secureandpay\event.
+     * @param object $order Order.
+     */
+    private static function instalment_event(string $name, object $order): void {
+        $class = '\\local_secureandpay\\event\\' . $name;
+        $plan = gateway::instalment_plan($order);
+        $class::create([
+            'objectid' => $order->id,
+            'context' => \context_system::instance(),
+            'relateduserid' => (int) $order->userid,
+            'other' => ['paid' => gateway::instalments_paid($order), 'count' => $plan['count']],
+        ])->trigger();
     }
 
     /**
@@ -261,9 +294,7 @@ class notification_handler {
             return false;
         }
         // Instalments charged: the trial's own payment (the card registration, at 0 or at a token amount) is not one.
-        $paid = $DB->count_records_select('local_moderncommerce_payment_events',
-            'orderid = :orderid AND gateway = :gateway AND status = :status AND amount > 0',
-            ['orderid' => $order->id, 'gateway' => gateway::GATEWAY, 'status' => 'success']);
+        $paid = gateway::instalments_paid($order);
         if (gateway::is_trial_order($order) && (float) $order->total > 0) {
             $paid--;
         }

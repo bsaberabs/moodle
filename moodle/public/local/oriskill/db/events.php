@@ -35,4 +35,17 @@ $observers = [
         'eventname' => '\local_moderncommerce\event\order_paid',
         'callback' => '\local_oriskill\observer::order_paid',
     ],
+    // Payment in instalments (SecureAndPay charges them and reports each one).
+    [
+        'eventname' => '\local_secureandpay\event\instalment_paid',
+        'callback' => '\local_oriskill\instalment_service::instalment_paid',
+    ],
+    [
+        'eventname' => '\local_secureandpay\event\instalment_failed',
+        'callback' => '\local_oriskill\instalment_service::instalment_failed',
+    ],
+    [
+        'eventname' => '\local_secureandpay\event\instalments_stopped',
+        'callback' => '\local_oriskill\instalment_service::instalments_stopped',
+    ],
 ];
