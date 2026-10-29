@@ -577,3 +577,16 @@
     text-align: center;
     font-weight: 600;
 }
+
+/* Invoices and credit notes: the client and actions cells wrap so the actions (refund, credit note) stay in view;
+   more specific than the store's rule that keeps table cells on one line. */
+.path-local-moderncommerce .oriskill-space table.table.oriskill-documents:not(.mc-table) td:nth-child(2),
+.path-local-moderncommerce .oriskill-space table.table.oriskill-documents:not(.mc-table) td:last-child {
+    white-space: normal;
+}
+.path-local-moderncommerce .oriskill-space table.table.oriskill-documents:not(.mc-table) td:nth-child(2) {
+    min-width: 13rem;
+}
+.path-local-moderncommerce .oriskill-space table.table.oriskill-documents:not(.mc-table) td:last-child {
+    min-width: 15rem;
+}

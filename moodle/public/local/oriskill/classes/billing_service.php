@@ -182,6 +182,27 @@ class billing_service {
     }
 
     /**
+     * SecureAndPay refunded part or all of an order: a credit note of that amount on the trainer's invoice.
+     *
+     * @param \local_secureandpay\event\payment_refunded $event Event.
+     */
+    public static function payment_refunded(\local_secureandpay\event\payment_refunded $event): void {
+        global $DB;
+
+        $invoice = $DB->get_record('local_oriskill_invoices', ['orderid' => $event->objectid, 'type' => 'invoice']);
+        if (!$invoice) {
+            return;
+        }
+        $amount = min((float) $event->other['amount'], self::creditable($invoice));
+        if ($amount > 0) {
+            $credit = self::issue_credit_note($invoice, $amount, get_string('credit:refunded', 'local_oriskill'));
+            $creator = $DB->get_record('local_oriskill_creators', ['id' => $invoice->creatorid]);
+            log_service::add($creator, 'refund_done', ['amount' => pricing_service::format_price($amount, $invoice->currency),
+                'number' => $credit->number], null, (int) $invoice->userid);
+        }
+    }
+
+    /**
      * Credit notes for orders refunded through the store, for what their invoice still shows. Run by a task.
      *
      * @return int Credit notes issued.

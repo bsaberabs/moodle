@@ -48,4 +48,9 @@ $observers = [
         'eventname' => '\local_secureandpay\event\instalments_stopped',
         'callback' => '\local_oriskill\instalment_service::instalments_stopped',
     ],
+    // A refund confirmed by SecureAndPay: credit note in the trainer's name.
+    [
+        'eventname' => '\local_secureandpay\event\payment_refunded',
+        'callback' => '\local_oriskill\billing_service::payment_refunded',
+    ],
 ];

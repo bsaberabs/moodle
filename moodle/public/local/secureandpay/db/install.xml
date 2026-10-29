@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="local/secureandpay/db" VERSION="2026102906" COMMENT="XMLDB file for Moodle local/secureandpay"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
+>
+  <TABLES>
+    <TABLE NAME="local_secureandpay_refunds" COMMENT="Refunds asked of SecureAndPay (refundWs.php), one per charge refunded">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="orderid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="bankid" TYPE="char" LENGTH="64" NOTNULL="true" SEQUENCE="false" COMMENT="SecureAndPay transaction of the charge (banqueId)"/>
+        <FIELD NAME="amount" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="2" SEQUENCE="false"/>
+        <FIELD NAME="currency" TYPE="char" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="reason" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="10" NOTNULL="true" DEFAULT="requested" SEQUENCE="false" COMMENT="requested (SecureAndPay validates it), refunded (notified), refused"/>
+        <FIELD NAME="answer" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="SecureAndPay's answer"/>
+        <FIELD NAME="requestedby" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="orderid" TYPE="foreign" FIELDS="orderid" REFTABLE="local_moderncommerce_orders" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="status" UNIQUE="false" FIELDS="status"/>
+      </INDEXES>
+    </TABLE>
+  </TABLES>
+</XMLDB>

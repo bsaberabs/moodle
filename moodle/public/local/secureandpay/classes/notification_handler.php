@@ -107,10 +107,12 @@ class notification_handler {
 
             case '03':
             case '04':
-                self::record($order, $data, 'refunded');
-                // One instalment refunded does not refund the whole purchase.
-                if (!$subscription && !gateway::instalment_plan($order)) {
-                    order_api::update_order_status($order->id, 'refunded');
+                if (self::record($order, $data, 'refunded')->duplicate) {
+                    return 'duplicate';
+                }
+                if (!$subscription) {
+                    self::apply_refund($order, is_numeric($data['PayAmount'] ?? null)
+                        ? (float) $data['PayAmount'] / 100 : (float) $order->total);
                 }
                 return $status === '03' ? 'refunded' : 'chargeback';
 
@@ -169,6 +171,35 @@ class notification_handler {
             throw new moodle_exception('invalidorder', 'local_moderncommerce');
         }
         return order_api::get_order($orderid);
+    }
+
+    /**
+     * A refund (or chargeback) of a purchase: add it to the order's refunded total, mark the order refunded once
+     * nothing is left, and tell other plugins (a credit note in the seller's name, for example).
+     *
+     * @param object $order Order.
+     * @param float $amount Amount refunded.
+     */
+    private static function apply_refund(object $order, float $amount): void {
+        global $DB;
+
+        $amount = round(min($amount, (float) $order->total - (float) $order->refundedtotal), 2);
+        if ($amount <= 0) {
+            return;
+        }
+        refund_service::refund_notified($order, $amount);
+        $refunded = round((float) $order->refundedtotal + $amount, 2);
+        $DB->update_record('local_moderncommerce_orders', (object) ['id' => $order->id, 'refundedtotal' => $refunded,
+            'timemodified' => time()]);
+        if ($refunded >= (float) $order->total - 0.005) {
+            order_api::update_order_status($order->id, 'refunded');
+        }
+        event\payment_refunded::create([
+            'objectid' => $order->id,
+            'context' => \context_system::instance(),
+            'relateduserid' => (int) $order->userid,
+            'other' => ['amount' => $amount, 'refundedtotal' => $refunded],
+        ])->trigger();
     }
 
     /**

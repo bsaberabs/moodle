@@ -28,9 +28,27 @@ use local_moderncommerce\services\pricing_service;
 use local_oriskill\billing_service;
 use local_oriskill\creator_service;
 use local_oriskill\form\billing_form;
+use local_secureandpay\refund_service;
 
 $url = new moodle_url('/local/oriskill/invoices.php');
 $creator = creator_service::require_current_creator($url, 'menu:invoices');
+
+// Refund through SecureAndPay of an order of one of the trainer's invoices.
+if (optional_param('action', '', PARAM_ALPHA) === 'refund' && confirm_sesskey()) {
+    $invoice = $DB->get_record('local_oriskill_invoices', ['id' => required_param('invoiceid', PARAM_INT),
+        'creatorid' => $creator->id, 'type' => 'invoice'], '*', MUST_EXIST);
+    $order = $DB->get_record('local_moderncommerce_orders', ['id' => $invoice->orderid], '*', MUST_EXIST);
+    $amount = (float) unformat_float(required_param('amount', PARAM_RAW_TRIMMED), true);
+    try {
+        refund_service::request($order, $amount, trim(optional_param('reason', '', PARAM_TEXT)));
+        \local_oriskill\log_service::add($creator, 'refund_requested', ['amount' =>
+            pricing_service::format_price($amount, $order->currency), 'invoice' => $invoice->number], null,
+            (int) $invoice->userid);
+        redirect($url, get_string('refund:requested', 'local_oriskill'), null, \core\output\notification::NOTIFY_SUCCESS);
+    } catch (moodle_exception $e) {
+        redirect($url, $e->getMessage(), null, \core\output\notification::NOTIFY_ERROR);
+    }
+}
 
 // Credit note on one of the trainer's invoices.
 if (optional_param('action', '', PARAM_ALPHA) === 'credit' && confirm_sesskey()) {
@@ -76,9 +94,8 @@ if (!$documents) {
     echo html_writer::tag('p', get_string('invoices:none', 'local_oriskill'), ['class' => 'text-muted mb-0']);
 } else {
     $table = new html_table();
-    $table->attributes['class'] = 'table align-middle';
-    $table->head = [get_string('invoice:number', 'local_oriskill'), get_string('invoice:date', 'local_oriskill'),
-        get_string('invoices:client', 'local_oriskill'), get_string('invoice:order', 'local_oriskill'),
+    $table->attributes['class'] = 'table align-middle oriskill-documents';
+    $table->head = [get_string('invoice:number', 'local_oriskill'), get_string('invoices:client', 'local_oriskill'), get_string('invoice:order', 'local_oriskill'),
         get_string('invoice:total', 'local_oriskill'), ''];
     foreach ($documents as $document) {
         $data = json_decode($document->data, true);
@@ -104,17 +121,47 @@ if (!$documents) {
                      'onsubmit' => 'return confirm(' . json_encode(get_string('credit:confirmtext', 'local_oriskill')) . ')']),
                 ['class' => 'd-inline-block']);
         }
+        // Refund through SecureAndPay, for an order it took, and the refunds already asked.
+        if (!$iscredit && ($order = $DB->get_record('local_moderncommerce_orders', ['id' => $document->orderid]))) {
+            $refundable = refund_service::refundable($order);
+            if ($refundable > 0) {
+                $actions .= ' ' . html_writer::tag('details',
+                    html_writer::tag('summary', get_string('refund:action', 'local_oriskill'), ['class' => 'btn btn-sm btn-link']) .
+                    html_writer::tag('form',
+                        html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]) .
+                        html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'refund']) .
+                        html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'invoiceid', 'value' => $document->id]) .
+                        html_writer::tag('label', get_string('credit:amount', 'local_oriskill'), ['class' => 'form-label small']) .
+                        html_writer::empty_tag('input', ['type' => 'text', 'name' => 'amount', 'inputmode' => 'decimal',
+                            'class' => 'form-control form-control-sm mb-1', 'value' => format_float($refundable, 2, true)]) .
+                        html_writer::tag('label', get_string('credit:reason', 'local_oriskill'), ['class' => 'form-label small']) .
+                        html_writer::empty_tag('input', ['type' => 'text', 'name' => 'reason', 'maxlength' => 200,
+                            'class' => 'form-control form-control-sm mb-2']) .
+                        html_writer::div(get_string('refund:help', 'local_oriskill'), 'small text-muted mb-2') .
+                        html_writer::tag('button', get_string('refund:confirm', 'local_oriskill'),
+                            ['type' => 'submit', 'class' => 'btn btn-sm btn-primary']),
+                        ['method' => 'post', 'action' => $url->out(false), 'class' => 'mt-2', 'style' => 'max-width: 18rem',
+                         'onsubmit' => 'return confirm(' . json_encode(get_string('refund:confirmtext', 'local_oriskill')) . ')']),
+                    ['class' => 'd-inline-block']);
+            }
+            foreach (refund_service::requests($order) as $request) {
+                $actions .= html_writer::div(get_string('refund:status_' . $request->status, 'local_oriskill',
+                    pricing_service::format_price((float) $request->amount, $request->currency)) .
+                    ($request->status === 'refused' ? ' (' . s($request->answer) . ')' : ''), 'small text-muted w-100');
+            }
+        }
         $table->data[] = [
             html_writer::span($document->number, 'fw-semibold') . ' ' .
                 html_writer::span(get_string($iscredit ? 'credit:title' : 'invoice:title', 'local_oriskill'),
                     'oriskill-badge ' . ($iscredit ? 'is-warn' : '')) .
                 ($iscredit && $data['parentnumber'] ? html_writer::div(get_string('credit:ofinvoiceshort', 'local_oriskill',
-                    $data['parentnumber']), 'small text-muted') : ''),
-            userdate($document->timecreated, get_string('strftimedatetimeshort', 'langconfig')),
+                    $data['parentnumber']), 'small text-muted') : '') .
+                html_writer::div(userdate($document->timecreated, get_string('strftimedatetimeshort', 'langconfig')),
+                    'small text-muted'),
             s($data['buyer']['name']) . html_writer::div(s($data['buyer']['email']), 'small text-muted'),
             s($data['ordernumber']),
             ($iscredit ? '-' : '') . pricing_service::format_price((float) $document->total, $document->currency),
-            $actions,
+            html_writer::div($actions, 'd-flex flex-wrap align-items-start gap-1'),
         ];
     }
     echo html_writer::table($table);

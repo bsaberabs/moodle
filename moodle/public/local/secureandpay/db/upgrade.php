@@ -48,5 +48,14 @@ function xmldb_local_secureandpay_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026102901, 'local', 'secureandpay');
     }
+
+    if ($oldversion < 2026102906) {
+        // Refunds asked of SecureAndPay from the site.
+        $dbman = $DB->get_manager();
+        if (!$dbman->table_exists('local_secureandpay_refunds')) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', 'local_secureandpay_refunds');
+        }
+        upgrade_plugin_savepoint(true, 2026102906, 'local', 'secureandpay');
+    }
     return true;
 }
