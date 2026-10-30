@@ -31,6 +31,13 @@ $url = new moodle_url('/local/oriskill/orderforms.php');
 $creator = creator_service::require_current_creator($url, 'menu:orderforms');
 $newurl = new moodle_url('/local/oriskill/orderform.php');
 
+if (optional_param('action', '', PARAM_ALPHA) === 'duplicate' && confirm_sesskey()) {
+    $copy = orderform_service::duplicate($creator, required_param('id', PARAM_INT));
+    \local_oriskill\log_service::add($creator, 'orderform_duplicated', ['title' => $copy->title]);
+    redirect(new moodle_url('/local/oriskill/orderform.php', ['id' => $copy->id]),
+        get_string('orderform:duplicated', 'local_oriskill'), null, \core\output\notification::NOTIFY_SUCCESS);
+}
+
 echo $OUTPUT->header();
 echo creator_service::space_start($creator, '/local/oriskill/orderforms.php', get_string('menu:orderforms', 'local_oriskill'));
 echo html_writer::div(
@@ -73,7 +80,15 @@ if (!$forms) {
             html_writer::link(new moodle_url('/local/oriskill/abandons.php', ['id' => $form->id]),
                 get_string('abandon:title', 'local_oriskill'), ['class' => 'btn btn-sm btn-outline-secondary']) . ' ' .
             html_writer::link(new moodle_url('/local/oriskill/orderform.php', ['id' => $form->id]),
-                get_string('edit'), ['class' => 'btn btn-sm btn-outline-secondary']),
+                get_string('edit'), ['class' => 'btn btn-sm btn-outline-secondary']) . ' ' .
+            html_writer::tag('form',
+                html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]) .
+                html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'duplicate']) .
+                html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'id', 'value' => $form->id]) .
+                html_writer::tag('button', get_string('orderform:duplicate', 'local_oriskill'),
+                    ['type' => 'submit', 'class' => 'btn btn-sm btn-outline-secondary',
+                     'title' => get_string('orderform:duplicate_help', 'local_oriskill')]),
+                ['method' => 'post', 'action' => $url->out(false), 'class' => 'd-inline']),
         ];
     }
     echo html_writer::div(html_writer::table($table), 'oriskill-card');

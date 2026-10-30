@@ -156,6 +156,43 @@ class orderform_service {
     }
 
     /**
+     * Copy a form (a backup form for the same offers, or a variant): same content, offers, image and reminders,
+     * as a draft under a free address. Its statistics and prospects start from zero.
+     *
+     * @param \stdClass $creator Trainer.
+     * @param int $id Form to copy.
+     * @return \stdClass The copy.
+     */
+    public static function duplicate(\stdClass $creator, int $id): \stdClass {
+        global $DB;
+
+        $form = $DB->get_record('local_oriskill_orderforms', ['id' => $id, 'creatorid' => $creator->id], '*', MUST_EXIST);
+        $base = \core_text::substr(preg_replace('/-copie(-\d+)?$/', '', $form->slug), 0, 50) . '-copie';
+        $slug = $base;
+        for ($n = 2; self::slug_error($slug, $creator, 0) !== null; $n++) {
+            $slug = $base . '-' . $n;
+        }
+        $copy = clone $form;
+        unset($copy->id);
+        $copy->slug = $slug;
+        $copy->title = \core_text::substr(get_string('orderform:copyof', 'local_oriskill', $form->title), 0, 255);
+        $copy->status = 'draft';
+        $copy->timecreated = $copy->timemodified = time();
+        $copy->id = $DB->insert_record('local_oriskill_orderforms', $copy);
+        foreach (self::offers($form) as $offer) {
+            unset($offer->id);
+            $offer->formid = $copy->id;
+            $DB->insert_record('local_oriskill_formoffers', $offer);
+        }
+        $context = \context_system::instance();
+        $fs = get_file_storage();
+        foreach ($fs->get_area_files($context->id, 'local_oriskill', 'orderform', $form->id, 'id', false) as $file) {
+            $fs->create_file_from_storedfile(['itemid' => $copy->id], $file);
+        }
+        return $copy;
+    }
+
+    /**
      * Published order form a visitor asked for: by id, or by the trainer's own domain and the form's address.
      *
      * @param int $id Form id (0 when found by domain).
