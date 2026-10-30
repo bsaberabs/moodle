@@ -125,15 +125,9 @@ class creator_form extends \moodleform {
             self::BANNER_OPTIONS);
         $mform->addHelpButton('banner_filemanager', 'field:banner', 'local_oriskill');
 
-        $mform->addElement('text', 'customdomain', get_string('field:customdomain', 'local_oriskill'),
-            ['size' => 40, 'placeholder' => 'www.mon-academie.com']);
-        $mform->setType('customdomain', PARAM_RAW_TRIMMED);
-        $mform->addHelpButton('customdomain', 'field:customdomain', 'local_oriskill');
-        if (!empty($creator->customdomain)) {
-            $ready = creator_service::domain_points_here($creator->customdomain);
-            $mform->addElement('static', 'domainstatus', '', get_string($ready ? 'domainready' : 'domainnotready',
-                'local_oriskill', (object) ['domain' => s($creator->customdomain), 'ip' => creator_service::SERVER_IPV4]));
-        }
+        $mform->addElement('static', 'domainslink', get_string('field:customdomain', 'local_oriskill'),
+            \html_writer::link(new \moodle_url('/local/oriskill/domains.php'), get_string('domains:manage', 'local_oriskill')) .
+            (!empty($creator->customdomain) ? ' · ' . s($creator->customdomain) : ''));
     }
 
     public function validation($data, $files) {
@@ -149,14 +143,6 @@ class creator_form extends \moodleform {
         foreach (['primarycolor', 'accentcolor'] as $field) {
             if (creator_service::valid_color((string) ($data[$field] ?? '')) === null) {
                 $errors[$field] = get_string('error:color', 'local_oriskill');
-            }
-        }
-        $domain = trim((string) ($data['customdomain'] ?? ''));
-        if ($domain !== '') {
-            $normalised = creator_service::normalise_domain($domain);
-            $error = $normalised ? creator_service::domain_error($normalised, (int) $creator->id) : 'error:domainshape';
-            if ($error) {
-                $errors['customdomain'] = get_string($error, 'local_oriskill');
             }
         }
         return $errors;

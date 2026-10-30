@@ -80,6 +80,7 @@ class team_service {
         '/local/oriskill/apply.php' => ['admin'],
         '/local/oriskill/team.php' => ['admin'],
         '/local/oriskill/integrations.php' => ['admin'],
+        '/local/oriskill/domains.php' => ['admin'],
         '/local/oriskill/webhooks.php' => ['admin'],
         '/local/oriskill/log.php' => ['admin'],
     ];

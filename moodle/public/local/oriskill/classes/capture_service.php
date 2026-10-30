@@ -78,6 +78,7 @@ class capture_service {
             'redirectformid' => in_array((int) $data->redirectformid, $formids, true) ? (int) $data->redirectformid : null,
             'actags' => activecampaign_service::clean_tags((string) $data->actags),
             'status' => $data->status === 'published' ? 'published' : 'draft',
+            'domainid' => isset(domain_service::domains($creator)[(int) ($data->domainid ?? 0)]) ? (int) $data->domainid : 0,
             'timemodified' => $now,
         ];
         if (!empty($data->id)) {
@@ -140,8 +141,8 @@ class capture_service {
      * @return moodle_url
      */
     public static function url(\stdClass $page, \stdClass $creator): moodle_url {
-        if (!empty($creator->customdomain)) {
-            return new moodle_url('https://' . $creator->customdomain . '/p/' . $page->slug);
+        if ($host = domain_service::host($creator, (int) ($page->domainid ?? 0))) {
+            return new moodle_url('https://' . $host . '/p/' . $page->slug);
         }
         return new moodle_url('/local/oriskill/capture.php', ['id' => $page->id]);
     }

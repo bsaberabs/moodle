@@ -112,6 +112,7 @@ class orderform_service {
                 $own)),
             'upsellprice' => round(max(0, (float) ($data->upsellprice ?? 0)), 2),
             'status' => $data->status === 'published' ? 'published' : 'draft',
+            'domainid' => isset(domain_service::domains($creator)[(int) ($data->domainid ?? 0)]) ? (int) $data->domainid : 0,
             'timemodified' => $now,
         ];
         if (!empty($data->id)) {
@@ -310,8 +311,8 @@ class orderform_service {
      * @return moodle_url
      */
     public static function url(\stdClass $form, \stdClass $creator): moodle_url {
-        if (!empty($creator->customdomain)) {
-            return new moodle_url('https://' . $creator->customdomain . '/bdc/' . $form->slug);
+        if ($host = domain_service::host($creator, (int) ($form->domainid ?? 0))) {
+            return new moodle_url('https://' . $host . '/bdc/' . $form->slug);
         }
         return new moodle_url('/local/oriskill/order.php', ['id' => $form->id]);
     }

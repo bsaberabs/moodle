@@ -241,6 +241,7 @@ class creator_service {
             '/local/oriskill/payment.php' => ['paymentsettings', 'bi-wallet2'],
             '/local/oriskill/apply.php' => ['menu:profile', 'bi-shop'],
             '/local/oriskill/team.php' => ['menu:team', 'bi-person-badge'],
+            '/local/oriskill/domains.php' => ['menu:domains', 'bi-globe'],
             '/local/oriskill/integrations.php' => ['menu:integrations', 'bi-plug'],
             '/local/oriskill/log.php' => ['menu:log', 'bi-journal-text'],
         ],
@@ -412,8 +413,8 @@ class creator_service {
      * @return moodle_url
      */
     public static function course_page_url(\stdClass $creator, int $courseid): moodle_url {
-        if (!empty($creator->customdomain)) {
-            return new moodle_url('https://' . $creator->customdomain . '/formation/' . $courseid);
+        if ($host = domain_service::host($creator, domain_service::course_domainid($courseid))) {
+            return new moodle_url('https://' . $host . '/formation/' . $courseid);
         }
         return new moodle_url('/local/oriskill/coursepage.php', ['id' => $courseid]);
     }
@@ -574,7 +575,7 @@ class creator_service {
         if ($domain === $site || str_ends_with($domain, '.' . $site)) {
             return 'error:domainsite';
         }
-        if ($DB->record_exists_select(self::TABLE, 'customdomain = ? AND id <> ?', [$domain, $creatorid])) {
+        if ($DB->record_exists_select('local_oriskill_domains', 'domain = ? AND creatorid <> ?', [$domain, $creatorid])) {
             return 'error:domaintaken';
         }
         return null;
@@ -589,8 +590,8 @@ class creator_service {
     public static function creator_by_domain(string $domain): ?\stdClass {
         global $DB;
 
-        $domain = self::normalise_domain($domain);
-        return $domain ? ($DB->get_record(self::TABLE, ['customdomain' => $domain, 'status' => 'active']) ?: null) : null;
+        // Any of the trainer's domains (primary or secondary).
+        return domain_service::creator_by_domain($domain);
     }
 
     /** Public address of the Oriskill server, which a trainer's domain must point to. */

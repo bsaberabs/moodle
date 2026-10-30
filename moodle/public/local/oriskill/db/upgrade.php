@@ -435,5 +435,27 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103043, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103044) {
+        // Several domains per trainer: the domain each had becomes their primary domain.
+        foreach (['local_oriskill_domains', 'local_oriskill_coursedomains'] as $name) {
+            if (!$dbman->table_exists($name)) {
+                $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', $name);
+            }
+        }
+        foreach (['local_oriskill_orderforms', 'local_oriskill_capturepages'] as $tablename) {
+            $table = new xmldb_table($tablename);
+            $field = new xmldb_field('domainid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'status');
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+        foreach ($DB->get_records_select('local_oriskill_creators', "customdomain IS NOT NULL AND customdomain <> ''") as $c) {
+            if (!$DB->record_exists('local_oriskill_domains', ['domain' => $c->customdomain])) {
+                $DB->insert_record('local_oriskill_domains', (object) ['creatorid' => $c->id, 'domain' => $c->customdomain,
+                    'isprimary' => 1, 'status' => 'pending', 'lastcheck' => 0, 'timeactive' => 0, 'timecreated' => time()]);
+            }
+        }
+        upgrade_plugin_savepoint(true, 2026103044, 'local', 'oriskill');
+    }
     return true;
 }

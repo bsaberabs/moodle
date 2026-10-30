@@ -87,6 +87,16 @@ class capturepage_form extends \moodleform {
             'published' => get_string('orderform:published', 'local_oriskill'),
         ]);
 
+        // Domain of the page, when the trainer has several.
+        $domains = \local_oriskill\domain_service::options($this->_customdata['creator']);
+        if (count($domains) > 1) {
+            $mform->addElement('select', 'domainid', get_string('domains:pagedomain', 'local_oriskill'), $domains);
+            $mform->addHelpButton('domainid', 'domains:pagedomain', 'local_oriskill');
+        } else {
+            $mform->addElement('hidden', 'domainid', 0);
+        }
+        $mform->setType('domainid', PARAM_INT);
+
         $this->add_action_buttons(true, get_string('savechanges'));
     }
 

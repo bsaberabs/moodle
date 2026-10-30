@@ -61,6 +61,7 @@ if ($form) {
         'thankyou' => $form->thankyou,
         'termsrequired' => $form->termsrequired,
         'status' => $form->status,
+        'domainid' => (int) ($form->domainid ?? 0),
         'bumplabel' => $form->bumplabel,
         'bumptext' => $form->bumptext,
         'bumpcourseids' => array_filter(array_map('intval', explode(',', (string) $form->bumpcourseids))),

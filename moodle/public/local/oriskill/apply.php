@@ -86,7 +86,6 @@ if ($creator) {
         'accentcolor' => $style['accent'],
         'fontstyle' => $creator->fontstyle ?: 'modern',
         'banner_filemanager' => $bannerdraft,
-        'customdomain' => $creator->customdomain,
     ]);
 } else {
     $form->set_data(['logo_filemanager' => $draftitemid]);
@@ -103,7 +102,6 @@ if ($data = $form->get_data()) {
             'primarycolor' => creator_service::valid_color($data->primarycolor),
             'accentcolor' => creator_service::valid_color($data->accentcolor),
             'fontstyle' => isset(creator_service::FONTS[$data->fontstyle]) ? $data->fontstyle : 'modern',
-            'customdomain' => creator_service::normalise_domain((string) $data->customdomain),
             'timemodified' => time(),
         ]);
         $creatorid = (int) $creator->id;

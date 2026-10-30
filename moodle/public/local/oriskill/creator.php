@@ -57,7 +57,7 @@ $url = creator_service::showcase_url($creator);
 $PAGE->set_url($url);
 $name = format_string($creator->displayname);
 $PAGE->set_title(get_string('showcasetitle', 'local_oriskill', $name), false);
-$canonical = $domain !== '' ? 'https://' . $creator->customdomain . '/' : $url->out(false);
+$canonical = $domain !== '' ? 'https://' . creator_service::normalise_domain($domain) . '/' : $url->out(false);
 $logo = creator_service::logo_url($creator);
 hook_callbacks::$headmeta = ['description' => $creator->tagline ?: $name, 'canonical' => $canonical,
     'icon' => $logo ? $logo->out(false) : ''];

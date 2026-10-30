@@ -42,7 +42,7 @@ $creator = $course ? seller_service::owner_of_course((int) $course->id) : null;
 $price = $course ? price_resolver::resolve_for_course((int) $course->id, 1, true) : null;
 // Only a course of an active trainer, on sale, and on that trainer's own domain when reached through one.
 if (!$creator || $creator->status !== 'active' || !$price
-        || ($domain !== '' && core_text::strtolower((string) $creator->customdomain) !== core_text::strtolower($domain))) {
+        || ($domain !== '' && !\local_oriskill\domain_service::belongs($creator, $domain))) {
     $PAGE->set_pagelayout('standard');
     $PAGE->set_url(new moodle_url('/local/oriskill/coursepage.php', ['id' => $id]));
     send_header_404();
