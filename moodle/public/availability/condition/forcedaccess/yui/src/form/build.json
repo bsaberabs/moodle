@@ -1,0 +1,10 @@
+{
+  "name": "moodle-availability_forcedaccess-form",
+  "builds": {
+    "moodle-availability_forcedaccess-form": {
+      "jsfiles": [
+        "form.js"
+      ]
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "moodle-availability_forcedaccess-form": {
+    "requires": [
+        "base",
+        "node",
+        "moodle-core_availability-form"
+    ]
+  }
+}

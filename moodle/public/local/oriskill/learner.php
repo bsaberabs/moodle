@@ -39,7 +39,57 @@ if (!$learner || ($mine !== null && !in_array($userid, $mine, true))) {
     throw new moodle_exception('invaliduserid');
 }
 $backurl = new moodle_url('/local/oriskill/learners.php', ['courseid' => $course->id]);
+$url = new moodle_url('/local/oriskill/learner.php', ['courseid' => $course->id, 'userid' => $userid]);
 $dateformat = get_string('strftimedate', 'langconfig');
+$canchange = \local_oriskill\team_service::can_change(creator_service::current_role(), '/local/oriskill/learners.php');
+
+if (($action = optional_param('action', '', PARAM_ALPHA)) && confirm_sesskey()) {
+    if (!$canchange) {
+        throw new moodle_exception('error:notallowed', 'local_oriskill');
+    }
+    $message = get_string('changessaved');
+    $type = \core\output\notification::NOTIFY_SUCCESS;
+    $details = [];
+    try {
+        switch ($action) {
+            case 'forcemodules':
+                $before = \availability_forcedaccess\condition::opened_sections((int) $course->id, $userid);
+                learning_service::set_forced_modules($course, $userid, optional_param_array('sectionids', [], PARAM_INT));
+                $after = \availability_forcedaccess\condition::opened_sections((int) $course->id, $userid);
+                if ($before == $after) {
+                    redirect($url);
+                }
+                $names = [];
+                foreach (learning_service::section_rules($course) as $rule) {
+                    if (in_array((int) $rule->section->id, $after)) {
+                        $names[] = $rule->name;
+                    }
+                }
+                $details['modules'] = $names ? implode(', ', $names) : get_string('none');
+                break;
+            case 'setstart':
+                $value = optional_param('timestart', '', PARAM_RAW_TRIMMED);
+                $start = preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $value, $m) ? make_timestamp($m[1], $m[2], $m[3]) : 0;
+                learning_service::set_timestart($course, $userid, $start);
+                $details['date'] = userdate($start, $dateformat);
+                break;
+            case 'resetprogress':
+                learning_service::reset_progress($course, $userid);
+                $message = get_string('learner:progressreset', 'local_oriskill');
+                break;
+            default:
+                throw new moodle_exception('invalidparameter', 'debug');
+        }
+        \local_oriskill\log_service::add($creator, 'learner_' . $action, $details, (int) $course->id, $userid);
+    } catch (moodle_exception $e) {
+        $message = $e->getMessage();
+        $type = \core\output\notification::NOTIFY_ERROR;
+    }
+    redirect($url, $message, null, $type);
+}
+$hidden = fn(string $action) =>
+    html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]) .
+    html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => $action]);
 $instalments = \local_oriskill\instalment_service::course_records((int) $course->id);
 
 echo $OUTPUT->header();
@@ -65,7 +115,13 @@ $summary = html_writer::div(
     'd-flex gap-3 align-items-center mb-3');
 $facts = '';
 foreach ([
-    [get_string('learner:since', 'local_oriskill'), userdate($learner->timestart, $dateformat)],
+    [get_string('learner:since', 'local_oriskill'), !$canchange ? userdate($learner->timestart, $dateformat) :
+        html_writer::tag('form', $hidden('setstart') .
+            html_writer::empty_tag('input', ['type' => 'date', 'name' => 'timestart', 'required' => 'required',
+                'class' => 'form-control form-control-sm', 'value' => userdate($learner->timestart, '%Y-%m-%d', 99, false),
+                'aria-label' => get_string('learner:since', 'local_oriskill'), 'onchange' => 'this.form.submit()',
+                'title' => get_string('learner:since_help', 'local_oriskill')]),
+            ['method' => 'post', 'action' => $url->out(false)])],
     [get_string('learner:until', 'local_oriskill'), $learner->timeend ? userdate($learner->timeend, $dateformat)
         : get_string('learner:unlimited', 'local_oriskill')],
     [get_string('learner:progress', 'local_oriskill'), $learner->progress === null ? '–' : round($learner->progress) . ' %'],
@@ -73,13 +129,20 @@ foreach ([
     [get_string('learner:lastaccess', 'local_oriskill'), $learner->lastaccess ? userdate($learner->lastaccess) : get_string('never')],
     [get_string('learner:completed', 'local_oriskill'), $learner->completed ? userdate($learner->completed, $dateformat) : '–'],
 ] as [$label, $value]) {
-    $facts .= html_writer::div(html_writer::div($label, 'oriskill-stat-label') . html_writer::div(s($value), 'fw-semibold'));
+    $facts .= html_writer::div(html_writer::div($label, 'oriskill-stat-label') .
+        html_writer::div(str_starts_with($value, '<form') ? $value : s($value), 'fw-semibold'));
 }
 if (isset($instalments[$userid])) {
     $facts .= html_writer::div(html_writer::div(get_string('learner:payment', 'local_oriskill'), 'oriskill-stat-label') .
         html_writer::div(\local_oriskill\instalment_service::status_badge($instalments[$userid])));
 }
-echo html_writer::div($summary . html_writer::div($facts, 'oriskill-facts'), 'oriskill-card mb-4');
+$reset = !$canchange ? '' : html_writer::tag('form', $hidden('resetprogress') .
+    html_writer::tag('button', '<i class="fa fa-rotate-left me-1" aria-hidden="true"></i>' .
+        get_string('learner:resetprogress', 'local_oriskill'), ['type' => 'submit', 'class' => 'btn btn-sm btn-outline-danger']),
+    ['method' => 'post', 'action' => $url->out(false), 'class' => 'mt-3',
+     'onsubmit' => 'return confirm(' . json_encode(get_string('learner:resetprogress_confirm', 'local_oriskill',
+         fullname($learner))) . ')']);
+echo html_writer::div($summary . html_writer::div($facts, 'oriskill-facts') . $reset, 'oriskill-card mb-4');
 
 // Modules.
 $states = [
@@ -87,7 +150,23 @@ $states = [
     'failed' => ['fa-circle-xmark text-danger', 'state:failed'],
     'todo' => ['fa-circle text-muted', 'state:todo'],
 ];
-foreach (learning_service::learner_progress($course, $userid) as $module) {
+$modules = learning_service::learner_progress($course, $userid);
+$forceable = array_filter($modules, fn($m) => $m->restricted || $m->forced);
+if ($canchange && $forceable) {
+    echo html_writer::start_tag('form', ['method' => 'post', 'action' => $url->out(false), 'id' => 'oriskill-forcemodules']) .
+        $hidden('forcemodules');
+    echo html_writer::div(
+        html_writer::div(get_string('learner:forcemodules_help', 'local_oriskill'), 'small text-muted') .
+        html_writer::div(
+            html_writer::tag('button', get_string('selectall'), ['type' => 'button', 'class' => 'btn btn-sm btn-outline-secondary',
+                'onclick' => "document.querySelectorAll('#oriskill-forcemodules input[name=\"sectionids[]\"]')" .
+                    ".forEach(c => c.checked = true)"]) .
+            html_writer::tag('button', get_string('learner:forcemodules_save', 'local_oriskill'),
+                ['type' => 'submit', 'class' => 'btn btn-sm btn-primary']),
+            'd-flex gap-2 flex-shrink-0'),
+        'oriskill-card mb-3 d-flex flex-wrap justify-content-between align-items-center gap-2');
+}
+foreach ($modules as $module) {
     $rows = '';
     foreach ($module->activities as $activity) {
         $state = $activity->state ? $states[$activity->state] : null;
@@ -101,17 +180,30 @@ foreach (learning_service::learner_progress($course, $userid) as $module) {
                 ($state ? get_string($state[1], 'local_oriskill') : get_string('state:notracking', 'local_oriskill')),
                 'small text-muted text-nowrap'));
     }
-    $lock = $module->available
-        ? html_writer::span('<i class="fa fa-lock-open me-1" aria-hidden="true"></i>' .
-            get_string('module:open', 'local_oriskill'), 'oriskill-badge is-good')
-        : html_writer::span('<i class="fa fa-lock me-1" aria-hidden="true"></i>' .
-            get_string('module:locked', 'local_oriskill'), 'oriskill-badge is-warn');
+    $lock = $module->forced
+        ? html_writer::span('<i class="fa fa-key me-1" aria-hidden="true"></i>' .
+            get_string('module:forced', 'local_oriskill'), 'oriskill-badge is-good')
+        : ($module->available
+            ? html_writer::span('<i class="fa fa-lock-open me-1" aria-hidden="true"></i>' .
+                get_string('module:open', 'local_oriskill'), 'oriskill-badge is-good')
+            : html_writer::span('<i class="fa fa-lock me-1" aria-hidden="true"></i>' .
+                get_string('module:locked', 'local_oriskill'), 'oriskill-badge is-warn'));
+    if ($canchange && ($module->restricted || $module->forced)) {
+        $lock = html_writer::div($lock . html_writer::tag('label',
+            html_writer::empty_tag('input', ['type' => 'checkbox', 'name' => 'sectionids[]', 'value' => $module->sectionid,
+                'class' => 'form-check-input me-1'] + ($module->forced ? ['checked' => 'checked'] : [])) .
+            get_string('learner:forceaccess', 'local_oriskill'), ['class' => 'small text-nowrap mb-0']),
+            'd-flex align-items-center gap-2');
+    }
     echo html_writer::div(
         html_writer::div(html_writer::tag('h3', s($module->name), ['class' => 'mb-0']) . $lock,
             'd-flex justify-content-between align-items-center gap-2 mb-2') .
-        ($module->availableinfo ? html_writer::div($module->availableinfo, 'small text-muted mb-2') : '') .
+        ($module->availableinfo && !$module->forced ? html_writer::div($module->availableinfo, 'small text-muted mb-2') : '') .
         ($rows ? html_writer::tag('ul', $rows, ['class' => 'oriskill-rows']) : ''),
         'oriskill-card mb-3');
+}
+if ($canchange && $forceable) {
+    echo html_writer::end_tag('form');
 }
 
 echo creator_service::space_end();

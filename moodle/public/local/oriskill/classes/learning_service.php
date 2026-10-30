@@ -17,6 +17,7 @@
 namespace local_oriskill;
 
 use availability_enroldays\condition as enroldays;
+use availability_forcedaccess\condition as forcedaccess;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -223,6 +224,55 @@ class learning_service {
     }
 
     /**
+     * Change the start of a learner's access (all their enrolments in the course); modules released J+X follow it.
+     *
+     * @param \stdClass $course Course.
+     * @param int $userid Learner.
+     * @param int $timestart Start of access.
+     */
+    public static function set_timestart(\stdClass $course, int $userid, int $timestart): void {
+        if ($timestart <= 0) {
+            throw new \moodle_exception('invalidparameter', 'debug');
+        }
+        foreach (self::user_enrolments($course, $userid) as [$plugin, $instance]) {
+            $plugin->update_user_enrol($instance, $userid, null, $timestart);
+        }
+        enroldays::reset_cache();
+    }
+
+    /**
+     * Start again from scratch: forget which activities the learner completed, and the course completion.
+     * Grades and attempts stay; modules opened by "previous module completed" lock again.
+     *
+     * @param \stdClass $course Course.
+     * @param int $userid Learner.
+     */
+    public static function reset_progress(\stdClass $course, int $userid): void {
+        global $DB;
+
+        $incourse = 'coursemoduleid IN (SELECT id FROM {course_modules} WHERE course = ?) AND userid = ?';
+        $DB->delete_records_select('course_modules_completion', $incourse, [$course->id, $userid]);
+        $DB->delete_records_select('course_modules_viewed', $incourse, [$course->id, $userid]);
+        $DB->delete_records('course_completion_crit_compl', ['course' => $course->id, 'userid' => $userid]);
+        $DB->delete_records('course_completions', ['course' => $course->id, 'userid' => $userid]);
+        \cache::make('core', 'completion')->delete($userid . '_' . $course->id);
+        \cache::make('core', 'coursecompletion')->delete($userid . '_' . $course->id);
+        \cache::make_from_params(\cache_store::MODE_REQUEST, 'core', 'course_progress')->purge();
+    }
+
+    /**
+     * Open modules to a learner whatever their release rules and groups; the other modules follow their rules again.
+     *
+     * @param \stdClass $course Course.
+     * @param int $userid Learner.
+     * @param int[] $sectionids Modules (sections) to open.
+     */
+    public static function set_forced_modules(\stdClass $course, int $userid, array $sectionids): void {
+        $valid = array_map(fn($rule) => (int) $rule->section->id, self::section_rules($course));
+        forcedaccess::set_opened_sections($course, $userid, array_intersect(array_map('intval', $sectionids), $valid));
+    }
+
+    /**
      * Remove an access offered by the trainer. A purchased access can only be suspended.
      *
      * @param \stdClass $course Course.
@@ -392,6 +442,8 @@ class learning_service {
      */
     public static function set_section_rule(\stdClass $course, int $sectionnum, string $timing, int $date, int $days,
             array $groupids): void {
+        global $DB;
+
         if ($sectionnum < 1 || !in_array($timing, self::TIMINGS)) {
             throw new \moodle_exception('invalidparameter', 'debug');
         }
@@ -422,6 +474,10 @@ class learning_service {
         }
         $json = $conditions ? json_encode(\core_availability\tree::get_root_json($conditions,
             \core_availability\tree::OP_AND, true)) : null;
+        // Learners the module was opened to keep it.
+        if ($DB->record_exists('availability_forcedaccess', ['sectionid' => $section->id])) {
+            $json = forcedaccess::wrap($json);
+        }
         course_update_section($course, $section, ['availability' => $json]);
     }
 
@@ -438,6 +494,8 @@ class learning_service {
         if (!$tree || empty($tree->c)) {
             return $rule;
         }
+        // Modules opened to some learners: the rule is what applies to the others.
+        $tree = forcedaccess::unwrap($tree);
         if (($tree->op ?? '&') !== '&') {
             $rule->custom = true;
             return $rule;
@@ -503,10 +561,12 @@ class learning_service {
      *
      * @param \stdClass $course Course.
      * @param int $userid Learner.
-     * @return array of objects {name, available, availableinfo, activities: [{name, url, icon, state, grade}]}
+     * @return array of objects {sectionid, name, available, availableinfo, restricted, forced,
+     *     activities: [{name, url, icon, state, grade}]}
      */
     public static function learner_progress(\stdClass $course, int $userid): array {
         $modinfo = get_fast_modinfo($course, $userid);
+        $forced = forcedaccess::opened_sections((int) $course->id, $userid);
         $completion = new \completion_info($course);
         $result = [];
         foreach ($modinfo->get_section_info_all() as $num => $section) {
@@ -537,6 +597,9 @@ class learning_service {
                     'state' => $state, 'grade' => $grade];
             }
             $result[] = (object) [
+                'sectionid' => (int) $section->id,
+                'restricted' => $num > 0 && !empty($section->availability),
+                'forced' => in_array((int) $section->id, $forced),
                 'name' => get_section_name($course, $section),
                 'available' => (bool) $section->available,
                 'availableinfo' => $section->available ? '' :
