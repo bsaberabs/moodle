@@ -303,5 +303,12 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103028, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103029) {
+        // Quotes in the trainer's name.
+        if (!$dbman->table_exists('local_oriskill_quotes')) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', 'local_oriskill_quotes');
+        }
+        upgrade_plugin_savepoint(true, 2026103029, 'local', 'oriskill');
+    }
     return true;
 }

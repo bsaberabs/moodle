@@ -28,6 +28,7 @@ use local_moderncommerce\services\pricing_service;
 use local_oriskill\billing_service;
 use local_oriskill\creator_service;
 use local_oriskill\form\billing_form;
+use local_oriskill\team_service;
 use local_secureandpay\refund_service;
 
 $search = trim(optional_param('q', '', PARAM_TEXT));
@@ -53,6 +54,30 @@ if (($export = optional_param('export', '', PARAM_ALPHA)) !== '') {
     csv_export_writer::download_array(clean_filename(get_string('menu:invoices', 'local_oriskill') . '-' . date('Y-m-d')),
         billing_service::journal($creator, 0, time() + 1), 'semicolon');
     exit;
+}
+
+// Quotes: turn into an invoice once paid, cancel, send.
+if (in_array($action = optional_param('action', '', PARAM_ALPHA), ['quoteinvoice', 'quotecancel', 'quotemail'], true)
+        && confirm_sesskey()) {
+    $quote = $DB->get_record('local_oriskill_quotes', ['id' => required_param('quoteid', PARAM_INT),
+        'creatorid' => $creator->id], '*', MUST_EXIST);
+    $quote->type = 'quote';
+    if (!team_service::can(creator_service::current_role(), '/local/oriskill/document.php')) {
+        throw new moodle_exception('error:notallowed', 'local_oriskill');
+    }
+    if ($action === 'quoteinvoice') {
+        $invoice = billing_service::invoice_quote($quote, required_param('method', PARAM_ALPHA));
+        $message = get_string('quote:invoiced', 'local_oriskill', (object) ['quote' => $quote->number,
+            'invoice' => $invoice->number]);
+    } else if ($action === 'quotecancel') {
+        billing_service::cancel_quote($quote);
+        $message = get_string('quote:cancelled', 'local_oriskill', $quote->number);
+    } else {
+        $sent = billing_service::mail_invoice($quote, true);
+        redirect($url, get_string($sent ? 'invoicemail:sent' : 'invoicemail:notsent', 'local_oriskill', $quote->number), null,
+            $sent ? \core\output\notification::NOTIFY_SUCCESS : \core\output\notification::NOTIFY_ERROR);
+    }
+    redirect($url, $message, null, \core\output\notification::NOTIFY_SUCCESS);
 }
 
 // E-mail a document to its buyer again, PDF attached.
@@ -119,6 +144,17 @@ if ($data = $form->get_data()) {
 echo $OUTPUT->header();
 echo creator_service::space_start($creator, '/local/oriskill/invoices.php', get_string('menu:invoices', 'local_oriskill'));
 echo html_writer::tag('p', get_string('invoices:intro', 'local_oriskill'));
+$canissue = team_service::can(creator_service::current_role(), '/local/oriskill/document.php');
+if ($canissue) {
+    echo html_writer::div(
+        html_writer::link(new moodle_url('/local/oriskill/document.php', ['type' => 'invoice']),
+            '<i class="fa fa-plus me-1" aria-hidden="true"></i>' . get_string('document:new_invoice', 'local_oriskill'),
+            ['class' => 'btn btn-primary']) .
+        html_writer::link(new moodle_url('/local/oriskill/document.php', ['type' => 'quote']),
+            '<i class="fa fa-file-signature me-1" aria-hidden="true"></i>' . get_string('document:new_quote', 'local_oriskill'),
+            ['class' => 'btn btn-outline-primary']),
+        'd-flex flex-wrap gap-2 mb-3');
+}
 
 // Documents, found by number or buyer.
 $documents = billing_service::documents($creator);
@@ -252,7 +288,8 @@ if (!$documents) {
                 html_writer::div(userdate($document->timecreated, get_string('strftimedatetimeshort', 'langconfig')),
                     'small text-muted'),
             s($data['buyer']['name']) . html_writer::div(s($data['buyer']['email']), 'small text-muted'),
-            s($data['ordernumber']),
+            $data['ordernumber'] !== '' ? s($data['ordernumber'])
+                : html_writer::span(get_string('document:manual', 'local_oriskill'), 'small text-muted'),
             ($iscredit ? '-' : '') . pricing_service::format_price((float) $document->total, $document->currency),
             html_writer::div($actions, 'd-flex flex-wrap align-items-start gap-1'),
         ];
@@ -260,6 +297,66 @@ if (!$documents) {
     echo html_writer::table($table);
 }
 echo html_writer::end_div();
+
+// Quotes.
+$quotes = billing_service::quotes($creator);
+if ($quotes) {
+    $post = function(stdClass $quote, string $action, string $content, string $confirm = '') use ($url) {
+        return html_writer::tag('form',
+            html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]) .
+            html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => $action]) .
+            html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'quoteid', 'value' => $quote->id]) . $content,
+            ['method' => 'post', 'action' => $url->out(false), 'class' => 'd-inline'] +
+            ($confirm !== '' ? ['onsubmit' => 'return confirm(' . json_encode($confirm) . ')'] : []));
+    };
+    $methods = [];
+    foreach (billing_service::METHODS as $method) {
+        $methods[$method] = get_string('invoice:method_' . $method, 'local_oriskill');
+    }
+    $table = new html_table();
+    $table->attributes['class'] = 'table align-middle oriskill-documents';
+    $table->head = [get_string('invoice:number', 'local_oriskill'), get_string('invoices:client', 'local_oriskill'),
+        get_string('invoice:total', 'local_oriskill'), get_string('quote:state', 'local_oriskill'), ''];
+    foreach ($quotes as $quote) {
+        $data = json_decode($quote->data, true);
+        $badge = ['open' => '', 'expired' => 'is-warn', 'invoiced' => 'is-good', 'cancelled' => ''][$quote->state];
+        $state = html_writer::span(get_string('quote:state_' . $quote->state, 'local_oriskill'), 'oriskill-badge ' . $badge);
+        if ($quote->state === 'invoiced' && ($invoice = $DB->get_record('local_oriskill_invoices', ['id' => $quote->invoiceid]))) {
+            $state .= html_writer::div(get_string('quote:invoicedas', 'local_oriskill', $invoice->number), 'small text-muted');
+        } else if ($quote->status === 'open') {
+            $state .= html_writer::div(get_string('quote:validuntil', 'local_oriskill',
+                userdate($quote->validuntil, get_string('strftimedate'))), 'small text-muted');
+        }
+        $actions = html_writer::link(billing_service::url($quote), '<i class="fa fa-download me-1" aria-hidden="true"></i>PDF',
+            ['class' => 'btn btn-sm btn-outline-secondary']);
+        if ($canissue && $quote->status === 'open') {
+            $actions .= ' ' . $post($quote, 'quotemail', html_writer::tag('button',
+                '<i class="fa fa-envelope" aria-hidden="true"></i>', ['type' => 'submit', 'class' => 'btn btn-sm btn-outline-secondary',
+                'title' => get_string('invoicemail:send', 'local_oriskill'), 'aria-label' => get_string('invoicemail:send', 'local_oriskill')]));
+            $actions .= ' ' . html_writer::tag('details',
+                html_writer::tag('summary', get_string('quote:toinvoice', 'local_oriskill'), ['class' => 'btn btn-sm btn-link']) .
+                $post($quote, 'quoteinvoice',
+                    html_writer::div(get_string('quote:toinvoicehelp', 'local_oriskill'), 'small text-muted mb-1') .
+                    html_writer::select($methods, 'method', 'transfer', false, ['class' => 'form-select form-select-sm mb-2',
+                        'aria-label' => get_string('journal:method', 'local_oriskill')]) .
+                    html_writer::tag('button', get_string('quote:toinvoiceconfirm', 'local_oriskill'),
+                        ['type' => 'submit', 'class' => 'btn btn-sm btn-primary'])),
+                ['class' => 'd-inline-block', 'style' => 'max-width: 16rem']);
+            $actions .= ' ' . $post($quote, 'quotecancel', html_writer::tag('button', get_string('quote:cancel', 'local_oriskill'),
+                ['type' => 'submit', 'class' => 'btn btn-sm btn-link text-danger']), get_string('quote:cancelconfirm', 'local_oriskill'));
+        }
+        $table->data[] = [
+            html_writer::span($quote->number, 'fw-semibold') .
+                html_writer::div(userdate($quote->timecreated, get_string('strftimedatetimeshort', 'langconfig')), 'small text-muted'),
+            s($data['buyer']['name']) . html_writer::div(s($data['buyer']['email']), 'small text-muted'),
+            pricing_service::format_price((float) $quote->total, $quote->currency),
+            $state,
+            html_writer::div($actions, 'd-flex flex-wrap align-items-start gap-1'),
+        ];
+    }
+    echo html_writer::div(html_writer::tag('h3', get_string('quote:list', 'local_oriskill'), ['class' => 'h5']) .
+        html_writer::div(html_writer::table($table), 'table-responsive'), 'oriskill-card mb-4');
+}
 
 // What the invoices state about the trainer.
 echo html_writer::start_div('oriskill-card');

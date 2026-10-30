@@ -26,12 +26,14 @@ require_once(__DIR__ . '/../../config.php');
 
 use local_oriskill\billing_service;
 
-$id = required_param('id', PARAM_INT);
+$id = optional_param('id', 0, PARAM_INT);
+$quoteid = optional_param('quoteid', 0, PARAM_INT);
 $PAGE->set_context(context_system::instance());
-$PAGE->set_url(new moodle_url('/local/oriskill/invoice.php', ['id' => $id]));
+$PAGE->set_url(new moodle_url('/local/oriskill/invoice.php', $quoteid ? ['quoteid' => $quoteid] : ['id' => $id]));
 require_login(null, false);
 
-$document = $DB->get_record('local_oriskill_invoices', ['id' => $id], '*', MUST_EXIST);
+$document = $quoteid ? $DB->get_record('local_oriskill_quotes', ['id' => $quoteid], '*', MUST_EXIST)
+    : $DB->get_record('local_oriskill_invoices', ['id' => $id], '*', MUST_EXIST);
 if (!billing_service::can_view($document)) {
     throw new moodle_exception('nopermissions', 'error', '', get_string('invoice:title', 'local_oriskill'));
 }

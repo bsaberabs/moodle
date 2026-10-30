@@ -40,7 +40,16 @@ require_once($CFG->libdir . '/pdflib.php');
 class billing_service {
 
     /** Number prefix per document type. */
-    const PREFIX = ['invoice' => 'F', 'credit' => 'AV'];
+    const PREFIX = ['invoice' => 'F', 'credit' => 'AV', 'quote' => 'DE'];
+
+    /** How a manual invoice was paid. */
+    const METHODS = ['transfer', 'cheque', 'cash', 'card', 'other'];
+
+    /** Lines a manual invoice or quote can have. */
+    const FREE_LINES = 6;
+
+    /** Days a quote is valid, unless the trainer says otherwise. */
+    const QUOTE_DAYS = 30;
 
     /**
      * Whether the trainer filled in what an invoice must state about the seller.
@@ -198,7 +207,15 @@ class billing_service {
             $buyer->lastname = '';
             $buyer->mailformat = 1;
         }
-        [$subject, $text] = self::mail_text($creator, $invoice);
+        if (($invoice->type ?? '') === 'quote') {
+            $a = (object) ['number' => $invoice->number, 'trainer' => format_string($creator->displayname),
+                'name' => $data['buyer']['name'], 'until' => userdate($invoice->validuntil, get_string('strftimedate')),
+                'total' => pricing_service::format_price((float) $invoice->total, $invoice->currency)];
+            $subject = get_string('quotemail:subject', 'local_oriskill', $a);
+            $text = get_string('quotemail:body', 'local_oriskill', $a);
+        } else {
+            [$subject, $text] = self::mail_text($creator, $invoice);
+        }
         $from = \core_user::get_noreply_user();
         $from->firstname = format_string($creator->displayname);
         $from->lastname = '';
@@ -328,7 +345,9 @@ class billing_service {
             throw new \moodle_exception('error:creditamount', 'local_oriskill');
         }
         $creator = $DB->get_record('local_oriskill_creators', ['id' => $invoice->creatorid], '*', MUST_EXIST);
-        $order = $DB->get_record('local_moderncommerce_orders', ['id' => $invoice->orderid], '*', MUST_EXIST);
+        // A manual invoice has no order: the credit note keeps its buyer.
+        $order = $invoice->orderid ? $DB->get_record('local_moderncommerce_orders', ['id' => $invoice->orderid], '*', MUST_EXIST)
+            : null;
         $data = json_decode($invoice->data, true);
         $tax = (float) $invoice->total > 0 ? round((float) $invoice->tax * $amount / (float) $invoice->total, 2) : 0.0;
         $credit = self::issue($creator, $order, 'credit', $invoice, $amount, $tax, [
@@ -339,7 +358,7 @@ class billing_service {
             'paid' => false,
             'mentions' => [],
             'vatrate' => $data['seller']['vatrate'] ?? 0,
-        ]);
+        ], ['userid' => (int) $invoice->userid, 'buyer' => $data['buyer'], 'currency' => $invoice->currency]);
 
         // The buyer gets the credit note.
         if ($buyer = $DB->get_record('user', ['id' => $credit->userid, 'deleted' => 0])) {
@@ -434,7 +453,8 @@ class billing_service {
                 || has_capability('local/moderncommerce:viewallorders', \context_system::instance())) {
             return true;
         }
-        return $DB->record_exists('local_oriskill_creators', ['id' => $document->creatorid, 'userid' => $USER->id]);
+        $space = team_service::spaces_of((int) $USER->id)[$document->creatorid] ?? null;
+        return $space && team_service::can($space['role'], '/local/oriskill/invoices.php');
     }
 
     /**
@@ -444,7 +464,8 @@ class billing_service {
      * @return moodle_url
      */
     public static function url(\stdClass $document): moodle_url {
-        return new moodle_url('/local/oriskill/invoice.php', ['id' => $document->id]);
+        return new moodle_url('/local/oriskill/invoice.php', ($document->type ?? '') === 'quote'
+            ? ['quoteid' => $document->id] : ['id' => $document->id]);
     }
 
     /**
@@ -457,16 +478,28 @@ class billing_service {
      * @param float $total Amount including VAT.
      * @param float $tax VAT.
      * @param array $content lines, discount, paid, mentions.
+     * @param array $free Without an order: userid (0 for someone without an account), buyer (name, email, address),
+     *                    currency.
+     * @param bool $save Number and store it (false: a preview, numbered as such).
      * @return \stdClass
      */
-    private static function issue(\stdClass $creator, \stdClass $order, string $type, ?\stdClass $parent, float $total,
-            float $tax, array $content): \stdClass {
+    private static function issue(\stdClass $creator, ?\stdClass $order, string $type, ?\stdClass $parent, float $total,
+            float $tax, array $content, array $free = [], bool $save = true): \stdClass {
         global $DB;
 
-        $buyer = $DB->get_record('user', ['id' => $order->userid], '*', MUST_EXIST);
-        $billing = json_decode((string) ($order->billingaddress ?? ''), true) ?: [];
-        $country = $billing['country'] ?? $buyer->country;
-        $country = get_string_manager()->get_list_of_countries()[$country] ?? $country;
+        if ($order) {
+            $buyer = $DB->get_record('user', ['id' => $order->userid], '*', MUST_EXIST);
+            $billing = json_decode((string) ($order->billingaddress ?? ''), true) ?: [];
+            $country = $billing['country'] ?? $buyer->country;
+            $country = get_string_manager()->get_list_of_countries()[$country] ?? $country;
+            $buyerdata = [
+                'name' => fullname($buyer),
+                'email' => $buyer->email,
+                'address' => trim(implode("\n", array_filter([$billing['address'] ?? $buyer->address,
+                    trim(($billing['zipcode'] ?? '') . ' ' . ($billing['city'] ?? $buyer->city)),
+                    $country]))),
+            ];
+        }
         $data = $content + [
             'seller' => [
                 'name' => trim((string) $creator->legalname) ?: format_string($creator->displayname),
@@ -478,18 +511,30 @@ class billing_service {
                 'notes' => (string) $creator->invoicenotes,
                 'email' => (string) $DB->get_field('user', 'email', ['id' => $creator->userid]),
             ],
-            'buyer' => [
-                'name' => fullname($buyer),
-                'email' => $buyer->email,
-                'address' => trim(implode("\n", array_filter([$billing['address'] ?? $buyer->address,
-                    trim(($billing['zipcode'] ?? '') . ' ' . ($billing['city'] ?? $buyer->city)),
-                    $country]))),
-            ],
-            'ordernumber' => $order->ordernumber,
+            'buyer' => $order ? $buyerdata : $free['buyer'],
+            'ordernumber' => $order->ordernumber ?? '',
             'parentnumber' => $parent->number ?? null,
             'parentdate' => $parent->timecreated ?? null,
         ];
         $data['vatrate'] = $content['vatrate'] ?? $data['seller']['vatrate'];
+        $record = (object) [
+            'creatorid' => $creator->id,
+            'orderid' => $order->id ?? 0,
+            'userid' => $order ? $order->userid : (int) ($free['userid'] ?? 0),
+            'type' => $type,
+            'parentid' => $parent->id ?? null,
+            'total' => $total,
+            'tax' => $tax,
+            'currency' => $order->currency ?? $free['currency'],
+            'data' => json_encode($data),
+            'timecreated' => time(),
+        ];
+        if (!$save) {
+            $record->id = 0;
+            $record->sequence = 0;
+            $record->number = get_string('document:preview', 'local_oriskill');
+            return $record;
+        }
 
         // The sequence must have no gap and no duplicate, even when two payments are notified at once.
         $lock = \core\lock\lock_config::get_lock_factory('local_oriskill_invoices')
@@ -498,27 +543,210 @@ class billing_service {
             throw new \moodle_exception('locktimeout');
         }
         try {
-            $sequence = 1 + (int) $DB->get_field_sql("SELECT MAX(sequence) FROM {local_oriskill_invoices}
-                                                       WHERE creatorid = ? AND type = ?", [$creator->id, $type]);
-            $record = (object) [
-                'creatorid' => $creator->id,
-                'orderid' => $order->id,
-                'userid' => $order->userid,
-                'type' => $type,
-                'sequence' => $sequence,
-                'number' => self::PREFIX[$type] . '-' . str_pad((string) $sequence, 6, '0', STR_PAD_LEFT),
-                'parentid' => $parent->id ?? null,
-                'total' => $total,
-                'tax' => $tax,
-                'currency' => $order->currency,
-                'data' => json_encode($data),
-                'timecreated' => time(),
-            ];
-            $record->id = $DB->insert_record('local_oriskill_invoices', $record);
+            $table = $type === 'quote' ? 'local_oriskill_quotes' : 'local_oriskill_invoices';
+            $sequence = 1 + (int) ($type === 'quote'
+                ? $DB->get_field_sql("SELECT MAX(sequence) FROM {local_oriskill_quotes} WHERE creatorid = ?", [$creator->id])
+                : $DB->get_field_sql("SELECT MAX(sequence) FROM {local_oriskill_invoices}
+                                       WHERE creatorid = ? AND type = ?", [$creator->id, $type]));
+            $record->sequence = $sequence;
+            $record->number = self::PREFIX[$type] . '-' . str_pad((string) $sequence, 6, '0', STR_PAD_LEFT);
+            if ($type === 'quote') {
+                $record->validuntil = (int) $content['validuntil'];
+                $record->status = 'open';
+                $record->invoiceid = 0;
+                $record->timemodified = $record->timecreated;
+            }
+            $record->id = $DB->insert_record($table, $record);
         } finally {
             $lock->release();
         }
         return $record;
+    }
+
+    // ----- Manual invoices and quotes ------------------------------------------------------------------------
+
+    /**
+     * Lines typed by the trainer, priced including VAT at the trainer's rate.
+     *
+     * @param \stdClass $creator Trainer.
+     * @param array $lines of ['name', 'quantity', 'unitprice'] (empty ones are dropped)
+     * @return array [lines, total, tax]
+     */
+    public static function free_lines(\stdClass $creator, array $lines): array {
+        $vatrate = (float) $creator->vatrate;
+        $result = [];
+        foreach (array_slice($lines, 0, self::FREE_LINES) as $line) {
+            $name = trim((string) ($line['name'] ?? ''));
+            $quantity = max(0, (float) ($line['quantity'] ?? 1));
+            $unitprice = round(max(0, (float) ($line['unitprice'] ?? 0)), 2);
+            if ($name === '' || $quantity <= 0) {
+                continue;
+            }
+            $total = round($quantity * $unitprice, 2);
+            $result[] = ['name' => \core_text::substr($name, 0, 255), 'quantity' => $quantity, 'unitprice' => $unitprice,
+                'total' => $total, 'tax' => $vatrate > 0 ? round($total - $total / (1 + $vatrate / 100), 2) : 0.0];
+        }
+        $total = round(array_sum(array_column($result, 'total')), 2);
+        if (!$result || $total <= 0) {
+            throw new \moodle_exception('error:documentlines', 'local_oriskill');
+        }
+        return [$result, $total, round(array_sum(array_column($result, 'tax')), 2)];
+    }
+
+    /**
+     * Buyer typed by the trainer: the learner with that e-mail address when there is one.
+     *
+     * @param array $input name, email, address
+     * @return array ['userid' => int, 'buyer' => [name, email, address]]
+     */
+    public static function free_buyer(array $input): array {
+        global $DB;
+
+        $email = trim((string) ($input['email'] ?? ''));
+        $name = trim((string) ($input['name'] ?? ''));
+        if ($email !== '' && !validate_email($email)) {
+            throw new \moodle_exception('invalidemail');
+        }
+        $user = $email !== '' ? $DB->get_record_select('user', 'LOWER(email) = LOWER(?) AND deleted = 0',
+            [$email], '*', IGNORE_MULTIPLE) : null;
+        $name = $name !== '' ? $name : ($user ? fullname($user) : '');
+        if ($name === '') {
+            throw new \moodle_exception('error:documentbuyer', 'local_oriskill');
+        }
+        return ['userid' => $user ? (int) $user->id : 0, 'buyer' => ['name' => \core_text::substr($name, 0, 255),
+            'email' => $email, 'address' => trim((string) ($input['address'] ?? ''))]];
+    }
+
+    /**
+     * Content of a manual invoice or quote.
+     *
+     * @param \stdClass $creator Trainer.
+     * @param string $type invoice or quote.
+     * @param array $buyer See free_buyer().
+     * @param array $lines See free_lines().
+     * @param array $options method and paid (invoice), days (quote), notes, quote (number it comes from)
+     * @param bool $save Issue it (false: preview).
+     * @return \stdClass
+     */
+    private static function free_document(\stdClass $creator, string $type, array $buyer, array $lines, array $options,
+            bool $save): \stdClass {
+        [$lines, $total, $tax] = self::free_lines($creator, $lines);
+        $mentions = array_values(array_filter([trim((string) ($options['notes'] ?? ''))]));
+        $content = ['lines' => $lines, 'discount' => 0, 'mentions' => $mentions];
+        if ($type === 'invoice') {
+            $method = in_array($options['method'] ?? '', self::METHODS, true) ? $options['method'] : 'other';
+            $content += ['paid' => !empty($options['paid']),
+                'paymentmethod' => get_string('invoice:method_' . $method, 'local_oriskill'),
+                'quotenumber' => $options['quote'] ?? null];
+        } else {
+            $days = max(1, min(365, (int) ($options['days'] ?? self::QUOTE_DAYS)));
+            $content += ['paid' => false, 'validuntil' => strtotime('+' . $days . ' days 23:59:59', usergetmidnight(time()))];
+        }
+        return self::issue($creator, null, $type, null, $total, $tax, $content, self::free_buyer($buyer) + [
+            'currency' => pricing_service::get_currency_config()->currency], $save);
+    }
+
+    /**
+     * Issue an invoice typed by the trainer (a sale outside the platform).
+     *
+     * @param \stdClass $creator Trainer.
+     * @param array $buyer See free_buyer().
+     * @param array $lines See free_lines().
+     * @param array $options method (one of METHODS), paid, notes
+     * @return \stdClass Invoice.
+     */
+    public static function issue_manual_invoice(\stdClass $creator, array $buyer, array $lines, array $options): \stdClass {
+        $invoice = self::free_document($creator, 'invoice', $buyer, $lines, $options, true);
+        log_service::add($creator, 'invoice_manual', ['number' => $invoice->number], null, (int) $invoice->userid ?: null);
+        return $invoice;
+    }
+
+    /**
+     * Issue a quote: numbered in its own sequence (DE-...), valid for some days, turned into an invoice once paid.
+     *
+     * @param \stdClass $creator Trainer.
+     * @param array $buyer See free_buyer().
+     * @param array $lines See free_lines().
+     * @param array $options days, notes
+     * @return \stdClass Quote.
+     */
+    public static function issue_quote(\stdClass $creator, array $buyer, array $lines, array $options): \stdClass {
+        $quote = self::free_document($creator, 'quote', $buyer, $lines, $options, true);
+        log_service::add($creator, 'quote_issued', ['number' => $quote->number], null, (int) $quote->userid ?: null);
+        return $quote;
+    }
+
+    /**
+     * PDF of a manual invoice or quote before it is issued.
+     *
+     * @param \stdClass $creator Trainer.
+     * @param string $type invoice or quote.
+     * @param array $buyer See free_buyer().
+     * @param array $lines See free_lines().
+     * @param array $options See issue_manual_invoice() and issue_quote().
+     * @return array [file name, PDF content]
+     */
+    public static function preview(\stdClass $creator, string $type, array $buyer, array $lines, array $options): array {
+        return self::pdf(self::free_document($creator, $type, $buyer, $lines, $options, false));
+    }
+
+    /**
+     * Quotes of a trainer, newest first (a quote past its date and still open is "expired").
+     *
+     * @param \stdClass $creator Trainer.
+     * @return array
+     */
+    public static function quotes(\stdClass $creator): array {
+        global $DB;
+
+        $quotes = $DB->get_records('local_oriskill_quotes', ['creatorid' => $creator->id], 'timecreated DESC, id DESC');
+        foreach ($quotes as $quote) {
+            $quote->type = 'quote';
+            $quote->state = $quote->status === 'open' && $quote->validuntil < time() ? 'expired' : $quote->status;
+        }
+        return $quotes;
+    }
+
+    /**
+     * A quote was paid: issue its invoice (same buyer and lines) and mark it invoiced.
+     *
+     * @param \stdClass $quote Open quote (even expired: the trainer decides).
+     * @param string $method One of METHODS.
+     * @param bool $paid Paid already.
+     * @return \stdClass Invoice.
+     */
+    public static function invoice_quote(\stdClass $quote, string $method, bool $paid = true): \stdClass {
+        global $DB;
+
+        if ($quote->status !== 'open') {
+            throw new \moodle_exception('error:quoteclosed', 'local_oriskill');
+        }
+        $creator = $DB->get_record('local_oriskill_creators', ['id' => $quote->creatorid], '*', MUST_EXIST);
+        $data = json_decode($quote->data, true);
+        $buyer = $data['buyer'];
+        $invoice = self::free_document($creator, 'invoice', $buyer, $data['lines'], ['method' => $method, 'paid' => $paid,
+            'notes' => get_string('quote:invoicednote', 'local_oriskill', (object) ['number' => $quote->number,
+            'date' => userdate($quote->timecreated, get_string('strftimedate'))]), 'quote' => $quote->number], true);
+        $DB->update_record('local_oriskill_quotes', (object) ['id' => $quote->id, 'status' => 'invoiced',
+            'invoiceid' => $invoice->id, 'timemodified' => time()]);
+        log_service::add($creator, 'quote_invoiced', ['number' => $quote->number, 'invoice' => $invoice->number], null,
+            (int) $invoice->userid ?: null);
+        return $invoice;
+    }
+
+    /**
+     * Cancel an open quote (it keeps its number).
+     *
+     * @param \stdClass $quote Quote.
+     */
+    public static function cancel_quote(\stdClass $quote): void {
+        global $DB;
+
+        if ($quote->status !== 'open') {
+            throw new \moodle_exception('error:quoteclosed', 'local_oriskill');
+        }
+        $DB->update_record('local_oriskill_quotes', (object) ['id' => $quote->id, 'status' => 'cancelled',
+            'timemodified' => time()]);
     }
 
     /**
@@ -533,7 +761,8 @@ class billing_service {
         $currency = $document->currency;
         $money = fn(float $value) => pricing_service::format_price($value, $currency);
         $iscredit = $document->type === 'credit';
-        $title = get_string($iscredit ? 'credit:title' : 'invoice:title', 'local_oriskill');
+        $isquote = $document->type === 'quote';
+        $title = get_string($iscredit ? 'credit:title' : ($isquote ? 'quote:title' : 'invoice:title'), 'local_oriskill');
 
         $pdf = new \pdf('P', 'mm', 'A4', true, 'UTF-8');
         $pdf->SetCreator($seller['brand']);
@@ -558,11 +787,13 @@ class billing_service {
         $pdf->SetXY(110, 15);
         $pdf->Cell(85, 10, \core_text::strtoupper($title), 0, 1, 'R');
         $pdf->SetFont('freesans', '', 10);
-        foreach ([
+        foreach (array_filter([
             get_string('invoice:number', 'local_oriskill') . ' ' . $document->number,
             get_string('invoice:date', 'local_oriskill') . ' ' . userdate($document->timecreated, get_string('strftimedate')),
-            get_string('invoice:order', 'local_oriskill') . ' ' . $data['ordernumber'],
-        ] as $line) {
+            $data['ordernumber'] ? get_string('invoice:order', 'local_oriskill') . ' ' . $data['ordernumber'] : '',
+            $isquote ? get_string('quote:validuntil', 'local_oriskill', userdate($data['validuntil'], get_string('strftimedate')))
+                : '',
+        ]) as $line) {
             $pdf->SetX(110);
             $pdf->Cell(85, 5, $line, 0, 1, 'R');
         }
@@ -587,7 +818,7 @@ class billing_service {
 
         $pdf->SetXY(115, max($y, 45));
         $pdf->SetFont('freesans', 'B', 10);
-        $pdf->Cell(80, 6, get_string('invoice:billedto', 'local_oriskill'), 0, 2);
+        $pdf->Cell(80, 6, get_string($isquote ? 'document:customer' : 'invoice:billedto', 'local_oriskill'), 0, 2);
         $pdf->SetFont('freesans', '', 9);
         $pdf->MultiCell(80, 4.5, implode("\n", array_filter([$data['buyer']['name'], $data['buyer']['address'],
             $data['buyer']['email']])), 0, 'L', false, 1, 115);
@@ -637,6 +868,17 @@ class billing_service {
             $pdf->SetTextColor(0, 128, 0);
             $pdf->Cell(0, 6, get_string('invoice:paid', 'local_oriskill'), 0, 1, 'R');
             $pdf->SetTextColor(0, 0, 0);
+        }
+        if (!$iscredit && !empty($data['paymentmethod'])) {
+            $pdf->SetFont('freesans', '', 9);
+            $pdf->Cell(0, 6, get_string('invoice:paymentmethod', 'local_oriskill', $data['paymentmethod']), 0, 1, 'R');
+        }
+        if ($isquote) {
+            // Room for the customer's agreement.
+            $pdf->Ln(6);
+            $pdf->SetFont('freesans', '', 9);
+            $pdf->SetX(105);
+            $pdf->MultiCell(90, 22, get_string('quote:agreement', 'local_oriskill'), 1, 'L');
         }
 
         // Mentions.

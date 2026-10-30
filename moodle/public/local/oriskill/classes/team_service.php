@@ -44,6 +44,7 @@ class team_service {
         '/local/oriskill/dashboard.php' => ['admin', 'teaching', 'support'],
         '/local/oriskill/sales.php' => ['admin', 'support'],
         '/local/oriskill/invoices.php' => ['admin', 'support'],
+        '/local/oriskill/document.php' => ['admin'],
         '/local/oriskill/schedules.php' => ['admin', 'support'],
         '/local/oriskill/unpaid.php' => ['admin', 'support'],
         '/local/oriskill/courses.php' => ['admin', 'teaching'],
