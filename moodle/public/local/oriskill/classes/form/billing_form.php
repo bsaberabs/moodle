@@ -66,6 +66,25 @@ class billing_form extends \moodleform {
         $mform->setType('invoicenotes', PARAM_TEXT);
         $mform->addHelpButton('invoicenotes', 'billing:notes', 'local_oriskill');
 
+        $mform->addElement('header', 'numberingheader', get_string('numbering:title', 'local_oriskill'));
+        $mform->addElement('static', 'numberinghelp', '', get_string('numbering:help', 'local_oriskill'));
+        foreach (['invoice', 'credit'] as $type) {
+            $group = [
+                $mform->createElement('text', $type . 'prefix', get_string('numbering:prefix', 'local_oriskill'), ['size' => 8]),
+                $mform->createElement('select', $type . 'digits', get_string('numbering:digits', 'local_oriskill'),
+                    array_combine(range(0, 8), array_map(fn($n) => $n ? get_string('numbering:digits_n', 'local_oriskill', $n)
+                        : get_string('numbering:digits_0', 'local_oriskill'), range(0, 8)))),
+                $mform->createElement('text', $type . 'start', get_string('numbering:start', 'local_oriskill'), ['size' => 10]),
+            ];
+            $mform->addGroup($group, $type . 'numbering', get_string('numbering:' . $type, 'local_oriskill'), ' ', false);
+            $mform->setType($type . 'prefix', PARAM_TEXT);
+            $mform->setType($type . 'start', PARAM_INT);
+            if (!empty($this->_customdata['next'][$type])) {
+                $mform->addElement('static', $type . 'next', '', get_string('numbering:next', 'local_oriskill',
+                    s($this->_customdata['next'][$type])));
+            }
+        }
+
         $mform->addElement('header', 'invoicemailheader', get_string('invoicemail:title', 'local_oriskill'));
         $mform->setExpanded('invoicemailheader', true);
         $mform->addElement('advcheckbox', 'invoicemail', get_string('invoicemail:enabled', 'local_oriskill'));

@@ -33,6 +33,12 @@
         <FIELD NAME="invoicemail" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="E-mail each invoice to the buyer, PDF attached"/>
         <FIELD NAME="invoicemailsubject" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="invoicemailbody" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="invoiceprefix" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false" COMMENT="Prefix of invoice numbers, empty for F-"/>
+        <FIELD NAME="invoicedigits" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="6" SEQUENCE="false" COMMENT="Digits of invoice numbers, 0 for no padding"/>
+        <FIELD NAME="invoicestart" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="First invoice number (to go on from a previous tool)"/>
+        <FIELD NAME="creditprefix" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false" COMMENT="Prefix of credit note numbers, empty for AV-"/>
+        <FIELD NAME="creditdigits" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="6" SEQUENCE="false"/>
+        <FIELD NAME="creditstart" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>

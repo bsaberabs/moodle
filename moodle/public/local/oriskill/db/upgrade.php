@@ -380,5 +380,23 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103038, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103039) {
+        // Numbering of invoices and credit notes chosen by the trainer.
+        $table = new xmldb_table('local_oriskill_creators');
+        $fields = [
+            new xmldb_field('invoiceprefix', XMLDB_TYPE_CHAR, '20', null, null, null, null, 'invoicemailbody'),
+            new xmldb_field('invoicedigits', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '6', 'invoiceprefix'),
+            new xmldb_field('invoicestart', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '1', 'invoicedigits'),
+            new xmldb_field('creditprefix', XMLDB_TYPE_CHAR, '20', null, null, null, null, 'invoicestart'),
+            new xmldb_field('creditdigits', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '6', 'creditprefix'),
+            new xmldb_field('creditstart', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '1', 'creditdigits'),
+        ];
+        foreach ($fields as $field) {
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+        upgrade_plugin_savepoint(true, 2026103039, 'local', 'oriskill');
+    }
     return true;
 }

@@ -124,8 +124,14 @@ if (optional_param('action', '', PARAM_ALPHA) === 'credit' && confirm_sesskey())
     }
 }
 
-$form = new billing_form($url);
+$form = new billing_form($url, ['next' => ['invoice' => billing_service::next_number($creator, 'invoice'),
+    'credit' => billing_service::next_number($creator, 'credit')]]);
+$numbering = ['invoice' => billing_service::numbering($creator, 'invoice'), 'credit' => billing_service::numbering($creator, 'credit')];
 $form->set_data([
+    'invoiceprefix' => $numbering['invoice']['prefix'], 'invoicedigits' => $numbering['invoice']['digits'],
+    'invoicestart' => max($numbering['invoice']['start'], billing_service::last_sequence($creator, 'invoice') + 1),
+    'creditprefix' => $numbering['credit']['prefix'], 'creditdigits' => $numbering['credit']['digits'],
+    'creditstart' => max($numbering['credit']['start'], billing_service::last_sequence($creator, 'credit') + 1),
     'legalname' => $creator->legalname,
     'legaladdress' => $creator->legaladdress,
     'siret' => $creator->siret,
@@ -137,7 +143,11 @@ $form->set_data([
     'invoicemailbody' => $creator->invoicemailbody ?: get_string('invoicemail:defaultbody', 'local_oriskill'),
 ]);
 if ($data = $form->get_data()) {
-    billing_service::save_details($creator, $data);
+    try {
+        billing_service::save_details($creator, $data);
+    } catch (moodle_exception $e) {
+        redirect($url, $e->getMessage(), null, \core\output\notification::NOTIFY_ERROR);
+    }
     \local_oriskill\log_service::add($creator, 'billing_saved');
     redirect($url, get_string('changessaved'), null, \core\output\notification::NOTIFY_SUCCESS);
 }

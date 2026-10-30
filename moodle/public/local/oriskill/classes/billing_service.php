@@ -84,6 +84,100 @@ class billing_service {
             'invoicemailbody' => trim((string) ($data->invoicemailbody ?? '')),
             'timemodified' => time(),
         ]);
+        if (isset($data->invoiceprefix)) {
+            self::save_numbering($creator, [
+                'invoice' => ['prefix' => $data->invoiceprefix, 'digits' => $data->invoicedigits, 'start' => $data->invoicestart],
+                'credit' => ['prefix' => $data->creditprefix, 'digits' => $data->creditdigits, 'start' => $data->creditstart],
+            ]);
+        }
+    }
+
+    /**
+     * How a trainer's invoices and credit notes are numbered.
+     *
+     * @param \stdClass $creator Trainer.
+     * @param string $type invoice or credit.
+     * @return array ['prefix' => string, 'digits' => int, 'start' => int]
+     */
+    public static function numbering(\stdClass $creator, string $type): array {
+        $field = $type === 'credit' ? 'credit' : 'invoice';
+        $prefix = $creator->{$field . 'prefix'} ?? null;
+        return [
+            'prefix' => $prefix === null || $prefix === '' ? self::PREFIX[$type] . '-' : (string) $prefix,
+            'digits' => isset($creator->{$field . 'digits'}) ? (int) $creator->{$field . 'digits'} : 6,
+            'start' => max(1, (int) ($creator->{$field . 'start'} ?? 1)),
+        ];
+    }
+
+    /**
+     * Last sequence number issued by a trainer for a type of document.
+     *
+     * @param \stdClass $creator Trainer.
+     * @param string $type invoice or credit.
+     * @return int 0 when none.
+     */
+    public static function last_sequence(\stdClass $creator, string $type): int {
+        global $DB;
+        return (int) $DB->get_field_sql("SELECT MAX(sequence) FROM {local_oriskill_invoices} WHERE creatorid = ? AND type = ?",
+            [$creator->id, $type]);
+    }
+
+    /**
+     * Number of the next document of a type, as it will be printed.
+     *
+     * @param \stdClass $creator Trainer.
+     * @param string $type invoice or credit.
+     * @return string
+     */
+    public static function next_number(\stdClass $creator, string $type): string {
+        $numbering = self::numbering($creator, $type);
+        return self::format_number($numbering, max(self::last_sequence($creator, $type) + 1, $numbering['start']));
+    }
+
+    /**
+     * A sequence number with its prefix and padding.
+     *
+     * @param array $numbering numbering().
+     * @param int $sequence Sequence number.
+     * @return string
+     */
+    public static function format_number(array $numbering, int $sequence): string {
+        return $numbering['prefix'] . ($numbering['digits'] > 0
+            ? str_pad((string) $sequence, $numbering['digits'], '0', STR_PAD_LEFT) : (string) $sequence);
+    }
+
+    /**
+     * Change the numbering (to go on with the numbers of the previous tool). A start before the next number would
+     * reuse numbers: it is refused.
+     *
+     * @param \stdClass $creator Trainer.
+     * @param array $settings type => [prefix, digits, start].
+     */
+    public static function save_numbering(\stdClass $creator, array $settings): void {
+        global $DB;
+
+        $update = ['id' => $creator->id];
+        foreach (['invoice', 'credit'] as $type) {
+            if (!isset($settings[$type])) {
+                continue;
+            }
+            $prefix = \core_text::substr(trim((string) $settings[$type]['prefix']), 0, 20);
+            if ($prefix !== '' && !preg_match('~^[A-Za-z0-9_./ -]+$~', $prefix)) {
+                throw new \moodle_exception('numbering:badprefix', 'local_oriskill');
+            }
+            $start = max(1, (int) $settings[$type]['start']);
+            $last = self::last_sequence($creator, $type);
+            if ($start <= $last && $start !== self::numbering($creator, $type)['start']) {
+                throw new \moodle_exception('numbering:startused', 'local_oriskill', '', $last + 1);
+            }
+            $update[$type . 'prefix'] = $prefix;
+            $update[$type . 'digits'] = min(10, max(0, (int) $settings[$type]['digits']));
+            $update[$type . 'start'] = $start;
+        }
+        $DB->update_record('local_oriskill_creators', (object) $update);
+        foreach ($update as $field => $value) {
+            $creator->$field = $value;
+        }
     }
 
     /**
@@ -546,12 +640,18 @@ class billing_service {
         }
         try {
             $table = $type === 'quote' ? 'local_oriskill_quotes' : 'local_oriskill_invoices';
-            $sequence = 1 + (int) ($type === 'quote'
-                ? $DB->get_field_sql("SELECT MAX(sequence) FROM {local_oriskill_quotes} WHERE creatorid = ?", [$creator->id])
-                : $DB->get_field_sql("SELECT MAX(sequence) FROM {local_oriskill_invoices}
-                                       WHERE creatorid = ? AND type = ?", [$creator->id, $type]));
+            if ($type === 'quote') {
+                $sequence = 1 + (int) $DB->get_field_sql("SELECT MAX(sequence) FROM {local_oriskill_quotes} WHERE creatorid = ?",
+                    [$creator->id]);
+                $record->number = self::PREFIX[$type] . '-' . str_pad((string) $sequence, 6, '0', STR_PAD_LEFT);
+            } else {
+                // The trainer's own numbering (read again under the lock), going on from their previous tool if set.
+                $creator = $DB->get_record('local_oriskill_creators', ['id' => $creator->id], '*', MUST_EXIST);
+                $numbering = self::numbering($creator, $type);
+                $sequence = max(self::last_sequence($creator, $type) + 1, $numbering['start']);
+                $record->number = self::format_number($numbering, $sequence);
+            }
             $record->sequence = $sequence;
-            $record->number = self::PREFIX[$type] . '-' . str_pad((string) $sequence, 6, '0', STR_PAD_LEFT);
             if ($type === 'quote') {
                 $record->validuntil = (int) $content['validuntil'];
                 $record->status = 'open';
