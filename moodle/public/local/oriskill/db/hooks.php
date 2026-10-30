@@ -54,6 +54,10 @@ $callbacks = [
         'callback' => [\local_oriskill\hook_callbacks::class, 'resolve_gateway_config'],
     ],
     [
+        'hook' => \core\hook\email\before_email_to_user::class,
+        'callback' => [\local_oriskill\email_log::class, 'before_email_to_user'],
+    ],
+    [
         'hook' => \core\hook\output\before_footer_html_generation::class,
         'callback' => [\local_oriskill\hook_callbacks::class, 'before_footer_html_generation'],
     ],

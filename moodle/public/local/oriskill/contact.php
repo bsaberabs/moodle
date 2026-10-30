@@ -32,7 +32,7 @@ use local_oriskill\team_service;
 
 $id = required_param('id', PARAM_INT);
 $tab = optional_param('tab', 'infos', PARAM_ALPHA);
-$tabs = ['infos', 'activity', 'courses', 'transactions'];
+$tabs = ['infos', 'activity', 'emails', 'courses', 'transactions'];
 $tab = in_array($tab, $tabs, true) ? $tab : 'infos';
 $url = new moodle_url('/local/oriskill/contact.php', ['id' => $id, 'tab' => $tab]);
 $creator = creator_service::require_current_creator($url, 'menu:contacts');
@@ -71,6 +71,31 @@ if (($action = optional_param('action', '', PARAM_ALPHA)) && confirm_sesskey()) 
             case 'enable':
                 cs::set_disabled($creator, $contact, $action === 'disable');
                 log_service::add($creator, 'contacts_' . $action, ['count' => 1]);
+                break;
+            case 'sendmail':
+                \local_oriskill\email_log::send_direct($creator, $contact, required_param('subject', PARAM_TEXT),
+                    required_param('message', PARAM_RAW));
+                log_service::add($creator, 'contact_mailed', ['email' => $contact->email]);
+                $message = get_string('email:sent', 'local_oriskill');
+                break;
+            case 'resendmail':
+                if (!\local_oriskill\email_log::resend($creator, required_param('emailid', PARAM_INT))) {
+                    throw new moodle_exception('email:notsent', 'local_oriskill');
+                }
+                log_service::add($creator, 'contact_mailresent', ['email' => $contact->email]);
+                $message = get_string('email:sent', 'local_oriskill');
+                break;
+            case 'resetpassword':
+                $account = $contact->userid ? core_user::get_user($contact->userid) : null;
+                if (!$account || $account->deleted || $account->auth !== 'manual' || is_siteadmin($account)) {
+                    throw new moodle_exception('email:nopassword', 'local_oriskill');
+                }
+                // A new password by e-mail, to change at the next login (the e-mail belongs to this trainer).
+                \local_oriskill\email_log::for_creator((int) $creator->id, 'transactional',
+                    fn() => reset_password_and_mail($account));
+                set_user_preference('auth_forcepasswordchange', 1, $account);
+                log_service::add($creator, 'contact_password', ['email' => $contact->email]);
+                $message = get_string('email:passwordsent', 'local_oriskill');
                 break;
             case 'delete':
                 cs::delete($creator, [$contact->id]);
@@ -137,12 +162,28 @@ $identity = html_writer::div(html_writer::span(s($initials), 'oriskill-initials 
             'aria-label' => get_string('contacts:addtags', 'local_oriskill')]) .
         html_writer::tag('button', '+', ['type' => 'submit', 'class' => 'btn btn-sm btn-outline-primary',
             'title' => get_string('contacts:addtags', 'local_oriskill')]), 'd-flex gap-1')) : '') .
+    ($canchange ? html_writer::tag('details', html_writer::tag('summary', '<i class="fa fa-envelope me-1" aria-hidden="true"></i>' .
+        get_string('email:write', 'local_oriskill'), ['class' => 'small fw-semibold']) .
+        $post($hidden('sendmail') .
+            html_writer::empty_tag('input', ['type' => 'text', 'name' => 'subject', 'required' => 'required', 'maxlength' => 200,
+                'class' => 'form-control form-control-sm mt-2', 'placeholder' => get_string('subject'), 'aria-label' => get_string('subject')]) .
+            html_writer::tag('textarea', '', ['name' => 'message', 'required' => 'required', 'rows' => 5,
+                'class' => 'form-control form-control-sm mt-1', 'placeholder' => get_string('message', 'message'),
+                'aria-label' => get_string('message', 'message')]) .
+            html_writer::tag('button', get_string('email:send', 'local_oriskill'), ['type' => 'submit', 'class' => 'btn btn-sm btn-primary mt-1'])),
+        ['class' => 'mt-3']) : '') .
+    ($canchange && $user && !$user->deleted && $user->auth === 'manual' && !is_siteadmin($user) ? $post($hidden('resetpassword') .
+        html_writer::tag('button', '<i class="fa fa-key me-1" aria-hidden="true"></i>' . get_string('email:newpassword', 'local_oriskill'),
+            ['type' => 'submit', 'class' => 'btn btn-sm btn-outline-secondary mt-2 w-100']),
+        ['onsubmit' => 'return confirm(' . json_encode(get_string('email:newpassword_confirm', 'local_oriskill')) . ')']) : '') .
     ($canchange ? html_writer::div($post($hidden('delete') . html_writer::tag('button', get_string('contacts:delete', 'local_oriskill'),
         ['type' => 'submit', 'class' => 'btn btn-sm btn-outline-danger']), ['onsubmit' => 'return confirm(' .
         json_encode(get_string('contacts:delete_confirm', 'local_oriskill')) . ')']), 'mt-4') : '');
 
 // Tabs, a dot on those with data.
-$hasdata = ['infos' => true, 'activity' => false, 'courses' => (bool) $courses, 'transactions' => (bool) $invoices];
+$emails = \local_oriskill\email_log::for_contact($creator, $contact);
+$hasdata = ['infos' => true, 'activity' => false, 'emails' => (bool) $emails, 'courses' => (bool) $courses,
+    'transactions' => (bool) $invoices];
 $nav = '';
 foreach ($tabs as $name) {
     $nav .= html_writer::tag('li', html_writer::link(new moodle_url($url, ['tab' => $name]),
@@ -200,6 +241,62 @@ if ($tab === 'infos') {
         }
         $content .= html_writer::div(html_writer::div(s($day), 'oriskill-stat-label mb-2') .
             html_writer::tag('ul', $items, ['class' => 'list-unstyled mb-0']), 'mb-3');
+    }
+} else if ($tab === 'emails') {
+    // Preview of one of the trainer's e-mails, shown as it was sent (in a frame without scripts).
+    $emailid = optional_param('emailid', 0, PARAM_INT);
+    if ($emailid && isset($emails[$emailid]) && (int) $emails[$emailid]->creatorid === (int) $creator->id) {
+        $sent = \local_oriskill\email_log::require_own($creator, $emailid);
+        $html = preg_replace('~<img[^>]+emailopen\.php[^>]*>~i', '', (string) $sent->bodyhtml);
+        $content .= html_writer::div(
+            html_writer::div(html_writer::span(s($sent->subject), 'fw-semibold') . ' ' .
+                html_writer::link(new moodle_url($url), get_string('closebuttontitle'), ['class' => 'btn btn-sm btn-outline-secondary']),
+                'd-flex justify-content-between align-items-center gap-2 mb-2') .
+            ($html !== '' ? html_writer::tag('iframe', '', ['srcdoc' => $html, 'sandbox' => '', 'title' => s($sent->subject),
+                'style' => 'width: 100%; height: 28rem; border: 1px solid var(--ori-line); border-radius: .5rem; background: #fff'])
+                : html_writer::tag('pre', s((string) $sent->bodytext), ['class' => 'small p-3 border rounded bg-light',
+                    'style' => 'white-space: pre-wrap; max-height: 28rem; overflow: auto'])) .
+            ($sent->attachment !== '' ? html_writer::div('<i class="fa fa-paperclip me-1" aria-hidden="true"></i>' .
+                s($sent->attachment), 'small text-muted mt-1') : ''),
+            'mb-4');
+    }
+    if (!$emails) {
+        $content .= html_writer::div(get_string('email:none', 'local_oriskill'), 'text-muted');
+    } else {
+        $table = new html_table();
+        $table->attributes['class'] = 'table align-middle';
+        $table->head = [get_string('email:type', 'local_oriskill'), get_string('subject'), get_string('email:sentat', 'local_oriskill'),
+            get_string('email:openedat', 'local_oriskill')];
+        $format = get_string('strftimedatetimeshort', 'langconfig');
+        foreach ($emails as $sent) {
+            $own = (int) $sent->creatorid === (int) $creator->id;
+            $actions = '';
+            if ($own) {
+                $actions = html_writer::link(new moodle_url($url, ['emailid' => $sent->id]),
+                    '<i class="fa fa-eye" aria-hidden="true"></i>', ['class' => 'btn btn-sm btn-outline-secondary',
+                        'title' => get_string('email:preview', 'local_oriskill'), 'aria-label' => get_string('email:preview', 'local_oriskill')]);
+                if ($canchange && $contact->userid) {
+                    $actions .= ' ' . $post($hidden('resendmail') . html_writer::empty_tag('input', ['type' => 'hidden',
+                        'name' => 'emailid', 'value' => $sent->id]) . html_writer::tag('button', get_string('email:resend', 'local_oriskill'),
+                        ['type' => 'submit', 'class' => 'btn btn-sm btn-outline-secondary']), ['class' => 'd-inline']);
+                }
+            }
+            $table->data[] = [
+                html_writer::span(get_string('email:kind_' . ($own ? $sent->kind : 'platform'), 'local_oriskill'),
+                    'oriskill-badge' . ($sent->kind === 'marketing' && $own ? ' is-warn' : '')),
+                html_writer::div(s($sent->subject), '', ['style' => 'white-space: normal; min-width: 14rem']) .
+                    ($sent->attachment !== '' ? html_writer::div('<i class="fa fa-paperclip me-1" aria-hidden="true"></i>' .
+                        s($sent->attachment), 'small text-muted') : '') .
+                    ($sent->status === 'failed' ? html_writer::span(get_string('email:failed', 'local_oriskill'), 'oriskill-badge is-bad') : '') .
+                    ($actions ? html_writer::div($actions, 'mt-1') : ''),
+                userdate($sent->timecreated, $format),
+                $sent->timeopened ? userdate($sent->timeopened, $format) . ($sent->opens > 1
+                    ? html_writer::div(get_string('email:opens', 'local_oriskill', (int) $sent->opens), 'small text-muted') : '')
+                    : html_writer::span(get_string('email:notopened', 'local_oriskill'), 'text-muted'),
+            ];
+        }
+        $content .= html_writer::div(get_string('email:help', 'local_oriskill'), 'small text-muted mb-2') .
+            html_writer::div(html_writer::table($table), 'table-responsive');
     }
 } else if ($tab === 'courses') {
     if (!$courses) {

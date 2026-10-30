@@ -513,8 +513,9 @@ class instalment_service {
                 ->out(false),
         ];
         $from = \core_user::get_noreply_user();
-        email_to_user($learner, $from, get_string("instalmentmail:{$what}_subject", 'local_oriskill', $a),
-            get_string("instalmentmail:{$what}_learner", 'local_oriskill', $a));
+        email_log::for_creator((int) $creator->id, 'transactional', fn() => email_to_user($learner, $from,
+            get_string("instalmentmail:{$what}_subject", 'local_oriskill', $a),
+            get_string("instalmentmail:{$what}_learner", 'local_oriskill', $a)));
         if ($trainer = $DB->get_record('user', ['id' => $creator->userid, 'deleted' => 0])) {
             email_to_user($trainer, $from, get_string("instalmentmail:{$what}_subject", 'local_oriskill', $a),
                 get_string("instalmentmail:{$what}_trainer", 'local_oriskill', $a));

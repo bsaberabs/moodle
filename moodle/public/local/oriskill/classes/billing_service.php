@@ -223,7 +223,8 @@ class billing_service {
         $path = make_request_directory() . '/' . $filename;
         file_put_contents($path, $content);
         try {
-            return (bool) email_to_user($buyer, $from, $subject, $text, '', $path, $filename);
+            return (bool) email_log::for_creator((int) $creator->id, 'transactional',
+                fn() => email_to_user($buyer, $from, $subject, $text, '', $path, $filename));
         } catch (\Throwable $e) {
             debugging('Invoice e-mail not sent: ' . $e->getMessage(), DEBUG_DEVELOPER);
             return false;
@@ -365,8 +366,9 @@ class billing_service {
             $a = (object) ['number' => $credit->number, 'invoice' => $invoice->number,
                 'trainer' => format_string($creator->displayname), 'url' => self::url($credit)->out(false),
                 'amount' => pricing_service::format_price($amount, $credit->currency)];
-            email_to_user($buyer, \core_user::get_noreply_user(), get_string('credit:mail_subject', 'local_oriskill', $a),
-                get_string('credit:mail_body', 'local_oriskill', $a));
+            email_log::for_creator((int) $creator->id, 'transactional', fn() => email_to_user($buyer,
+                \core_user::get_noreply_user(), get_string('credit:mail_subject', 'local_oriskill', $a),
+                get_string('credit:mail_body', 'local_oriskill', $a)));
         }
         return $credit;
     }

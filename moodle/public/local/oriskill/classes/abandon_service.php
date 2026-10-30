@@ -229,7 +229,8 @@ class abandon_service {
                 $from = \core_user::get_noreply_user();
                 $from->firstname = format_string($creator->displayname);
                 $from->lastname = '';
-                $delivered = (bool) $mail($user, $from, $subject, $text);
+                $delivered = (bool) email_log::for_creator((int) $creator->id, 'marketing',
+                    fn() => $mail($user, $from, $subject, $text));
                 $sent += (int) $delivered;
                 $DB->update_record('local_oriskill_abandons', (object) ['id' => $row->id, 'step' => $step + 1,
                     'sent' => (int) $row->sent + (int) $delivered, 'lastsent' => $delivered ? $now : $row->lastsent,

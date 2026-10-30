@@ -366,5 +366,12 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103036, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103037) {
+        // E-mails sent to people, for the CRM.
+        if (!$dbman->table_exists('local_oriskill_emails')) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', 'local_oriskill_emails');
+        }
+        upgrade_plugin_savepoint(true, 2026103037, 'local', 'oriskill');
+    }
     return true;
 }

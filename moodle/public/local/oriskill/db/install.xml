@@ -497,6 +497,31 @@
         <INDEX NAME="creatorid-name" UNIQUE="true" FIELDS="creatorid, name"/>
       </INDEXES>
     </TABLE>
+    <TABLE NAME="local_oriskill_emails" COMMENT="E-mails sent to people by the platform (support: date, content, opening)">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Recipient, 0 for a contact without an account"/>
+        <FIELD NAME="creatorid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Trainer it was sent for, 0 for the platform's own"/>
+        <FIELD NAME="kind" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="transactional" SEQUENCE="false" COMMENT="transactional, marketing or direct"/>
+        <FIELD NAME="email" TYPE="char" LENGTH="100" NOTNULL="true" DEFAULT="" SEQUENCE="false" COMMENT="Address it was sent to"/>
+        <FIELD NAME="subject" TYPE="char" LENGTH="255" NOTNULL="true" DEFAULT="" SEQUENCE="false"/>
+        <FIELD NAME="bodyhtml" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="bodytext" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="attachment" TYPE="char" LENGTH="255" NOTNULL="true" DEFAULT="" SEQUENCE="false" COMMENT="Name of the attached file"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="10" NOTNULL="true" DEFAULT="sent" SEQUENCE="false" COMMENT="sent or failed"/>
+        <FIELD NAME="timeopened" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="First opening"/>
+        <FIELD NAME="opens" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="userid-timecreated" UNIQUE="false" FIELDS="userid, timecreated"/>
+        <INDEX NAME="creatorid-email" UNIQUE="false" FIELDS="creatorid, email"/>
+        <INDEX NAME="timecreated" UNIQUE="false" FIELDS="timecreated"/>
+      </INDEXES>
+    </TABLE>
     <TABLE NAME="local_oriskill_formstats" COMMENT="Daily visits of the order forms and their order step, per offer">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>

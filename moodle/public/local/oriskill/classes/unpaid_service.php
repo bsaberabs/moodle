@@ -237,8 +237,9 @@ class unpaid_service {
             'missing' => self::missing($record, $case->cause),
             'url' => (new moodle_url('/local/oriskill/regularize.php', ['id' => $case->id]))->out(false),
         ];
-        email_to_user($learner, \core_user::get_noreply_user(), get_string('unpaidmail:subject', 'local_oriskill', $a),
-            get_string('unpaidmail:body', 'local_oriskill', $a));
+        email_log::for_creator((int) $creator->id, 'transactional', fn() => email_to_user($learner,
+            \core_user::get_noreply_user(), get_string('unpaidmail:subject', 'local_oriskill', $a),
+            get_string('unpaidmail:body', 'local_oriskill', $a)));
         $DB->update_record('local_oriskill_unpaid', (object) ['id' => $case->id, 'amount' => $amount,
             'reminders' => (int) $case->reminders + 1, 'lastreminder' => time(), 'timemodified' => time()]);
         log_service::add($creator, 'unpaid_reminded', ['amount' => $a->amount], (int) $case->courseid, (int) $case->userid);

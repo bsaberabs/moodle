@@ -181,7 +181,10 @@ class learning_service {
                 'mnethostid' => $CFG->mnet_localhost_id, 'lang' => current_language()], false, false);
             $user = $DB->get_record('user', ['id' => $userid], '*', MUST_EXIST);
             if ($sendcredentials) {
-                setnew_password_and_mail($user);
+                // The account e-mail belongs to the trainer of the course.
+                $creatorid = (int) $DB->get_field('local_oriskill_creators', 'id', ['categoryid' => $course->category],
+                    IGNORE_MULTIPLE);
+                email_log::for_creator($creatorid, 'transactional', fn() => setnew_password_and_mail($user));
                 set_user_preference('auth_forcepasswordchange', 1, $user);
             } else {
                 update_internal_user_password($user, generate_password(20));

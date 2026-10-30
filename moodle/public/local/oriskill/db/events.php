@@ -62,6 +62,11 @@ $observers = [
         'eventname' => '\core\event\user_enrolment_created',
         'callback' => '\local_oriskill\observer::user_enrolled',
     ],
+    // E-mails sent to people: those that could not leave.
+    [
+        'eventname' => '\core\event\email_failed',
+        'callback' => '\local_oriskill\email_log::email_failed',
+    ],
     [
         'eventname' => '\core\event\user_deleted',
         'callback' => '\local_oriskill\observer::user_deleted',

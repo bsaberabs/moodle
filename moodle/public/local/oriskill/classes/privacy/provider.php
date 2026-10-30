@@ -72,6 +72,13 @@ class provider implements
             'consentdirect' => 'privacy:metadata:contacts:consentdirect',
             'ltv' => 'privacy:metadata:contacts:ltv',
         ], 'privacy:metadata:contacts');
+        $collection->add_database_table('local_oriskill_emails', [
+            'userid' => 'privacy:metadata:emails:userid',
+            'email' => 'privacy:metadata:emails:email',
+            'subject' => 'privacy:metadata:emails:subject',
+            'bodyhtml' => 'privacy:metadata:emails:body',
+            'timeopened' => 'privacy:metadata:emails:timeopened',
+        ], 'privacy:metadata:emails');
         $collection->add_database_table('local_oriskill_studytime', [
             'courseid' => 'privacy:metadata:studytime:courseid',
             'userid' => 'privacy:metadata:studytime:userid',
@@ -162,6 +169,7 @@ class provider implements
         }
         self::delete_affiliate((int) $contextlist->get_user()->id);
         $DB->delete_records('local_oriskill_studytime', ['userid' => $contextlist->get_user()->id]);
+        $DB->delete_records('local_oriskill_emails', ['userid' => $contextlist->get_user()->id]);
         foreach ($DB->get_records('local_oriskill_contacts', ['userid' => $contextlist->get_user()->id]) as $contact) {
             $DB->delete_records('local_oriskill_contacttags', ['contactid' => $contact->id]);
             $DB->delete_records('local_oriskill_contacts', ['id' => $contact->id]);
