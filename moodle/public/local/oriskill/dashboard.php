@@ -27,22 +27,15 @@ require_once(__DIR__ . '/../../config.php');
 use local_moderncommerce\services\pricing_service;
 use local_oriskill\creator_service;
 use local_oriskill\seller_service;
+use local_oriskill\stats_service as st;
 
 $url = new moodle_url('/local/oriskill/dashboard.php');
 $creator = creator_service::require_current_creator($url, 'menu:dashboard');
 
 $courses = seller_service::priced_courses($creator);
 $learners = seller_service::learner_counts($creator, array_keys($courses));
-$sales = seller_service::sales($creator);
-$paid = array_filter($sales, fn($sale) => $sale->status !== 'refunded');
-$revenue = [];
-foreach ($paid as $sale) {
-    $revenue[$sale->currency] = ($revenue[$sale->currency] ?? 0) + (float) $sale->total;
-}
-$revenuetext = [];
-foreach ($revenue as $currency => $amount) {
-    $revenuetext[] = pricing_service::format_price($amount, $currency);
-}
+$period = optional_param('period', 'today', PARAM_ALPHANUM);
+$period = in_array($period, st::PERIODS, true) ? $period : 'today';
 $onsale = count(array_filter($courses, fn($row) => $row->onsale));
 $newcourseurl = new moodle_url('/course/edit.php', ['category' => $creator->categoryid]);
 // A collaborator only gets the links of the pages their role opens.
@@ -93,13 +86,78 @@ echo html_writer::div(
             get_string('createcourse', 'local_oriskill'), ['class' => 'btn btn-light']) : ''),
     'oriskill-hello');
 
+// The period: money collected, new customers, what happened (for the roles that see the sales).
+if ($can('/local/oriskill/sales.php')) {
+    [$from, $to, $pfrom, $pto] = st::period($creator, $period);
+    $movements = st::movements($creator, $from, $to);
+    $totals = st::totals($movements);
+    $previous = st::totals(st::movements($creator, $pfrom, $pto));
+    $main = st::currency();
+    $tabs = '';
+    foreach (st::PERIODS as $key) {
+        $tabs .= html_writer::tag('li', html_writer::link(new moodle_url($url, ['period' => $key]),
+            get_string('stats:period_' . $key, 'local_oriskill'), ['class' => 'nav-link' . ($key === $period ? ' active' : ''),
+            'aria-current' => $key === $period ? 'page' : null]), ['class' => 'nav-item']);
+    }
+    echo html_writer::tag('ul', $tabs, ['class' => 'nav nav-pills mb-3']);
+
+    // Difference with the period before, in the main currency.
+    $delta = function(float $now, float $before, bool $money) use ($main): string {
+        $diff = round($now - $before, 2);
+        $text = ($diff > 0 ? '+' : ($diff < 0 ? '−' : '')) . ($money ? pricing_service::format_price(abs($diff), $main)
+            : abs($diff));
+        return html_writer::span(get_string('stats:delta', 'local_oriskill', $text),
+            'small ' . ($diff > 0 ? 'text-success' : ($diff < 0 ? 'text-danger' : 'text-muted')));
+    };
+    $amount = (float) ($totals[$main]->amount ?? 0);
+    $revenuecard = html_writer::div(
+        html_writer::div(html_writer::tag('h3', get_string('stats:revenue_' . $period, 'local_oriskill'), ['class' => 'h6 mb-1']) .
+            html_writer::div(st::money(array_map(fn($t) => $t->amount, $totals)), 'oriskill-stat-value') .
+            html_writer::div($delta($amount, (float) ($previous[$main]->amount ?? 0), true) . ' · ' .
+                get_string('stats:sales', 'local_oriskill', array_sum(array_map(fn($t) => $t->count, $totals))), 'mb-2')) .
+        st::chart(st::series($creator, $movements, $from, $to), get_string('stats:revenue_' . $period, 'local_oriskill')) .
+        ($can('/local/oriskill/stats.php') ? html_writer::div(html_writer::link(new moodle_url('/local/oriskill/stats.php'),
+            get_string('stats:alltransactions', 'local_oriskill')), 'small mt-2') : ''),
+        'oriskill-card');
+    $new = count(st::new_customers($creator, $from, $to));
+    $contactscount = $DB->count_records('local_oriskill_contacts', ['creatorid' => $creator->id]);
+    $customerscard = html_writer::div(
+        html_writer::tag('h3', get_string('stats:newcustomers_' . $period, 'local_oriskill'), ['class' => 'h6 mb-1']) .
+        html_writer::div((string) $new, 'oriskill-stat-value') .
+        html_writer::div($delta($new, count(st::new_customers($creator, $pfrom, $pto)), false), 'mb-2') .
+        ($can('/local/oriskill/contacts.php') ? html_writer::div(html_writer::link(new moodle_url('/local/oriskill/contacts.php',
+            ['view' => 'customers']), get_string('stats:seecustomers', 'local_oriskill')), 'small mb-3') : '') .
+        html_writer::div(get_string('stats:contacts', 'local_oriskill', $contactscount) . ' · ' .
+            get_string('stats:members', 'local_oriskill', array_sum($learners)), 'small text-muted'),
+        'oriskill-card');
+    echo html_writer::div($revenuecard . $customerscard, 'oriskill-grid-2 mb-3', ['style' => 'grid-template-columns: 2fr 1fr']);
+
+    // What happened in the period, each line opening the contact.
+    $contactids = $DB->get_records_menu('local_oriskill_contacts', ['creatorid' => $creator->id], '', 'userid, id');
+    $rows = '';
+    foreach (st::activity($creator, $movements, $from, $to, 12) as $event) {
+        $text = s($event->text);
+        if (isset($contactids[$event->userid]) && $can('/local/oriskill/contact.php')) {
+            $text = html_writer::link(new moodle_url('/local/oriskill/contact.php', ['id' => $contactids[$event->userid]]), $text);
+        }
+        $rows .= html_writer::tag('li',
+            html_writer::div(html_writer::div('<i class="fa ' . $event->icon . ' me-2 ' .
+                ($event->tone === 'good' ? 'text-success' : ($event->tone === 'bad' ? 'text-danger' : 'text-muted')) .
+                '" aria-hidden="true"></i>' . $text, 'oriskill-row-title') .
+                html_writer::div(userdate($event->time, get_string('strftimedatetimeshort', 'langconfig')), 'oriskill-row-sub'),
+                'oriskill-row-main'));
+    }
+    echo html_writer::div(html_writer::tag('h3', get_string('stats:activity', 'local_oriskill')) .
+        ($rows ? html_writer::tag('ul', $rows, ['class' => 'oriskill-rows'])
+            : html_writer::div('<i class="fa fa-clock" aria-hidden="true"></i>' . get_string('stats:noactivity', 'local_oriskill'),
+                'oriskill-empty')), 'oriskill-card mb-4');
+}
+
 // Key figures.
 $stats = '';
 foreach ([
     ['fa-graduation-cap', count($courses), get_string('stat:courses', 'local_oriskill', $onsale)],
     ['fa-user-graduate', array_sum($learners), get_string('stat:learners', 'local_oriskill')],
-    ['fa-cart-shopping', count($paid), get_string('stat:sales', 'local_oriskill')],
-    ['fa-euro-sign', $revenuetext ? implode(' + ', $revenuetext) : '0', get_string('stat:revenue', 'local_oriskill')],
 ] as [$icon, $value, $label]) {
     $stats .= html_writer::div(
         html_writer::span('<i class="fa ' . $icon . '" aria-hidden="true"></i>', 'oriskill-stat-icon') .
@@ -126,26 +184,6 @@ $stepscard = html_writer::tag('h3', get_string('dashboard:steps', 'local_oriskil
         ['role' => 'progressbar', 'aria-valuenow' => $percent, 'aria-valuemin' => 0, 'aria-valuemax' => 100]) .
     html_writer::tag('ul', $items, ['class' => 'oriskill-steps']);
 
-// Latest sales.
-$rows = '';
-foreach (array_slice($sales, 0, 5) as $sale) {
-    $rows .= html_writer::tag('li',
-        html_writer::div(html_writer::div(format_string($sale->itemname), 'oriskill-row-title') .
-            html_writer::div(s($sale->firstname . ' ' . $sale->lastname) . ' · ' .
-                userdate($sale->timepaid, get_string('strftimedatetimeshort', 'langconfig')), 'oriskill-row-sub'),
-            'oriskill-row-main') .
-        html_writer::span(pricing_service::format_price($sale->total, $sale->currency),
-            'oriskill-badge ' . ($sale->status === 'refunded' ? '' : 'is-good')));
-}
-$salescard = html_writer::tag('h3', get_string('dashboard:latestsales', 'local_oriskill')) .
-    ($rows ? html_writer::tag('ul', $rows, ['class' => 'oriskill-rows']) .
-        ($can('/local/oriskill/sales.php') ? html_writer::div(html_writer::link(new moodle_url('/local/oriskill/sales.php'),
-            get_string('seeall', 'local_oriskill')), 'mt-2 small') : '')
-    : html_writer::div('<i class="fa fa-chart-line" aria-hidden="true"></i>' . get_string('nosales', 'local_oriskill'),
-        'oriskill-empty'));
-echo html_writer::div(html_writer::div($stepscard, 'oriskill-card') . html_writer::div($salescard, 'oriskill-card'),
-    'oriskill-grid-2');
-
 // Courses.
 $rows = '';
 foreach (array_slice($courses, 0, 5, true) as $courseid => $row) {
@@ -157,13 +195,14 @@ foreach (array_slice($courses, 0, 5, true) as $courseid => $row) {
             'oriskill-row-main') .
         creator_service::course_status_badge($row));
 }
-echo html_writer::div(html_writer::tag('h3', get_string('mycourses', 'local_oriskill')) .
+$coursescard = html_writer::tag('h3', get_string('mycourses', 'local_oriskill')) .
     ($rows ? html_writer::tag('ul', $rows, ['class' => 'oriskill-rows']) .
         ($can('/local/oriskill/courses.php') ? html_writer::div(html_writer::link(new moodle_url('/local/oriskill/courses.php'),
             get_string('seeall', 'local_oriskill')), 'mt-2 small') : '')
     : html_writer::div('<i class="fa fa-graduation-cap" aria-hidden="true"></i>' .
-        get_string('nocoursesyet', 'local_oriskill', $newcourseurl->out(false)), 'oriskill-empty')),
-    'oriskill-card');
+        get_string('nocoursesyet', 'local_oriskill', $newcourseurl->out(false)), 'oriskill-empty'));
+echo html_writer::div(html_writer::div($stepscard, 'oriskill-card') . html_writer::div($coursescard, 'oriskill-card'),
+    'oriskill-grid-2');
 
 echo creator_service::space_end();
 echo $OUTPUT->footer();

@@ -55,6 +55,7 @@ class team_service {
     const PAGE_ROLES = [
         '/local/oriskill/dashboard.php' => ['admin', 'teaching', 'support', 'accounting'],
         '/local/oriskill/sales.php' => ['admin', 'support', 'accounting'],
+        '/local/oriskill/stats.php' => ['admin', 'support', 'accounting'],
         '/local/oriskill/invoices.php' => ['admin', 'support', 'accounting'],
         '/local/oriskill/document.php' => ['admin', 'accounting'],
         '/local/oriskill/schedules.php' => ['admin', 'support', 'accounting'],
