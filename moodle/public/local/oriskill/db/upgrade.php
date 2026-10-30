@@ -466,5 +466,14 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103045, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103046) {
+        // Support tickets.
+        foreach (['local_oriskill_tickets', 'local_oriskill_ticketmsgs'] as $name) {
+            if (!$dbman->table_exists($name)) {
+                $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', $name);
+            }
+        }
+        upgrade_plugin_savepoint(true, 2026103046, 'local', 'oriskill');
+    }
     return true;
 }

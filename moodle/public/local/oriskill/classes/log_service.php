@@ -33,7 +33,7 @@ class log_service {
         'access' => ['learner_', 'access_', 'accessmail_', 'notifs_', 'unpaid_', 'subscription_'],
         'sales' => ['price_', 'instalments_', 'affiliaterate_', 'coupon_', 'payment_', 'orderform_', 'abandon_', 'invoice_',
             'quote_', 'credit_', 'refund_', 'billing_', 'accounting_'],
-        'crm' => ['contact_', 'contacts_', 'segment_', 'capturepage_'],
+        'crm' => ['contact_', 'contacts_', 'segment_', 'capturepage_', 'ticket_'],
         'team' => ['member_', 'export'],
     ];
 

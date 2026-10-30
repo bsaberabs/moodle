@@ -70,6 +70,13 @@ class hook_callbacks {
             $hook->get_primaryview()->add(get_string('editshowcase', 'local_oriskill'),
                 new \moodle_url('/local/oriskill/dashboard.php'), \navigation_node::TYPE_CUSTOM, null, 'oriskilltrainer');
         }
+        // Learners of a trainer write to the trainer's team.
+        if (isloggedin() && !isguestuser() && !self::current_creator()
+                && ($DB->record_exists('local_oriskill_tickets', ['userid' => $USER->id])
+                    || ticket_service::trainers_of((int) $USER->id))) {
+            $hook->get_primaryview()->add(get_string('support:title', 'local_oriskill'),
+                new \moodle_url('/local/oriskill/support.php'), \navigation_node::TYPE_CUSTOM, null, 'oriskillsupport');
+        }
         // Subscribers of a trainer's offer reach their subscriptions (to see or cancel them).
         if (isloggedin() && !isguestuser()
                 && $DB->record_exists('local_oriskill_instalments', ['userid' => $USER->id, 'count' => 0])) {

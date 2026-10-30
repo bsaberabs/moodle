@@ -755,6 +755,10 @@ $string['log:segment_saved'] = 'Segment saved: {$a->name}';
 $string['log:showcase_saved'] = 'Showcase changed';
 $string['log:smtp_saved'] = 'Sending server saved (used: {$a->state})';
 $string['log:subscription_cancelled'] = 'Subscription of {$a->user} to "{$a->course}" cancelled';
+$string['log:ticket_answered'] = 'Ticket answered: {$a->subject}';
+$string['log:ticket_closed'] = 'Ticket closed: {$a->subject}';
+$string['log:ticket_created'] = 'Ticket sent by {$a->user}: {$a->subject}';
+$string['log:ticket_reopened'] = 'Ticket reopened: {$a->subject}';
 $string['log:to'] = 'To';
 $string['log:tool_added'] = '{$a->tool} added to "{$a->course}"';
 $string['log:unpaid_abandoned'] = 'Unpaid instalments of {$a->user} for "{$a->course}" abandoned: {$a->reason}';
@@ -791,6 +795,7 @@ $string['menu:orderforms'] = 'Order forms';
 $string['menu:profile'] = 'My showcase';
 $string['menu:schedules'] = 'Payment schedules';
 $string['menu:team'] = 'Team';
+$string['menu:tickets'] = 'Tickets';
 $string['menu:tools'] = 'Teaching tools';
 $string['menu:unpaid'] = 'Unpaid';
 $string['module:forced'] = 'Access forced';
@@ -1133,6 +1138,24 @@ $string['substatus:cancelled'] = 'Cancelled – access until {$a->until}';
 $string['substatus:late'] = 'Charge refused';
 $string['substatus:stopped'] = 'Charges stopped';
 $string['substatus:suspended'] = 'Suspended for non-payment';
+$string['support:answer'] = 'Your answer';
+$string['support:back'] = 'My requests';
+$string['support:close'] = 'My question is solved: close the request';
+$string['support:closed'] = 'Request closed.';
+$string['support:course'] = 'Course concerned';
+$string['support:mine'] = 'My requests';
+$string['support:new'] = 'Write to the support';
+$string['support:nocourse'] = 'None in particular';
+$string['support:notrainer'] = 'You can write to the support of a trainer once you are enrolled in one of their courses.';
+$string['support:reopen'] = 'Write again (the request is reopened)';
+$string['support:send'] = 'Send';
+$string['support:sent'] = 'Message sent: the team answers you here and by e-mail.';
+$string['support:status_answered'] = 'Answer received';
+$string['support:status_closed'] = 'Closed';
+$string['support:status_open'] = 'Sent';
+$string['support:title'] = 'Support';
+$string['support:trainer'] = 'Trainer';
+$string['support:you'] = 'You';
 $string['suspend'] = 'Suspend';
 $string['task:abandonreminders'] = 'Send the abandon sequence e-mails of the order forms';
 $string['task:activecampaignsync'] = 'Send a buyer to ActiveCampaign';
@@ -1175,6 +1198,45 @@ $string['team:send'] = 'Invite';
 $string['team:since'] = 'since {$a}';
 $string['team:switchto'] = 'Switch to the space of {$a}';
 $string['team:workingin'] = 'Space of {$a->trainer} – your role: {$a->role}.';
+$string['tickets:addnote'] = 'Internal note';
+$string['tickets:answer'] = 'Answer';
+$string['tickets:answered'] = 'Answer sent to the learner.';
+$string['tickets:back'] = 'All tickets';
+$string['tickets:close'] = 'Close the ticket';
+$string['tickets:empty'] = 'Write a subject and a message.';
+$string['tickets:internal'] = 'Internal note';
+$string['tickets:learner'] = 'Learner';
+$string['tickets:mail_answer_subject'] = 'Answer to your request: {$a->subject}';
+$string['tickets:mail_learner'] = 'Hello {$a->firstname},
+
+{$a->trainer} answered your request "{$a->subject}":
+
+{$a->message}
+
+To answer or follow your request: {$a->url}';
+$string['tickets:mail_new_subject'] = '[Ticket #{$a->id}] {$a->subject}';
+$string['tickets:mail_reply_subject'] = '[Ticket #{$a->id}] New message: {$a->subject}';
+$string['tickets:mail_team'] = '{$a->learner} ({$a->email}) wrote:
+
+{$a->message}
+
+Answer: {$a->url}';
+$string['tickets:none'] = 'No ticket here.';
+$string['tickets:note_help'] = 'An internal note is seen only by your team; the learner is not told.';
+$string['tickets:noted'] = 'Note added.';
+$string['tickets:opened'] = 'opened {$a}';
+$string['tickets:reopen'] = 'Reopen the ticket';
+$string['tickets:search'] = 'Subject, name or e-mail';
+$string['tickets:send'] = 'Send the answer';
+$string['tickets:sendclose'] = 'Send and close';
+$string['tickets:status_answered'] = 'Answered';
+$string['tickets:status_closed'] = 'Closed';
+$string['tickets:status_open'] = 'To handle';
+$string['tickets:tab_all'] = 'All';
+$string['tickets:tab_answered'] = 'Answered';
+$string['tickets:tab_closed'] = 'Closed';
+$string['tickets:tab_open'] = 'To handle';
+$string['tickets:updated'] = 'Last message';
 $string['tools:add_certificate'] = 'Add the certificate';
 $string['tools:add_feedback'] = 'Add the questionnaire';
 $string['tools:add_forum'] = 'Create the discussion space';
