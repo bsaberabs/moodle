@@ -55,6 +55,31 @@ if ($course) {
     }
 }
 
+// Notifications of the course (module opened, reminders).
+$notifsform = null;
+if ($course) {
+    $notifsform = new \local_oriskill\form\coursenotifs_form($url);
+    $data = ['courseid' => $course->id];
+    foreach (\local_oriskill\course_notifications::settings($course) as $kind => $setting) {
+        $data += ['enabled_' . $kind => $setting->enabled, 'days_' . $kind => $setting->days, 'hour_' . $kind => $setting->hour,
+            'subject_' . $kind => $setting->subject, 'body_' . $kind => ['text' => $setting->body, 'format' => $setting->bodyformat]];
+    }
+    $notifsform->set_data($data);
+    if ($data = $notifsform->get_data()) {
+        $before = \local_oriskill\course_notifications::summary($course);
+        \local_oriskill\course_notifications::save($course, $data);
+        \local_oriskill\log_service::add($creator, 'notifs_saved', [], (int) $course->id, null,
+            \local_oriskill\log_service::diff($before, \local_oriskill\course_notifications::summary($course)));
+        $message = get_string('changessaved');
+        if (!empty($data->testbutton)) {
+            $sent = \local_oriskill\course_notifications::send_tests($course, $creator, $USER);
+            $message = get_string($sent ? 'notifs:testsent' : 'notifs:testnone', 'local_oriskill',
+                (object) ['count' => $sent, 'email' => s($USER->email)]);
+        }
+        redirect(new moodle_url($url, [], 'notifications'), $message, null, \core\output\notification::NOTIFY_SUCCESS);
+    }
+}
+
 // A module's release rule in words, for the log.
 $ruletext = function(stdClass $rule) use ($course): string {
     if (!empty($rule->custom)) {
@@ -74,7 +99,8 @@ $ruletext = function(stdClass $rule) use ($course): string {
     return $text;
 };
 
-if ($course && ($action = optional_param('action', '', PARAM_ALPHA)) && $action !== 'accessmail' && confirm_sesskey()) {
+if ($course && ($action = optional_param('action', '', PARAM_ALPHA)) && !in_array($action, ['accessmail', 'notifs'])
+        && confirm_sesskey()) {
     $message = get_string('changessaved');
     $type = \core\output\notification::NOTIFY_SUCCESS;
     try {
@@ -226,6 +252,14 @@ echo html_writer::tag('h3', '<i class="fa fa-envelope-open-text me-2" aria-hidde
     get_string('accessmail:title', 'local_oriskill'));
 echo html_writer::tag('p', get_string('accessmail:intro', 'local_oriskill'), ['class' => 'small text-muted']);
 $accessform->display();
+echo html_writer::end_div();
+
+// Notifications of the course.
+echo html_writer::start_div('oriskill-card mb-4', ['id' => 'notifications']);
+echo html_writer::tag('h3', '<i class="fa fa-bell me-2" aria-hidden="true"></i>' .
+    get_string('notifs:title', 'local_oriskill'));
+echo html_writer::tag('p', get_string('notifs:intro', 'local_oriskill'), ['class' => 'small text-muted']);
+$notifsform->display();
 echo html_writer::end_div();
 
 // Time spent in the course.

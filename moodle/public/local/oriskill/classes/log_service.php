@@ -30,7 +30,7 @@ class log_service {
 
     /** Categories of the log, by action prefix (anything else is a setting). */
     const CATEGORIES = [
-        'access' => ['learner_', 'access_', 'accessmail_', 'unpaid_', 'subscription_'],
+        'access' => ['learner_', 'access_', 'accessmail_', 'notifs_', 'unpaid_', 'subscription_'],
         'sales' => ['price_', 'instalments_', 'affiliaterate_', 'coupon_', 'payment_', 'orderform_', 'abandon_', 'invoice_',
             'quote_', 'credit_', 'refund_', 'billing_', 'accounting_'],
         'crm' => ['contact_', 'contacts_', 'segment_', 'capturepage_'],

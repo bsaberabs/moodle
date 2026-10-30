@@ -44,6 +44,15 @@ $tasks = [
         'dayofweek' => '*',
     ],
     [
+        'classname' => '\local_oriskill\task\course_notifications',
+        'blocking' => 0,
+        'minute' => '5',
+        'hour' => '*',
+        'day' => '*',
+        'month' => '*',
+        'dayofweek' => '*',
+    ],
+    [
         'classname' => '\local_oriskill\task\suspend_unpaid',
         'blocking' => 0,
         'minute' => '43',
