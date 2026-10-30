@@ -55,3 +55,7 @@ Ces changements ne viennent pas du dépôt d'origine. À reporter après chaque 
    - `classes/hook/order_document.php` (nouveau)
    - `download_invoice.php` : déclenche le hook une fois les droits vérifiés ; sans document fourni, le PDF de la
      boutique est envoyé comme avant.
+10. **Commande sur une formation déjà acquise** : une commande dont les notes JSON portent `"allowowned": true` n'est
+    pas annulée comme « commande en double » au paiement. Sert aux échéances impayées réglées par un lien de paiement
+    (local_oriskill, page Impayés) : l'apprenant a déjà la formation, il paie ce qui manque.
+    - `classes/services/order_validation_service.php` : `validate_order_for_payment()` renvoie valide d'emblée.

@@ -505,7 +505,7 @@ class orderform_service {
      * @param \stdClass $order Order.
      * @return moodle_url
      */
-    private static function payment_url(\stdClass $creator, \stdClass $order): moodle_url {
+    public static function payment_url(\stdClass $creator, \stdClass $order): moodle_url {
         if (!seller_service::usable_gateways($creator)) {
             $start = gateway_manager::initialize_payment(gateway::GATEWAY, $order);
             return new moodle_url($start['authorization_url']);

@@ -156,11 +156,12 @@ class instalment_service {
         }
         $wassuspended = $record->status === 'suspended';
         $paid = (int) $event->other['paid'];
-        // A subscription (count 0) never completes: it runs until cancelled.
+        // A subscription (count 0) never completes: it runs until cancelled. Instalments caught up through a
+        // payment link (extrapaid) count too.
         $DB->update_record('local_oriskill_instalments', (object) [
             'id' => $record->id,
             'paid' => $paid,
-            'status' => $record->count && $paid >= (int) $record->count ? 'completed'
+            'status' => $record->count && $paid + (int) $record->extrapaid >= (int) $record->count ? 'completed'
                 : ($record->status === 'cancelled' ? 'cancelled' : 'active'),
             'latesince' => 0,
             'timemodified' => time(),
@@ -169,12 +170,22 @@ class instalment_service {
             // Each further month of a subscription gets its own invoice.
             billing_service::issue_invoice((int) $record->orderid, $paid);
         }
+        unpaid_service::charged($record);
         if ($wassuspended) {
             self::set_access($record, false);
-            self::notify($record, 'restored');
-            if ($creator = seller_service::owner_of_course((int) $record->courseid)) {
-                log_service::add($creator, 'learner_paidrestored', [], (int) $record->courseid, (int) $record->userid);
-            }
+            self::restored($record);
+        }
+    }
+
+    /**
+     * The access of a purchase suspended for non-payment was restored after payment: tell the learner and the trainer.
+     *
+     * @param \stdClass $record Instalment purchase.
+     */
+    public static function restored(\stdClass $record): void {
+        self::notify($record, 'restored');
+        if ($creator = seller_service::owner_of_course((int) $record->courseid)) {
+            log_service::add($creator, 'learner_paidrestored', [], (int) $record->courseid, (int) $record->userid);
         }
     }
 
@@ -211,7 +222,7 @@ class instalment_service {
      * @return int
      */
     public static function paid_until(\stdClass $record): int {
-        return strtotime('+' . (int) $record->paid . ' month', (int) $record->timecreated);
+        return strtotime('+' . ((int) $record->paid + (int) ($record->extrapaid ?? 0)) . ' month', (int) $record->timecreated);
     }
 
     /**
@@ -326,7 +337,7 @@ class instalment_service {
      * @param \stdClass $record Instalment purchase.
      * @param bool $suspend Suspend (true) or restore (false).
      */
-    private static function set_access(\stdClass $record, bool $suspend): void {
+    public static function set_access(\stdClass $record, bool $suspend): void {
         global $DB;
 
         $courseids = $DB->get_fieldset_select('local_moderncommerce_order_items', 'courseid',
@@ -389,13 +400,15 @@ class instalment_service {
                 ? $DB->get_field('local_oriskill_formoffers', 'label', ['id' => $notes['offer']]) : false;
             $record->label = $offer !== false ? format_string($offer) : format_string($record->coursename);
             // The first instalment can be a deposit of its own (firstamount), the others are equal.
+            // Instalments caught up through a payment link (extrapaid) are at the usual amount.
             $first = (float) $record->firstamount > 0 ? (float) $record->firstamount : (float) $record->amount;
-            $record->collected = $record->paid ? round($first + ((int) $record->paid - 1) * (float) $record->amount, 2) : 0.0;
-            $record->remaining = round(((int) $record->count - max(1, (int) $record->paid)) * (float) $record->amount
+            $paid = (int) $record->paid + (int) $record->extrapaid;
+            $record->collected = $record->paid ? round($first + ($paid - 1) * (float) $record->amount, 2) : 0.0;
+            $record->remaining = round(max(0, (int) $record->count - max(1, $paid)) * (float) $record->amount
                 + ($record->paid ? 0 : $first), 2);
             // Monthly from the first payment; once completed or stopped, nothing more is due.
             $record->nextdue = in_array($record->status, ['completed', 'stopped', 'cancelled'], true)
-                || ($record->count && $record->paid >= $record->count) ? 0 : self::paid_until($record);
+                || ($record->count && $paid >= $record->count) ? 0 : self::paid_until($record);
             if (!$record->count) {
                 $record->remaining = 0.0;
             }
@@ -441,7 +454,8 @@ class instalment_service {
         $now = time();
         $record = (object) ['orderid' => $orderid, 'userid' => (int) $order->userid, 'courseid' => $courseid,
             'count' => $plan['count'], 'amount' => $plan['amount'],
-            'firstamount' => $plan['first'] != $plan['amount'] ? $plan['first'] : 0, 'paid' => 0, 'status' => 'active', 'latesince' => 0,
+            'firstamount' => $plan['first'] != $plan['amount'] ? $plan['first'] : 0, 'paid' => 0, 'extrapaid' => 0,
+            'status' => 'active', 'latesince' => 0,
             'timecreated' => $now, 'timemodified' => $now];
         $record->id = $DB->insert_record('local_oriskill_instalments', $record);
         return $record;
@@ -458,7 +472,11 @@ class instalment_service {
         global $DB;
 
         $record = self::record_for_order($orderid);
-        if (!$record || in_array($record->status, ['suspended', 'completed'], true)) {
+        if (!$record || $record->status === 'completed') {
+            return;
+        }
+        unpaid_service::open($record, $message);
+        if ($record->status === 'suspended') {
             return;
         }
         $record->latesince = (int) $record->latesince ?: time();

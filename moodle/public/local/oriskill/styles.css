@@ -656,6 +656,15 @@
     min-width: 11rem;
 }
 
+/* Unpaid instalments: every cell wraps, the actions keep room for their buttons. */
+.path-local-moderncommerce .oriskill-space table.table.oriskill-unpaid:not(.mc-table) td {
+    white-space: normal;
+    min-width: 10rem;
+}
+.path-local-moderncommerce .oriskill-space table.table.oriskill-unpaid:not(.mc-table) td:nth-child(4) {
+    min-width: 13rem;
+}
+
 /* Order step extra and thank-you page offer. */
 .oriskill-bump {
     padding: .9rem 1rem;

@@ -43,6 +43,12 @@ class observer {
      * @param \local_moderncommerce\event\order_paid $event Event.
      */
     public static function order_paid(\local_moderncommerce\event\order_paid $event): void {
+        // Missing instalments paid through a reminder: invoiced, but not a new sale.
+        if (unpaid_service::order_paid((int) $event->objectid)) {
+            billing_service::issue_invoice((int) $event->objectid);
+            webhook_service::order_event((int) $event->objectid, 'order.paid');
+            return;
+        }
         affiliate_service::record_commissions((int) $event->objectid);
         instalment_service::group_buyers((int) $event->objectid);
         billing_service::issue_invoice((int) $event->objectid);

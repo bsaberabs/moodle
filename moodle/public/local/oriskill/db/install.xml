@@ -148,6 +148,7 @@
         <FIELD NAME="amount" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="2" SEQUENCE="false" COMMENT="Each instalment"/>
         <FIELD NAME="firstamount" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="2" SEQUENCE="false" COMMENT="First instalment when it differs from the others, 0 when equal"/>
         <FIELD NAME="paid" TYPE="int" LENGTH="3" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Instalments received"/>
+        <FIELD NAME="extrapaid" TYPE="int" LENGTH="3" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Missing instalments paid outside SecureAndPay's schedule (payment link, or recorded by the trainer)"/>
         <FIELD NAME="status" TYPE="char" LENGTH="15" NOTNULL="true" DEFAULT="active" SEQUENCE="false" COMMENT="active, late (refused, grace period), suspended (access suspended), stopped (schedule ended unpaid, grace period), completed"/>
         <FIELD NAME="latesince" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="First unpaid instalment, 0 when up to date"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
@@ -405,6 +406,37 @@
       </KEYS>
       <INDEXES>
         <INDEX NAME="pageuser" UNIQUE="true" FIELDS="pageid, userid"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="local_oriskill_unpaid" COMMENT="Unpaid instalments of a purchase, open until settled or abandoned, kept as history">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="instalmentid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="creatorid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="cause" TYPE="char" LENGTH="15" NOTNULL="true" DEFAULT="failed" SEQUENCE="false" COMMENT="failed (instalment refused) or stopped (schedule stopped before its end)"/>
+        <FIELD NAME="state" TYPE="char" LENGTH="15" NOTNULL="true" DEFAULT="open" SEQUENCE="false" COMMENT="open, settled or abandoned"/>
+        <FIELD NAME="amount" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="2" SEQUENCE="false" COMMENT="Amount owed when last computed, amount paid once settled"/>
+        <FIELD NAME="how" TYPE="char" LENGTH="15" NOTNULL="false" SEQUENCE="false" COMMENT="How it was closed: auto (charged again), link (payment link), manual (by the trainer)"/>
+        <FIELD NAME="reason" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Trainer's reason when closing it"/>
+        <FIELD NAME="reminders" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="lastreminder" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="payorderid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Order of the payment link, 0 before the first click"/>
+        <FIELD NAME="closedby" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timeclosed" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="instalmentid" TYPE="foreign" FIELDS="instalmentid" REFTABLE="local_oriskill_instalments" REFFIELDS="id"/>
+        <KEY NAME="creatorid" TYPE="foreign" FIELDS="creatorid" REFTABLE="local_oriskill_creators" REFFIELDS="id"/>
+        <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="creatorstate" UNIQUE="false" FIELDS="creatorid, state"/>
       </INDEXES>
     </TABLE>
   </TABLES>

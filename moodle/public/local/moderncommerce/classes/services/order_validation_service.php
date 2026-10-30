@@ -43,6 +43,13 @@ class order_validation_service {
         $errors = [];
         $cancelorder = false;
 
+        // An order paying something else than the access itself, such as missing instalments of a course the buyer
+        // already has, says so in its notes (Oriskill patch 10).
+        $notes = json_decode((string) $DB->get_field('local_moderncommerce_orders', 'notes', ['id' => $orderid]), true);
+        if (!empty($notes['allowowned'])) {
+            return ['valid' => true, 'errors' => [], 'cancel_order' => false];
+        }
+
         $items = \local_moderncommerce\api\order_api::get_order_items($orderid);
         if (empty($items)) {
             return [

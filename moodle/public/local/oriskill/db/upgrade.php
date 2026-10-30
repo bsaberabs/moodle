@@ -234,5 +234,21 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         local_oriskill_allow_trainer_loginas();
         upgrade_plugin_savepoint(true, 2026103024, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103025) {
+        // Unpaid cases, and missing instalments paid outside SecureAndPay's schedule.
+        $field = new xmldb_field('extrapaid', XMLDB_TYPE_INTEGER, '3', null, XMLDB_NOTNULL, null, '0', 'paid');
+        $table = new xmldb_table('local_oriskill_instalments');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        if (!$dbman->table_exists('local_oriskill_unpaid')) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', 'local_oriskill_unpaid');
+        }
+        // Purchases already unpaid get their open case.
+        foreach ($DB->get_records_select('local_oriskill_instalments', "status IN ('late', 'stopped', 'suspended')") as $record) {
+            \local_oriskill\unpaid_service::open($record, $record->status === 'stopped' ? 'stopped' : 'failed');
+        }
+        upgrade_plugin_savepoint(true, 2026103025, 'local', 'oriskill');
+    }
     return true;
 }

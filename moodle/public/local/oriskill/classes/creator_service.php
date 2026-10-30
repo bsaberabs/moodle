@@ -214,6 +214,7 @@ class creator_service {
             '/local/oriskill/dashboard.php' => ['menu:dashboard', 'bi-speedometer2'],
             '/local/oriskill/sales.php' => ['sales', 'bi-graph-up-arrow'],
             '/local/oriskill/schedules.php' => ['menu:schedules', 'bi-calendar-check'],
+            '/local/oriskill/unpaid.php' => ['menu:unpaid', 'bi-exclamation-triangle'],
             '/local/oriskill/invoices.php' => ['menu:invoices', 'bi-receipt'],
         ],
         'navgroup:courses' => [
