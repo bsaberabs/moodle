@@ -41,6 +41,9 @@ class instalment_service {
     /** Days between a refused instalment and the suspension of the access. */
     const GRACE_DAYS = 7;
 
+    /** Unpaid instalments before the access is cut, offered per offer (1: at the first one, as before). */
+    const CUTS = [1, 2, 3, 4, 5, 6];
+
     /**
      * Instalment offer of a course: number, amount of each and total, or null when the course is paid at once.
      *
@@ -59,7 +62,8 @@ class instalment_service {
         }
         $count = (int) $offer->count;
         $amount = ceil(round((float) $offer->total * 100 / $count, 4)) / 100;
-        return (object) ['count' => $count, 'amount' => $amount, 'total' => round($amount * $count, 2)];
+        return (object) ['count' => $count, 'amount' => $amount, 'total' => round($amount * $count, 2),
+            'cut' => in_array((int) ($offer->cut ?? 1), self::CUTS, true) ? (int) $offer->cut : 1];
     }
 
     /**
@@ -69,8 +73,9 @@ class instalment_service {
      * @param int $courseid Course.
      * @param int $count Number of instalments, 0 to stop.
      * @param float $total Total price in instalments.
+     * @param int $cut Unpaid instalments before the access is cut (one of CUTS).
      */
-    public static function save_offer(\stdClass $creator, int $courseid, int $count, float $total): void {
+    public static function save_offer(\stdClass $creator, int $courseid, int $count, float $total, int $cut = 1): void {
         global $DB;
 
         learning_service::require_own_course($creator, $courseid);
@@ -84,7 +89,8 @@ class instalment_service {
         if (!in_array($count, self::COUNTS, true) || $total <= 0) {
             throw new \moodle_exception('error:instalments', 'local_oriskill');
         }
-        $record = (object) ['courseid' => $courseid, 'count' => $count, 'total' => round($total, 2), 'timemodified' => time()];
+        $record = (object) ['courseid' => $courseid, 'count' => $count, 'total' => round($total, 2),
+            'cut' => in_array($cut, self::CUTS, true) ? $cut : 1, 'timemodified' => time()];
         if ($existing) {
             $record->id = $existing->id;
             $DB->update_record('local_oriskill_instoffers', $record);
@@ -318,6 +324,9 @@ class instalment_service {
         $now = $now ?? time();
         $records = $DB->get_records_select('local_oriskill_instalments',
             "status IN ('late', 'stopped') AND latesince > 0 AND latesince <= ?", [$now - self::GRACE_DAYS * DAYSECS]);
+        // Offers allowing several unpaid instalments: cut once that many are due and the grace period is over.
+        $records = array_filter($records, fn($record) => self::cut_time($record) <= $now
+            && unpaid_service::missing($record, 'failed', $now) >= max(1, (int) ($record->cutafter ?? 1)));
         foreach ($records as $record) {
             self::set_access($record, true);
             $DB->update_record('local_oriskill_instalments',
@@ -455,10 +464,42 @@ class instalment_service {
         $record = (object) ['orderid' => $orderid, 'userid' => (int) $order->userid, 'courseid' => $courseid,
             'count' => $plan['count'], 'amount' => $plan['amount'],
             'firstamount' => $plan['first'] != $plan['amount'] ? $plan['first'] : 0, 'paid' => 0, 'extrapaid' => 0,
+            'cutafter' => $plan['count'] ? self::cut_for_order($order, $courseid) : 1,
             'status' => 'active', 'latesince' => 0,
             'timecreated' => $now, 'timemodified' => $now];
         $record->id = $DB->insert_record('local_oriskill_instalments', $record);
         return $record;
+    }
+
+    /**
+     * Unpaid instalments allowed before the access is cut, as set on the offer the order was placed with.
+     *
+     * @param \stdClass $order Order.
+     * @param int $courseid Course bought.
+     * @return int
+     */
+    private static function cut_for_order(\stdClass $order, int $courseid): int {
+        global $DB;
+
+        $notes = json_decode((string) $order->notes, true) ?: [];
+        $cut = !empty($notes['offer'])
+            ? $DB->get_field('local_oriskill_formoffers', 'instalcut', ['id' => (int) $notes['offer']])
+            : $DB->get_field('local_oriskill_instoffers', 'cut', ['courseid' => $courseid]);
+        return in_array((int) $cut, self::CUTS, true) ? (int) $cut : 1;
+    }
+
+    /**
+     * When the access of a late purchase is cut: the grace period after the instalment that makes the unpaid ones
+     * reach the offer's number.
+     *
+     * @param \stdClass $record Instalment purchase (late or stopped).
+     * @return int Time.
+     */
+    public static function cut_time(\stdClass $record): int {
+        $cut = max(1, (int) ($record->cutafter ?? 1));
+        // The first unpaid instalment is the one refused; the cut-th falls due (cut - 1) months later.
+        $nth = strtotime('+' . ($cut - 1) . ' month', (int) $record->latesince);
+        return $nth + self::GRACE_DAYS * DAYSECS;
     }
 
     /**
@@ -507,7 +548,7 @@ class instalment_service {
             'paid' => (int) $record->paid,
             'count' => (int) $record->count,
             'days' => self::GRACE_DAYS,
-            'deadline' => userdate((int) $record->latesince + ($record->status === 'cancelled' ? 0 : self::GRACE_DAYS * DAYSECS),
+            'deadline' => userdate($record->status === 'cancelled' ? (int) $record->latesince : self::cut_time($record),
                 get_string('strftimedate')),
             'url' => (new moodle_url('/local/oriskill/learner.php', ['courseid' => $course->id, 'userid' => $learner->id]))
                 ->out(false),

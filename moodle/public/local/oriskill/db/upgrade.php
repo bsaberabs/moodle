@@ -398,5 +398,17 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103039, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103040) {
+        // Unpaid instalments allowed before the access is cut, per offer (1 = as before).
+        foreach ([['local_oriskill_instalments', 'cutafter', 'count'], ['local_oriskill_instoffers', 'cut', 'total'],
+                ['local_oriskill_formoffers', 'instalcut', 'instalfirst']] as [$tablename, $fieldname, $after]) {
+            $table = new xmldb_table($tablename);
+            $field = new xmldb_field($fieldname, XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '1', $after);
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+        upgrade_plugin_savepoint(true, 2026103040, 'local', 'oriskill');
+    }
     return true;
 }

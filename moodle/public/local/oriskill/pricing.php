@@ -61,6 +61,7 @@ if (data_submitted() && confirm_sesskey()) {
     if ($caninstalments) {
         $counts = optional_param_array('instcount', [], PARAM_INT);
         $totals = optional_param_array('insttotal', [], PARAM_RAW_TRIMMED);
+        $cuts = optional_param_array('instcut', [], PARAM_INT);
         foreach ($counts as $courseid => $count) {
             $courseid = (int) $courseid;
             if (!isset($courses[$courseid])) {
@@ -72,8 +73,10 @@ if (data_submitted() && confirm_sesskey()) {
                 continue;
             }
             $before = instalment_service::offer($courseid);
-            if (($before->count ?? 0) != $count || ($count && abs(($before->total ?? 0) - $total) >= 0.01)) {
-                instalment_service::save_offer($creator, $courseid, $count, (float) $total);
+            $cut = (int) ($cuts[$courseid] ?? 1);
+            if (($before->count ?? 0) != $count || ($count && abs(($before->total ?? 0) - $total) >= 0.01)
+                    || ($count && (int) ($before->cut ?? 1) !== $cut)) {
+                instalment_service::save_offer($creator, $courseid, $count, (float) $total, $cut);
                 \local_oriskill\log_service::add($creator, $count ? 'instalments_set' : 'instalments_off',
                     ['count' => $count, 'total' => format_float((float) $total, 2, true)], $courseid);
             }
@@ -116,6 +119,11 @@ $table->head = [get_string('course'), get_string('pricecol', 'local_oriskill', $
 if ($caninstalments) {
     $table->head[] = get_string('instalments:countcol', 'local_oriskill');
     $table->head[] = get_string('instalments:totalcol', 'local_oriskill', $currency);
+    $table->head[] = get_string('instalments:cutcol', 'local_oriskill');
+}
+$cutoptions = [];
+foreach (instalment_service::CUTS as $cut) {
+    $cutoptions[$cut] = get_string('instalments:cut', 'local_oriskill', $cut);
 }
 $countoptions = [0 => get_string('instalments:none', 'local_oriskill')];
 foreach (instalment_service::COUNTS as $count) {
@@ -140,6 +148,8 @@ foreach ($courses as $courseid => $row) {
             ($offer ? html_writer::div(get_string('instalments:preview', 'local_oriskill', (object) [
                 'count' => $offer->count, 'amount' => pricing_service::format_price($offer->amount, $currency)]),
                 'form-text') : '');
+        $cells[] = html_writer::select($cutoptions, "instcut[$courseid]", (int) ($offer->cut ?? 1), false,
+            ['class' => 'form-select']);
     }
     $table->data[] = $cells;
 }

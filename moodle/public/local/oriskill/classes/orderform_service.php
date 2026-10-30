@@ -145,6 +145,7 @@ class orderform_service {
                 'instalcount' => $count,
                 'instaltotal' => $instaltotal,
                 'instalfirst' => $instalfirst,
+                'instalcut' => in_array((int) ($offer->instalcut ?? 1), instalment_service::CUTS, true) ? (int) $offer->instalcut : 1,
                 'highlight' => empty($offer->highlight) ? 0 : 1,
                 'actags' => activecampaign_service::clean_tags((string) ($offer->actags ?? '')),
                 'subprice' => round(max(0, (float) ($offer->subprice ?? 0)), 2),
