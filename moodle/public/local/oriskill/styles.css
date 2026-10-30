@@ -11,6 +11,8 @@
     --ori-good-soft: #e8f7ee;
     --ori-warn: #b45309;
     --ori-warn-soft: #fef3e2;
+    --ori-bad: #b91c1c;
+    --ori-bad-soft: #fdecec;
 }
 
 /* Boutons aux couleurs de l'administration */
@@ -237,6 +239,10 @@
 .oriskill-badge.is-warn {
     background: var(--ori-warn-soft);
     color: var(--ori-warn);
+}
+.oriskill-badge.is-bad {
+    background: var(--ori-bad-soft);
+    color: var(--ori-bad);
 }
 
 /* Cartes de formations */

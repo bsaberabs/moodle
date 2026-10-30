@@ -34,7 +34,7 @@ $url = new moodle_url('/local/oriskill/integrations.php');
 $creator = creator_service::require_current_creator($url, 'menu:integrations');
 $account = activecampaign_service::account($creator);
 
-// Webhooks: add, test, remove.
+// Webhooks: add, test, turn on or off, remove.
 if (($action = optional_param('hookaction', '', PARAM_ALPHA)) && confirm_sesskey()) {
     $message = get_string('changessaved');
     $type = \core\output\notification::NOTIFY_SUCCESS;
@@ -49,9 +49,20 @@ if (($action = optional_param('hookaction', '', PARAM_ALPHA)) && confirm_sesskey
             if ($action === 'remove') {
                 webhook_service::remove($creator, (int) $hook->id);
                 log_service::add($creator, 'webhook_removed', ['url' => $hook->url]);
+            } else if ($action === 'toggle') {
+                webhook_service::set_enabled($hook, !$hook->enabled);
+                log_service::add($creator, $hook->enabled ? 'webhook_off' : 'webhook_on', ['url' => $hook->url]);
             } else if ($action === 'test') {
-                webhook_service::deliver($hook, 'test', json_encode(['event' => 'test', 'time' => time(),
+                // Sent now, once, and kept in the history.
+                $sentid = webhook_service::record($hook, 'test', json_encode(['event' => 'test', 'time' => time(),
                     'data' => ['trainer' => ['id' => (int) $creator->id, 'name' => format_string($creator->displayname)]]]));
+                webhook_service::attempt($sentid);
+                $sent = $DB->get_record(webhook_service::SENT, ['id' => $sentid]);
+                if ($sent->status !== 'ok') {
+                    $DB->set_field(webhook_service::SENT, 'status', 'failed', ['id' => $sentid]);
+                    throw new moodle_exception('error:webhookdelivery', 'local_oriskill', '',
+                        $sent->httpcode ? 'HTTP ' . $sent->httpcode : get_string('webhook:unreachable', 'local_oriskill'));
+                }
                 $message = get_string('webhook:testok', 'local_oriskill');
             }
         }
@@ -108,6 +119,20 @@ $hidden = fn(string $action, int $id = 0) =>
     html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]) .
     html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'hookaction', 'value' => $action]) .
     ($id ? html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'hookid', 'value' => $id]) : '');
+// Last delivery of a webhook, and how many failed in the last 7 days.
+$last = function(stdClass $hook) use ($DB): string {
+    $sent = $DB->get_records(webhook_service::SENT, ['hookid' => $hook->id], 'timecreated DESC, id DESC', '*', 0, 1);
+    if (!$sent = reset($sent)) {
+        return '';
+    }
+    $failed = $DB->count_records_select(webhook_service::SENT, "hookid = ? AND status IN ('retrying', 'failed')
+        AND timecreated > ?", [$hook->id, time() - 7 * DAYSECS]);
+    return html_writer::div(get_string('webhook:last', 'local_oriskill', (object) [
+        'time' => userdate($sent->timecreated, get_string('strftimedatetimeshort', 'langconfig')),
+        'status' => get_string('webhook:status_' . $sent->status, 'local_oriskill')]) .
+        ($failed ? ' · ' . html_writer::span(get_string('webhook:failedweek', 'local_oriskill', $failed), 'text-danger') : ''),
+        'small ' . ($sent->status === 'ok' ? 'text-success' : 'text-muted'));
+};
 echo html_writer::start_div('oriskill-card mt-4', ['id' => 'webhooks']);
 echo html_writer::tag('h3', get_string('webhook:title', 'local_oriskill'), ['class' => 'h5']);
 echo html_writer::tag('p', get_string('webhook:intro', 'local_oriskill'), ['class' => 'text-muted']);
@@ -115,13 +140,19 @@ foreach (webhook_service::hooks($creator) as $hook) {
     $events = implode(', ', array_map(fn($e) => get_string('webhook:event_' . str_replace('.', '_', $e), 'local_oriskill'),
         explode(',', $hook->events)));
     echo html_writer::div(
-        html_writer::div(html_writer::tag('code', s($hook->url)), 'fw-semibold text-break') .
+        html_writer::div(html_writer::tag('code', s($hook->url)) . ($hook->enabled ? '' : ' ' .
+            html_writer::span(get_string('webhook:off', 'local_oriskill'), 'oriskill-badge is-warn')), 'fw-semibold text-break') .
         html_writer::div($events, 'small text-muted') .
         html_writer::tag('details', html_writer::tag('summary', get_string('webhook:showsecret', 'local_oriskill'),
             ['class' => 'small']) . html_writer::tag('code', s(webhook_service::secret($hook))), ['class' => 'my-1']) .
-        ($hook->lastresult ? html_writer::div(s($hook->lastresult), 'small ' .
-            (str_starts_with($hook->lastresult, '✓') ? 'text-success' : 'text-danger')) : '') .
+        $last($hook) .
         html_writer::div(
+            html_writer::link(new moodle_url('/local/oriskill/webhooks.php', ['id' => $hook->id]),
+                get_string('webhook:history', 'local_oriskill'), ['class' => 'btn btn-sm btn-outline-primary']) . ' ' .
+            html_writer::tag('form', $hidden('toggle', (int) $hook->id) . html_writer::tag('button',
+                get_string($hook->enabled ? 'webhook:turnoff' : 'webhook:turnon', 'local_oriskill'),
+                ['type' => 'submit', 'class' => 'btn btn-sm btn-outline-secondary']),
+                ['method' => 'post', 'action' => $url->out(false), 'class' => 'd-inline']) . ' ' .
             html_writer::tag('form', $hidden('test', (int) $hook->id) . html_writer::tag('button',
                 get_string('webhook:test', 'local_oriskill'), ['type' => 'submit', 'class' => 'btn btn-sm btn-outline-secondary']),
                 ['method' => 'post', 'action' => $url->out(false), 'class' => 'd-inline']) . ' ' .

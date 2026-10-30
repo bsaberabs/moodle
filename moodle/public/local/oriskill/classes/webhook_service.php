@@ -32,6 +32,15 @@ class webhook_service {
     /** Table. */
     const TABLE = 'local_oriskill_webhooks';
 
+    /** Deliveries, kept KEEP_DAYS days. */
+    const SENT = 'local_oriskill_webhooksent';
+
+    /** Days the deliveries are kept. */
+    const KEEP_DAYS = 90;
+
+    /** Tries of a delivery before it is given up (Moodle waits longer after each failure: 1, 2, 4... minutes). */
+    const MAX_ATTEMPTS = 8;
+
     /** Events a webhook can receive. */
     const EVENTS = ['order.paid', 'instalment.paid', 'instalment.failed', 'instalments.stopped', 'refund.done',
         'access.suspended', 'lead.created'];
@@ -77,7 +86,21 @@ class webhook_service {
      */
     public static function remove(\stdClass $creator, int $id): void {
         global $DB;
-        $DB->delete_records(self::TABLE, ['id' => $id, 'creatorid' => $creator->id]);
+        if ($DB->record_exists(self::TABLE, ['id' => $id, 'creatorid' => $creator->id])) {
+            $DB->delete_records(self::SENT, ['hookid' => $id]);
+            $DB->delete_records(self::TABLE, ['id' => $id]);
+        }
+    }
+
+    /**
+     * Turn a webhook on or off; while off, nothing is sent to it.
+     *
+     * @param \stdClass $hook Webhook.
+     * @param bool $enabled On.
+     */
+    public static function set_enabled(\stdClass $hook, bool $enabled): void {
+        global $DB;
+        $DB->set_field(self::TABLE, 'enabled', (int) $enabled, ['id' => $hook->id]);
     }
 
     /**
@@ -113,10 +136,114 @@ class webhook_service {
      * @param array $data Event data.
      */
     public static function queue(\stdClass $hook, string $event, array $data): void {
+        self::queue_sent(self::record($hook, $event, json_encode(['event' => $event, 'time' => time(), 'data' => $data],
+            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)));
+    }
+
+    /**
+     * Note a delivery in the history, before its first try; deliveries older than KEEP_DAYS go.
+     *
+     * @param \stdClass $hook Webhook.
+     * @param string $event Event name.
+     * @param string $body JSON body.
+     * @return int Delivery id.
+     */
+    public static function record(\stdClass $hook, string $event, string $body): int {
+        global $DB;
+
+        $DB->delete_records_select(self::SENT, 'hookid = ? AND timecreated < ?',
+            [$hook->id, time() - self::KEEP_DAYS * DAYSECS]);
+        return $DB->insert_record(self::SENT, (object) ['hookid' => $hook->id, 'creatorid' => $hook->creatorid,
+            'event' => $event, 'body' => $body, 'status' => 'pending', 'attempts' => 0, 'httpcode' => null,
+            'answer' => null, 'timecreated' => time(), 'timemodified' => time()]);
+    }
+
+    /**
+     * Queue the sending of a delivery of the history.
+     *
+     * @param int $sentid Delivery.
+     */
+    protected static function queue_sent(int $sentid): void {
         $task = new task\webhook_deliver();
-        $task->set_custom_data(['hookid' => (int) $hook->id, 'body' => json_encode(['event' => $event, 'time' => time(),
-            'data' => $data], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), 'event' => $event]);
+        $task->set_custom_data(['sentid' => $sentid]);
         \core\task\manager::queue_adhoc_task($task);
+    }
+
+    /**
+     * Send a delivery again, by hand (its tries start again).
+     *
+     * @param \stdClass $creator Trainer.
+     * @param int $sentid Delivery.
+     */
+    public static function resend(\stdClass $creator, int $sentid): void {
+        global $DB;
+
+        $sent = $DB->get_record(self::SENT, ['id' => $sentid, 'creatorid' => $creator->id], '*', MUST_EXIST);
+        $DB->update_record(self::SENT, (object) ['id' => $sent->id, 'status' => 'pending', 'attempts' => 0,
+            'timemodified' => time()]);
+        self::queue_sent((int) $sent->id);
+    }
+
+    /**
+     * One try of a delivery, noted in the history.
+     *
+     * @param int $sentid Delivery.
+     * @param callable|null $send See deliver().
+     * @return bool Whether to try again later.
+     */
+    public static function attempt(int $sentid, ?callable $send = null): bool {
+        global $DB;
+
+        $sent = $DB->get_record(self::SENT, ['id' => $sentid]);
+        $hook = $sent ? $DB->get_record(self::TABLE, ['id' => $sent->hookid]) : null;
+        if (!$sent || !$hook) {
+            return false;
+        }
+        $update = (object) ['id' => $sent->id, 'attempts' => $sent->attempts + 1, 'timemodified' => time()];
+        if (!$hook->enabled) {
+            $update->status = 'failed';
+            $update->httpcode = null;
+            $update->answer = get_string('webhook:disabled', 'local_oriskill');
+            $DB->update_record(self::SENT, $update);
+            return false;
+        }
+        $codes = [];
+        $spy = function(string $url, array $headers, string $body) use ($send, &$codes) {
+            return $codes[] = ($send ?? [self::class, 'http'])($url, $headers, $body);
+        };
+        try {
+            self::deliver($hook, $sent->event, $sent->body, $spy);
+            $update->status = 'ok';
+        } catch (\moodle_exception $e) {
+            $update->status = $update->attempts >= self::MAX_ATTEMPTS ? 'failed' : 'retrying';
+        }
+        [$code, $answer] = $codes[0] ?? [0, ''];
+        $update->httpcode = (int) $code;
+        $update->answer = \core_text::substr(trim(preg_replace('/\s+/', ' ', strip_tags((string) $answer))), 0, 255);
+        $DB->update_record(self::SENT, $update);
+        return $update->status === 'retrying';
+    }
+
+    /**
+     * Deliveries of a webhook, newest first.
+     *
+     * @param \stdClass $hook Webhook.
+     * @param string $status '' for all, or a status.
+     * @param int $page Page (0 first).
+     * @param int $perpage Per page.
+     * @return array [records, total]
+     */
+    public static function history(\stdClass $hook, string $status = '', int $page = 0, int $perpage = 50): array {
+        global $DB;
+
+        $where = 'hookid = ?';
+        $params = [$hook->id];
+        if ($status !== '') {
+            $where .= ' AND status = ?';
+            $params[] = $status;
+        }
+        return [$DB->get_records_select(self::SENT, $where, $params, 'timecreated DESC, id DESC', '*', $page * $perpage,
+            $perpage), $DB->count_records_select(self::SENT, $where, $params)];
     }
 
     /**

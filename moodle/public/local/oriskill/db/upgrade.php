@@ -322,5 +322,12 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103030, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103032) {
+        // History of the webhook deliveries.
+        if (!$dbman->table_exists('local_oriskill_webhooksent')) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', 'local_oriskill_webhooksent');
+        }
+        upgrade_plugin_savepoint(true, 2026103032, 'local', 'oriskill');
+    }
     return true;
 }

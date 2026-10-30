@@ -19,9 +19,9 @@ namespace local_oriskill\task;
 use local_oriskill\webhook_service;
 
 /**
- * Post one event to a trainer's webhook; an error makes Moodle retry the task later.
+ * Post one event to a trainer's webhook; an error makes Moodle retry the task later, up to MAX_ATTEMPTS tries.
  *
- * Custom data: hookid, event, body.
+ * Custom data: sentid (delivery in the history); tasks queued before the history: hookid, event, body.
  *
  * @package    local_oriskill
  * @copyright  2026 Advanced TM
@@ -37,11 +37,17 @@ class webhook_deliver extends \core\task\adhoc_task {
         global $DB;
 
         $data = $this->get_custom_data();
-        $hook = $DB->get_record(webhook_service::TABLE, ['id' => $data->hookid]);
-        if (!$hook || !$hook->enabled) {
-            return;
+        if (empty($data->sentid)) {
+            $hook = $DB->get_record(webhook_service::TABLE, ['id' => $data->hookid]);
+            if (!$hook) {
+                return;
+            }
+            $data->sentid = webhook_service::record($hook, $data->event, $data->body);
+            $this->set_custom_data($data);
         }
-        webhook_service::deliver($hook, $data->event, $data->body);
-        mtrace("Webhook {$hook->id}: {$data->event} delivered");
+        if (webhook_service::attempt((int) $data->sentid)) {
+            throw new \moodle_exception('error:webhookdelivery', 'local_oriskill', '', 'retry');
+        }
+        mtrace("Webhook delivery {$data->sentid} done");
     }
 }
