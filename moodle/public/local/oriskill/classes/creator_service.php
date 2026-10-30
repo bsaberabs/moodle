@@ -244,6 +244,7 @@ class creator_service {
             '/local/oriskill/apply.php' => ['menu:profile', 'bi-shop'],
             '/local/oriskill/team.php' => ['menu:team', 'bi-person-badge'],
             '/local/oriskill/domains.php' => ['menu:domains', 'bi-globe'],
+            '/local/oriskill/privacy.php' => ['menu:privacy', 'bi-shield-lock'],
             '/local/oriskill/integrations.php' => ['menu:integrations', 'bi-plug'],
             '/local/oriskill/log.php' => ['menu:log', 'bi-journal-text'],
         ],

@@ -244,6 +244,7 @@ if ($tab === 'infos') {
             $check('consentdirect') . $check('consentpartners') .
             ($contact->consentdate ? html_writer::div(get_string('contacts:consentdate', 'local_oriskill',
                 userdate($contact->consentdate)), 'small text-muted mt-1') : '') .
+            \local_oriskill\privacy_service::history_html($contact) .
             ($canchange ? html_writer::tag('button', get_string('savechanges'), ['type' => 'submit', 'class' => 'btn btn-primary mt-3'])
                 : ''));
 } else if ($tab === 'activity') {

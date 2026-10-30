@@ -80,8 +80,11 @@ if (data_submitted()) {
         $error = get_string('capture:invalid', 'local_oriskill');
     } else {
         try {
-            [, $created] = capture_service::signup($page, $values['firstname'], $values['lastname'], $values['email'],
-                optional_param('consent', 0, PARAM_BOOL));
+            $consents = ['direct' => optional_param('consentdirect', 0, PARAM_BOOL),
+                'partners' => optional_param('consentpartners', 0, PARAM_BOOL)];
+            [$signedup, $created] = capture_service::signup($page, $values['firstname'], $values['lastname'], $values['email'],
+                (bool) $consents['direct']);
+            \local_oriskill\privacy_service::record($creator, (int) $signedup->id, $consents, $PAGE->url->out(false), 'capture');
             $done = true;
         } catch (moodle_exception $e) {
             $error = $e->getMessage();
@@ -117,7 +120,11 @@ echo $OUTPUT->render_from_template('local_oriskill/capture', [
     'formaction' => '',
     'sesskey' => sesskey(),
     'buttonlabel' => format_string($page->buttonlabel ?: get_string('capture:buttondefault', 'local_oriskill')),
-    'consentlabel' => get_string('capture:consent', 'local_oriskill', format_string($creator->displayname)),
+    'consents' => array_values(array_filter([
+        ['name' => 'consentdirect', 'label' => \local_oriskill\privacy_service::consent_text($creator, 'direct')],
+        \local_oriskill\privacy_service::settings($creator)->askpartners
+            ? ['name' => 'consentpartners', 'label' => \local_oriskill\privacy_service::consent_text($creator, 'partners')] : null,
+    ])),
     'error' => $error,
     'values' => $values,
     'done' => $done,
@@ -134,4 +141,5 @@ echo $OUTPUT->render_from_template('local_oriskill/capture', [
          'label' => get_string('showcase:privacy', 'local_oriskill')],
     ],
 ]);
+echo \local_oriskill\privacy_service::banner($creator, 'funnel');
 echo $OUTPUT->footer();

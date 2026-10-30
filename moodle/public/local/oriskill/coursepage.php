@@ -133,4 +133,5 @@ echo $OUTPUT->render_from_template('local_oriskill/coursepage', [
          'label' => get_string('showcase:privacy', 'local_oriskill')],
     ],
 ]);
+echo \local_oriskill\privacy_service::banner($creator, 'site');
 echo $OUTPUT->footer();

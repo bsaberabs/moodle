@@ -27,7 +27,7 @@
         "title": "Mini-formation offerte", "headline": "5 vidéos pour démarrer", "description": "<p>Texte</p>",
         "image": "", "courses": [{"name": "Excel"}], "formaction": "", "sesskey": "x", "buttonlabel": "Je m'inscris",
         "error": "", "done": false, "thankyou": "", "doneintro": "", "courselinks": [], "redirect": null,
-        "values": {"firstname": "", "lastname": "", "email": ""}, "consentlabel": "J'accepte", "year": "2026",
+        "values": {"firstname": "", "lastname": "", "email": ""}, "consents": [{"name": "consentdirect", "label": "J'accepte"}], "year": "2026",
         "links": [{"url": "#", "label": "Conditions générales"}]
     }
 }}
@@ -76,9 +76,11 @@
                     <input type="text" id="capture-lastname" name="lastname" required maxlength="100" value="{{values.lastname}}">
                     <label for="capture-email">{{#str}}email{{/str}}</label>
                     <input type="email" id="capture-email" name="email" required maxlength="100" value="{{values.email}}">
+                    {{#consents}}
                     <label class="oriskill-capture-consent">
-                        <input type="checkbox" name="consent" value="1"> {{consentlabel}}
+                        <input type="checkbox" name="{{name}}" value="1"> {{label}}
                     </label>
+                    {{/consents}}
                     <button type="submit" class="oriskill-vitrine-cta">{{buttonlabel}}</button>
                     <p class="oriskill-capture-legal">{{#str}}capture:legal, local_oriskill{{/str}}</p>
                 </form>

@@ -134,6 +134,9 @@ if ($offerid) {
             try {
                 [, $payurl] = orderform_service::create_order((int) $USER->id, $form, $offer, $mode, $coupon, $withextra,
                     $billing);
+                \local_oriskill\privacy_service::record($creator, (int) $USER->id, [
+                    'direct' => optional_param('consentdirect', 0, PARAM_BOOL),
+                    'partners' => optional_param('consentpartners', 0, PARAM_BOOL)], $formurl->out(false), 'order');
                 redirect($payurl);
             } catch (moodle_exception $e) {
                 $error = $e->getMessage();
@@ -221,6 +224,7 @@ if ($offerid) {
     echo html_writer::tag('form',
         html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]) .
         html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'confirm', 'value' => 1]) . $inputs .
+        \local_oriskill\privacy_service::consent_boxes($creator) .
         ($form->termsrequired ? html_writer::div(
             html_writer::checkbox('terms', 1, false, get_string('orderform:acceptterms', 'local_oriskill', $termslink),
                 ['id' => 'orderform-terms', 'class' => 'form-check-input', 'required' => 'required']), 'form-check mb-3') : '') .
@@ -233,6 +237,7 @@ if ($offerid) {
         ['method' => 'post', 'action' => $url->out(false)]);
     echo html_writer::end_div();
     echo html_writer::end_div();
+    echo \local_oriskill\privacy_service::banner($creator, 'funnel');
     echo $OUTPUT->footer();
     exit;
 }
@@ -296,4 +301,5 @@ echo $OUTPUT->render_from_template('local_oriskill/orderform', [
          'label' => get_string('showcase:privacy', 'local_oriskill')],
     ],
 ]);
+echo \local_oriskill\privacy_service::banner($creator, 'funnel');
 echo $OUTPUT->footer();

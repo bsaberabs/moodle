@@ -498,5 +498,14 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103047, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103048) {
+        // Privacy: consent texts, cookie banner, history of the consents.
+        foreach (['local_oriskill_privacy', 'local_oriskill_consents'] as $name) {
+            if (!$dbman->table_exists($name)) {
+                $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', $name);
+            }
+        }
+        upgrade_plugin_savepoint(true, 2026103048, 'local', 'oriskill');
+    }
     return true;
 }
