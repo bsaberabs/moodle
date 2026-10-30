@@ -83,6 +83,14 @@ class email_log {
         $userid = max(0, $userid);
         [$creatorid, $kind] = self::$context ?? [self::creator_of_order($email->subject . ' ' . $email->messagetext)
             ?: self::creator_of_course($email->subject), 'transactional'];
+        // An e-mail sent for a trainer carries their brand, not the platform's.
+        if ($creatorid && ($creator = $DB->get_record('local_oriskill_creators', ['id' => $creatorid]))) {
+            try {
+                email_brand::apply($email, $creator);
+            } catch (\Throwable $e) {
+                debugging('E-mail brand: ' . $e->getMessage(), DEBUG_DEVELOPER);
+            }
+        }
         $record = (object) ['userid' => $userid, 'creatorid' => $creatorid, 'kind' => $kind,
             'email' => \core_text::substr((string) $email->user->email, 0, 100),
             'subject' => \core_text::substr($email->subject, 0, 255),
