@@ -923,3 +923,34 @@
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 1rem;
 }
+
+/* Courses list: thumbnail, latest members. */
+.oriskill-courselist-thumb {
+    width: 64px;
+    height: 40px;
+    flex: 0 0 64px;
+    border-radius: 6px;
+    background-size: cover;
+    background-position: center;
+}
+.oriskill-avatars {
+    display: flex;
+    margin-bottom: 2px;
+}
+.oriskill-avatars img + img {
+    margin-left: -8px;
+}
+.oriskill-courselist form.d-inline button.oriskill-badge {
+    cursor: pointer;
+}
+/* The theme keeps table cells on one line: let this list wrap so that it fits. */
+.table.oriskill-courselist td,
+.table.oriskill-courselist th {
+    white-space: normal !important;
+}
+.oriskill-courselist td:first-child {
+    min-width: 14rem;
+}
+.table.oriskill-courselist td:last-child {
+    white-space: nowrap !important;
+}
