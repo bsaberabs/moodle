@@ -305,16 +305,20 @@ class team_service {
     public static function set_coach(\stdClass $creator, int $userid, int $coachid): void {
         global $DB;
 
-        if ($coachid && !isset(self::coaches($creator)[$coachid])) {
+        $coaches = self::coaches($creator);
+        if ($coachid && !isset($coaches[$coachid])) {
             throw new \moodle_exception('invaliddata', 'error');
         }
+        $old = self::coach_map($creator)[$userid] ?? 0;
         $DB->delete_records('local_oriskill_coachees', ['creatorid' => $creator->id, 'userid' => $userid]);
         if ($coachid) {
             $DB->insert_record('local_oriskill_coachees', (object) ['creatorid' => $creator->id, 'userid' => $userid,
                 'coachid' => $coachid, 'timecreated' => time()]);
         }
-        log_service::add($creator, 'learner_setcoach', ['coach' => $coachid ? fullname(self::coaches($creator)[$coachid])
-            : '–'], null, $userid);
+        $name = fn(int $id) => $id ? (isset($coaches[$id]) ? fullname($coaches[$id])
+            : fullname(\core_user::get_user($id) ?: (object) ['firstname' => '?', 'lastname' => ''])) : '–';
+        log_service::add($creator, 'learner_setcoach', ['coach' => $name($coachid)], null, $userid,
+            [get_string('change:coach', 'local_oriskill') => [$name($old), $name($coachid)]]);
     }
 
     /**

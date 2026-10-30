@@ -121,8 +121,12 @@ if (($action = optional_param('action', '', PARAM_ALPHA)) && confirm_sesskey()) 
                 }
                 log_service::add($creator, 'contacts_' . $action, ['count' => count($ids)]);
             } else if ($action === 'delete') {
+                $emails = $DB->get_fieldset_select(cs::TABLE, 'email', 'creatorid = ? AND id ' .
+                    $DB->get_in_or_equal($ids ?: [0])[0], array_merge([$creator->id], $ids ?: [0]));
                 cs::delete($creator, $ids);
-                log_service::add($creator, 'contacts_delete', ['count' => count($ids)]);
+                log_service::add($creator, 'contacts_delete', ['count' => count($ids)], null, null,
+                    [get_string('change:deleted', 'local_oriskill') => [implode(', ', array_slice($emails, 0, 30)) .
+                        (count($emails) > 30 ? ' …' : ''), '–']]);
             }
         } catch (moodle_exception $e) {
             $message = $e->getMessage();

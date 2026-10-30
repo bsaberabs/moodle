@@ -42,8 +42,10 @@ if (($action = optional_param('action', '', PARAM_ALPHA)) && confirm_sesskey()) 
             $message = get_string($domain->status === 'active' ? 'domains:addedactive' : 'domains:added', 'local_oriskill',
                 s($domain->domain));
         } else if ($action === 'primary') {
+            $old = (string) $creator->customdomain;
             ds::set_primary($creator, $id);
-            log_service::add($creator, 'domain_primary', ['domain' => ds::require_own($creator, $id)->domain]);
+            log_service::add($creator, 'domain_primary', ['domain' => ds::require_own($creator, $id)->domain], null, null,
+                [get_string('domains:primary', 'local_oriskill') => [$old ?: '–', ds::require_own($creator, $id)->domain]]);
         } else if ($action === 'check') {
             $domain = ds::check(ds::require_own($creator, $id));
             $message = get_string($domain->status === 'active' ? 'domains:checkok' : 'domains:checkpending', 'local_oriskill',

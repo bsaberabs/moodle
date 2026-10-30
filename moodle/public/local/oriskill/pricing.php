@@ -54,8 +54,14 @@ if (data_submitted() && confirm_sesskey()) {
         if ($before->amount === null || abs($before->amount - $amount) >= 0.005 || $before->compareamount != $compare
                 || $before->onsale !== !empty($onsale[$courseid])) {
             seller_service::set_course_price($creator, $courseid, $amount, $compare, !empty($onsale[$courseid]));
+            $price = fn($value) => $value === null ? '–' : format_float((float) $value, 2, true);
             \local_oriskill\log_service::add($creator, 'price_set', ['price' => format_float($amount, 2, true),
-                'onsale' => get_string(!empty($onsale[$courseid]) ? 'yes' : 'no')], $courseid);
+                'onsale' => get_string(!empty($onsale[$courseid]) ? 'yes' : 'no')], $courseid, null, [
+                    get_string('change:price', 'local_oriskill') => [$price($before->amount), $price($amount)],
+                    get_string('change:compareprice', 'local_oriskill') => [$price($before->compareamount), $price($compare)],
+                    get_string('change:onsale', 'local_oriskill') => [get_string($before->onsale ? 'yes' : 'no'),
+                        get_string(!empty($onsale[$courseid]) ? 'yes' : 'no')],
+                ]);
         }
     }
     if ($caninstalments) {
@@ -77,8 +83,12 @@ if (data_submitted() && confirm_sesskey()) {
             if (($before->count ?? 0) != $count || ($count && abs(($before->total ?? 0) - $total) >= 0.01)
                     || ($count && (int) ($before->cut ?? 1) !== $cut)) {
                 instalment_service::save_offer($creator, $courseid, $count, (float) $total, $cut);
+                $offer = fn($n, $sum, $c) => $n ? get_string('change:instalmentsvalue', 'local_oriskill',
+                    (object) ['count' => $n, 'total' => format_float((float) $sum, 2, true), 'cut' => $c]) : get_string('no');
                 \local_oriskill\log_service::add($creator, $count ? 'instalments_set' : 'instalments_off',
-                    ['count' => $count, 'total' => format_float((float) $total, 2, true)], $courseid);
+                    ['count' => $count, 'total' => format_float((float) $total, 2, true)], $courseid, null,
+                    [get_string('change:instalments', 'local_oriskill') => [$offer($before->count ?? 0, $before->total ?? 0,
+                        (int) ($before->cut ?? 1)), $offer($count, $total, $cut)]]);
             }
         }
     }
@@ -88,7 +98,9 @@ if (data_submitted() && confirm_sesskey()) {
     } else {
         if (abs((float) $creator->affiliaterate - $rate) >= 0.005) {
             $DB->set_field('local_oriskill_creators', 'affiliaterate', $rate, ['id' => $creator->id]);
-            \local_oriskill\log_service::add($creator, 'affiliaterate_set', ['rate' => format_float($rate, 2, true, true)]);
+            \local_oriskill\log_service::add($creator, 'affiliaterate_set', ['rate' => format_float($rate, 2, true, true)], null,
+                null, [get_string('affiliaterate', 'local_oriskill') => [format_float((float) $creator->affiliaterate, 2, true, true)
+                    . ' %', format_float($rate, 2, true, true) . ' %']]);
         }
     }
     redirect($url, $errors ? get_string('error:invalidprices', 'local_oriskill', implode(', ', $errors))

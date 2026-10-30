@@ -55,7 +55,25 @@ if (($action = optional_param('action', '', PARAM_ALPHA)) && confirm_sesskey()) 
                 $data['consentdirect'] = optional_param('consentdirect', 0, PARAM_BOOL);
                 $data['consentpartners'] = optional_param('consentpartners', 0, PARAM_BOOL);
                 cs::update($contact, $data);
-                log_service::add($creator, 'contact_saved', ['email' => $contact->email]);
+                $labels = ['firstname' => get_string('firstname'), 'lastname' => get_string('lastname'),
+                    'phone' => get_string('phone'), 'address' => get_string('address'),
+                    'postcode' => get_string('postcode', 'local_oriskill'), 'city' => get_string('city'),
+                    'country' => get_string('country'),
+                    'consentdirect' => get_string('contacts:consentdirect', 'local_oriskill'),
+                    'consentpartners' => get_string('contacts:consentpartners', 'local_oriskill')];
+                $changes = [];
+                foreach ($labels as $field => $label) {
+                    $old = (string) $contact->$field;
+                    $new = trim((string) $data[$field]);
+                    if (str_starts_with($field, 'consent')) {
+                        [$old, $new] = [get_string($old ? 'yes' : 'no'), get_string($new ? 'yes' : 'no')];
+                    } else if ($field === 'country') {
+                        $countries = get_string_manager()->get_list_of_countries();
+                        [$old, $new] = [$countries[$old] ?? $old, $countries[$new] ?? $new];
+                    }
+                    $changes[$label] = [$old === '' ? '–' : $old, $new === '' ? '–' : $new];
+                }
+                log_service::add($creator, 'contact_saved', ['email' => $contact->email], null, null, $changes);
                 break;
             case 'addtags':
                 $tags = cs::parse_tags(required_param('tags', PARAM_RAW_TRIMMED));
@@ -69,8 +87,11 @@ if (($action = optional_param('action', '', PARAM_ALPHA)) && confirm_sesskey()) 
                 break;
             case 'disable':
             case 'enable':
+                $was = get_string($contact->status === 'disabled' ? 'contacts:status_disabled' : 'contacts:status_active', 'local_oriskill');
                 cs::set_disabled($creator, $contact, $action === 'disable');
-                log_service::add($creator, 'contacts_' . $action, ['count' => 1]);
+                log_service::add($creator, 'contacts_' . $action, ['count' => 1], null, null,
+                    [$contact->email => [$was, get_string($action === 'disable' ? 'contacts:status_disabled'
+                        : 'contacts:status_active', 'local_oriskill')]]);
                 break;
             case 'sendmail':
                 \local_oriskill\email_log::send_direct($creator, $contact, required_param('subject', PARAM_TEXT),
@@ -99,7 +120,8 @@ if (($action = optional_param('action', '', PARAM_ALPHA)) && confirm_sesskey()) 
                 break;
             case 'delete':
                 cs::delete($creator, [$contact->id]);
-                log_service::add($creator, 'contacts_delete', ['count' => 1]);
+                log_service::add($creator, 'contacts_delete', ['count' => 1], null, null,
+                    [get_string('change:deleted', 'local_oriskill') => [$contact->email, '–']]);
                 redirect(new moodle_url('/local/oriskill/contacts.php'), get_string('contacts:deleted', 'local_oriskill'),
                     null, $type);
         }

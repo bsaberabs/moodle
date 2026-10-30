@@ -50,6 +50,7 @@ if (($action = optional_param('action', '', PARAM_ALPHA)) && confirm_sesskey()) 
     $message = get_string('changessaved');
     $type = \core\output\notification::NOTIFY_SUCCESS;
     $details = [];
+    $changes = [];
     try {
         switch ($action) {
             case 'forcemodules':
@@ -59,28 +60,37 @@ if (($action = optional_param('action', '', PARAM_ALPHA)) && confirm_sesskey()) 
                 if ($before == $after) {
                     redirect($url);
                 }
-                $names = [];
+                $names = $oldnames = [];
                 foreach (learning_service::section_rules($course) as $rule) {
                     if (in_array((int) $rule->section->id, $after)) {
                         $names[] = $rule->name;
                     }
+                    if (in_array((int) $rule->section->id, $before)) {
+                        $oldnames[] = $rule->name;
+                    }
                 }
                 $details['modules'] = $names ? implode(', ', $names) : get_string('none');
+                $changes[get_string('change:modules', 'local_oriskill')] = [$oldnames ? implode(', ', $oldnames)
+                    : get_string('none'), $details['modules']];
                 break;
             case 'setstart':
                 $value = optional_param('timestart', '', PARAM_RAW_TRIMMED);
                 $start = preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $value, $m) ? make_timestamp($m[1], $m[2], $m[3]) : 0;
                 learning_service::set_timestart($course, $userid, $start);
                 $details['date'] = userdate($start, $dateformat);
+                $changes[get_string('change:start', 'local_oriskill')] = [userdate($learner->timestart, $dateformat),
+                    $details['date']];
                 break;
             case 'resetprogress':
                 learning_service::reset_progress($course, $userid);
+                $changes[get_string('change:progress', 'local_oriskill')] = [(int) round((float) $learner->progress) . ' %',
+                    (int) round((float) \core_completion\progress::get_course_progress_percentage($course, $userid)) . ' %'];
                 $message = get_string('learner:progressreset', 'local_oriskill');
                 break;
             default:
                 throw new moodle_exception('invalidparameter', 'debug');
         }
-        \local_oriskill\log_service::add($creator, 'learner_' . $action, $details, (int) $course->id, $userid);
+        \local_oriskill\log_service::add($creator, 'learner_' . $action, $details, (int) $course->id, $userid, $changes);
     } catch (moodle_exception $e) {
         $message = $e->getMessage();
         $type = \core\output\notification::NOTIFY_ERROR;

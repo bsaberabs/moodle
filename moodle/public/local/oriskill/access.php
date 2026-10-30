@@ -55,6 +55,25 @@ if ($course) {
     }
 }
 
+// A module's release rule in words, for the log.
+$ruletext = function(stdClass $rule) use ($course): string {
+    if (!empty($rule->custom)) {
+        return get_string('rule:custom', 'local_oriskill');
+    }
+    $text = get_string('rule:' . $rule->timing, 'local_oriskill');
+    if ($rule->timing === 'date') {
+        $text .= ' ' . userdate($rule->date, get_string('strftimedate', 'langconfig'));
+    } else if ($rule->timing === 'days') {
+        $text .= ' ' . $rule->days . ' ' . get_string('rule:days_after', 'local_oriskill');
+    }
+    if (!empty($rule->groups)) {
+        $groups = groups_get_all_groups($course->id);
+        $text .= ' – ' . implode(', ', array_map(fn($id) => isset($groups[$id]) ? format_string($groups[$id]->name) : '?',
+            $rule->groups));
+    }
+    return $text;
+};
+
 if ($course && ($action = optional_param('action', '', PARAM_ALPHA)) && $action !== 'accessmail' && confirm_sesskey()) {
     $message = get_string('changessaved');
     $type = \core\output\notification::NOTIFY_SUCCESS;
@@ -70,6 +89,7 @@ if ($course && ($action = optional_param('action', '', PARAM_ALPHA)) && $action 
             $dates = optional_param_array('date', [], PARAM_RAW_TRIMMED);
             $days = optional_param_array('days', [], PARAM_INT);
             $rules = learning_service::section_rules($course);
+            $beforerules = array_map($ruletext, $rules);
             $errors = [];
             foreach ($rules as $num => $rule) {
                 $timing = $timings[$num] ?? 'keep';
@@ -96,10 +116,16 @@ if ($course && ($action = optional_param('action', '', PARAM_ALPHA)) && $action 
                 $type = \core\output\notification::NOTIFY_ERROR;
             }
         }
+        $changes = [];
+        if ($action === 'rules') {
+            foreach (learning_service::section_rules(get_course($course->id)) as $num => $rule) {
+                $changes[$rule->name] = [$beforerules[$num] ?? '–', $ruletext($rule)];
+            }
+        }
         \local_oriskill\log_service::add($creator, 'access_' . $action, $action === 'addgroup'
             ? ['name' => required_param('name', PARAM_TEXT)] : ($action === 'studymode'
                 ? ['mode' => get_string('studytime:mode_' . required_param('mode', PARAM_ALPHA), 'local_oriskill')] : []),
-            (int) $course->id);
+            (int) $course->id, null, $changes);
     } catch (moodle_exception $e) {
         $message = $e->getMessage();
         $type = \core\output\notification::NOTIFY_ERROR;

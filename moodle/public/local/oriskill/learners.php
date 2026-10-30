@@ -57,14 +57,26 @@ if ($course && ($action = optional_param('action', '', PARAM_ALPHA)) && confirm_
         throw new moodle_exception('error:notallowed', 'local_oriskill');
     }
     $userid = optional_param('userid', 0, PARAM_INT);
-    if ($userid && !isset(learning_service::learners($creator, $course)[$userid])) {
+    $before = $userid ? (learning_service::learners($creator, $course)[$userid] ?? null) : null;
+    if ($userid && !$before) {
         throw new moodle_exception('invaliduserid');
     }
+    // What the log keeps of a learner's access, to show it before and after.
+    $state = fn(?stdClass $learner) => $learner ? [
+        get_string('change:access', 'local_oriskill') => get_string($learner->suspended ? 'change:suspended' : 'change:active',
+            'local_oriskill'),
+        get_string('change:end', 'local_oriskill') => $learner->timeend
+            ? userdate($learner->timeend, get_string('strftimedate', 'langconfig')) : get_string('learner:unlimited', 'local_oriskill'),
+        get_string('groups') => implode(', ', array_map(fn($g) => format_string($g->name), $learner->groups)) ?: '–',
+    ] : [get_string('change:access', 'local_oriskill') => get_string('change:noaccess', 'local_oriskill')];
     $message = get_string('changessaved');
     $type = \core\output\notification::NOTIFY_SUCCESS;
     try {
         switch ($action) {
             case 'offer':
+                $email = trim(core_text::strtolower(required_param('email', PARAM_RAW_TRIMMED)));
+                $before = ($existing = $DB->get_record('user', ['email' => $email, 'deleted' => 0], 'id', IGNORE_MULTIPLE))
+                    ? (learning_service::learners($creator, $course)[$existing->id] ?? null) : null;
                 [$user, $created] = learning_service::offer_access($course, required_param('email', PARAM_RAW_TRIMMED),
                     optional_param('firstname', '', PARAM_NOTAGS), optional_param('lastname', '', PARAM_NOTAGS),
                     local_oriskill_end_of_day(optional_param('timeend', '', PARAM_RAW_TRIMMED)),
@@ -97,10 +109,12 @@ if ($course && ($action = optional_param('action', '', PARAM_ALPHA)) && confirm_
                 redirect(new moodle_url('/course/loginas.php', ['id' => $course->id, 'user' => $userid,
                     'sesskey' => sesskey()]));
         }
+        $logged = $action === 'offer' ? (int) $user->id : $userid;
         \local_oriskill\log_service::add($creator, 'learner_' . $action, $action === 'setend'
             ? ['date' => ($end = local_oriskill_end_of_day(optional_param('timeend', '', PARAM_RAW_TRIMMED)))
                 ? userdate($end, get_string('strftimedate', 'langconfig')) : get_string('learner:unlimited', 'local_oriskill')]
-            : [], (int) $course->id, $action === 'offer' ? (int) $user->id : $userid);
+            : [], (int) $course->id, $logged, \local_oriskill\log_service::diff($state($before),
+                $state(learning_service::learners($creator, $course)[$logged] ?? null)));
     } catch (moodle_exception $e) {
         $message = $e->getMessage();
         $type = \core\output\notification::NOTIFY_ERROR;
