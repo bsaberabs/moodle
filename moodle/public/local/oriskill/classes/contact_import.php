@@ -42,7 +42,13 @@ class contact_import {
 
     /** Fields a column can go to ('' = ignored). */
     const FIELDS = ['', 'email', 'firstname', 'lastname', 'fullname', 'phone', 'address', 'postcode', 'city', 'country', 'tags',
-        'consentdirect', 'consentpartners', 'created'];
+        'consentdirect', 'consentpartners', 'created', 'course', 'groups', 'state', 'timespent', 'progress', 'lastactivity'];
+
+    /** Earlier time and progress of a learner in a course, brought from the previous platform. */
+    const PRIOR = 'local_oriskill_priorprogress';
+
+    /** Distinct values of the course column shown for mapping, at most. */
+    const MAX_COURSES = 200;
 
     /** Column names recognised for each field (lower case, without accents or punctuation). */
     const GUESSES = [
@@ -61,6 +67,12 @@ class contact_import {
         'consentpartners' => ['prospection partenaires', 'partenaires', 'partners', 'offres partenaires'],
         'created' => ['date d inscription', 'inscription', 'date de creation', 'cree le', 'created', 'created at',
             'date added', 'signup date', 'subscribed'],
+        'course' => ['formations', 'formation', 'course', 'courses', 'cours', 'produit', 'product'],
+        'groups' => ['groupes', 'groupe', 'groups', 'group'],
+        'state' => ['etat', 'statut', 'state', 'status', 'acces'],
+        'timespent' => ['temps passe', 'time spent', 'duree', 'progression en secondes'],
+        'progress' => ['progression', 'progress', 'avancement'],
+        'lastactivity' => ['date de derniere activite', 'derniere activite', 'last activity', 'derniere connexion'],
     ];
 
     // ----- Preparing ------------------------------------------------------------------------------------------------
@@ -139,7 +151,8 @@ class contact_import {
      *
      * @param \stdClass $import Import (draft).
      * @param string[] $mapping One of FIELDS per column.
-     * @param array $options tags (string[]), courseid, groupid, sendcredentials.
+     * @param array $options tags (string[]), courseid, groupid, sendcredentials; with a course column: coursemap
+     *                       (value of the column => course id, 0 to give no access), creategroups.
      */
     public static function start(\stdClass $import, array $mapping, array $options): void {
         global $DB;
@@ -157,11 +170,131 @@ class contact_import {
         if ($groupid && !$DB->record_exists('groups', ['id' => $groupid, 'courseid' => $courseid])) {
             $groupid = 0;
         }
+        $own = $DB->get_records_menu('course', ['category' => $creator->categoryid], '', 'id, id AS same');
+        $coursemap = [];
+        foreach ($options['coursemap'] ?? [] as $value => $id) {
+            $coursemap[(string) $value] = isset($own[(int) $id]) ? (int) $id : 0;
+        }
         $DB->update_record(self::TABLE, (object) ['id' => $import->id, 'mapping' => json_encode($mapping),
             'options' => json_encode(['tags' => array_values($options['tags'] ?? []), 'courseid' => $courseid,
-                'groupid' => $groupid, 'sendcredentials' => !empty($options['sendcredentials'])], JSON_UNESCAPED_UNICODE),
+                'groupid' => $groupid, 'sendcredentials' => !empty($options['sendcredentials']), 'coursemap' => $coursemap,
+                'creategroups' => !empty($options['creategroups'])], JSON_UNESCAPED_UNICODE),
             'status' => 'pending', 'timemodified' => time()]);
         self::queue((int) $import->id);
+    }
+
+    /**
+     * Keep the mapping and options while the course of each value of the course column is chosen.
+     *
+     * @param \stdClass $import Import (draft).
+     * @param string[] $mapping One of FIELDS per column.
+     * @param array $options Options of the mapping step.
+     */
+    public static function save_mapping(\stdClass $import, array $mapping, array $options): void {
+        global $DB;
+
+        $mapping = array_map(fn($f) => in_array($f, self::FIELDS, true) ? $f : '', array_values($mapping));
+        if (!in_array('email', $mapping, true)) {
+            throw new \moodle_exception('import:noemail', 'local_oriskill');
+        }
+        $DB->update_record(self::TABLE, (object) ['id' => $import->id, 'mapping' => json_encode($mapping),
+            'options' => json_encode($options, JSON_UNESCAPED_UNICODE), 'timemodified' => time()]);
+    }
+
+    /**
+     * Values of the course column in the whole file, with how many rows have each and the groups they list.
+     *
+     * @param \stdClass $import Import (draft, mapping saved).
+     * @return array value => ['rows' => int, 'groups' => [name => rows]]
+     */
+    public static function course_values(\stdClass $import): array {
+        $mapping = json_decode((string) $import->mapping, true) ?: [];
+        $coursecol = array_search('course', $mapping, true);
+        $groupcol = array_search('groups', $mapping, true);
+        $file = get_file_storage()->get_file(\context_system::instance()->id, 'local_oriskill', self::FILEAREA, $import->id,
+            '/', 'import.csv');
+        if ($coursecol === false || !$file) {
+            return [];
+        }
+        $values = [];
+        $handle = $file->get_content_file_handle();
+        fgets($handle);
+        while (($line = fgets($handle)) !== false) {
+            while (substr_count($line, '"') % 2 === 1 && ($next = fgets($handle)) !== false) {
+                $line .= $next;
+            }
+            if (trim($line) === '') {
+                continue;
+            }
+            $row = str_getcsv(rtrim(self::to_utf8($line), "\r\n"), $import->delimiter, '"', '');
+            $value = trim((string) ($row[$coursecol] ?? ''));
+            if (!isset($values[$value]) && count($values) >= self::MAX_COURSES) {
+                continue;
+            }
+            $values[$value]['rows'] = ($values[$value]['rows'] ?? 0) + 1;
+            $values[$value]['groups'] = $values[$value]['groups'] ?? [];
+            if ($groupcol !== false) {
+                foreach (self::split_groups((string) ($row[$groupcol] ?? '')) as $group) {
+                    $values[$value]['groups'][$group] = ($values[$value]['groups'][$group] ?? 0) + 1;
+                }
+            }
+        }
+        fclose($handle);
+        uksort($values, 'strnatcasecmp');
+        return $values;
+    }
+
+    /**
+     * Course of the trainer with the same name as a value, if any (to suggest the mapping).
+     *
+     * @param array $courses id => course (fullname, shortname).
+     * @param string $value Value of the course column.
+     * @return int Course id, 0 when none.
+     */
+    public static function guess_course(array $courses, string $value): int {
+        $key = \core_text::strtolower(trim($value));
+        foreach ($courses as $course) {
+            if ($key !== '' && in_array($key, [\core_text::strtolower(trim(format_string($course->fullname))),
+                    \core_text::strtolower(trim($course->shortname))], true)) {
+                return (int) $course->id;
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Group names of a cell ("Règlement en plusieurs mensualités, certification").
+     *
+     * @param string $value Cell.
+     * @return string[]
+     */
+    public static function split_groups(string $value): array {
+        $groups = array_map(fn($g) => \core_text::substr(trim($g), 0, 254), preg_split('/[,;|]/', $value));
+        return array_values(array_unique(array_filter($groups, fn($g) => $g !== '')));
+    }
+
+    /**
+     * A duration cell ("33h 20min 51s", "1:05:00" or seconds) in seconds.
+     *
+     * @param string $value Cell.
+     * @return int
+     */
+    public static function duration(string $value): int {
+        $value = trim($value);
+        if (preg_match('/^\d+$/', $value)) {
+            return (int) $value;
+        }
+        if (preg_match('/^(\d+):(\d{2})(?::(\d{2}))?$/', $value, $m)) {
+            return (int) $m[1] * 3600 + (int) $m[2] * 60 + (int) ($m[3] ?? 0);
+        }
+        $seconds = 0;
+        foreach (['h' => 3600, 'min' => 60, 'm' => 60, 's' => 1] as $unit => $factor) {
+            if (preg_match('/(\d+)\s*' . $unit . '(?![a-z])/i', $value, $m)) {
+                $seconds += (int) $m[1] * $factor;
+                $value = str_replace($m[0], '', $value);
+            }
+        }
+        return $seconds;
     }
 
     /**
@@ -311,8 +444,12 @@ class contact_import {
                 $data['lastname'] = $data['lastname'] ?? $last;
             } else if ($field === 'consentdirect' || $field === 'consentpartners') {
                 $data[$field] = self::yes($value);
-            } else if ($field === 'created') {
-                $data['created'] = self::date($value);
+            } else if ($field === 'created' || $field === 'lastactivity') {
+                $data[$field] = self::date($value);
+            } else if ($field === 'timespent') {
+                $data['timespent'] = max($data['timespent'] ?? 0, self::duration($value));
+            } else if ($field === 'progress') {
+                $data['progress'] = min(100, max(0, (float) str_replace([',', '%'], ['.', ''], $value)));
             } else {
                 $data[$field] = $value;
             }
@@ -323,23 +460,129 @@ class contact_import {
         }
         $contact = contact_service::upsert($creator, $email, $data, 'import');
         $new = !empty($contact->isnew);
-        if ($new && !empty($data['created']) && $data['created'] < $contact->timecreated) {
+        if (!empty($data['created']) && $data['created'] < $contact->timecreated) {
             $DB->set_field(contact_service::TABLE, 'timecreated', $data['created'], ['id' => $contact->id]);
         }
         if ($tags) {
             contact_service::add_tags($creator, [$contact->id], array_values(array_unique($tags)), true);
         }
+        // The course of the row (course column) or of the whole file (option).
+        $groupnames = [];
+        if (array_key_exists('course', $data) || in_array('course', $mapping, true)) {
+            $courseid = (int) ($options['coursemap'][(string) ($data['course'] ?? '')] ?? 0);
+            $course = $courseid ? self::course($courseid) : null;
+            $groupnames = self::split_groups((string) ($data['groups'] ?? ''));
+        }
         $enrolled = false;
         if ($course) {
             $local = strstr($email, '@', true);
             [$user] = learning_service::offer_access($course, $email, $data['firstname'] ?? '' ?: $local,
-                $data['lastname'] ?? '' ?: '-', 0, (int) $options['groupid'], !empty($options['sendcredentials']));
+                $data['lastname'] ?? '' ?: '-', 0, $groupnames ? 0 : (int) $options['groupid'],
+                !empty($options['sendcredentials']));
             if (!$contact->userid) {
                 $DB->set_field(contact_service::TABLE, 'userid', $user->id, ['id' => $contact->id]);
+            }
+            foreach ($groupnames as $name) {
+                if ($groupid = self::group($course, $name, !empty($options['creategroups']))) {
+                    groups_add_member($groupid, $user->id);
+                }
+            }
+            // The start of the access is the sign-up date on the previous platform: modules released J+X follow it.
+            // On several rows of the same course, the earliest date wins.
+            $current = \availability_enroldays\condition::enrolment_start((int) $course->id, (int) $user->id);
+            if (!empty($data['created']) && $data['created'] < ($current ?? time())) {
+                learning_service::set_timestart($course, (int) $user->id, $data['created']);
+            }
+            if (isset($data['state']) && in_array(\core_text::strtolower(\core_text::specialtoascii($data['state'])),
+                    ['desactive', 'desactivee', 'inactif', 'inactive', 'disabled', 'suspendu', 'suspended', '0', 'non'], true)) {
+                learning_service::set_suspended($course, (int) $user->id, true);
+            }
+            if (isset($data['timespent']) || isset($data['progress']) || !empty($data['lastactivity'])) {
+                self::save_prior((int) $course->id, (int) $user->id, (int) ($data['timespent'] ?? 0),
+                    isset($data['progress']) ? (float) $data['progress'] : null, (int) ($data['lastactivity'] ?? 0));
             }
             $enrolled = true;
         }
         return ['new' => $new, 'enrolled' => $enrolled];
+    }
+
+    /** @var array Courses read during the import, by id. */
+    protected static $courses = [];
+
+    /** @var array Group ids by "courseid|name" during the import. */
+    protected static $groups = [];
+
+    /**
+     * A course (kept for the rows of the batch).
+     *
+     * @param int $id Course.
+     * @return \stdClass|null
+     */
+    protected static function course(int $id): ?\stdClass {
+        global $DB;
+        if (!array_key_exists($id, self::$courses)) {
+            self::$courses[$id] = $DB->get_record('course', ['id' => $id]) ?: null;
+        }
+        return self::$courses[$id];
+    }
+
+    /**
+     * Group of a course with this name, created when missing (if allowed).
+     *
+     * @param \stdClass $course Course.
+     * @param string $name Name.
+     * @param bool $create Create it when missing.
+     * @return int Group id, 0 when none.
+     */
+    protected static function group(\stdClass $course, string $name, bool $create): int {
+        global $CFG, $DB;
+        require_once($CFG->dirroot . '/group/lib.php');
+
+        $key = $course->id . '|' . \core_text::strtolower($name);
+        if (!isset(self::$groups[$key])) {
+            $id = (int) $DB->get_field_select('groups', 'id', 'courseid = ? AND ' . $DB->sql_equal('name', '?', false),
+                [$course->id, $name], IGNORE_MULTIPLE);
+            if (!$id && $create) {
+                $id = (int) groups_create_group((object) ['courseid' => $course->id, 'name' => $name]);
+            }
+            self::$groups[$key] = $id;
+        }
+        return self::$groups[$key];
+    }
+
+    /**
+     * Keep the time and progress a learner had in a course on the previous platform (the longest kept).
+     *
+     * @param int $courseid Course.
+     * @param int $userid Learner.
+     * @param int $seconds Time spent.
+     * @param float|null $progress Progress in %.
+     * @param int $lastactivity Last activity there.
+     */
+    protected static function save_prior(int $courseid, int $userid, int $seconds, ?float $progress, int $lastactivity): void {
+        global $DB;
+
+        $row = $DB->get_record(self::PRIOR, ['courseid' => $courseid, 'userid' => $userid]);
+        $record = ['courseid' => $courseid, 'userid' => $userid, 'seconds' => max($seconds, (int) ($row->seconds ?? 0)),
+            'progress' => $progress === null ? ($row->progress ?? null) : max($progress, (float) ($row->progress ?? 0)),
+            'lastactivity' => max($lastactivity, (int) ($row->lastactivity ?? 0)), 'timemodified' => time()];
+        if ($row) {
+            $DB->update_record(self::PRIOR, (object) (['id' => $row->id] + $record));
+        } else {
+            $DB->insert_record(self::PRIOR, (object) $record);
+        }
+    }
+
+    /**
+     * Earlier time and progress of a learner in a course, from the previous platform.
+     *
+     * @param int $courseid Course.
+     * @param int $userid Learner.
+     * @return \stdClass|null {seconds, progress, lastactivity}
+     */
+    public static function prior(int $courseid, int $userid): ?\stdClass {
+        global $DB;
+        return $DB->get_record(self::PRIOR, ['courseid' => $courseid, 'userid' => $userid]) ?: null;
     }
 
     // ----- Helpers --------------------------------------------------------------------------------------------------

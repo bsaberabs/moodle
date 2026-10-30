@@ -105,8 +105,14 @@ if (optional_param('download', '', PARAM_ALPHA) === 'studytime') {
         $rows[] = [userdate($day->day, $dateformat), userdate($day->first, $timeformat), userdate($day->last, $timeformat),
             \local_oriskill\studytime_service::format($day->seconds), round($day->seconds / 60)];
     }
-    $rows[] = [get_string('total'), '', '', \local_oriskill\studytime_service::format($learner->studytime),
-        round($learner->studytime / 60)];
+    // Time spent on the previous platform, brought by the migration: its own line, without days.
+    $prior = \local_oriskill\contact_import::prior((int) $course->id, $userid);
+    if ($prior && $prior->seconds) {
+        $rows[] = [get_string('studytime:prior', 'local_oriskill'), '', '', \local_oriskill\studytime_service::format((int) $prior->seconds),
+            round($prior->seconds / 60)];
+    }
+    $total = $learner->studytime + (int) ($prior->seconds ?? 0);
+    $rows[] = [get_string('total'), '', '', \local_oriskill\studytime_service::format($total), round($total / 60)];
     csv_export_writer::download_array(clean_filename(get_string('studytime:statement', 'local_oriskill') . '-' .
         fullname($learner) . '-' . $course->shortname), $rows);
     exit;
@@ -149,6 +155,9 @@ foreach ([
     [get_string('learner:lastaccess', 'local_oriskill'), $learner->lastaccess ? userdate($learner->lastaccess) : get_string('never')],
     [get_string('learner:completed', 'local_oriskill'), $learner->completed ? userdate($learner->completed, $dateformat) : '–'],
     [get_string('studytime:column', 'local_oriskill'), \local_oriskill\studytime_service::format($learner->studytime)],
+    ...(($prior = \local_oriskill\contact_import::prior((int) $course->id, $userid)) ? [[get_string('studytime:prior', 'local_oriskill'),
+        \local_oriskill\studytime_service::format((int) $prior->seconds) . ($prior->progress !== null
+            ? ' · ' . format_float((float) $prior->progress, 0) . ' %' : '')]] : []),
 ] as [$label, $value]) {
     $facts .= html_writer::div(html_writer::div($label, 'oriskill-stat-label') .
         html_writer::div(str_starts_with($value, '<form') ? $value : s($value), 'fw-semibold'));

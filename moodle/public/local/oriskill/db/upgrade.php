@@ -373,5 +373,12 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103037, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103038) {
+        // Time and progress brought from the previous platform.
+        if (!$dbman->table_exists('local_oriskill_priorprogress')) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', 'local_oriskill_priorprogress');
+        }
+        upgrade_plugin_savepoint(true, 2026103038, 'local', 'oriskill');
+    }
     return true;
 }

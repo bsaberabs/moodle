@@ -44,11 +44,31 @@ if (($action = optional_param('action', '', PARAM_ALPHA)) && confirm_sesskey()) 
             redirect(new moodle_url('/local/oriskill/contactimport.php', ['id' => $import->id]));
         } else if ($import && $action === 'start') {
             [$courseid, $groupid] = array_map('intval', array_pad(explode(':', optional_param('course', '', PARAM_RAW_TRIMMED)), 2, 0));
-            ci::start($import, optional_param_array('map', [], PARAM_ALPHA), [
+            $map = optional_param_array('map', [], PARAM_ALPHA);
+            $options = [
                 'tags' => cs::parse_tags(optional_param('tags', '', PARAM_RAW_TRIMMED)),
-                'courseid' => $courseid, 'groupid' => $groupid,
+                'courseid' => in_array('course', $map, true) ? 0 : $courseid, 'groupid' => $groupid,
                 'sendcredentials' => optional_param('sendcredentials', 0, PARAM_BOOL),
-            ]);
+            ];
+            if (in_array('course', $map, true)) {
+                // A column gives each row's course: choose which course each of its values is first.
+                ci::save_mapping($import, $map, $options);
+            } else {
+                ci::start($import, $map, $options);
+            }
+            redirect($url);
+        } else if ($import && $action === 'courses') {
+            $values = optional_param_array('value', [], PARAM_RAW);
+            $targets = optional_param_array('target', [], PARAM_INT);
+            $coursemap = [];
+            foreach ($values as $i => $value) {
+                $coursemap[$value] = (int) ($targets[$i] ?? 0);
+            }
+            ci::start($import, json_decode($import->mapping, true), (json_decode($import->options, true) ?: []) + [
+                'coursemap' => $coursemap, 'creategroups' => optional_param('creategroups', 0, PARAM_BOOL)]);
+            redirect($url);
+        } else if ($import && $action === 'back') {
+            $DB->set_field(ci::TABLE, 'mapping', null, ['id' => $import->id]);
             redirect($url);
         } else if ($import && $action === 'cancel') {
             ci::cancel($import);
@@ -99,6 +119,46 @@ if (!$import) {
         echo html_writer::div(html_writer::tag('h3', get_string('import:previous', 'local_oriskill'), ['class' => 'h5']) .
             html_writer::tag('ul', $rows, ['class' => 'oriskill-rows']), 'oriskill-card');
     }
+} else if ($import->status === 'draft' && $import->mapping) {
+    // 3. Course of each value of the course column.
+    $values = ci::course_values($import);
+    $courseoptions = [0 => get_string('import:nocourseaccess', 'local_oriskill')];
+    foreach ($courses as $course) {
+        $courseoptions[$course->id] = format_string($course->fullname);
+    }
+    $fullcourses = $DB->get_records('course', ['category' => $creator->categoryid], 'fullname', 'id, fullname, shortname');
+    $table = new html_table();
+    $table->attributes['class'] = 'table align-middle';
+    $table->head = [get_string('import:coursevalue', 'local_oriskill'), get_string('import:rows', 'local_oriskill'),
+        get_string('groups'), get_string('import:goesto', 'local_oriskill')];
+    $i = 0;
+    foreach ($values as $value => $info) {
+        arsort($info['groups']);
+        $groups = array_map(fn($g, $n) => s($g) . " ($n)", array_keys($info['groups']), $info['groups']);
+        $table->data[] = [
+            html_writer::span($value === '' ? get_string('import:empty_value', 'local_oriskill') : s($value), 'fw-semibold') .
+                html_writer::empty_tag('input', ['type' => 'hidden', 'name' => "value[$i]", 'value' => $value]),
+            number_format($info['rows'], 0, ',', ' '),
+            html_writer::div(implode(', ', $groups) ?: '–', 'small text-muted', ['style' => 'white-space: normal; min-width: 14rem; max-width: 24rem']),
+            html_writer::select($courseoptions, "target[$i]", ci::guess_course($fullcourses, $value), false,
+                ['class' => 'form-select form-select-sm', 'style' => 'max-width: 18rem']),
+        ];
+        $i++;
+    }
+    echo html_writer::tag('form', $hidden('courses') .
+        html_writer::div(
+            html_writer::tag('h3', get_string('import:step3', 'local_oriskill'), ['class' => 'h5']) .
+            html_writer::tag('p', get_string('import:step3_help', 'local_oriskill'), ['class' => 'text-muted small']) .
+            html_writer::div(html_writer::table($table), 'table-responsive') .
+            html_writer::div(html_writer::empty_tag('input', ['type' => 'checkbox', 'name' => 'creategroups', 'value' => 1,
+                'id' => 'imp-groups', 'class' => 'form-check-input', 'checked' => 'checked']) .
+                html_writer::tag('label', get_string('import:creategroups', 'local_oriskill'), ['for' => 'imp-groups',
+                    'class' => 'form-check-label']), 'form-check mb-3') .
+            html_writer::tag('button', get_string('import:start', 'local_oriskill'), ['type' => 'submit', 'class' => 'btn btn-primary']),
+            'oriskill-card mb-3'),
+        ['method' => 'post', 'action' => $url->out(false)]);
+    echo html_writer::tag('form', $hidden('back') . html_writer::tag('button', get_string('import:backtocolumns', 'local_oriskill'),
+        ['type' => 'submit', 'class' => 'btn btn-sm btn-outline-secondary']), ['method' => 'post', 'action' => $url->out(false)]);
 } else if ($import->status === 'draft') {
     // 2. Map the columns.
     $headers = json_decode($import->headers, true);
