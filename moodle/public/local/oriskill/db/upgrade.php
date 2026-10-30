@@ -359,5 +359,12 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103035, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103036) {
+        // Saved segments of the CRM.
+        if (!$dbman->table_exists('local_oriskill_segments')) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', 'local_oriskill_segments');
+        }
+        upgrade_plugin_savepoint(true, 2026103036, 'local', 'oriskill');
+    }
     return true;
 }

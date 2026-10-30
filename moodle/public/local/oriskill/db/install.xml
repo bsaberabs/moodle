@@ -481,6 +481,22 @@
         <KEY NAME="creatorid" TYPE="foreign" FIELDS="creatorid" REFTABLE="local_oriskill_creators" REFFIELDS="id"/>
       </KEYS>
     </TABLE>
+    <TABLE NAME="local_oriskill_segments" COMMENT="Saved combinations of filters of a trainer's CRM">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="creatorid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="name" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="filters" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="JSON: parameters of the contact list"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="creatorid" TYPE="foreign" FIELDS="creatorid" REFTABLE="local_oriskill_creators" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="creatorid-name" UNIQUE="true" FIELDS="creatorid, name"/>
+      </INDEXES>
+    </TABLE>
     <TABLE NAME="local_oriskill_formstats" COMMENT="Daily visits of the order forms and their order step, per offer">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>

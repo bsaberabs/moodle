@@ -338,6 +338,26 @@
     height: 4rem;
     font-size: 1.25rem;
 }
+.oriskill-activity-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 2rem;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: #f1f1f4;
+    color: #4b5563;
+    font-size: .85rem;
+}
+.oriskill-activity-icon.is-good {
+    background: var(--ori-good-soft);
+    color: var(--ori-good);
+}
+.oriskill-activity-icon.is-warn {
+    background: var(--ori-warn-soft);
+    color: var(--ori-warn);
+}
 .oriskill-dot {
     display: inline-block;
     width: .45rem;

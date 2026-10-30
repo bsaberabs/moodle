@@ -79,6 +79,16 @@ if (($action = optional_param('action', '', PARAM_ALPHA)) && confirm_sesskey()) 
         $message = get_string('changessaved');
         $type = \core\output\notification::NOTIFY_SUCCESS;
         try {
+            if ($action === 'savesegment') {
+                $name = required_param('name', PARAM_TEXT);
+                cs::save_segment($creator, $name, $filters);
+                log_service::add($creator, 'segment_saved', ['name' => $name]);
+                redirect($url, get_string('segment:saved', 'local_oriskill', s($name)), null, $type);
+            }
+            if ($action === 'deletesegment') {
+                cs::delete_segment($creator, required_param('segmentid', PARAM_INT));
+                redirect($url, $message, null, $type);
+            }
             if ($action === 'add') {
                 $contact = cs::upsert($creator, required_param('email', PARAM_RAW_TRIMMED), [
                     'firstname' => optional_param('firstname', '', PARAM_NOTAGS),
@@ -166,6 +176,39 @@ foreach (cs::VIEWS as $name) {
         ['class' => 'btn btn-sm ' . ($filters['view'] === $name ? 'btn-primary' : 'btn-outline-secondary')]);
 }
 echo html_writer::div($tabs, 'd-flex flex-wrap gap-1 mb-3');
+
+// Saved segments: a click applies their filters; the current filters can be saved as one.
+$sesskeyinput = html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
+$chips = '';
+foreach (cs::segments($creator) as $segment) {
+    $segmenturl = new moodle_url('/local/oriskill/contacts.php', $segment->filters);
+    $current = $segmenturl->params() == array_filter($filters, fn($v) => $v !== '' && $v !== 'all');
+    $chips .= html_writer::span(
+        html_writer::link($segmenturl, '<i class="fa fa-filter me-1" aria-hidden="true"></i>' . s($segment->name),
+            ['class' => 'text-reset text-decoration-none']) .
+        ($canchange ? html_writer::tag('form', $sesskeyinput .
+            html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'deletesegment']) .
+            html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'segmentid', 'value' => $segment->id]) .
+            html_writer::tag('button', '×', ['type' => 'submit', 'class' => 'btn btn-link btn-sm p-0 ms-1 text-reset',
+                'title' => get_string('segment:delete', 'local_oriskill', s($segment->name))]),
+            ['method' => 'post', 'action' => $url->out(false), 'class' => 'd-inline',
+             'onsubmit' => 'return confirm(' . json_encode(get_string('segment:delete_confirm', 'local_oriskill')) . ')']) : ''),
+        'oriskill-badge ' . ($current ? 'is-good' : '') . ' me-1');
+}
+$filtered = (bool) array_filter($filters, fn($v) => $v !== '' && $v !== 'all');
+if ($chips || ($canchange && $filtered)) {
+    echo html_writer::div(
+        html_writer::span(get_string('segment:title', 'local_oriskill'), 'small text-muted me-1') . $chips .
+        ($canchange && $filtered ? html_writer::tag('form', $sesskeyinput .
+            html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'savesegment']) .
+            html_writer::empty_tag('input', ['type' => 'text', 'name' => 'name', 'required' => 'required', 'maxlength' => 100,
+                'class' => 'form-control form-control-sm', 'style' => 'width: 14rem',
+                'placeholder' => get_string('segment:name', 'local_oriskill'), 'aria-label' => get_string('segment:name', 'local_oriskill')]) .
+            html_writer::tag('button', get_string('segment:save', 'local_oriskill'), ['type' => 'submit',
+                'class' => 'btn btn-sm btn-outline-primary text-nowrap']),
+            ['method' => 'post', 'action' => $url->out(false), 'class' => 'd-inline-flex gap-1 ms-2']) : ''),
+        'd-flex flex-wrap align-items-center gap-1 mb-3');
+}
 
 // Search and filters.
 $hidden = '';

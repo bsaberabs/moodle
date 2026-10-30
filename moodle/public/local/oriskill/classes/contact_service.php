@@ -34,6 +34,12 @@ class contact_service {
     /** Tags of the contacts. */
     const TAGS = 'local_oriskill_contacttags';
 
+    /** Saved segments. */
+    const SEGMENTS = 'local_oriskill_segments';
+
+    /** Parameters of the list a segment keeps. */
+    const SEGMENT_PARAMS = ['view', 'q', 'status', 'tag', 'course', 'ltvmin', 'ltvmax', 'from', 'to', 'consent'];
+
     /** Quick views of the list. */
     const VIEWS = ['all', 'members', 'prospects', 'customers'];
 
@@ -519,7 +525,160 @@ class contact_service {
         }
     }
 
+    // ----- Segments -------------------------------------------------------------------------------------------------
+
+    /**
+     * Saved segments of the trainer (a named combination of filters of the list).
+     *
+     * @param \stdClass $creator Trainer.
+     * @return array id => {id, name, filters (array)}
+     */
+    public static function segments(\stdClass $creator): array {
+        global $DB;
+
+        $segments = $DB->get_records(self::SEGMENTS, ['creatorid' => $creator->id], 'name');
+        foreach ($segments as $segment) {
+            $segment->filters = json_decode($segment->filters, true) ?: [];
+        }
+        return $segments;
+    }
+
+    /**
+     * Save the current filters of the list as a segment (a segment with the same name is replaced).
+     *
+     * @param \stdClass $creator Trainer.
+     * @param string $name Name.
+     * @param array $filters Parameters of the list (SEGMENT_PARAMS).
+     * @return int Segment id.
+     */
+    public static function save_segment(\stdClass $creator, string $name, array $filters): int {
+        global $DB;
+
+        $name = \core_text::substr(trim(clean_param($name, PARAM_NOTAGS)), 0, 100);
+        $filters = array_filter(array_intersect_key($filters, array_flip(self::SEGMENT_PARAMS)),
+            fn($v) => $v !== '' && $v !== null && $v !== 'all');
+        if ($name === '' || !$filters) {
+            throw new \moodle_exception('segment:invalid', 'local_oriskill');
+        }
+        $record = ['creatorid' => $creator->id, 'name' => $name, 'filters' => json_encode($filters, JSON_UNESCAPED_UNICODE),
+            'timecreated' => time()];
+        if ($id = $DB->get_field(self::SEGMENTS, 'id', ['creatorid' => $creator->id, 'name' => $name])) {
+            $DB->update_record(self::SEGMENTS, (object) (['id' => $id] + $record));
+            return (int) $id;
+        }
+        return $DB->insert_record(self::SEGMENTS, (object) $record);
+    }
+
+    /**
+     * Delete a segment (the contacts stay).
+     *
+     * @param \stdClass $creator Trainer.
+     * @param int $id Segment.
+     */
+    public static function delete_segment(\stdClass $creator, int $id): void {
+        global $DB;
+        $DB->delete_records(self::SEGMENTS, ['id' => $id, 'creatorid' => $creator->id]);
+    }
+
     // ----- Contact's page -------------------------------------------------------------------------------------------
+
+    /**
+     * What happened with a contact, newest first: added, tags, sign-ups, orders, enrolments, logins, activities and
+     * courses completed, unpaid instalments, changes made by the trainer's team.
+     *
+     * @param \stdClass $creator Trainer.
+     * @param \stdClass $contact Contact.
+     * @param int $limit Events at most.
+     * @return array of objects {time, icon, text, tone ('' | good | warn)}
+     */
+    public static function activity(\stdClass $creator, \stdClass $contact, int $limit = 300): array {
+        global $DB;
+
+        $events = [];
+        $add = function(int $time, string $icon, string $text, string $tone = '') use (&$events) {
+            if ($time > 0) {
+                $events[] = (object) ['time' => $time, 'icon' => $icon, 'text' => $text, 'tone' => $tone];
+            }
+        };
+        $s = fn(string $key, $a = null) => get_string('activity:' . $key, 'local_oriskill', $a);
+        $price = fn($amount, $currency) => \local_moderncommerce\services\pricing_service::format_price((float) $amount, $currency);
+
+        $add((int) $contact->timecreated, 'fa-user-plus', $s('added', get_string('contacts:source_' . $contact->source,
+            'local_oriskill')));
+        foreach ($DB->get_records(self::TAGS, ['contactid' => $contact->id]) as $tag) {
+            $add((int) $tag->timecreated, 'fa-tag', $s('tag', $tag->tag));
+        }
+        $userid = (int) $contact->userid;
+        if ($userid) {
+            $courses = $DB->get_records('course', ['category' => $creator->categoryid], '', 'id, fullname');
+            $coursename = fn($id) => isset($courses[$id]) ? format_string($courses[$id]->fullname) : '';
+            if ($courses) {
+                [$insql, $params] = $DB->get_in_or_equal(array_keys($courses), SQL_PARAMS_NAMED);
+                foreach ($DB->get_records_sql("SELECT ue.id, ue.timecreated, e.courseid FROM {user_enrolments} ue
+                                                 JOIN {enrol} e ON e.id = ue.enrolid
+                                                WHERE ue.userid = :userid AND e.courseid $insql",
+                        ['userid' => $userid] + $params) as $ue) {
+                    $add((int) $ue->timecreated, 'fa-graduation-cap', $s('enrolled', $coursename($ue->courseid)), 'good');
+                }
+                foreach ($DB->get_records_sql("SELECT id, course, timecompleted FROM {course_completions}
+                                                WHERE userid = :userid AND timecompleted > 0 AND course $insql",
+                        ['userid' => $userid] + $params) as $done) {
+                    $add((int) $done->timecompleted, 'fa-trophy', $s('coursecompleted', $coursename($done->course)), 'good');
+                }
+                $completions = $DB->get_records_sql(
+                    "SELECT cmc.id, cmc.coursemoduleid, cmc.timemodified, cm.course
+                       FROM {course_modules_completion} cmc JOIN {course_modules} cm ON cm.id = cmc.coursemoduleid
+                      WHERE cmc.userid = :userid AND cmc.completionstate IN (1, 2) AND cm.course $insql
+                   ORDER BY cmc.timemodified DESC", ['userid' => $userid] + $params, 0, 100);
+                foreach ($completions as $completion) {
+                    $cm = get_fast_modinfo($completion->course, $userid)->get_cms()[$completion->coursemoduleid] ?? null;
+                    if ($cm) {
+                        $add((int) $completion->timemodified, 'fa-circle-check', $s('activitydone', $cm->get_formatted_name()));
+                    }
+                }
+                foreach ($DB->get_records_select('local_oriskill_unpaid', "userid = :userid AND creatorid = :creatorid",
+                        ['userid' => $userid, 'creatorid' => $creator->id]) as $unpaid) {
+                    $add((int) $unpaid->timecreated, 'fa-triangle-exclamation', $s('unpaid', (object) [
+                        'course' => $coursename($unpaid->courseid), 'amount' => $price($unpaid->amount, 'EUR')]), 'warn');
+                    if ($unpaid->timeclosed) {
+                        $add((int) $unpaid->timeclosed, 'fa-scale-balanced', $s('unpaid_' . $unpaid->state,
+                            $coursename($unpaid->courseid)), $unpaid->state === 'settled' ? 'good' : '');
+                    }
+                }
+            }
+            foreach ($DB->get_records('local_oriskill_invoices', ['creatorid' => $creator->id, 'userid' => $userid]) as $invoice) {
+                $add((int) $invoice->timecreated, $invoice->type === 'credit' ? 'fa-rotate-left' : 'fa-receipt',
+                    $s($invoice->type === 'credit' ? 'credit' : 'invoice', (object) ['number' => $invoice->number,
+                        'amount' => $price($invoice->total, $invoice->currency)]), $invoice->type === 'credit' ? 'warn' : 'good');
+            }
+            foreach ($DB->get_records_sql("SELECT l.id, l.timecreated, p.title FROM {local_oriskill_leads} l
+                                             JOIN {local_oriskill_capturepages} p ON p.id = l.pageid
+                                            WHERE l.userid = ? AND l.creatorid = ?", [$userid, $creator->id]) as $lead) {
+                $add((int) $lead->timecreated, 'fa-envelope-open-text', $s('lead', format_string($lead->title)));
+            }
+            foreach ($DB->get_records_sql("SELECT a.*, f.title FROM {local_oriskill_abandons} a
+                                             JOIN {local_oriskill_orderforms} f ON f.id = a.formid
+                                            WHERE a.userid = ? AND a.creatorid = ?", [$userid, $creator->id]) as $abandon) {
+                $add((int) $abandon->timecreated, 'fa-cart-shopping', $s('checkout', (object) ['form' => format_string($abandon->title),
+                    'amount' => $price($abandon->amount, $abandon->currency)]));
+                if ($abandon->sent) {
+                    $add((int) $abandon->lastsent, 'fa-paper-plane', $s('reminded', (int) $abandon->sent));
+                }
+            }
+            foreach ($DB->get_records_select('logstore_standard_log', "userid = ? AND eventname = ?",
+                    [$userid, '\core\event\user_loggedin'], 'timecreated DESC', 'id, timecreated', 0, 30) as $login) {
+                $add((int) $login->timecreated, 'fa-right-to-bracket', $s('login'));
+            }
+            foreach ($DB->get_records('local_oriskill_log', ['creatorid' => $creator->id, 'relateduserid' => $userid],
+                    'timecreated DESC', '*', 0, 100) as $entry) {
+                $by = $entry->userid ? \core_user::get_user($entry->userid) : null;
+                $add((int) $entry->timecreated, 'fa-pen-to-square', log_service::describe($entry) .
+                    ($by ? ' · ' . $s('by', fullname($by)) : ''));
+            }
+        }
+        usort($events, fn($a, $b) => $b->time <=> $a->time);
+        return array_slice($events, 0, $limit);
+    }
 
     /**
      * The contact's accesses to the trainer's courses.

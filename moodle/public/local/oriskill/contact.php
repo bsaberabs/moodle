@@ -32,7 +32,7 @@ use local_oriskill\team_service;
 
 $id = required_param('id', PARAM_INT);
 $tab = optional_param('tab', 'infos', PARAM_ALPHA);
-$tabs = ['infos', 'courses', 'transactions'];
+$tabs = ['infos', 'activity', 'courses', 'transactions'];
 $tab = in_array($tab, $tabs, true) ? $tab : 'infos';
 $url = new moodle_url('/local/oriskill/contact.php', ['id' => $id, 'tab' => $tab]);
 $creator = creator_service::require_current_creator($url, 'menu:contacts');
@@ -142,7 +142,7 @@ $identity = html_writer::div(html_writer::span(s($initials), 'oriskill-initials 
         json_encode(get_string('contacts:delete_confirm', 'local_oriskill')) . ')']), 'mt-4') : '');
 
 // Tabs, a dot on those with data.
-$hasdata = ['infos' => true, 'courses' => (bool) $courses, 'transactions' => (bool) $invoices];
+$hasdata = ['infos' => true, 'activity' => false, 'courses' => (bool) $courses, 'transactions' => (bool) $invoices];
 $nav = '';
 foreach ($tabs as $name) {
     $nav .= html_writer::tag('li', html_writer::link(new moodle_url($url, ['tab' => $name]),
@@ -183,6 +183,24 @@ if ($tab === 'infos') {
                 userdate($contact->consentdate)), 'small text-muted mt-1') : '') .
             ($canchange ? html_writer::tag('button', get_string('savechanges'), ['type' => 'submit', 'class' => 'btn btn-primary mt-3'])
                 : ''));
+} else if ($tab === 'activity') {
+    // Day by day, to the second.
+    $days = [];
+    foreach (cs::activity($creator, $contact) as $event) {
+        $days[userdate($event->time, get_string('strftimedaydate', 'langconfig'))][] = $event;
+    }
+    foreach ($days as $day => $events) {
+        $items = '';
+        foreach ($events as $event) {
+            $items .= html_writer::tag('li', html_writer::span('<i class="fa ' . $event->icon . ' fa-fw" aria-hidden="true"></i>',
+                'oriskill-activity-icon' . ($event->tone ? ' is-' . $event->tone : '')) .
+                html_writer::div(html_writer::div(s($event->text)) .
+                    html_writer::div(userdate($event->time, '%H:%M:%S'), 'small text-muted'), 'flex-grow-1'),
+                ['class' => 'd-flex gap-2 align-items-start mb-2']);
+        }
+        $content .= html_writer::div(html_writer::div(s($day), 'oriskill-stat-label mb-2') .
+            html_writer::tag('ul', $items, ['class' => 'list-unstyled mb-0']), 'mb-3');
+    }
 } else if ($tab === 'courses') {
     if (!$courses) {
         $content = html_writer::div(get_string('contacts:nocourses', 'local_oriskill'), 'text-muted');
