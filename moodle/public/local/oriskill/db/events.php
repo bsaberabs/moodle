@@ -67,6 +67,11 @@ $observers = [
         'eventname' => '\core\event\email_failed',
         'callback' => '\local_oriskill\email_log::email_failed',
     ],
+    // The trainer's access e-mail of the course.
+    [
+        'eventname' => '\core\event\user_enrolment_created',
+        'callback' => '\local_oriskill\access_mail::user_enrolled',
+    ],
     [
         'eventname' => '\core\event\user_deleted',
         'callback' => '\local_oriskill\observer::user_deleted',

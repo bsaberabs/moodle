@@ -71,6 +71,9 @@ class email_log {
         global $DB;
 
         $email = $hook->email;
+        if ($email->is_blocked()) {
+            return;
+        }
         $userid = (int) ($email->user->id ?? 0);
         // People without an account are noted only when written to from the CRM.
         $direct = self::$context && self::$context[1] === 'direct';

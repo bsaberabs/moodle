@@ -33,7 +33,29 @@ $course = creator_service::selected_course($creator);
 $url = new moodle_url('/local/oriskill/access.php', $course ? ['courseid' => $course->id] : []);
 $PAGE->set_url($url);
 
-if ($course && ($action = optional_param('action', '', PARAM_ALPHA)) && confirm_sesskey()) {
+// The access e-mail of the course (its own form, handled before the other actions of the page).
+$accessform = null;
+if ($course) {
+    $accessform = new \local_oriskill\form\accessmail_form($url);
+    $settings = \local_oriskill\access_mail::settings($course, $creator);
+    $accessform->set_data(['courseid' => $course->id, 'enabled' => $settings->enabled, 'onpurchase' => $settings->onpurchase,
+        'onmanual' => $settings->onmanual, 'onimport' => $settings->onimport, 'sendername' => $settings->sendername,
+        'subject' => $settings->subject, 'body' => ['text' => $settings->body, 'format' => $settings->bodyformat]]);
+    if ($data = $accessform->get_data()) {
+        \local_oriskill\access_mail::save($course, $data);
+        \local_oriskill\log_service::add($creator, 'accessmail_saved', ['state' => get_string(!empty($data->enabled) ? 'yes' : 'no')],
+            (int) $course->id);
+        $message = get_string('changessaved');
+        if (!empty($data->testbutton)) {
+            $sent = \local_oriskill\access_mail::send($course, $creator, $USER,
+                \local_oriskill\access_mail::settings($course, $creator), true);
+            $message = get_string($sent ? 'accessmail:testsent' : 'accessmail:testfailed', 'local_oriskill', s($USER->email));
+        }
+        redirect(new moodle_url($url, [], 'accessmail'), $message, null, \core\output\notification::NOTIFY_SUCCESS);
+    }
+}
+
+if ($course && ($action = optional_param('action', '', PARAM_ALPHA)) && $action !== 'accessmail' && confirm_sesskey()) {
     $message = get_string('changessaved');
     $type = \core\output\notification::NOTIFY_SUCCESS;
     try {
@@ -171,6 +193,14 @@ if ($rules) {
     echo html_writer::div('<i class="fa fa-layer-group" aria-hidden="true"></i>' . get_string('nomodules', 'local_oriskill'),
         'oriskill-card oriskill-empty mb-4');
 }
+
+// Access e-mail of the course.
+echo html_writer::start_div('oriskill-card mb-4', ['id' => 'accessmail']);
+echo html_writer::tag('h3', '<i class="fa fa-envelope-open-text me-2" aria-hidden="true"></i>' .
+    get_string('accessmail:title', 'local_oriskill'));
+echo html_writer::tag('p', get_string('accessmail:intro', 'local_oriskill'), ['class' => 'small text-muted']);
+$accessform->display();
+echo html_writer::end_div();
 
 // Time spent in the course.
 $current = \local_oriskill\studytime_service::mode((int) $course->id);

@@ -168,6 +168,9 @@ class learning_service {
         $user = $DB->get_record_select('user', 'LOWER(email) = ? AND deleted = 0 AND mnethostid = ?',
             [$email, $CFG->mnet_localhost_id], '*', IGNORE_MULTIPLE);
         $created = false;
+        // The trainer's access e-mail, when it goes out, carries a link to choose a password: no credentials e-mail.
+        $trigger = access_mail::current_trigger() ?? 'manual';
+        $sendcredentials = $sendcredentials && !access_mail::will_send((int) $course->id, $trigger);
         if (!$user) {
             if (trim($firstname) === '' || trim($lastname) === '') {
                 throw new \moodle_exception('error:newlearnername', 'local_oriskill');
@@ -199,7 +202,7 @@ class learning_service {
         if ($existing) {
             $plugin->update_user_enrol($instance, $user->id, ENROL_USER_ACTIVE, null, $timeend);
         } else {
-            $plugin->enrol_user($instance, $user->id, $instance->roleid, $now, $timeend);
+            access_mail::with_trigger($trigger, fn() => $plugin->enrol_user($instance, $user->id, $instance->roleid, $now, $timeend));
         }
         if ($groupid) {
             self::set_learner_group($course, $user->id, $groupid);

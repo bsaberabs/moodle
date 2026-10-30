@@ -54,6 +54,12 @@ $callbacks = [
         'callback' => [\local_oriskill\hook_callbacks::class, 'resolve_gateway_config'],
     ],
     [
+        // First: the standard enrolment e-mails replaced by the trainer's access e-mail are not sent (nor logged).
+        'hook' => \core\hook\email\before_email_to_user::class,
+        'callback' => [\local_oriskill\access_mail::class, 'before_email_to_user'],
+        'priority' => 500,
+    ],
+    [
         'hook' => \core\hook\email\before_email_to_user::class,
         'callback' => [\local_oriskill\email_log::class, 'before_email_to_user'],
     ],

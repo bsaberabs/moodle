@@ -476,9 +476,9 @@ class contact_import {
         $enrolled = false;
         if ($course) {
             $local = strstr($email, '@', true);
-            [$user] = learning_service::offer_access($course, $email, $data['firstname'] ?? '' ?: $local,
-                $data['lastname'] ?? '' ?: '-', 0, $groupnames ? 0 : (int) $options['groupid'],
-                !empty($options['sendcredentials']));
+            [$user] = access_mail::with_trigger('import', fn() => learning_service::offer_access($course, $email,
+                $data['firstname'] ?? '' ?: $local, $data['lastname'] ?? '' ?: '-', 0, $groupnames ? 0 : (int) $options['groupid'],
+                !empty($options['sendcredentials'])));
             if (!$contact->userid) {
                 $DB->set_field(contact_service::TABLE, 'userid', $user->id, ['id' => $contact->id]);
             }

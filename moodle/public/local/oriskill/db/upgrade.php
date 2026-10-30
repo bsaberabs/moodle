@@ -419,5 +419,14 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103041, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103042) {
+        // Access e-mail of each course, written by its trainer, with a link to choose a password.
+        foreach (['local_oriskill_accessmails', 'local_oriskill_accesssent', 'local_oriskill_pwtokens'] as $name) {
+            if (!$dbman->table_exists($name)) {
+                $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', $name);
+            }
+        }
+        upgrade_plugin_savepoint(true, 2026103042, 'local', 'oriskill');
+    }
     return true;
 }

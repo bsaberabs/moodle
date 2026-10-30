@@ -86,5 +86,7 @@ class observer {
         }
         $DB->delete_records(email_log::TABLE, ['userid' => $event->objectid]);
         $DB->delete_records(contact_import::PRIOR, ['userid' => $event->objectid]);
+        $DB->delete_records(access_mail::SENT, ['userid' => $event->objectid]);
+        $DB->delete_records(access_mail::TOKENS, ['userid' => $event->objectid]);
     }
 }
