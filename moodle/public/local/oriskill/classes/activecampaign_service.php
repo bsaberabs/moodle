@@ -282,6 +282,9 @@ class activecampaign_service {
         global $CFG;
         require_once($CFG->libdir . '/filelib.php');
 
+        if (!empty($CFG->oriskill_staging)) {
+            return [0, 'Test copy of the platform: nothing is sent.'];
+        }
         $curl = new \curl();
         $curl->setHeader($headers);
         $options = ['CURLOPT_TIMEOUT' => 20];

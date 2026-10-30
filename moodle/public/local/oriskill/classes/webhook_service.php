@@ -285,6 +285,9 @@ class webhook_service {
         global $CFG;
         require_once($CFG->libdir . '/filelib.php');
 
+        if (!empty($CFG->oriskill_staging)) {
+            return [0, 'Test copy of the platform: nothing is sent.'];
+        }
         $curl = new \curl();
         $curl->setHeader($headers);
         $answer = (string) $curl->post($url, $body, ['CURLOPT_TIMEOUT' => 15]);

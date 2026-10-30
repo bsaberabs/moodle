@@ -53,4 +53,11 @@ if (getenv('MOODLE_SUPPORT_NAME')) {
     $CFG->emailfromvia = 0;
 }
 
+// Copie de test de la plateforme : aucun envoi réel vers l'extérieur. Les e-mails partent vers sa boîte de test
+// (MOODLE_SMTP_HOST=mailpit:1025), jamais par le serveur d'un formateur ; SecureAndPay toujours en mode test ;
+// webhooks et ActiveCampaign coupés.
+if (getenv('MOODLE_STAGING') === 'true') {
+    $CFG->oriskill_staging = true;
+}
+
 require_once(__DIR__ . '/lib/setup.php');

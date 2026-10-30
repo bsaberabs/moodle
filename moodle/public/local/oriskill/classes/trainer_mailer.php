@@ -88,7 +88,10 @@ class trainer_mailer {
      * @param \stdClass|null $creator Trainer the e-mail is sent for, null for the platform.
      */
     public static function prepare(?\stdClass $creator): void {
-        $settings = $creator ? self::settings($creator) : null;
+        global $CFG;
+
+        // On a test copy of the platform, every e-mail stays in its test mailbox.
+        $settings = $creator && empty($CFG->oriskill_staging) ? self::settings($creator) : null;
         if (!$settings || !$settings->enabled || $settings->host === '') {
             self::restore();
             return;

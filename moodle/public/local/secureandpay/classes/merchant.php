@@ -25,6 +25,9 @@ namespace local_secureandpay;
  */
 class merchant {
 
+    /** @var bool Test environment (always on a test copy of the platform). */
+    public readonly bool $testmode;
+
     /**
      * Constructor.
      *
@@ -38,11 +41,12 @@ class merchant {
         public readonly string $siteid,
         /** @var string Signing key. */
         public readonly string $key,
-        /** @var bool Test environment. */
-        public readonly bool $testmode,
+        bool $testmode,
         /** @var string Account owner. */
         public readonly string $owner = 'platform',
     ) {
+        global $CFG;
+        $this->testmode = $testmode || !empty($CFG->oriskill_staging);
     }
 
     /**
