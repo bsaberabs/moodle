@@ -146,6 +146,7 @@ class orderform_service {
                 'instaltotal' => $instaltotal,
                 'instalfirst' => $instalfirst,
                 'instalcut' => in_array((int) ($offer->instalcut ?? 1), instalment_service::CUTS, true) ? (int) $offer->instalcut : 1,
+                'groupids' => self::offer_groupids((array) ($offer->groupids ?? []), $courseids),
                 'highlight' => empty($offer->highlight) ? 0 : 1,
                 'actags' => activecampaign_service::clean_tags((string) ($offer->actags ?? '')),
                 'subprice' => round(max(0, (float) ($offer->subprice ?? 0)), 2),
@@ -153,6 +154,65 @@ class orderform_service {
             ]);
         }
         return $DB->get_record('local_oriskill_orderforms', ['id' => $record->id]);
+    }
+
+    /**
+     * Groups an offer gives, kept only when they belong to the courses it opens.
+     *
+     * @param int[] $groupids Groups chosen.
+     * @param int[] $courseids Courses of the offer.
+     * @return string Comma-separated ids ('' for none).
+     */
+    protected static function offer_groupids(array $groupids, array $courseids): string {
+        global $DB;
+
+        $groupids = array_values(array_unique(array_filter(array_map('intval', $groupids))));
+        if (!$groupids || !$courseids) {
+            return '';
+        }
+        [$gsql, $gparams] = $DB->get_in_or_equal($groupids);
+        [$csql, $cparams] = $DB->get_in_or_equal($courseids);
+        $valid = $DB->get_fieldset_select('groups', 'id', "id $gsql AND courseid $csql", array_merge($gparams, $cparams));
+        return implode(',', array_map('intval', array_intersect($groupids, array_map('intval', $valid))));
+    }
+
+    /**
+     * Groups given by the offer an order was placed with (they open the modules reserved to them).
+     *
+     * @param \stdClass $order Order.
+     * @return int[] Group ids.
+     */
+    public static function order_groupids(\stdClass $order): array {
+        global $DB;
+
+        $notes = json_decode((string) $order->notes, true) ?: [];
+        if (empty($notes['offer'])) {
+            return [];
+        }
+        $ids = (string) $DB->get_field('local_oriskill_formoffers', 'groupids', ['id' => (int) $notes['offer']]);
+        return array_values(array_filter(array_map('intval', explode(',', $ids))));
+    }
+
+    /**
+     * The order is paid: put the buyer in the groups its offer gives (once enrolled in their course).
+     *
+     * @param int $orderid Order.
+     * @return bool Whether the offer gives groups (the automatic group of the payment is then not added).
+     */
+    public static function grant_groups(int $orderid): bool {
+        global $CFG, $DB;
+        require_once($CFG->dirroot . '/group/lib.php');
+
+        $order = $DB->get_record('local_moderncommerce_orders', ['id' => $orderid]);
+        $groupids = $order ? self::order_groupids($order) : [];
+        foreach ($groupids as $groupid) {
+            $courseid = (int) $DB->get_field('groups', 'courseid', ['id' => $groupid]);
+            if ($courseid && is_enrolled(\context_course::instance($courseid), $order->userid)
+                    && !groups_is_member($groupid, $order->userid)) {
+                groups_add_member($groupid, $order->userid);
+            }
+        }
+        return (bool) $groupids;
     }
 
     /**

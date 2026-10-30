@@ -94,6 +94,9 @@ class orderform_form extends \moodleform {
             $mform->createElement('textarea', 'offerdetails', get_string('orderform:offerdetails', 'local_oriskill'),
                 ['rows' => 3, 'cols' => 50]),
             $mform->createElement('text', 'offerprice', get_string('orderform:offerprice', 'local_oriskill'), ['size' => 10]),
+            $mform->createElement('autocomplete', 'offergroups', get_string('orderform:offergroups', 'local_oriskill'),
+                $this->_customdata['groups'] ?? [], ['multiple' => true,
+                    'noselectionstring' => get_string('orderform:offergroups_none', 'local_oriskill')]),
             $mform->createElement('select', 'offerinstalcount', get_string('instalments:countcol', 'local_oriskill'), $counts),
             $mform->createElement('text', 'offerinstaltotal', get_string('orderform:offerinstaltotal', 'local_oriskill'),
                 ['size' => 10]),
@@ -116,6 +119,7 @@ class orderform_form extends \moodleform {
             'offerinstalcut' => ['type' => PARAM_INT, 'default' => 1, 'hideif' => ['offerinstalcount', 'eq', 0],
                 'helpbutton' => ['instalments:cutcol', 'local_oriskill']],
             'offercourses' => ['type' => PARAM_INT],
+            'offergroups' => ['type' => PARAM_INT, 'helpbutton' => ['orderform:offergroups', 'local_oriskill']],
             'offeractags' => ['type' => PARAM_TEXT, 'helpbutton' => ['orderform:offeractags', 'local_oriskill']],
             'offersubprice' => ['type' => PARAM_RAW_TRIMMED, 'helpbutton' => ['orderform:offersubprice', 'local_oriskill']],
         ];

@@ -576,7 +576,8 @@ class instalment_service {
         require_once($CFG->dirroot . '/group/lib.php');
 
         $order = $DB->get_record('local_moderncommerce_orders', ['id' => $orderid]);
-        if (!$order) {
+        if (!$order || orderform_service::order_groupids($order)) {
+            // The trainer chose the groups of this offer: they replace the automatic group of the payment.
             return;
         }
         $plan = gateway::instalment_plan($order);

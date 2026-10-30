@@ -40,7 +40,13 @@ $form = $id ? $DB->get_record('local_oriskill_orderforms', ['id' => $id, 'creato
 $offers = $form ? array_values(orderform_service::offers($form)) : [];
 $courses = array_map(fn($row) => format_string($row->course->fullname), seller_service::priced_courses($creator));
 
-$mform = new orderform_form($url, ['creator' => $creator, 'formid' => $id, 'courses' => $courses,
+$groups = [];
+foreach ($courses as $courseid => $coursename) {
+    foreach (groups_get_all_groups($courseid, 0, 0, 'g.id, g.name', false) as $group) {
+        $groups[$group->id] = $coursename . ' — ' . format_string($group->name);
+    }
+}
+$mform = new orderform_form($url, ['creator' => $creator, 'formid' => $id, 'courses' => $courses, 'groups' => $groups,
     'offercount' => count($offers)]);
 $draftitemid = file_get_submitted_draft_itemid('image_filemanager');
 file_prepare_draft_area($draftitemid, $context->id, 'local_oriskill', 'orderform', $id, orderform_service::IMAGE_OPTIONS);
@@ -73,6 +79,7 @@ if ($form) {
         $defaults["offerinstaltotal[$i]"] = $offer->instalcount ? format_float((float) $offer->instaltotal, 2, true) : '';
         $defaults["offerinstalfirst[$i]"] = (float) $offer->instalfirst > 0 ? format_float((float) $offer->instalfirst, 2, true) : '';
         $defaults["offerinstalcut[$i]"] = (int) ($offer->instalcut ?? 1) ?: 1;
+        $defaults["offergroups[$i]"] = array_values(array_filter(array_map('intval', explode(',', (string) ($offer->groupids ?? '')))));
         $defaults["offerhighlight[$i]"] = $offer->highlight;
         $defaults["offeractags[$i]"] = $offer->actags;
         $defaults["offersubprice[$i]"] = (float) $offer->subprice > 0 ? format_float((float) $offer->subprice, 2, true) : '';
@@ -101,6 +108,7 @@ if ($data = $mform->get_data()) {
             'instaltotal' => unformat_float((string) $data->offerinstaltotal[$i], true),
             'instalfirst' => unformat_float((string) ($data->offerinstalfirst[$i] ?? ''), true) ?: 0,
             'instalcut' => (int) ($data->offerinstalcut[$i] ?? 1),
+            'groupids' => $data->offergroups[$i] ?? [],
             'highlight' => !empty($data->offerhighlight[$i]),
             'actags' => $data->offeractags[$i] ?? '',
             'subprice' => unformat_float((string) ($data->offersubprice[$i] ?? ''), true) ?: 0,
