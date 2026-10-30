@@ -64,6 +64,7 @@ $type = fn($c) => $c->count ? get_string('unpaid:type_instalments', 'local_orisk
 
 // CSV export of what is shown.
 if (optional_param('download', '', PARAM_ALPHA) === 'csv') {
+    \local_oriskill\team_service::export_allowed($creator, get_string('menu:unpaid', 'local_oriskill'));
     $rows = [[get_string('date'), get_string('lastname'), get_string('firstname'), get_string('email'),
         get_string('unpaid:product', 'local_oriskill'), get_string('unpaid:type', 'local_oriskill'),
         get_string('unpaid:cause', 'local_oriskill'), get_string('unpaid:amount', 'local_oriskill'),

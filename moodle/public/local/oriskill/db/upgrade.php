@@ -310,5 +310,17 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103029, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103030) {
+        // Accounting, partner and coach roles: export permission and coaches' learners.
+        $field = new xmldb_field('canexport', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1', 'role');
+        $table = new xmldb_table('local_oriskill_members');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        if (!$dbman->table_exists('local_oriskill_coachees')) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', 'local_oriskill_coachees');
+        }
+        upgrade_plugin_savepoint(true, 2026103030, 'local', 'oriskill');
+    }
     return true;
 }

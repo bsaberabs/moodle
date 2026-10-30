@@ -44,6 +44,10 @@ require_capability('local/oriskill:apply', $context);
 
 $space = \local_oriskill\team_service::current_space();
 if ($space && \local_oriskill\team_service::can($space['role'], '/local/oriskill/apply.php')) {
+    if (\local_oriskill\team_service::needs_mfa($space['role'], (int) $USER->id)) {
+        redirect(new moodle_url('/admin/tool/mfa/user_preferences.php'), get_string('team:mfarequired', 'local_oriskill'),
+            null, \core\output\notification::NOTIFY_WARNING);
+    }
     $creator = $space['creator'];
 } else {
     $creator = $DB->get_record('local_oriskill_creators', ['userid' => $USER->id]);

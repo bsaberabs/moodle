@@ -46,7 +46,16 @@ function local_oriskill_end_of_day(string $value): int {
     return make_timestamp((int) $m[1], (int) $m[2], (int) $m[3], 23, 59, 59);
 }
 
+$role = creator_service::current_role();
+$canchange = \local_oriskill\team_service::can_change($role, '/local/oriskill/learners.php');
+$canexport = \local_oriskill\team_service::can_export();
+$coaches = \local_oriskill\team_service::coaches($creator);
+$coachmap = \local_oriskill\team_service::coach_map($creator);
+
 if ($course && ($action = optional_param('action', '', PARAM_ALPHA)) && confirm_sesskey()) {
+    if (!$canchange) {
+        throw new moodle_exception('error:notallowed', 'local_oriskill');
+    }
     $userid = optional_param('userid', 0, PARAM_INT);
     if ($userid && !isset(learning_service::learners($creator, $course)[$userid])) {
         throw new moodle_exception('invaliduserid');
@@ -73,6 +82,10 @@ if ($course && ($action = optional_param('action', '', PARAM_ALPHA)) && confirm_
             case 'setgroup':
                 learning_service::set_learner_group($course, $userid, optional_param('groupid', 0, PARAM_INT));
                 break;
+            case 'setcoach':
+                // Logged by set_coach().
+                \local_oriskill\team_service::set_coach($creator, $userid, optional_param('coachid', 0, PARAM_INT));
+                redirect($url, $message, null, $type);
             case 'remove':
                 learning_service::remove_offered($course, $userid);
                 $message = get_string('accessremoved', 'local_oriskill');
@@ -96,12 +109,18 @@ if ($course && ($action = optional_param('action', '', PARAM_ALPHA)) && confirm_
 }
 
 $learners = $course ? learning_service::learners($creator, $course) : [];
+// A coach sees only the learners they follow.
+if (($mine = \local_oriskill\team_service::visible_learners($creator)) !== null) {
+    $learners = array_intersect_key($learners, array_flip($mine));
+}
 $groups = $course ? groups_get_all_groups($course->id) : [];
 $dateformat = get_string('strftimedate', 'langconfig');
 $canloginas = $course && has_capability('moodle/user:loginas', context_course::instance($course->id));
 
 // CSV export.
 if ($course && optional_param('download', '', PARAM_ALPHA) === 'csv') {
+    \local_oriskill\team_service::export_allowed($creator, get_string('menu:learners', 'local_oriskill') . ' – ' .
+        format_string($course->fullname));
     $rows = [[get_string('lastname'), get_string('firstname'), get_string('email'), get_string('learner:access', 'local_oriskill'),
         get_string('status'), get_string('learner:since', 'local_oriskill'), get_string('learner:until', 'local_oriskill'),
         get_string('group'), get_string('learner:progress', 'local_oriskill'), get_string('learner:grade', 'local_oriskill'),
@@ -153,35 +172,38 @@ foreach ([
 }
 echo html_writer::div($stats, 'oriskill-stats');
 
-// Offer an access.
 $groupoptions = [0 => get_string('learner:nogroup', 'local_oriskill')];
 foreach ($groups as $group) {
     $groupoptions[$group->id] = format_string($group->name);
 }
-$field = fn(string $label, string $input, string $class = 'col-md-6') =>
-    html_writer::div(html_writer::tag('label', $label, ['class' => 'form-label small fw-semibold']) . $input, $class);
-$form = html_writer::start_tag('form', ['method' => 'post', 'action' => $url->out(false), 'class' => 'row g-3']) .
-    html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]) .
-    html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'offer']) .
-    $field(get_string('email'), html_writer::empty_tag('input', ['type' => 'email', 'name' => 'email', 'required' => 'required',
-        'class' => 'form-control'])) .
-    $field(get_string('learner:until', 'local_oriskill'), html_writer::empty_tag('input', ['type' => 'date', 'name' => 'timeend',
-        'class' => 'form-control']) . html_writer::div(get_string('learner:until_help', 'local_oriskill'), 'form-text'),
-        'col-md-3') .
-    $field(get_string('group'), html_writer::select($groupoptions, 'groupid', 0, false, ['class' => 'form-select']), 'col-md-3') .
-    $field(get_string('firstname'), html_writer::empty_tag('input', ['type' => 'text', 'name' => 'firstname',
-        'class' => 'form-control'])) .
-    $field(get_string('lastname'), html_writer::empty_tag('input', ['type' => 'text', 'name' => 'lastname',
-        'class' => 'form-control'])) .
-    html_writer::div(html_writer::div(get_string('offer_help', 'local_oriskill'), 'form-text mb-2') .
-        html_writer::tag('button', '<i class="fa fa-user-plus me-1" aria-hidden="true"></i>' .
-            get_string('offeraccess', 'local_oriskill'), ['type' => 'submit', 'class' => 'btn btn-primary']), 'col-12') .
-    html_writer::end_tag('form');
-echo html_writer::tag('details',
-    html_writer::tag('summary', '<i class="fa fa-user-plus me-2" aria-hidden="true"></i>' .
-        get_string('offeraccess', 'local_oriskill'), ['class' => 'fw-semibold']) .
-    html_writer::div($form, 'mt-3'),
-    ['class' => 'oriskill-card mb-4', 'open' => $learners ? null : 'open']);
+
+if ($canchange) {
+    // Offer an access.
+    $field =fn(string $label, string $input, string $class = 'col-md-6') =>
+        html_writer::div(html_writer::tag('label', $label, ['class' => 'form-label small fw-semibold']) . $input, $class);
+    $form = html_writer::start_tag('form', ['method' => 'post', 'action' => $url->out(false), 'class' => 'row g-3']) .
+        html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]) .
+        html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'offer']) .
+        $field(get_string('email'), html_writer::empty_tag('input', ['type' => 'email', 'name' => 'email', 'required' => 'required',
+            'class' => 'form-control'])) .
+        $field(get_string('learner:until', 'local_oriskill'), html_writer::empty_tag('input', ['type' => 'date', 'name' => 'timeend',
+            'class' => 'form-control']) . html_writer::div(get_string('learner:until_help', 'local_oriskill'), 'form-text'),
+            'col-md-3') .
+        $field(get_string('group'), html_writer::select($groupoptions, 'groupid', 0, false, ['class' => 'form-select']), 'col-md-3') .
+        $field(get_string('firstname'), html_writer::empty_tag('input', ['type' => 'text', 'name' => 'firstname',
+            'class' => 'form-control'])) .
+        $field(get_string('lastname'), html_writer::empty_tag('input', ['type' => 'text', 'name' => 'lastname',
+            'class' => 'form-control'])) .
+        html_writer::div(html_writer::div(get_string('offer_help', 'local_oriskill'), 'form-text mb-2') .
+            html_writer::tag('button', '<i class="fa fa-user-plus me-1" aria-hidden="true"></i>' .
+                get_string('offeraccess', 'local_oriskill'), ['type' => 'submit', 'class' => 'btn btn-primary']), 'col-12') .
+        html_writer::end_tag('form');
+    echo html_writer::tag('details',
+        html_writer::tag('summary', '<i class="fa fa-user-plus me-2" aria-hidden="true"></i>' .
+            get_string('offeraccess', 'local_oriskill'), ['class' => 'fw-semibold']) .
+        html_writer::div($form, 'mt-3'),
+        ['class' => 'oriskill-card mb-4', 'open' => $learners ? null : 'open']);
+}
 
 if (!$learners) {
     echo html_writer::div('<i class="fa fa-user-graduate" aria-hidden="true"></i>' .
@@ -201,6 +223,10 @@ $table->attributes['class'] = 'table oriskill-learners align-middle';
 $table->head = [get_string('learner', 'local_oriskill'), get_string('learner:access', 'local_oriskill'),
     get_string('learner:until', 'local_oriskill'), get_string('group'), get_string('learner:progress', 'local_oriskill'),
     get_string('learner:grade', 'local_oriskill'), get_string('learner:lastaccess', 'local_oriskill'), ''];
+$coachoptions = [0 => get_string('learner:nocoach', 'local_oriskill')] + array_map('fullname', $coaches);
+if ($coaches) {
+    array_splice($table->head, 4, 0, [get_string('role:coach', 'local_oriskill')]);
+}
 $instalments = \local_oriskill\instalment_service::course_records((int) $course->id);
 foreach ($learners as $userid => $learner) {
     $ficheurl = new moodle_url('/local/oriskill/learner.php', ['courseid' => $course->id, 'userid' => $userid]);
@@ -227,12 +253,22 @@ foreach ($learners as $userid => $learner) {
         html_writer::select($groupoptions, 'groupid', $current, false, ['class' => 'form-select form-select-sm',
             'aria-label' => get_string('group'), 'onchange' => 'this.form.submit()']),
         ['method' => 'post', 'action' => $url->out(false)]);
+    $coachform = html_writer::tag('form', $hidden('setcoach', $userid) .
+        html_writer::select($coachoptions, 'coachid', $coachmap[$userid] ?? 0, false, ['class' => 'form-select form-select-sm',
+            'aria-label' => get_string('role:coach', 'local_oriskill'), 'onchange' => 'this.form.submit()']),
+        ['method' => 'post', 'action' => $url->out(false)]);
+    if (!$canchange) {
+        // Looking only: the values, not the forms.
+        $endform = $learner->timeend ? userdate($learner->timeend, $dateformat) : get_string('learner:unlimited', 'local_oriskill');
+        $groupform = $learner->groups ? s(format_string(reset($learner->groups)->name)) : '–';
+        $coachform = s($coachoptions[$coachmap[$userid] ?? 0] ?? '–');
+    }
     $progress = $learner->progress === null ? '–' :
         html_writer::div(html_writer::span('', '', ['style' => 'width: ' . round($learner->progress) . '%']),
             'oriskill-progress mb-1') . html_writer::span(round($learner->progress) . ' %', 'small text-muted');
     $actions = html_writer::link($ficheurl, get_string('learner:details', 'local_oriskill'),
         ['class' => 'btn btn-sm btn-outline-primary']);
-    if ($canloginas && !$learner->suspended && !is_siteadmin($userid)) {
+    if ($canchange && $canloginas && !$learner->suspended && !is_siteadmin($userid)) {
         $actions .= html_writer::tag('form', $hidden('loginas', $userid) .
             html_writer::tag('button', get_string('learner:loginas', 'local_oriskill'),
                 ['type' => 'submit', 'class' => 'btn btn-sm btn-outline-secondary']),
@@ -241,11 +277,11 @@ foreach ($learners as $userid => $learner) {
                  fullname($learner))) . ')']);
     }
     $toggle = $learner->suspended ? 'reactivate' : 'suspend';
-    $actions .= html_writer::tag('form', $hidden($toggle, $userid) .
+    $actions .= !$canchange ? '' : html_writer::tag('form', $hidden($toggle, $userid) .
         html_writer::tag('button', get_string('learner:' . $toggle, 'local_oriskill'),
             ['type' => 'submit', 'class' => 'btn btn-sm btn-outline-secondary']),
         ['method' => 'post', 'action' => $url->out(false), 'class' => 'd-inline']);
-    if ($learner->source === 'offered') {
+    if ($canchange && $learner->source === 'offered') {
         $actions .= html_writer::tag('form', $hidden('remove', $userid) .
             html_writer::tag('button', get_string('learner:remove', 'local_oriskill'),
                 ['type' => 'submit', 'class' => 'btn btn-sm btn-outline-danger']),
@@ -261,6 +297,7 @@ foreach ($learners as $userid => $learner) {
         $badges,
         $endform,
         $groupform,
+        ...($coaches ? [$coachform] : []),
         $progress,
         $learner->grade ?? '–',
         $learner->lastaccess ? html_writer::span(format_time(time() - $learner->lastaccess), '',
@@ -270,8 +307,9 @@ foreach ($learners as $userid => $learner) {
 }
 echo html_writer::div(
     html_writer::div(html_writer::tag('h3', get_string('learnerscount', 'local_oriskill', count($learners)), ['class' => 'mb-0']) .
-        html_writer::link(new moodle_url($url, ['download' => 'csv']), '<i class="fa fa-download me-1" aria-hidden="true"></i>' .
-            get_string('exportcsv', 'local_oriskill'), ['class' => 'btn btn-sm btn-outline-secondary']),
+        ($canexport ? html_writer::link(new moodle_url($url, ['download' => 'csv']),
+            '<i class="fa fa-download me-1" aria-hidden="true"></i>' . get_string('exportcsv', 'local_oriskill'),
+            ['class' => 'btn btn-sm btn-outline-secondary']) : ''),
         'd-flex justify-content-between align-items-center mb-3') .
     html_writer::div(html_writer::table($table), 'table-responsive'),
     'oriskill-card');

@@ -178,7 +178,7 @@ class creator_service {
      * @return \stdClass Trainer whose space it is.
      */
     public static function require_current_creator(moodle_url $url, string $titlekey): \stdClass {
-        global $PAGE;
+        global $PAGE, $USER;
 
         $PAGE->set_context(context_system::instance());
         $PAGE->set_url($url);
@@ -191,8 +191,14 @@ class creator_service {
             redirect(new moodle_url('/local/oriskill/apply.php'));
         }
         if (!team_service::can($space['role'], $url->get_path(false))) {
-            redirect(new moodle_url('/local/oriskill/dashboard.php'), get_string('error:notallowed', 'local_oriskill'),
-                null, \core\output\notification::NOTIFY_ERROR);
+            $home = team_service::home($space['role']);
+            // The dashboard is where links lead: a role without it lands on its own first page, without a message.
+            redirect(new moodle_url($home), $url->get_path(false) === '/local/oriskill/dashboard.php' ? ''
+                : get_string('error:notallowed', 'local_oriskill'), null, \core\output\notification::NOTIFY_ERROR);
+        }
+        if (team_service::needs_mfa($space['role'], (int) $USER->id)) {
+            redirect(new moodle_url('/admin/tool/mfa/user_preferences.php'), get_string('team:mfarequired', 'local_oriskill'),
+                null, \core\output\notification::NOTIFY_WARNING);
         }
         $PAGE->set_title(get_string($titlekey, 'local_oriskill'));
         self::prepare_space_page();

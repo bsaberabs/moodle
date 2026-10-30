@@ -33,7 +33,9 @@ $creator = creator_service::require_current_creator(new moodle_url('/local/orisk
     ['courseid' => $courseid, 'userid' => $userid]), 'menu:learners');
 $course = learning_service::require_own_course($creator, $courseid);
 $learner = learning_service::learners($creator, $course)[$userid] ?? null;
-if (!$learner) {
+// A coach opens only the learners they follow.
+$mine = \local_oriskill\team_service::visible_learners($creator);
+if (!$learner || ($mine !== null && !in_array($userid, $mine, true))) {
     throw new moodle_exception('invaliduserid');
 }
 $backurl = new moodle_url('/local/oriskill/learners.php', ['courseid' => $course->id]);

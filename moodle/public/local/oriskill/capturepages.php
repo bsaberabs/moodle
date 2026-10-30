@@ -34,6 +34,7 @@ $creator = creator_service::require_current_creator($url, 'menu:capturepages');
 // Export of a page's sign-ups.
 if ($exportid = optional_param('export', 0, PARAM_INT)) {
     $page = $DB->get_record(capture_service::TABLE, ['id' => $exportid, 'creatorid' => $creator->id], '*', MUST_EXIST);
+    \local_oriskill\team_service::export_allowed($creator, format_string($page->title));
     $csv = new csv_export_writer();
     $csv->set_filename('inscrits-' . $page->slug);
     $csv->add_data([get_string('firstname'), get_string('lastname'), get_string('email'), get_string('date'),

@@ -43,6 +43,8 @@ if (($action = optional_param('action', '', PARAM_ALPHA)) && confirm_sesskey()) 
                 'creatorid' => $creator->id], '*', MUST_EXIST);
             if ($action === 'setrole') {
                 team_service::set_role($creator, $member, required_param('role', PARAM_ALPHA));
+            } else if ($action === 'setexport') {
+                team_service::set_export($creator, $member, optional_param('canexport', 0, PARAM_BOOL));
             } else if ($action === 'resend') {
                 team_service::send_invitation($creator, $member);
                 $message = get_string('team:invited', 'local_oriskill', s($member->email));
@@ -97,6 +99,16 @@ foreach (team_service::members($creator) as $member) {
         html_writer::select($roles, 'role', $member->role, false, ['class' => 'form-select form-select-sm',
             'onchange' => 'this.form.submit()', 'aria-label' => get_string('team:role', 'local_oriskill')]),
         ['method' => 'post', 'action' => $url->out(false), 'style' => 'max-width: 14rem']);
+    if ($member->role === 'partner') {
+        // Partners do not take the customer base away unless allowed.
+        $roleform .= html_writer::tag('form', $hidden('setexport', (int) $member->id) .
+            html_writer::div(html_writer::empty_tag('input', ['type' => 'checkbox', 'name' => 'canexport', 'value' => 1,
+                'id' => 'export' . $member->id, 'class' => 'form-check-input', 'onchange' => 'this.form.submit()'] +
+                ($member->canexport ? ['checked' => 'checked'] : [])) .
+                html_writer::label(get_string('team:canexport', 'local_oriskill'), 'export' . $member->id, true,
+                    ['class' => 'form-check-label small']), 'form-check mt-1'),
+            ['method' => 'post', 'action' => $url->out(false)]);
+    }
     $actions = '';
     if ($member->status === 'invited') {
         $actions .= html_writer::tag('form', $hidden('resend', (int) $member->id) .

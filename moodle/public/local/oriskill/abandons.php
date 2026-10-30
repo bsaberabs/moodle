@@ -52,6 +52,8 @@ $dateformat = get_string('strftimedatetimeshort', 'langconfig');
 
 // CSV export of what is shown.
 if (optional_param('download', '', PARAM_ALPHA) === 'csv') {
+    \local_oriskill\team_service::export_allowed($creator, get_string('abandon:title', 'local_oriskill') . ' – ' .
+        format_string($form->title));
     $rows = [[get_string('date'), get_string('lastname'), get_string('firstname'), get_string('email'),
         get_string('abandon:offer', 'local_oriskill'), get_string('abandon:amount', 'local_oriskill'),
         get_string('abandon:state', 'local_oriskill'), get_string('abandon:reminders', 'local_oriskill')]];

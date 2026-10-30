@@ -22,10 +22,13 @@ use moodle_url;
 /**
  * Collaborators of a trainer and what each role may do in the trainer space.
  *
- * The trainer (owner) invites a collaborator by e-mail with one of three roles: admin (everything but the payment
- * accounts), teaching (courses, videos, learners, module release) and support (learners, sales, invoices). The
- * collaborator accepts with their own Oriskill account. Admin and teaching collaborators get Moodle's manager role
- * on the trainer's category, so they edit the trainer's courses.
+ * The trainer (owner) invites a collaborator by e-mail with a role: admin (everything but the payment accounts),
+ * teaching (courses, videos, learners, module release), support (learners, sales, invoices), accounting (sales,
+ * invoices, quotes, schedules, unpaid, learners read-only), partner (learners read-only, no export unless an admin
+ * allows it) or coach (only the learners assigned to them, read-only). The collaborator accepts with their own
+ * Oriskill account. Admin and teaching collaborators get Moodle's manager role on the trainer's category, so they
+ * edit the trainer's courses; coaches get the non-editing teacher role there, to comment and grade.
+ * Admin and accounting collaborators must use two-factor authentication.
  *
  * @package    local_oriskill
  * @copyright  2026 Advanced TM
@@ -34,19 +37,27 @@ use moodle_url;
 class team_service {
 
     /** Collaborator roles. */
-    const ROLES = ['admin', 'teaching', 'support'];
+    const ROLES = ['admin', 'teaching', 'support', 'accounting', 'partner', 'coach'];
 
     /** Roles that edit the trainer's courses (Moodle manager role on the trainer's category). */
     const COURSE_EDITORS = ['admin', 'teaching'];
 
+    /** Roles that see payments and customer data: two-factor authentication required. */
+    const MFA_ROLES = ['admin', 'accounting'];
+
+    /** Pages some roles may only look at (no change, no action). */
+    const VIEW_ONLY = [
+        '/local/oriskill/learners.php' => ['accounting', 'partner', 'coach'],
+    ];
+
     /** Pages of the trainer space and the collaborator roles allowed on each (the owner is allowed everywhere). */
     const PAGE_ROLES = [
-        '/local/oriskill/dashboard.php' => ['admin', 'teaching', 'support'],
-        '/local/oriskill/sales.php' => ['admin', 'support'],
-        '/local/oriskill/invoices.php' => ['admin', 'support'],
-        '/local/oriskill/document.php' => ['admin'],
-        '/local/oriskill/schedules.php' => ['admin', 'support'],
-        '/local/oriskill/unpaid.php' => ['admin', 'support'],
+        '/local/oriskill/dashboard.php' => ['admin', 'teaching', 'support', 'accounting'],
+        '/local/oriskill/sales.php' => ['admin', 'support', 'accounting'],
+        '/local/oriskill/invoices.php' => ['admin', 'support', 'accounting'],
+        '/local/oriskill/document.php' => ['admin', 'accounting'],
+        '/local/oriskill/schedules.php' => ['admin', 'support', 'accounting'],
+        '/local/oriskill/unpaid.php' => ['admin', 'support', 'accounting'],
         '/local/oriskill/courses.php' => ['admin', 'teaching'],
         '/local/oriskill/videos.php' => ['admin', 'teaching'],
         '/local/oriskill/tools.php' => ['admin', 'teaching'],
@@ -58,8 +69,8 @@ class team_service {
         '/local/oriskill/coupons.php' => ['admin'],
         '/local/oriskill/capturepages.php' => ['admin'],
         '/local/oriskill/capturepage.php' => ['admin'],
-        '/local/oriskill/learners.php' => ['admin', 'teaching', 'support'],
-        '/local/oriskill/learner.php' => ['admin', 'teaching', 'support'],
+        '/local/oriskill/learners.php' => ['admin', 'teaching', 'support', 'accounting', 'partner', 'coach'],
+        '/local/oriskill/learner.php' => ['admin', 'teaching', 'support', 'accounting', 'partner', 'coach'],
         '/local/oriskill/access.php' => ['admin', 'teaching'],
         '/local/oriskill/payment.php' => [],
         '/local/oriskill/apply.php' => ['admin'],
@@ -149,6 +160,175 @@ class team_service {
     }
 
     /**
+     * Whether a role may act on a page it can open (not only look at it).
+     *
+     * @param string $role owner or a collaborator role.
+     * @param string $path Page path.
+     * @return bool
+     */
+    public static function can_change(string $role, string $path): bool {
+        return self::can($role, $path) && !in_array($role, self::VIEW_ONLY[$path] ?? [], true);
+    }
+
+    /**
+     * First page of the trainer space a role may open.
+     *
+     * @param string $role owner or a collaborator role.
+     * @return string Page path.
+     */
+    public static function home(string $role): string {
+        foreach (self::PAGE_ROLES as $path => $roles) {
+            if (self::can($role, $path)) {
+                return $path;
+            }
+        }
+        return '/local/oriskill/dashboard.php';
+    }
+
+    /**
+     * Whether a user must set up two-factor authentication before working with this role: admin and accounting
+     * collaborators, when the site offers it.
+     *
+     * @param string $role Role in the trainer space.
+     * @param int $userid User.
+     * @return bool
+     */
+    public static function needs_mfa(string $role, int $userid): bool {
+        global $DB;
+
+        if (!in_array($role, self::MFA_ROLES, true) || !get_config('tool_mfa', 'enabled')) {
+            return false;
+        }
+        return !$DB->record_exists_select('tool_mfa', "userid = ? AND factor IN ('totp', 'webauthn') AND revoked = 0",
+            [$userid]);
+    }
+
+    /**
+     * Whether the current user may export lists of people from the trainer space. Partners may not, unless an
+     * admin allowed it.
+     *
+     * @return bool
+     */
+    public static function can_export(): bool {
+        global $DB, $USER;
+
+        $space = self::current_space();
+        if (!$space) {
+            return false;
+        }
+        if ($space['role'] !== 'partner') {
+            return true;
+        }
+        return (bool) $DB->get_field('local_oriskill_members', 'canexport', ['creatorid' => $space['creator']->id,
+            'userid' => $USER->id, 'status' => 'active']);
+    }
+
+    /**
+     * Refuse an export the current user may not make, and record the others in the trainer's log.
+     *
+     * @param \stdClass $creator Trainer.
+     * @param string $what What is exported (shown in the log).
+     */
+    public static function export_allowed(\stdClass $creator, string $what): void {
+        if (!self::can_export()) {
+            throw new \moodle_exception('error:noexport', 'local_oriskill');
+        }
+        log_service::add($creator, 'export', ['what' => $what]);
+    }
+
+    /**
+     * Allow or forbid a partner to export.
+     *
+     * @param \stdClass $creator Trainer.
+     * @param \stdClass $member Member of that trainer.
+     * @param bool $allowed Allowed.
+     */
+    public static function set_export(\stdClass $creator, \stdClass $member, bool $allowed): void {
+        global $DB;
+
+        if ((int) $member->creatorid !== (int) $creator->id) {
+            throw new \moodle_exception('invaliddata', 'error');
+        }
+        $DB->set_field('local_oriskill_members', 'canexport', $allowed ? 1 : 0, ['id' => $member->id]);
+        log_service::add($creator, $allowed ? 'member_exporton' : 'member_exportoff', ['email' => $member->email], null,
+            $member->userid ? (int) $member->userid : null);
+    }
+
+    // ----- Coaches ------------------------------------------------------------------------------------------
+
+    /**
+     * Active coaches of a trainer.
+     *
+     * @param \stdClass $creator Trainer.
+     * @return array userid => user
+     */
+    public static function coaches(\stdClass $creator): array {
+        global $DB;
+
+        $userids = $DB->get_fieldset_select('local_oriskill_members', 'userid',
+            "creatorid = ? AND role = 'coach' AND status = 'active' AND userid IS NOT NULL", [$creator->id]);
+        $result = [];
+        foreach ($userids as $userid) {
+            if ($user = \core_user::get_user((int) $userid)) {
+                $result[(int) $userid] = $user;
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Coach of each of a trainer's learners.
+     *
+     * @param \stdClass $creator Trainer.
+     * @return array learner userid => coach userid
+     */
+    public static function coach_map(\stdClass $creator): array {
+        global $DB;
+
+        return array_map('intval', $DB->get_records_menu('local_oriskill_coachees', ['creatorid' => $creator->id], '',
+            'userid, coachid'));
+    }
+
+    /**
+     * Give a learner a coach (0 for none).
+     *
+     * @param \stdClass $creator Trainer.
+     * @param int $userid Learner.
+     * @param int $coachid Coach (an active coach of the trainer), 0 for none.
+     */
+    public static function set_coach(\stdClass $creator, int $userid, int $coachid): void {
+        global $DB;
+
+        if ($coachid && !isset(self::coaches($creator)[$coachid])) {
+            throw new \moodle_exception('invaliddata', 'error');
+        }
+        $DB->delete_records('local_oriskill_coachees', ['creatorid' => $creator->id, 'userid' => $userid]);
+        if ($coachid) {
+            $DB->insert_record('local_oriskill_coachees', (object) ['creatorid' => $creator->id, 'userid' => $userid,
+                'coachid' => $coachid, 'timecreated' => time()]);
+        }
+        log_service::add($creator, 'learner_setcoach', ['coach' => $coachid ? fullname(self::coaches($creator)[$coachid])
+            : '–'], null, $userid);
+    }
+
+    /**
+     * The learners a coach follows, when the current user works as a coach; null for every other role (all).
+     *
+     * @param \stdClass $creator Trainer.
+     * @return int[]|null
+     */
+    public static function visible_learners(\stdClass $creator): ?array {
+        global $DB, $USER;
+
+        $space = self::current_space();
+        if (!$space || $space['role'] !== 'coach') {
+            return null;
+        }
+        return array_map('intval', $DB->get_fieldset_select('local_oriskill_coachees', 'userid',
+            'creatorid = ? AND coachid = ?', [$creator->id, $USER->id]));
+    }
+
+    /**
      * Collaborators of a trainer (invitations pending included), oldest first.
      *
      * @param \stdClass $creator Trainer.
@@ -200,6 +380,7 @@ class team_service {
             'creatorid' => $creator->id,
             'email' => $email,
             'role' => $role,
+            'canexport' => $role === 'partner' ? 0 : 1,
             'status' => 'invited',
             'token' => random_string(48),
             'invitedby' => $USER->id,
@@ -307,7 +488,11 @@ class team_service {
         self::revoke($creator, $member);
         $old = $member->role;
         $member->role = $role;
-        $DB->set_field('local_oriskill_members', 'role', $role, ['id' => $member->id]);
+        $DB->update_record('local_oriskill_members', (object) ['id' => $member->id, 'role' => $role,
+            'canexport' => $role === 'partner' ? 0 : 1]);
+        if ($old === 'coach' && $member->userid) {
+            $DB->delete_records('local_oriskill_coachees', ['creatorid' => $creator->id, 'coachid' => $member->userid]);
+        }
         self::grant($creator, $member);
         log_service::add($creator, 'member_role', ['email' => $member->email, 'from' => $old, 'role' => $role], null,
             $member->userid ? (int) $member->userid : null);
@@ -326,6 +511,9 @@ class team_service {
             throw new \moodle_exception('invaliddata', 'error');
         }
         self::revoke($creator, $member);
+        if ($member->userid) {
+            $DB->delete_records('local_oriskill_coachees', ['creatorid' => $creator->id, 'coachid' => $member->userid]);
+        }
         $DB->delete_records('local_oriskill_members', ['id' => $member->id]);
         log_service::add($creator, 'member_removed', ['email' => $member->email, 'role' => $member->role], null,
             $member->userid ? (int) $member->userid : null);
@@ -338,9 +526,13 @@ class team_service {
      * @param \stdClass $member Active member.
      */
     private static function grant(\stdClass $creator, \stdClass $member): void {
-        if ($member->status === 'active' && $member->userid && $creator->categoryid
-                && in_array($member->role, self::COURSE_EDITORS, true)) {
-            role_assign(self::manager_role(), (int) $member->userid, context_coursecat::instance($creator->categoryid)->id,
+        if ($member->status !== 'active' || !$member->userid || !$creator->categoryid) {
+            return;
+        }
+        $shortname = in_array($member->role, self::COURSE_EDITORS, true) ? 'manager'
+            : ($member->role === 'coach' ? 'teacher' : '');
+        if ($shortname !== '') {
+            role_assign(self::role_id($shortname), (int) $member->userid, context_coursecat::instance($creator->categoryid)->id,
                 'local_oriskill', (int) $member->id);
         }
     }
@@ -353,18 +545,20 @@ class team_service {
      */
     private static function revoke(\stdClass $creator, \stdClass $member): void {
         if ($member->userid && $creator->categoryid) {
-            role_unassign(self::manager_role(), (int) $member->userid,
-                context_coursecat::instance($creator->categoryid)->id, 'local_oriskill', (int) $member->id);
+            role_unassign_all(['userid' => (int) $member->userid,
+                'contextid' => context_coursecat::instance($creator->categoryid)->id, 'component' => 'local_oriskill',
+                'itemid' => (int) $member->id]);
         }
     }
 
     /**
-     * Moodle's manager role id.
+     * Id of a Moodle role.
      *
+     * @param string $shortname manager or teacher.
      * @return int
      */
-    private static function manager_role(): int {
+    private static function role_id(string $shortname): int {
         global $DB;
-        return (int) $DB->get_field('role', 'id', ['shortname' => 'manager'], MUST_EXIST);
+        return (int) $DB->get_field('role', 'id', ['shortname' => $shortname], MUST_EXIST);
     }
 }

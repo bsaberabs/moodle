@@ -51,6 +51,7 @@ if (($export = optional_param('export', '', PARAM_ALPHA)) !== '') {
             'application/zip');
     }
     require_once($CFG->libdir . '/csvlib.class.php');
+    \local_oriskill\team_service::export_allowed($creator, get_string('menu:invoices', 'local_oriskill'));
     csv_export_writer::download_array(clean_filename(get_string('menu:invoices', 'local_oriskill') . '-' . date('Y-m-d')),
         billing_service::journal($creator, 0, time() + 1), 'semicolon');
     exit;
