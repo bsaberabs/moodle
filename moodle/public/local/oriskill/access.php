@@ -41,6 +41,8 @@ if ($course && ($action = optional_param('action', '', PARAM_ALPHA)) && confirm_
             learning_service::create_group($course, required_param('name', PARAM_TEXT));
         } else if ($action === 'deletegroup') {
             learning_service::delete_group($course, required_param('groupid', PARAM_INT));
+        } else if ($action === 'studymode') {
+            \local_oriskill\studytime_service::set_mode((int) $course->id, required_param('mode', PARAM_ALPHA));
         } else if ($action === 'rules') {
             $timings = optional_param_array('timing', [], PARAM_ALPHA);
             $dates = optional_param_array('date', [], PARAM_RAW_TRIMMED);
@@ -72,8 +74,10 @@ if ($course && ($action = optional_param('action', '', PARAM_ALPHA)) && confirm_
                 $type = \core\output\notification::NOTIFY_ERROR;
             }
         }
-        \local_oriskill\log_service::add($creator, 'access_' . $action,
-            $action === 'addgroup' ? ['name' => required_param('name', PARAM_TEXT)] : [], (int) $course->id);
+        \local_oriskill\log_service::add($creator, 'access_' . $action, $action === 'addgroup'
+            ? ['name' => required_param('name', PARAM_TEXT)] : ($action === 'studymode'
+                ? ['mode' => get_string('studytime:mode_' . required_param('mode', PARAM_ALPHA), 'local_oriskill')] : []),
+            (int) $course->id);
     } catch (moodle_exception $e) {
         $message = $e->getMessage();
         $type = \core\output\notification::NOTIFY_ERROR;
@@ -167,6 +171,28 @@ if ($rules) {
     echo html_writer::div('<i class="fa fa-layer-group" aria-hidden="true"></i>' . get_string('nomodules', 'local_oriskill'),
         'oriskill-card oriskill-empty mb-4');
 }
+
+// Time spent in the course.
+$current = \local_oriskill\studytime_service::mode((int) $course->id);
+$choices = '';
+foreach (\local_oriskill\studytime_service::MODES as $mode) {
+    $id = 'studymode-' . $mode;
+    $choices .= html_writer::div(
+        html_writer::empty_tag('input', ['type' => 'radio', 'name' => 'mode', 'value' => $mode, 'id' => $id,
+            'class' => 'form-check-input', 'checked' => $mode === $current ? 'checked' : null]) .
+        html_writer::tag('label', html_writer::span(get_string('studytime:mode_' . $mode, 'local_oriskill'), 'fw-semibold') .
+            html_writer::div(get_string('studytime:mode_' . $mode . '_help', 'local_oriskill'), 'small text-muted'),
+            ['for' => $id, 'class' => 'form-check-label']),
+        'form-check mb-2');
+}
+echo html_writer::div(
+    html_writer::tag('h3', '<i class="fa fa-stopwatch me-2" aria-hidden="true"></i>' .
+        get_string('studytime:title', 'local_oriskill')) .
+    html_writer::tag('p', get_string('studytime:intro', 'local_oriskill'), ['class' => 'small text-muted']) .
+    html_writer::tag('form', $sesskey . $hiddenaction('studymode') . $choices .
+        html_writer::tag('button', get_string('savechanges'), ['type' => 'submit', 'class' => 'btn btn-outline-primary btn-sm']),
+        ['method' => 'post', 'action' => $url->out(false)]),
+    'oriskill-card mb-4');
 
 // Groups.
 $rows = '';

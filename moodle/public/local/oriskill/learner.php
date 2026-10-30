@@ -92,6 +92,26 @@ $hidden = fn(string $action) =>
     html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => $action]);
 $instalments = \local_oriskill\instalment_service::course_records((int) $course->id);
 
+// Time statement (CPF): one line per day.
+if (optional_param('download', '', PARAM_ALPHA) === 'studytime') {
+    \local_oriskill\team_service::export_allowed($creator, get_string('studytime:statement', 'local_oriskill') . ' – ' .
+        fullname($learner) . ' – ' . format_string($course->fullname));
+    require_once($CFG->libdir . '/csvlib.class.php');
+    $timeformat = get_string('strftimetime', 'langconfig');
+    $days = \local_oriskill\studytime_service::days((int) $course->id, $userid);
+    $rows = [[get_string('date'), get_string('studytime:first', 'local_oriskill'), get_string('studytime:last', 'local_oriskill'),
+        get_string('studytime:column', 'local_oriskill'), get_string('studytime:minutescol', 'local_oriskill')]];
+    foreach ($days as $day) {
+        $rows[] = [userdate($day->day, $dateformat), userdate($day->first, $timeformat), userdate($day->last, $timeformat),
+            \local_oriskill\studytime_service::format($day->seconds), round($day->seconds / 60)];
+    }
+    $rows[] = [get_string('total'), '', '', \local_oriskill\studytime_service::format($learner->studytime),
+        round($learner->studytime / 60)];
+    csv_export_writer::download_array(clean_filename(get_string('studytime:statement', 'local_oriskill') . '-' .
+        fullname($learner) . '-' . $course->shortname), $rows);
+    exit;
+}
+
 echo $OUTPUT->header();
 echo creator_service::space_start($creator, '/local/oriskill/learners.php', fullname($learner));
 echo html_writer::div(html_writer::link($backurl, '<i class="fa fa-arrow-left me-1" aria-hidden="true"></i>' .
@@ -128,6 +148,7 @@ foreach ([
     [get_string('learner:grade', 'local_oriskill'), $learner->grade ?? '–'],
     [get_string('learner:lastaccess', 'local_oriskill'), $learner->lastaccess ? userdate($learner->lastaccess) : get_string('never')],
     [get_string('learner:completed', 'local_oriskill'), $learner->completed ? userdate($learner->completed, $dateformat) : '–'],
+    [get_string('studytime:column', 'local_oriskill'), \local_oriskill\studytime_service::format($learner->studytime)],
 ] as [$label, $value]) {
     $facts .= html_writer::div(html_writer::div($label, 'oriskill-stat-label') .
         html_writer::div(str_starts_with($value, '<form') ? $value : s($value), 'fw-semibold'));
@@ -143,6 +164,32 @@ $reset = !$canchange ? '' : html_writer::tag('form', $hidden('resetprogress') .
      'onsubmit' => 'return confirm(' . json_encode(get_string('learner:resetprogress_confirm', 'local_oriskill',
          fullname($learner))) . ')']);
 echo html_writer::div($summary . html_writer::div($facts, 'oriskill-facts') . $reset, 'oriskill-card mb-4');
+
+// Time spent, day by day.
+$days = \local_oriskill\studytime_service::days((int) $course->id, $userid);
+if ($days) {
+    $timeformat = get_string('strftimetime', 'langconfig');
+    $table = new html_table();
+    $table->attributes['class'] = 'table table-sm align-middle mb-0';
+    $table->head = [get_string('date'), get_string('studytime:first', 'local_oriskill'),
+        get_string('studytime:last', 'local_oriskill'), get_string('studytime:column', 'local_oriskill')];
+    foreach (array_reverse($days) as $day) {
+        $table->data[] = [userdate($day->day, $dateformat), userdate($day->first, $timeformat),
+            userdate($day->last, $timeformat), \local_oriskill\studytime_service::format($day->seconds)];
+    }
+    $download = \local_oriskill\team_service::can_export() ? html_writer::link(new moodle_url($url,
+        ['download' => 'studytime']), '<i class="fa fa-download me-1" aria-hidden="true"></i>' .
+        get_string('studytime:download', 'local_oriskill'), ['class' => 'btn btn-sm btn-outline-secondary']) : '';
+    echo html_writer::tag('details',
+        html_writer::tag('summary', html_writer::span(get_string('studytime:days', 'local_oriskill', (object) [
+            'days' => count($days), 'total' => \local_oriskill\studytime_service::format($learner->studytime)]),
+            'fw-semibold')) .
+        html_writer::div(html_writer::div(get_string('studytime:mode_' .
+            \local_oriskill\studytime_service::mode((int) $course->id) . '_help', 'local_oriskill'), 'small text-muted') .
+            $download, 'd-flex flex-wrap justify-content-between align-items-center gap-2 my-2') .
+        html_writer::div(html_writer::table($table), 'table-responsive', ['style' => 'max-height: 24rem; overflow: auto']),
+        ['class' => 'oriskill-card mb-4']);
+}
 
 // Modules.
 $states = [

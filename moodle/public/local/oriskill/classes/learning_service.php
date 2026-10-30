@@ -126,6 +126,7 @@ class learning_service {
             $members[$mapping->userid][] = $mapping->groupid;
         }
         $grades = grade_get_course_grades($course->id, $userids)->grades ?? [];
+        $studytime = studytime_service::totals((int) $course->id, $userids);
 
         $now = \core\di::get(\core\clock::class)->time();
         foreach ($learners as $userid => $learner) {
@@ -136,6 +137,7 @@ class learning_service {
             $learner->groups = array_values(array_intersect_key($groups, array_flip($members[$userid] ?? [])));
             $learner->progress = \core_completion\progress::get_course_progress_percentage($course, $userid);
             $learner->grade = isset($grades[$userid]) && $grades[$userid]->grade !== null ? $grades[$userid]->str_grade : null;
+            $learner->studytime = $studytime[$userid] ?? 0;
         }
         return $learners;
     }

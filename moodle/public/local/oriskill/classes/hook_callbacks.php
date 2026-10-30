@@ -235,6 +235,23 @@ class hook_callbacks {
     }
 
     /**
+     * On the pages of a trainer's course, count the time the learner spends (when the course tracks it).
+     *
+     * @param \core\hook\output\before_footer_html_generation $hook Hook.
+     */
+    public static function before_footer_html_generation(\core\hook\output\before_footer_html_generation $hook): void {
+        global $PAGE;
+
+        if (during_initial_install() || !in_array($PAGE->context->contextlevel, [CONTEXT_COURSE, CONTEXT_MODULE])) {
+            return;
+        }
+        $mode = studytime_service::page_mode($PAGE->course);
+        if ($mode !== null) {
+            $PAGE->requires->js_init_code(studytime_service::page_script((int) $PAGE->course->id, $mode));
+        }
+    }
+
+    /**
      * The invoice or receipt of an order of a trainer's courses is the invoice in the trainer's name.
      *
      * @param \local_moderncommerce\hook\order_document $hook Hook.

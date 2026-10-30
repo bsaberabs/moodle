@@ -124,7 +124,8 @@ if ($course && optional_param('download', '', PARAM_ALPHA) === 'csv') {
     $rows = [[get_string('lastname'), get_string('firstname'), get_string('email'), get_string('learner:access', 'local_oriskill'),
         get_string('status'), get_string('learner:since', 'local_oriskill'), get_string('learner:until', 'local_oriskill'),
         get_string('group'), get_string('learner:progress', 'local_oriskill'), get_string('learner:grade', 'local_oriskill'),
-        get_string('learner:lastaccess', 'local_oriskill'), get_string('learner:completed', 'local_oriskill')]];
+        get_string('learner:lastaccess', 'local_oriskill'), get_string('learner:completed', 'local_oriskill'),
+        get_string('studytime:column', 'local_oriskill')]];
     foreach ($learners as $learner) {
         $rows[] = [$learner->lastname, $learner->firstname, $learner->email,
             get_string('source:' . $learner->source, 'local_oriskill'),
@@ -136,7 +137,8 @@ if ($course && optional_param('download', '', PARAM_ALPHA) === 'csv') {
             $learner->progress === null ? '' : round($learner->progress) . ' %',
             $learner->grade ?? '',
             $learner->lastaccess ? userdate($learner->lastaccess, $dateformat) : get_string('never'),
-            $learner->completed ? userdate($learner->completed, $dateformat) : ''];
+            $learner->completed ? userdate($learner->completed, $dateformat) : '',
+            \local_oriskill\studytime_service::format($learner->studytime)];
     }
     csv_export_writer::download_array(clean_filename(get_string('menu:learners', 'local_oriskill') . '-' .
         $course->shortname), $rows);
@@ -266,6 +268,11 @@ foreach ($learners as $userid => $learner) {
     $progress = $learner->progress === null ? '–' :
         html_writer::div(html_writer::span('', '', ['style' => 'width: ' . round($learner->progress) . '%']),
             'oriskill-progress mb-1') . html_writer::span(round($learner->progress) . ' %', 'small text-muted');
+    if ($learner->studytime) {
+        $progress .= html_writer::div('<i class="fa fa-stopwatch me-1" aria-hidden="true"></i>' .
+            \local_oriskill\studytime_service::format($learner->studytime), 'small text-muted',
+            ['title' => get_string('studytime:column', 'local_oriskill')]);
+    }
     $actions = html_writer::link($ficheurl, get_string('learner:details', 'local_oriskill'),
         ['class' => 'btn btn-sm btn-outline-primary']);
     if ($canchange && $canloginas && !$learner->suspended && !is_siteadmin($userid)) {

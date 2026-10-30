@@ -61,6 +61,12 @@ class provider implements
             'amount' => 'privacy:metadata:commissions:amount',
             'status' => 'privacy:metadata:commissions:status',
         ], 'privacy:metadata:commissions');
+        $collection->add_database_table('local_oriskill_studytime', [
+            'courseid' => 'privacy:metadata:studytime:courseid',
+            'userid' => 'privacy:metadata:studytime:userid',
+            'day' => 'privacy:metadata:studytime:day',
+            'seconds' => 'privacy:metadata:studytime:seconds',
+        ], 'privacy:metadata:studytime');
         $collection->add_cookie(\local_oriskill\affiliate_service::COOKIE, 'privacy:metadata:cookie');
         return $collection;
     }
@@ -70,8 +76,9 @@ class provider implements
         $contextlist->add_from_sql('SELECT ctx.id FROM {context} ctx
                                      WHERE ctx.contextlevel = :level
                                        AND (EXISTS (SELECT 1 FROM {local_oriskill_creators} c WHERE c.userid = :userid1)
-                                            OR EXISTS (SELECT 1 FROM {local_oriskill_affiliates} a WHERE a.userid = :userid2))',
-            ['userid1' => $userid, 'userid2' => $userid, 'level' => CONTEXT_SYSTEM]);
+                                            OR EXISTS (SELECT 1 FROM {local_oriskill_affiliates} a WHERE a.userid = :userid2)
+                                            OR EXISTS (SELECT 1 FROM {local_oriskill_studytime} t WHERE t.userid = :userid3))',
+            ['userid1' => $userid, 'userid2' => $userid, 'userid3' => $userid, 'level' => CONTEXT_SYSTEM]);
         return $contextlist;
     }
 
@@ -79,6 +86,7 @@ class provider implements
         if ($userlist->get_context() instanceof \context_system) {
             $userlist->add_from_sql('userid', 'SELECT userid FROM {local_oriskill_creators}', []);
             $userlist->add_from_sql('userid', 'SELECT userid FROM {local_oriskill_affiliates}', []);
+            $userlist->add_from_sql('userid', 'SELECT userid FROM {local_oriskill_studytime}', []);
         }
     }
 
@@ -97,6 +105,13 @@ class provider implements
                     'item' => $c->itemname, 'amount' => $c->amount, 'currency' => $c->currency, 'rate' => $c->rate,
                     'status' => $c->status, 'timecreated' => \core_privacy\local\request\transform::datetime($c->timecreated),
                 ], $DB->get_records('local_oriskill_commissions', ['affiliateid' => $affiliate->id]))),
+            ]);
+        }
+        $studytime = $DB->get_records('local_oriskill_studytime', ['userid' => $userid], 'courseid, day');
+        if ($studytime) {
+            writer::with_context($context)->export_data([get_string('studytime:title', 'local_oriskill')], (object) [
+                'days' => array_values(array_map(fn($t) => ['course' => (int) $t->courseid, 'day' => $t->day,
+                    'seconds' => (int) $t->seconds], $studytime)),
             ]);
         }
         $creator = $DB->get_record('local_oriskill_creators', ['userid' => $userid]);
@@ -135,6 +150,7 @@ class provider implements
             self::delete_creator($creator);
         }
         self::delete_affiliate((int) $contextlist->get_user()->id);
+        $DB->delete_records('local_oriskill_studytime', ['userid' => $contextlist->get_user()->id]);
     }
 
     /**
