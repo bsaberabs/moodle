@@ -34,6 +34,33 @@ $url = new moodle_url('/local/oriskill/integrations.php');
 $creator = creator_service::require_current_creator($url, 'menu:integrations');
 $account = activecampaign_service::account($creator);
 
+// The trainer's own sending server.
+if (($smtpaction = optional_param('smtpaction', '', PARAM_ALPHA)) && confirm_sesskey()) {
+    $message = get_string('changessaved');
+    $type = \core\output\notification::NOTIFY_SUCCESS;
+    try {
+        \local_oriskill\trainer_mailer::save($creator, (object) [
+            'enabled' => optional_param('smtpenabled', 0, PARAM_BOOL), 'host' => optional_param('smtphost', '', PARAM_HOST),
+            'port' => optional_param('smtpport', 587, PARAM_INT), 'secure' => optional_param('smtpsecure', 'tls', PARAM_ALPHA),
+            'username' => optional_param('smtpuser', '', PARAM_RAW_TRIMMED), 'password' => optional_param('smtppass', '', PARAM_RAW),
+            'fromemail' => optional_param('smtpfrom', '', PARAM_RAW_TRIMMED)]);
+        log_service::add($creator, 'smtp_saved', ['state' => get_string(optional_param('smtpenabled', 0, PARAM_BOOL) ? 'yes' : 'no')]);
+        if ($smtpaction === 'test') {
+            $trainer = core_user::get_user($creator->userid);
+            if (\local_oriskill\trainer_mailer::test($creator)) {
+                $message = get_string('smtp:testok', 'local_oriskill', s($trainer->email));
+            } else {
+                $message = get_string('smtp:testfailed', 'local_oriskill');
+                $type = \core\output\notification::NOTIFY_ERROR;
+            }
+        }
+    } catch (moodle_exception $e) {
+        $message = $e->getMessage();
+        $type = \core\output\notification::NOTIFY_ERROR;
+    }
+    redirect(new moodle_url($url, [], 'smtp'), $message, null, $type);
+}
+
 // Webhooks: add, test, turn on or off, remove.
 if (($action = optional_param('hookaction', '', PARAM_ALPHA)) && confirm_sesskey()) {
     $message = get_string('changessaved');
@@ -112,6 +139,44 @@ if (!empty($account->lastresult)) {
         (str_starts_with($account->lastresult, '✓') ? 'text-success' : 'text-danger'));
 }
 $form->display();
+echo html_writer::end_div();
+
+// Sending server.
+$smtp = \local_oriskill\trainer_mailer::settings($creator);
+$input = fn(string $name, string $label, string $value, string $type = 'text', array $extra = []) => html_writer::div(
+    html_writer::tag('label', $label, ['for' => 'smtp-' . $name, 'class' => 'form-label small mb-1']) .
+    html_writer::empty_tag('input', ['type' => $type, 'name' => $name, 'id' => 'smtp-' . $name, 'value' => $value,
+        'class' => 'form-control form-control-sm'] + $extra), 'col-sm-6 col-lg-4');
+echo html_writer::start_div('oriskill-card mt-4', ['id' => 'smtp']);
+echo html_writer::tag('h3', get_string('smtp:title', 'local_oriskill'), ['class' => 'h5']);
+echo html_writer::tag('p', get_string('smtp:intro', 'local_oriskill'), ['class' => 'text-muted']);
+echo html_writer::tag('form',
+    html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]) .
+    html_writer::div(html_writer::empty_tag('input', ['type' => 'checkbox', 'name' => 'smtpenabled', 'value' => 1, 'id' => 'smtp-on',
+        'class' => 'form-check-input', 'checked' => !empty($smtp->enabled) ? 'checked' : null]) .
+        html_writer::tag('label', get_string('smtp:enabled', 'local_oriskill'), ['for' => 'smtp-on', 'class' => 'form-check-label']),
+        'form-check mb-2') .
+    html_writer::div(
+        $input('smtpfrom', get_string('smtp:from', 'local_oriskill'), (string) ($smtp->fromemail ?? ''), 'email',
+            ['placeholder' => 'contact@votre-domaine.com']) .
+        $input('smtphost', get_string('smtp:host', 'local_oriskill'), (string) ($smtp->host ?? ''), 'text',
+            ['placeholder' => 'smtp-relay.brevo.com']) .
+        $input('smtpport', get_string('smtp:port', 'local_oriskill'), (string) ($smtp->port ?? 587), 'number') .
+        html_writer::div(html_writer::tag('label', get_string('smtp:secure', 'local_oriskill'), ['for' => 'smtp-secure',
+            'class' => 'form-label small mb-1']) . html_writer::select(['tls' => 'TLS (587)', 'ssl' => 'SSL (465)',
+            '' => get_string('none')], 'smtpsecure', $smtp->secure ?? 'tls', false, ['class' => 'form-select form-select-sm',
+            'id' => 'smtp-secure']), 'col-sm-6 col-lg-4') .
+        $input('smtpuser', get_string('smtp:user', 'local_oriskill'), (string) ($smtp->username ?? ''), 'text',
+            ['autocomplete' => 'off']) .
+        $input('smtppass', get_string('smtp:password', 'local_oriskill'), '', 'password', ['autocomplete' => 'new-password',
+            'placeholder' => !empty($smtp->password) ? '••••••••' : '']),
+        'row g-2 mb-2') .
+    html_writer::div(get_string('smtp:dns', 'local_oriskill'), 'small text-muted mb-2') .
+    html_writer::tag('button', get_string('savechanges'), ['type' => 'submit', 'name' => 'smtpaction', 'value' => 'save',
+        'class' => 'btn btn-primary btn-sm']) . ' ' .
+    html_writer::tag('button', get_string('smtp:test', 'local_oriskill'), ['type' => 'submit', 'name' => 'smtpaction', 'value' => 'test',
+        'class' => 'btn btn-outline-secondary btn-sm']),
+    ['method' => 'post', 'action' => $url->out(false)]);
 echo html_writer::end_div();
 
 // Webhooks.

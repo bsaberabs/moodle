@@ -71,6 +71,8 @@ class email_log {
         global $DB;
 
         $email = $hook->email;
+        // Each e-mail leaves through the site's server unless found to be a trainer's with their own server (below).
+        trainer_mailer::restore();
         if ($email->is_blocked()) {
             return;
         }
@@ -87,6 +89,7 @@ class email_log {
         if ($creatorid && ($creator = $DB->get_record('local_oriskill_creators', ['id' => $creatorid]))) {
             try {
                 email_brand::apply($email, $creator);
+                trainer_mailer::prepare($creator);
             } catch (\Throwable $e) {
                 debugging('E-mail brand: ' . $e->getMessage(), DEBUG_DEVELOPER);
             }

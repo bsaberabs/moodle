@@ -428,5 +428,12 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103042, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103043) {
+        // A trainer's own sending server.
+        if (!$dbman->table_exists('local_oriskill_smtp')) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', 'local_oriskill_smtp');
+        }
+        upgrade_plugin_savepoint(true, 2026103043, 'local', 'oriskill');
+    }
     return true;
 }
