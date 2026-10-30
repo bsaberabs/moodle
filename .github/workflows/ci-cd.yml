@@ -150,3 +150,53 @@ jobs:
             docker compose up -d --no-build --remove-orphans --wait --wait-timeout 900
             docker image prune -f
             docker logout ghcr.io"
+
+  deploy-test:
+    name: Mettre à jour la copie de test
+    needs: publish
+    # Branche dev : nouveau code sur la copie de test (https://test.oriskill.com), jamais sur la production.
+    # Rien n'est fait tant que la copie n'est pas installée (docker/test-copy/install.sh).
+    if: vars.DEPLOY_ENABLED == 'true' && github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-latest
+    environment: OriSkill
+    permissions:
+      contents: read
+      packages: read
+    env:
+      IMAGE: ${{ needs.publish.outputs.image }}:${{ github.sha }}
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
+    steps:
+      - name: Configurer SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
+          printf 'Host target\n  HostName %s\n  User %s\n  Port %s\n  IdentityFile ~/.ssh/id_deploy\n' \
+            "$SSH_HOST" "$SSH_USER" "$SSH_PORT" > ~/.ssh/config
+
+      - name: Mettre à jour la copie de test
+        run: |
+          if ! ssh target "test -f /opt/moodle-test/.env"; then
+            echo "Copie de test pas encore installée : rien à faire."
+            exit 0
+          fi
+          echo "${{ secrets.GITHUB_TOKEN }}" | ssh target "docker login ghcr.io -u '${{ github.actor }}' --password-stdin"
+          ssh target "set -e
+            cd /opt/moodle-test
+            docker compose config | head -1 | grep -qx 'name: moodle-test'
+            if grep -q '^MOODLE_IMAGE=' .env; then
+              sed -i 's|^MOODLE_IMAGE=.*|MOODLE_IMAGE=$IMAGE|' .env
+            else
+              echo 'MOODLE_IMAGE=$IMAGE' >> .env
+            fi
+            docker compose pull moodle cron
+            docker compose up -d --no-build --wait --wait-timeout 900
+            docker logout ghcr.io
+            # Anciennes images de l'application, plus utilisées par aucun conteneur (le disque système est petit)
+            used=\$(docker ps -a --format '{{.Image}}' | sort -u)
+            for img in \$(docker images --format '{{.Repository}}:{{.Tag}}' | grep '^ghcr.io/'); do
+              grep -qxF \"\$img\" <<<\"\$used\" || docker rmi \"\$img\" >/dev/null || true
+            done"

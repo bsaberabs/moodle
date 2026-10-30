@@ -1,0 +1,24 @@
+
+# Copie de test d'Oriskill (docker/test-copy) : protégée par un mot de passe, sauf les notifications de paiement.
+test.oriskill.com {
+	encode zstd gzip
+	request_body {
+		max_size 1GB
+	}
+	header X-Robots-Tag "noindex, nofollow"
+	@protected not path /local/secureandpay/notify.php /local/moderncommerce/payment/*
+	basicauth @protected {
+		oriskill @HASH@
+	}
+	handle /mailpit* {
+		reverse_proxy 127.0.0.1:8026
+	}
+	handle {
+		reverse_proxy 127.0.0.1:8081 {
+			transport http {
+				read_timeout 10m
+				write_timeout 10m
+			}
+		}
+	}
+}

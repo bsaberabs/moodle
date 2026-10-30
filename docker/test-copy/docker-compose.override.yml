@@ -1,0 +1,15 @@
+# Copie de test : ajouté au docker-compose.yml de la production dans /opt/moodle-test.
+# Nom de projet distinct = conteneurs et volumes distincts de ceux de la production.
+name: moodle-test
+
+x-staging: &staging
+  MOODLE_STAGING: "true"
+
+services:
+  moodle:
+    environment: *staging
+  cron:
+    environment: *staging
+  mailpit:
+    environment:
+      MP_WEBROOT: /mailpit
