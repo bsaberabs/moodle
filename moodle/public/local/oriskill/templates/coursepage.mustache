@@ -1,0 +1,114 @@
+{{!
+    This file is part of Moodle - https://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_oriskill/coursepage
+
+    Public page of a trainer's course, in the trainer's brand (same bar and footer as the showcase).
+
+    Example context (json):
+    {
+        "displayname": "Studio Data", "tagline": "Formations pratiques", "logo": "", "initial": "S",
+        "style": {"primary": "#7c3aed", "onprimary": "#ffffff", "accent": "#fbbf24", "onaccent": "#111827", "ink": "#7c3aed",
+                  "font": "Georgia, serif"},
+        "homeurl": "#", "coursesurl": "#", "accounturl": "#", "accountlabel": "Se connecter",
+        "coursename": "Excel pour l'analyse", "summary": "<p>Description.</p>", "image": "",
+        "price": "49,00 €", "compareprice": "79,00 €", "instalments": {"label": "ou 3 × 17,00 €", "url": "#"},
+        "cta": {"url": "#", "label": "Choisir ma formule"}, "enrolled": false, "facts": "4 modules · 12 activités",
+        "hasprogram": true,
+        "program": [{"number": 1, "name": "Bien démarrer", "count": 2, "hasactivities": true,
+                     "activities": [{"name": "Bienvenue", "icon": ""}]}],
+        "year": "2026", "links": [{"url": "#", "label": "Conditions générales"}]
+    }
+}}
+<div class="oriskill-vitrine" style="--v-primary: {{style.primary}}; --v-on-primary: {{style.onprimary}}; --v-accent: {{style.accent}}; --v-on-accent: {{style.onaccent}}; --v-ink: {{style.ink}}; --v-font: {{style.font}};">
+    <header class="oriskill-vitrine-bar">
+        <a href="{{homeurl}}" class="oriskill-vitrine-brand">
+            {{#logo}}<img src="{{logo}}" alt="" class="oriskill-vitrine-logo">{{/logo}}
+            {{^logo}}<span class="oriskill-vitrine-initial" aria-hidden="true">{{initial}}</span>{{/logo}}
+            <span>{{displayname}}</span>
+        </a>
+        <nav class="oriskill-vitrine-nav" aria-label="{{displayname}}">
+            <a href="{{coursesurl}}">{{#str}}creatorcourses, local_oriskill{{/str}}</a>
+            <a href="{{accounturl}}" class="oriskill-vitrine-account">{{accountlabel}}</a>
+        </nav>
+    </header>
+
+    <section class="oriskill-coursepage-hero">
+        <div class="oriskill-coursepage-intro">
+            <a href="{{coursesurl}}" class="oriskill-coursepage-back">← {{#str}}creatorcourses, local_oriskill{{/str}}</a>
+            <h1>{{coursename}}</h1>
+            <p class="oriskill-coursepage-facts">{{facts}}</p>
+        </div>
+        <aside class="oriskill-coursepage-buy" aria-label="{{#str}}coursepage:buybox, local_oriskill{{/str}}">
+            {{#image}}<img src="{{image}}" alt="">{{/image}}
+            <div class="oriskill-coursepage-buy-body">
+                {{^enrolled}}
+                    <p class="oriskill-vitrine-price"><strong>{{price}}</strong> {{#compareprice}}<s>{{compareprice}}</s>{{/compareprice}}</p>
+                    {{#instalments}}<a href="{{url}}" class="oriskill-vitrine-instalments">{{label}}</a>{{/instalments}}
+                {{/enrolled}}
+                {{#enrolled}}<p class="oriskill-coursepage-enrolled">{{#str}}coursepage:enrolled, local_oriskill{{/str}}</p>{{/enrolled}}
+                {{#cta}}<a href="{{url}}" class="oriskill-vitrine-cta oriskill-coursepage-cta">{{label}}</a>{{/cta}}
+            </div>
+        </aside>
+    </section>
+
+    <main class="oriskill-vitrine-main oriskill-coursepage-main">
+        <section aria-labelledby="oriskill-coursepage-about">
+            <h2 id="oriskill-coursepage-about">{{#str}}coursepage:about, local_oriskill{{/str}}</h2>
+            <div class="oriskill-coursepage-summary">{{{summary}}}</div>
+        </section>
+        {{#hasprogram}}
+            <section aria-labelledby="oriskill-coursepage-program">
+                <h2 id="oriskill-coursepage-program">{{#str}}coursepage:program, local_oriskill{{/str}}</h2>
+                <ol class="oriskill-coursepage-modules">
+                    {{#program}}
+                        <li>
+                            <details>
+                                <summary>
+                                    <span class="oriskill-coursepage-num">{{number}}</span>
+                                    <span class="oriskill-coursepage-module">{{name}}</span>
+                                    <span class="oriskill-coursepage-count">{{#str}}coursepage:activities, local_oriskill, {{count}}{{/str}}</span>
+                                </summary>
+                                {{#hasactivities}}
+                                    <ul>
+                                        {{#activities}}<li>{{#icon}}<img src="{{icon}}" alt="" width="16" height="16">{{/icon}} {{name}}</li>{{/activities}}
+                                    </ul>
+                                {{/hasactivities}}
+                            </details>
+                        </li>
+                    {{/program}}
+                </ol>
+            </section>
+        {{/hasprogram}}
+        <section class="oriskill-coursepage-trainer" aria-labelledby="oriskill-coursepage-trainer">
+            <h2 id="oriskill-coursepage-trainer">{{#str}}coursepage:trainer, local_oriskill{{/str}}</h2>
+            <a href="{{homeurl}}" class="oriskill-vitrine-brand">
+                {{#logo}}<img src="{{logo}}" alt="" class="oriskill-vitrine-logo">{{/logo}}
+                {{^logo}}<span class="oriskill-vitrine-initial" aria-hidden="true">{{initial}}</span>{{/logo}}
+                <span>{{displayname}}</span>
+            </a>
+            {{#tagline}}<p>{{tagline}}</p>{{/tagline}}
+        </section>
+    </main>
+
+    <footer class="oriskill-vitrine-footer">
+        <span>© {{year}} {{displayname}}</span>
+        <nav aria-label="{{#str}}showcase:legal, local_oriskill{{/str}}">
+            {{#links}}<a href="{{url}}">{{label}}</a>{{/links}}
+        </nav>
+    </footer>
+</div>

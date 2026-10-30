@@ -405,6 +405,50 @@ class creator_service {
     }
 
     /**
+     * Address of the page of one of the trainer's courses, in their brand (on their own domain when they have one).
+     *
+     * @param \stdClass $creator Trainer.
+     * @param int $courseid Course.
+     * @return moodle_url
+     */
+    public static function course_page_url(\stdClass $creator, int $courseid): moodle_url {
+        if (!empty($creator->customdomain)) {
+            return new moodle_url('https://' . $creator->customdomain . '/formation/' . $courseid);
+        }
+        return new moodle_url('/local/oriskill/coursepage.php', ['id' => $courseid]);
+    }
+
+    /**
+     * Program of a course as a visitor sees it: its modules and the activities they hold (hidden ones left out).
+     *
+     * @param \stdClass $course Course.
+     * @return array of ['name' => string, 'activities' => [['name', 'icon']], 'count' => int]
+     */
+    public static function course_program(\stdClass $course): array {
+        $modinfo = get_fast_modinfo($course, -1);
+        $program = [];
+        foreach ($modinfo->get_section_info_all() as $num => $section) {
+            if ($section->component || !$section->visible) {
+                continue;
+            }
+            $activities = [];
+            foreach ($modinfo->sections[$num] ?? [] as $cmid) {
+                $cm = $modinfo->get_cm($cmid);
+                if (!$cm->visible || $cm->deletioninprogress || $cm->modname === 'label') {
+                    continue;
+                }
+                $activities[] = ['name' => $cm->get_formatted_name(), 'icon' => $cm->get_icon_url()->out(false)];
+            }
+            if (!$activities && $num == 0) {
+                continue;
+            }
+            $program[] = ['name' => get_section_name($course, $section), 'activities' => $activities,
+                'count' => count($activities)];
+        }
+        return $program;
+    }
+
+    /**
      * Logo URL, if one was uploaded.
      *
      * @param \stdClass $creator Creator.
@@ -612,7 +656,7 @@ class creator_service {
                 'price' => pricing_service::format_price($price->final_price, $price->currency),
                 'compareprice' => !empty($price->on_sale)
                     ? pricing_service::format_price($price->regularprice, $price->currency) : '',
-                'url' => (new moodle_url('/local/moderncommerce/course_details.php', ['id' => $course->id]))->out(false),
+                'url' => self::course_page_url($creator, (int) $course->id)->out(false),
                 'instalments' => instalment_service::buyable_offer((int) $course->id),
             ];
         }

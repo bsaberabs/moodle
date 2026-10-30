@@ -155,6 +155,14 @@ https:// {
             header_up Host oriskill.com
         }
     }
+    # Les fiches de ses formations : /formation/numéro.
+    @course path_regexp course ^/formation/([0-9]+)/?$
+    handle @course {
+        rewrite * /local/oriskill/coursepage.php?domain={host}&id={re.course.1}
+        reverse_proxy 127.0.0.1:8080 {
+            header_up Host oriskill.com
+        }
+    }
     # Ses bons de commande : /bdc/nom-du-bon.
     @bdc path_regexp bdc ^/bdc/([a-z0-9-]+)/?$
     handle @bdc {

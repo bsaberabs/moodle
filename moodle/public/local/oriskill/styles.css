@@ -621,6 +621,125 @@
     color: #d1d5db;
 }
 
+/* Page of a course in the trainer's brand. */
+.oriskill-coursepage-hero {
+    background: var(--v-primary);
+    color: var(--v-on-primary);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 22rem;
+    gap: 2rem;
+    align-items: start;
+    padding: clamp(2rem, 6vw, 4rem) max(clamp(1rem, 4vw, 3rem), calc((100% - 1100px) / 2));
+}
+.oriskill-coursepage-hero h1 {
+    font-size: clamp(1.8rem, 4.5vw, 3rem);
+    font-weight: 800;
+    color: inherit;
+    margin: .5rem 0 .75rem;
+}
+.oriskill-coursepage-back,
+.oriskill-coursepage-back:hover {
+    color: inherit;
+    opacity: .85;
+    font-size: .9rem;
+}
+.oriskill-coursepage-facts {
+    opacity: .9;
+    font-size: 1.05rem;
+}
+.oriskill-coursepage-buy {
+    background: #fff;
+    color: #111827;
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .18);
+}
+.oriskill-coursepage-buy img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+}
+.oriskill-coursepage-buy-body {
+    padding: 1.25rem;
+}
+.oriskill-coursepage-buy .oriskill-vitrine-price {
+    font-size: 1.6rem;
+    margin-bottom: .25rem;
+}
+.oriskill-coursepage-cta {
+    display: block;
+    text-align: center;
+}
+.oriskill-coursepage-enrolled {
+    font-weight: 600;
+    color: var(--v-ink);
+}
+.oriskill-coursepage-summary {
+    max-width: 48rem;
+    margin-bottom: 2.5rem;
+}
+.oriskill-coursepage-modules {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 2.5rem;
+    max-width: 48rem;
+}
+.oriskill-coursepage-modules > li {
+    border: 1px solid #e5e7eb;
+    border-radius: .75rem;
+    margin-bottom: .6rem;
+    background: #fff;
+}
+.oriskill-coursepage-modules summary {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .85rem 1rem;
+    cursor: pointer;
+    list-style: none;
+}
+.oriskill-coursepage-modules summary::-webkit-details-marker {
+    display: none;
+}
+.oriskill-coursepage-num {
+    flex: 0 0 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--v-primary);
+    color: var(--v-on-primary);
+    font-weight: 700;
+}
+.oriskill-coursepage-module {
+    flex: 1;
+    font-weight: 600;
+}
+.oriskill-coursepage-count {
+    color: #6b7280;
+    font-size: .9rem;
+    white-space: nowrap;
+}
+.oriskill-coursepage-modules ul {
+    margin: 0;
+    padding: 0 1rem 1rem 3.75rem;
+    list-style: none;
+}
+.oriskill-coursepage-modules ul li {
+    padding: .25rem 0;
+}
+.oriskill-coursepage-trainer p {
+    margin-top: .5rem;
+    color: #4b5563;
+}
+@media (max-width: 860px) {
+    .oriskill-coursepage-hero {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* Offer to pay a trainer course in instalments, above its store page. */
 .oriskill-instalment-bar {
     position: relative;

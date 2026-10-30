@@ -156,6 +156,34 @@ class orderform_service {
     }
 
     /**
+     * Published order form selling a course, to buy it from its page in the trainer's brand: a form whose offers
+     * open only this course first, then any form offering it.
+     *
+     * @param \stdClass $creator Trainer.
+     * @param int $courseid Course.
+     * @return \stdClass|null
+     */
+    public static function form_for_course(\stdClass $creator, int $courseid): ?\stdClass {
+        $best = null;
+        foreach (self::forms($creator) as $form) {
+            if ($form->status !== 'published') {
+                continue;
+            }
+            foreach (self::offers($form) as $offer) {
+                $courseids = array_map('intval', explode(',', (string) $offer->courseids));
+                if (!in_array($courseid, $courseids, true)) {
+                    continue;
+                }
+                if ($courseids === [$courseid]) {
+                    return $form;
+                }
+                $best = $best ?? $form;
+            }
+        }
+        return $best;
+    }
+
+    /**
      * Copy a form (a backup form for the same offers, or a variant): same content, offers, image and reminders,
      * as a draft under a free address. Its statistics and prospects start from zero.
      *
