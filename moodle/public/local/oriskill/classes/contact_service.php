@@ -80,6 +80,7 @@ class contact_service {
                 $record->$field = \core_text::substr(trim((string) ($data[$field] ?? '')), 0, $field === 'address' ? 255 : 100);
             }
             $record->id = $DB->insert_record(self::TABLE, $record);
+            $record->isnew = true;
             return $record;
         }
         $update = [];
@@ -384,13 +385,14 @@ class contact_service {
      * @param \stdClass $creator Trainer.
      * @param int[] $contactids Contacts (others' are ignored).
      * @param string[] $tags Tags.
+     * @param bool $checked The ids are known to be the trainer's (import): no need to check them.
      * @return int Tags added.
      */
-    public static function add_tags(\stdClass $creator, array $contactids, array $tags): int {
+    public static function add_tags(\stdClass $creator, array $contactids, array $tags, bool $checked = false): int {
         global $DB;
 
         $added = 0;
-        foreach (self::own_ids($creator, $contactids) as $contactid) {
+        foreach ($checked ? array_map('intval', $contactids) : self::own_ids($creator, $contactids) as $contactid) {
             foreach ($tags as $tag) {
                 if (!$DB->record_exists(self::TAGS, ['contactid' => $contactid, 'tag' => $tag])) {
                     $DB->insert_record(self::TAGS, (object) ['contactid' => $contactid, 'creatorid' => $creator->id,

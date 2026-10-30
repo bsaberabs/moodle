@@ -352,5 +352,12 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103034, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103035) {
+        // Imports of contacts from CSV files.
+        if (!$dbman->table_exists('local_oriskill_imports')) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', 'local_oriskill_imports');
+        }
+        upgrade_plugin_savepoint(true, 2026103035, 'local', 'oriskill');
+    }
     return true;
 }

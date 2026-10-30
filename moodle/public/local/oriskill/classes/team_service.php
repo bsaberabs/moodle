@@ -75,6 +75,7 @@ class team_service {
         '/local/oriskill/access.php' => ['admin', 'teaching'],
         '/local/oriskill/contacts.php' => ['admin', 'support', 'accounting', 'partner'],
         '/local/oriskill/contact.php' => ['admin', 'support', 'accounting', 'partner'],
+        '/local/oriskill/contactimport.php' => ['admin', 'support'],
         '/local/oriskill/payment.php' => [],
         '/local/oriskill/apply.php' => ['admin'],
         '/local/oriskill/team.php' => ['admin'],

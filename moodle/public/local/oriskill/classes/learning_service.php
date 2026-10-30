@@ -153,10 +153,12 @@ class learning_service {
      * @param string $lastname Last name, for a new account.
      * @param int $timeend End of access, 0 for unlimited.
      * @param int $groupid Group to put the learner in, 0 for none.
+     * @param bool $sendcredentials Send a new account its username and password (otherwise the learner uses
+     *                              "forgotten password" to get in).
      * @return array [user, bool account created]
      */
     public static function offer_access(\stdClass $course, string $email, string $firstname, string $lastname,
-            int $timeend, int $groupid): array {
+            int $timeend, int $groupid, bool $sendcredentials = true): array {
         global $CFG, $DB;
 
         $email = trim(\core_text::strtolower($email));
@@ -178,8 +180,12 @@ class learning_service {
                 'firstname' => trim($firstname), 'lastname' => trim($lastname), 'confirmed' => 1,
                 'mnethostid' => $CFG->mnet_localhost_id, 'lang' => current_language()], false, false);
             $user = $DB->get_record('user', ['id' => $userid], '*', MUST_EXIST);
-            setnew_password_and_mail($user);
-            set_user_preference('auth_forcepasswordchange', 1, $user);
+            if ($sendcredentials) {
+                setnew_password_and_mail($user);
+                set_user_preference('auth_forcepasswordchange', 1, $user);
+            } else {
+                update_internal_user_password($user, generate_password(20));
+            }
             $created = true;
         }
 

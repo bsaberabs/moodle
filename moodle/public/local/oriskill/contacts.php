@@ -151,7 +151,10 @@ $alltags = cs::all_tags($creator);
 $courses = $DB->get_records('course', ['category' => $creator->categoryid], 'fullname', 'id, fullname');
 
 echo $OUTPUT->header();
-echo creator_service::space_start($creator, '/local/oriskill/contacts.php', get_string('menu:contacts', 'local_oriskill'));
+echo creator_service::space_start($creator, '/local/oriskill/contacts.php', get_string('menu:contacts', 'local_oriskill'),
+    team_service::can(creator_service::current_role(), '/local/oriskill/contactimport.php')
+        ? html_writer::link(new moodle_url('/local/oriskill/contactimport.php'), '<i class="fa fa-file-import me-1" aria-hidden="true"></i>' .
+            get_string('import:title', 'local_oriskill'), ['class' => 'btn btn-outline-primary']) : '');
 echo html_writer::tag('p', get_string('contacts:intro', 'local_oriskill'), ['class' => 'text-muted']);
 
 // Quick views.
