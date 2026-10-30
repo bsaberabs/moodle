@@ -507,5 +507,42 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103048, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103049) {
+        // Affiliate campaigns of the trainers, sponsors (second level), time of the click, guarantee per campaign.
+        foreach (['local_oriskill_campaigns', 'local_oriskill_campaignaff'] as $name) {
+            if (!$dbman->table_exists($name)) {
+                $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', $name);
+            }
+        }
+        $fields = [
+            'local_oriskill_affiliates' => [new xmldb_field('referrerid', XMLDB_TYPE_INTEGER, '10', null, null, null, null,
+                'payoutdetails')],
+            'local_oriskill_referrals' => [new xmldb_field('clicktime', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0',
+                'affiliateid')],
+            'local_oriskill_commissions' => [
+                new xmldb_field('campaignid', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'timepaid'),
+                new xmldb_field('level', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1', 'campaignid'),
+                new xmldb_field('validafter', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'level'),
+            ],
+        ];
+        foreach ($fields as $tablename => $list) {
+            $table = new xmldb_table($tablename);
+            foreach ($list as $field) {
+                if (!$dbman->field_exists($table, $field)) {
+                    $dbman->add_field($table, $field);
+                }
+            }
+        }
+        upgrade_plugin_savepoint(true, 2026103049, 'local', 'oriskill');
+    }
+    if ($oldversion < 2026103050) {
+        // Several commissions per order line: the sponsor's (second level), and those added by hand (no line).
+        $table = new xmldb_table('local_oriskill_commissions');
+        $dbman->drop_key($table, new xmldb_key('orderitemid', XMLDB_KEY_FOREIGN_UNIQUE, ['orderitemid'],
+            'local_moderncommerce_order_items', ['id']));
+        $dbman->add_key($table, new xmldb_key('orderitemid', XMLDB_KEY_FOREIGN, ['orderitemid'],
+            'local_moderncommerce_order_items', ['id']));
+        upgrade_plugin_savepoint(true, 2026103050, 'local', 'oriskill');
+    }
     return true;
 }

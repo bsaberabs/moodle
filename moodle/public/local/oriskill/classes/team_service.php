@@ -57,6 +57,7 @@ class team_service {
         '/local/oriskill/sales.php' => ['admin', 'support', 'accounting'],
         '/local/oriskill/stats.php' => ['admin', 'support', 'accounting'],
         '/local/oriskill/invoices.php' => ['admin', 'support', 'accounting'],
+        '/local/oriskill/affiliation.php' => ['admin', 'accounting'],
         '/local/oriskill/document.php' => ['admin', 'accounting'],
         '/local/oriskill/schedules.php' => ['admin', 'support', 'accounting'],
         '/local/oriskill/unpaid.php' => ['admin', 'support', 'accounting'],

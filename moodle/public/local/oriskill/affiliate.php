@@ -114,6 +114,20 @@ foreach ([
 }
 echo html_writer::div($cards, 'd-flex flex-wrap gap-3 mb-4');
 
+// Campaigns of the trainers.
+$campaigns = \local_oriskill\campaign_service::for_affiliate($affiliate);
+if ($campaigns) {
+    echo html_writer::tag('h3', get_string('campaign:mine', 'local_oriskill'), ['class' => 'h5']);
+    $table = new html_table();
+    $table->head = [get_string('support:trainer', 'local_oriskill'), get_string('campaign:campaign', 'local_oriskill'),
+        get_string('commissioncol', 'local_oriskill'), get_string('affiliatelink', 'local_oriskill')];
+    foreach ($campaigns as $campaign) {
+        $table->data[] = [format_string($campaign->trainer), s($campaign->name) . ($campaign->description !== ''
+            ? html_writer::div(s($campaign->description), 'small text-muted') : ''), s($campaign->terms), $copyfield($campaign->url)];
+    }
+    echo html_writer::table($table);
+}
+
 // Courses to recommend.
 echo html_writer::tag('h3', get_string('promotablecourses', 'local_oriskill'), ['class' => 'h5']);
 $courses = affiliate_service::promotable_courses($affiliate);
@@ -141,7 +155,7 @@ if ($commissions) {
             userdate($commission->timecreated, get_string('strftimedatetimeshort', 'langconfig')),
             format_string($commission->itemname),
             pricing_service::format_price($commission->base, $commission->currency),
-            format_float($commission->rate, 2, true, true) . ' %',
+            (float) $commission->rate > 0 ? format_float($commission->rate, 2, true, true) . ' %' : '–',
             pricing_service::format_price($commission->amount, $commission->currency),
             get_string('commission:' . $commission->status, 'local_oriskill'),
         ];

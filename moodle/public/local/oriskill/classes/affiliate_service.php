@@ -35,6 +35,9 @@ class affiliate_service {
     /** @var string Cookie holding the referral code. */
     const COOKIE = 'oriskill_ref';
 
+    /** @var string Cookie holding the time of the click (tracking time of the campaigns). */
+    const COOKIE_TIME = 'oriskill_ref_time';
+
     /**
      * Whether the affiliate programme is open.
      *
@@ -71,8 +74,12 @@ class affiliate_service {
             $code = strtolower(random_string(8));
         } while ($DB->record_exists('local_oriskill_affiliates', ['code' => $code]));
         $now = time();
+        // Brought in by another affiliate's link: that one is their sponsor (second level of the campaigns).
+        $sponsor = !empty($_COOKIE[self::COOKIE]) ? $DB->get_record('local_oriskill_affiliates',
+            ['code' => strtolower(clean_param($_COOKIE[self::COOKIE], PARAM_ALPHANUM)), 'status' => 'active']) : null;
         $id = $DB->insert_record('local_oriskill_affiliates', (object) ['userid' => $userid, 'code' => $code,
-            'status' => 'active', 'clicks' => 0, 'timecreated' => $now, 'timemodified' => $now]);
+            'status' => 'active', 'clicks' => 0, 'referrerid' => $sponsor && (int) $sponsor->userid !== $userid ? $sponsor->id : null,
+            'timecreated' => $now, 'timemodified' => $now]);
         return $DB->get_record('local_oriskill_affiliates', ['id' => $id]);
     }
 
@@ -109,10 +116,13 @@ class affiliate_service {
         }
         $days = max(1, (int) get_config('local_oriskill', 'cookiedays'));
         if (!headers_sent()) {
-            setcookie(self::COOKIE, $code, ['expires' => time() + $days * DAYSECS, 'path' => $CFG->sessioncookiepath ?: '/',
-                'secure' => is_https(), 'httponly' => true, 'samesite' => 'Lax']);
+            $options = ['expires' => time() + $days * DAYSECS, 'path' => $CFG->sessioncookiepath ?: '/', 'secure' => is_https(),
+                'httponly' => true, 'samesite' => 'Lax'];
+            setcookie(self::COOKIE, $code, $options);
+            setcookie(self::COOKIE_TIME, (string) time(), $options);
         }
         $_COOKIE[self::COOKIE] = $code;
+        $_COOKIE[self::COOKIE_TIME] = (string) time();
         $DB->execute('UPDATE {local_oriskill_affiliates} SET clicks = clicks + 1 WHERE id = ?', [$affiliate->id]);
     }
 
@@ -136,6 +146,7 @@ class affiliate_service {
             return false;
         }
         $DB->insert_record('local_oriskill_referrals', (object) ['orderid' => $orderid, 'affiliateid' => $affiliate->id,
+            'clicktime' => (int) ($_COOKIE[self::COOKIE_TIME] ?? 0),
             'timecreated' => time()]);
         return true;
     }
@@ -172,9 +183,22 @@ class affiliate_service {
             return 0;
         }
         $items = $DB->get_records('local_moderncommerce_order_items', ['orderid' => $orderid]);
-        $subtotal = array_sum(array_map(fn($item) => (float) $item->subtotal, $items));
-        $net = max(0, (float) $order->subtotal - (float) $order->discount);
+        // Trainers with campaigns pay through them: one commission per sale (see campaign_service).
+        $bytrainer = [];
+        foreach ($items as $id => $item) {
+            $seller = $item->courseid ? seller_service::owner_of_course((int) $item->courseid) : null;
+            if ($seller && campaign_service::uses_campaigns($seller)) {
+                $bytrainer[$seller->id][0] = $seller;
+                $bytrainer[$seller->id][1][$id] = $item;
+            }
+        }
         $created = 0;
+        $subtotal = array_sum(array_map(fn($item) => (float) $item->subtotal, $items));
+        foreach ($bytrainer as [$seller, $lines]) {
+            $created += campaign_service::record($seller, $order, $lines, $affiliate, (int) ($referral->clicktime ?? 0));
+            $items = array_diff_key($items, $lines);
+        }
+        $net = max(0, (float) $order->subtotal - (float) $order->discount);
         $now = time();
         foreach ($items as $item) {
             if ($DB->record_exists('local_oriskill_commissions', ['orderitemid' => $item->id])) {
@@ -215,14 +239,14 @@ class affiliate_service {
         $window = max(0, (int) get_config('local_oriskill', 'validationdays')) * DAYSECS;
         $result = ['approved' => 0, 'cancelled' => 0];
         $pending = $DB->get_records_sql(
-            "SELECT c.id, c.timecreated, o.status AS orderstatus
+            "SELECT c.id, c.timecreated, c.validafter, c.orderid, o.status AS orderstatus
                FROM {local_oriskill_commissions} c
           LEFT JOIN {local_moderncommerce_orders} o ON o.id = c.orderid
               WHERE c.status = 'pending'");
         foreach ($pending as $commission) {
-            if (!in_array($commission->orderstatus, ['paid', 'completed'], true)) {
+            if ($commission->orderid && !in_array($commission->orderstatus, ['paid', 'completed'], true)) {
                 $status = 'cancelled';
-            } else if ($commission->timecreated <= $now - $window) {
+            } else if ($commission->validafter ? $commission->validafter <= $now : $commission->timecreated <= $now - $window) {
                 $status = 'approved';
             } else {
                 continue;

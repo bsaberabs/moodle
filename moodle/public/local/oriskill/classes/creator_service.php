@@ -223,6 +223,7 @@ class creator_service {
             '/local/oriskill/schedules.php' => ['menu:schedules', 'bi-calendar-check'],
             '/local/oriskill/unpaid.php' => ['menu:unpaid', 'bi-exclamation-triangle'],
             '/local/oriskill/invoices.php' => ['menu:invoices', 'bi-receipt'],
+            '/local/oriskill/affiliation.php' => ['menu:affiliation', 'bi-share'],
         ],
         'navgroup:courses' => [
             '/local/oriskill/courses.php' => ['mycourses', 'bi-mortarboard'],

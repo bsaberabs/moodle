@@ -61,6 +61,7 @@
         <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="active" SEQUENCE="false" COMMENT="active, suspended"/>
         <FIELD NAME="clicks" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Visits through the affiliate's links"/>
         <FIELD NAME="payoutdetails" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="How the affiliate wants to be paid (IBAN, PayPal...)"/>
+        <FIELD NAME="referrerid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Affiliate who brought this one (sponsor, second level)"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
@@ -77,6 +78,7 @@
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="orderid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="affiliateid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="clicktime" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Time of the click that brought the buyer, 0 when unknown"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
@@ -102,12 +104,15 @@
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timepaid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="campaignid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="level" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="1: the affiliate, 2: their sponsor"/>
+        <FIELD NAME="validafter" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="End of the guarantee period of the campaign, 0 for the platform setting"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
         <KEY NAME="affiliateid" TYPE="foreign" FIELDS="affiliateid" REFTABLE="local_oriskill_affiliates" REFFIELDS="id"/>
         <KEY NAME="orderid" TYPE="foreign" FIELDS="orderid" REFTABLE="local_moderncommerce_orders" REFFIELDS="id"/>
-        <KEY NAME="orderitemid" TYPE="foreign-unique" FIELDS="orderitemid" REFTABLE="local_moderncommerce_order_items" REFFIELDS="id"/>
+        <KEY NAME="orderitemid" TYPE="foreign" FIELDS="orderitemid" REFTABLE="local_moderncommerce_order_items" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
         <INDEX NAME="status" UNIQUE="false" FIELDS="status"/>
@@ -675,6 +680,41 @@
       <INDEXES>
         <INDEX NAME="contactid" UNIQUE="false" FIELDS="contactid"/>
       </INDEXES>
+    </TABLE>
+    <TABLE NAME="local_oriskill_campaigns" COMMENT="Affiliate campaigns of a trainer">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="creatorid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="description" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="commtype" TYPE="char" LENGTH="10" NOTNULL="true" DEFAULT="percent" SEQUENCE="false" COMMENT="percent or fixed (per sale)"/>
+        <FIELD NAME="commission" TYPE="number" LENGTH="10" NOTNULL="true" DEFAULT="0" DECIMALS="2" SEQUENCE="false"/>
+        <FIELD NAME="taxbase" TYPE="char" LENGTH="10" NOTNULL="true" DEFAULT="excl" SEQUENCE="false" COMMENT="Percentage of the amount excluding (excl) or including (incl) VAT"/>
+        <FIELD NAME="level2" TYPE="number" LENGTH="5" NOTNULL="true" DEFAULT="0" DECIMALS="2" SEQUENCE="false" COMMENT="Share of the commission paid to the affiliate's sponsor, in percent"/>
+        <FIELD NAME="formid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Order form, 0 for all"/>
+        <FIELD NAME="trackingdays" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="30" SEQUENCE="false"/>
+        <FIELD NAME="guaranteedays" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="14" SEQUENCE="false"/>
+        <FIELD NAME="visibility" TYPE="char" LENGTH="10" NOTNULL="true" DEFAULT="public" SEQUENCE="false" COMMENT="public or private (chosen affiliates)"/>
+        <FIELD NAME="newonly" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="No commission when the buyer was already a contact"/>
+        <FIELD NAME="enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="creatorid" TYPE="foreign" FIELDS="creatorid" REFTABLE="local_oriskill_creators" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="local_oriskill_campaignaff" COMMENT="Affiliates chosen for a private campaign">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="campaignid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="affiliateid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="campaignid" TYPE="foreign" FIELDS="campaignid" REFTABLE="local_oriskill_campaigns" REFFIELDS="id"/>
+      </KEYS>
     </TABLE>
     <TABLE NAME="local_oriskill_accesssent" COMMENT="Access e-mails sent, one per member and course">
       <FIELDS>
