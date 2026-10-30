@@ -38,6 +38,7 @@ $slug = optional_param('slug', '', PARAM_ALPHANUMEXT);
 $offerid = optional_param('offer', 0, PARAM_INT);
 $mode = optional_param('mode', 'once', PARAM_ALPHA);
 $mode = in_array($mode, ['instalments', 'subscription'], true) ? $mode : 'once';
+$plan = optional_param('plan', 0, PARAM_INT);
 
 $context = context_system::instance();
 $PAGE->set_context($context);
@@ -65,6 +66,10 @@ if ($offerid) {
     if (!$offer) {
         redirect($formurl);
     }
+    // One of the offer's payments in instalments (its main one is plan 0).
+    if ($mode === 'instalments') {
+        $offer = orderform_service::with_plan($offer, $plan) ?? redirect($formurl);
+    }
     $described = orderform_service::describe_offer($offer, $currency);
     if (($mode === 'instalments' && (!$described->instalments || !orderform_service::can_sell_instalments($creator)))
             || ($mode === 'subscription' && (!$described->subscription || !orderform_service::can_sell_instalments($creator)))) {
@@ -77,8 +82,10 @@ if ($offerid) {
     $bump = $mode === 'subscription' ? null : orderform_service::bump($form);
     $withextra = $bump && optional_param('extra', 0, PARAM_BOOL);
     $quote = orderform_service::quote($offer, $mode, $coupon, $withextra ? $bump->price : 0);
-    $url = new moodle_url($formurl, array_filter(['offer' => $offerid, 'mode' => $mode, 'coupon' => $coupon->code ?? '',
-        'extra' => $withextra ? 1 : 0]));
+    $url = new moodle_url($formurl, array_filter(['offer' => $offerid, 'mode' => $mode,
+        'plan' => $mode === 'instalments' ? $plan : 0, 'coupon' => $coupon->code ?? '', 'extra' => $withextra ? 1 : 0]));
+    $button = orderform_service::button($form);
+    $fields = array_filter(orderform_service::buyer_fields($form), fn($state) => $state !== 'hidden');
     $PAGE->set_url($url);
     $PAGE->set_pagelayout('standard');
     $PAGE->set_title(format_string($form->title));
@@ -107,13 +114,26 @@ if ($offerid) {
     }
     require_login(null, false);
 
+    // The buyer's details asked by the form, filled in from the profile.
+    $profile = ['address' => $USER->address, 'zipcode' => '', 'city' => $USER->city, 'country' => $USER->country,
+        'phone' => $USER->phone1 ?: $USER->phone2];
+    $billing = [];
+    foreach ($fields as $field => $state) {
+        $billing[$field] = trim(optional_param('billing_' . $field, $profile[$field] ?? '', PARAM_TEXT));
+    }
     $error = '';
     if (optional_param('confirm', 0, PARAM_BOOL) && confirm_sesskey()) {
+        $missing = array_keys(array_filter($fields, fn($state, $field) => $state === 'required' && $billing[$field] === '',
+            ARRAY_FILTER_USE_BOTH));
         if ($form->termsrequired && !optional_param('terms', 0, PARAM_BOOL)) {
             $error = get_string('orderform:termsmissing', 'local_oriskill');
+        } else if ($missing) {
+            $error = get_string('orderform:fieldmissing', 'local_oriskill', implode(', ',
+                array_map(fn($f) => get_string('orderform:field_' . $f, 'local_oriskill'), $missing)));
         } else {
             try {
-                [, $payurl] = orderform_service::create_order((int) $USER->id, $form, $offer, $mode, $coupon, $withextra);
+                [, $payurl] = orderform_service::create_order((int) $USER->id, $form, $offer, $mode, $coupon, $withextra,
+                    $billing);
                 redirect($payurl);
             } catch (moodle_exception $e) {
                 $error = $e->getMessage();
@@ -166,6 +186,7 @@ if ($offerid) {
             html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'id', 'value' => $form->id]) .
             html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'offer', 'value' => $offerid]) .
             html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'mode', 'value' => $mode]) .
+            html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'plan', 'value' => $plan]) .
             html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'extra', 'value' => $withextra ? 1 : 0]) .
             html_writer::empty_tag('input', ['type' => 'text', 'name' => 'coupon', 'class' => 'form-control form-control-sm',
                 'placeholder' => get_string('coupon:field', 'local_oriskill'), 'aria-label' => get_string('coupon:field',
@@ -178,15 +199,37 @@ if ($offerid) {
 
     $termslink = html_writer::link(new moodle_url('/local/moderncommerce/terms.php'),
         get_string('showcase:terms', 'local_oriskill'), ['target' => '_blank']);
+    $inputs = '';
+    if ($fields) {
+        $countries = get_string_manager()->get_list_of_countries();
+        foreach ($fields as $field => $state) {
+            $attributes = ['id' => 'billing-' . $field, 'class' => 'form-control'] +
+                ($state === 'required' ? ['required' => 'required'] : []);
+            $label = get_string('orderform:field_' . $field, 'local_oriskill') . ($state === 'required' ? ' *' : '');
+            $control = $field === 'country'
+                ? html_writer::select($countries, 'billing_country', $billing['country'], ['' => get_string('choosedots')],
+                    ['class' => 'form-select'] + $attributes)
+                : html_writer::empty_tag('input', ['type' => $field === 'phone' ? 'tel' : 'text', 'name' => 'billing_' . $field,
+                    'value' => $billing[$field]] + $attributes);
+            $inputs .= html_writer::div(html_writer::tag('label', $label, ['for' => 'billing-' . $field,
+                'class' => 'form-label small mb-1']) . $control, $field === 'address' ? 'col-12' : 'col-sm-6');
+        }
+        $inputs = html_writer::tag('h3', get_string('orderform:yourdetails', 'local_oriskill'), ['class' => 'h6']) .
+            html_writer::div(s(fullname($USER)) . ' · ' . s($USER->email), 'small text-muted mb-2') .
+            html_writer::div($inputs, 'row g-2 mb-3');
+    }
     echo html_writer::tag('form',
         html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]) .
-        html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'confirm', 'value' => 1]) .
+        html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'confirm', 'value' => 1]) . $inputs .
         ($form->termsrequired ? html_writer::div(
             html_writer::checkbox('terms', 1, false, get_string('orderform:acceptterms', 'local_oriskill', $termslink),
                 ['id' => 'orderform-terms', 'class' => 'form-check-input', 'required' => 'required']), 'form-check mb-3') : '') .
-        html_writer::tag('button', get_string('orderform:pay', 'local_oriskill', $quote->displayamount),
-            ['type' => 'submit', 'class' => 'btn btn-primary btn-lg']) . ' ' .
-        html_writer::link($formurl, get_string('cancel'), ['class' => 'btn btn-link']),
+        html_writer::div(
+            html_writer::tag('button', orderform_service::button_content($button,
+                get_string('orderform:pay', 'local_oriskill', $quote->displayamount)),
+                ['type' => 'submit', 'class' => 'btn btn-primary btn-lg', 'style' => orderform_service::button_css($button)]) . ' ' .
+            html_writer::link($formurl, get_string('cancel'), ['class' => 'btn btn-link']), 'text-' .
+            ['left' => 'start', 'center' => 'center', 'right' => 'end'][$button->align]),
         ['method' => 'post', 'action' => $url->out(false)]);
     echo html_writer::end_div();
     echo html_writer::end_div();
@@ -207,25 +250,27 @@ hook_callbacks::$headmeta = ['description' => $form->headline ?: format_string($
 $files = get_file_storage()->get_area_files($context->id, 'local_oriskill', 'orderform', $form->id, 'filename', false);
 $image = ($file = reset($files)) ? moodle_url::make_pluginfile_url($context->id, 'local_oriskill', 'orderform', $form->id, '/',
     $file->get_filename())->out(false) : '';
+$button = orderform_service::button($form);
+$optionurl = fn($offer, $option) => (new moodle_url($formurl, ['offer' => $offer->id, 'mode' => $option->mode] +
+    ($option->mode === 'instalments' ? ['plan' => $option->plan] : [])))->out(false);
 $items = [];
 foreach ($offers as $offer) {
     $described = orderform_service::describe_offer($offer, $currency);
+    // The payment chosen by default on the main button, the others below it.
+    $options = orderform_service::payment_options($offer, $currency, orderform_service::can_sell_instalments($creator));
+    $main = array_shift($options);
     $items[] = [
         'label' => format_string($offer->label),
         'details' => array_map('s', $described->details),
         'courses' => $described->courses,
-        'displayprice' => $described->displayprice,
+        'displayprice' => $main->price,
         'highlight' => (bool) $offer->highlight,
-        'buttonlabel' => format_string($form->buttonlabel ?: get_string('orderform:buttondefault', 'local_oriskill')),
-        'url' => (new moodle_url($formurl, ['offer' => $offer->id, 'mode' => 'once']))->out(false),
-        'instalments' => $described->instalments && orderform_service::can_sell_instalments($creator) ? [
-            'label' => get_string('instalments:or', 'local_oriskill', $described->instalments->label),
-            'url' => (new moodle_url($formurl, ['offer' => $offer->id, 'mode' => 'instalments']))->out(false),
-        ] : null,
-        'subscription' => $described->subscription && orderform_service::can_sell_instalments($creator) ? [
-            'label' => get_string('subscription:orshort', 'local_oriskill', $described->subscription->displayamount),
-            'url' => (new moodle_url($formurl, ['offer' => $offer->id, 'mode' => 'subscription']))->out(false),
-        ] : null,
+        'buttonlabel' => orderform_service::button_content($button,
+            s(format_string($form->buttonlabel ?: get_string('orderform:buttondefault', 'local_oriskill')))),
+        'buttonstyle' => orderform_service::button_css($button),
+        'buttonalign' => $button->align,
+        'url' => $optionurl($offer, $main),
+        'others' => array_map(fn($option) => ['label' => $option->other, 'url' => $optionurl($offer, $option)], $options),
     ];
 }
 

@@ -70,7 +70,14 @@ if ($form) {
         'upselltext' => $form->upselltext,
         'upsellcourseids' => array_filter(array_map('intval', explode(',', (string) $form->upsellcourseids))),
         'upsellprice' => (float) $form->upsellprice > 0 ? format_float((float) $form->upsellprice, 2, true) : '',
+        'redirecturl' => $form->redirecturl ?? '',
     ];
+    foreach (orderform_service::buyer_fields($form) as $field => $state) {
+        $defaults['field_' . $field] = $state;
+    }
+    $button = orderform_service::button($form);
+    $defaults += ['btncolor' => $button->color, 'btntextcolor' => $button->textcolor, 'btnsize' => $button->size,
+        'btnalign' => $button->align, 'btnicon' => $button->icon, 'btnradius' => $button->radius ?? ''];
     foreach ($offers as $i => $offer) {
         $defaults["offerlabel[$i]"] = $offer->label;
         $defaults["offercourses[$i]"] = array_map('intval', explode(',', $offer->courseids));
@@ -84,6 +91,8 @@ if ($form) {
         $defaults["offerhighlight[$i]"] = $offer->highlight;
         $defaults["offeractags[$i]"] = $offer->actags;
         $defaults["offersubprice[$i]"] = (float) $offer->subprice > 0 ? format_float((float) $offer->subprice, 2, true) : '';
+        $defaults["offerinstalplans[$i]"] = orderform_service::plans_text($offer);
+        $defaults["offerdefault[$i]"] = $offer->defaultmode ?? 'once';
     }
 }
 $mform->set_data($defaults);
@@ -113,8 +122,16 @@ if ($data = $mform->get_data()) {
             'highlight' => !empty($data->offerhighlight[$i]),
             'actags' => $data->offeractags[$i] ?? '',
             'subprice' => unformat_float((string) ($data->offersubprice[$i] ?? ''), true) ?: 0,
+            'instalplans' => $data->offerinstalplans[$i] ?? '',
+            'defaultmode' => $data->offerdefault[$i] ?? 'once',
         ];
     }
+    $data->buyerfields = [];
+    foreach (orderform_service::BUYER_FIELDS as $field) {
+        $data->buyerfields[$field] = $data->{'field_' . $field} ?? 'hidden';
+    }
+    $data->buttonstyle = ['color' => $data->btncolor, 'textcolor' => $data->btntextcolor, 'size' => $data->btnsize,
+        'align' => $data->btnalign, 'icon' => $data->btnicon, 'radius' => $data->btnradius];
     $saved = orderform_service::save($creator, $data);
     file_save_draft_area_files($data->image_filemanager, $context->id, 'local_oriskill', 'orderform', $saved->id,
         orderform_service::IMAGE_OPTIONS);

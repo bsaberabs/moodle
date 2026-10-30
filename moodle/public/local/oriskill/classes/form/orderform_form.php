@@ -69,6 +69,11 @@ class orderform_form extends \moodleform {
         $mform->setType('thankyou', PARAM_TEXT);
         $mform->addHelpButton('thankyou', 'orderform:thankyou', 'local_oriskill');
 
+        $mform->addElement('text', 'redirecturl', get_string('orderform:redirecturl', 'local_oriskill'), ['size' => 60,
+            'placeholder' => 'https://']);
+        $mform->setType('redirecturl', PARAM_RAW_TRIMMED);
+        $mform->addHelpButton('redirecturl', 'orderform:redirecturl', 'local_oriskill');
+
         $mform->addElement('advcheckbox', 'termsrequired', get_string('orderform:termsrequired', 'local_oriskill'));
         $mform->setDefault('termsrequired', 1);
 
@@ -91,6 +96,12 @@ class orderform_form extends \moodleform {
         $mform->addElement('header', 'offershdr', get_string('orderform:offers', 'local_oriskill'));
         $mform->setExpanded('offershdr');
         $mform->addElement('static', 'offersintro', '', get_string('orderform:offers_intro', 'local_oriskill'));
+        $defaults = ['once' => get_string('orderform:offerdefault_once', 'local_oriskill'),
+            'plan0' => get_string('orderform:offerdefault_plan0', 'local_oriskill')];
+        for ($i = 1; $i <= 6; $i++) {
+            $defaults['plan' . $i] = get_string('orderform:offerdefault_plan', 'local_oriskill', $i + 1);
+        }
+        $defaults['subscription'] = get_string('orderform:offerdefault_subscription', 'local_oriskill');
         $counts = [0 => get_string('instalments:none', 'local_oriskill')];
         foreach (instalment_service::COUNTS as $count) {
             $counts[$count] = get_string('instalments:times', 'local_oriskill', $count);
@@ -115,7 +126,10 @@ class orderform_form extends \moodleform {
             $mform->createElement('select', 'offerinstalcut', get_string('instalments:cutcol', 'local_oriskill'),
                 array_combine(\local_oriskill\instalment_service::CUTS, array_map(fn($n) => get_string('instalments:cut',
                     'local_oriskill', $n), \local_oriskill\instalment_service::CUTS))),
+            $mform->createElement('textarea', 'offerinstalplans', get_string('orderform:offerinstalplans', 'local_oriskill'),
+                ['rows' => 3, 'cols' => 30, 'placeholder' => "2 ; 2498\n3 ; 2499"]),
             $mform->createElement('text', 'offersubprice', get_string('orderform:offersubprice', 'local_oriskill'), ['size' => 10]),
+            $mform->createElement('select', 'offerdefault', get_string('orderform:offerdefault', 'local_oriskill'), $defaults),
             $mform->createElement('advcheckbox', 'offerhighlight', get_string('orderform:offerhighlight', 'local_oriskill')),
             $mform->createElement('text', 'offeractags', get_string('orderform:offeractags', 'local_oriskill'), ['size' => 50]),
         ];
@@ -132,9 +146,45 @@ class orderform_form extends \moodleform {
             'offergroups' => ['type' => PARAM_INT, 'helpbutton' => ['orderform:offergroups', 'local_oriskill']],
             'offeractags' => ['type' => PARAM_TEXT, 'helpbutton' => ['orderform:offeractags', 'local_oriskill']],
             'offersubprice' => ['type' => PARAM_RAW_TRIMMED, 'helpbutton' => ['orderform:offersubprice', 'local_oriskill']],
+            'offerinstalplans' => ['type' => PARAM_TEXT, 'helpbutton' => ['orderform:offerinstalplans', 'local_oriskill']],
+            'offerdefault' => ['type' => PARAM_ALPHANUM, 'default' => 'once',
+                'helpbutton' => ['orderform:offerdefault', 'local_oriskill']],
         ];
         $this->repeat_elements($repeat, max(1, (int) $this->_customdata['offercount']), $options, 'offerrepeats',
             'offeradd', 1, get_string('orderform:addoffer', 'local_oriskill'), true);
+
+        // Fields of the buyer at the payment step.
+        $mform->addElement('header', 'fieldshdr', get_string('orderform:buyerfields', 'local_oriskill'));
+        $mform->addElement('static', 'fieldsintro', '', get_string('orderform:buyerfields_intro', 'local_oriskill'));
+        $states = [];
+        foreach (orderform_service::FIELD_STATES as $state) {
+            $states[$state] = get_string('orderform:fieldstate_' . $state, 'local_oriskill');
+        }
+        foreach (orderform_service::BUYER_FIELDS as $field) {
+            $mform->addElement('select', 'field_' . $field, get_string('orderform:field_' . $field, 'local_oriskill'), $states);
+        }
+
+        // Order button.
+        $mform->addElement('header', 'buttonhdr', get_string('orderform:button', 'local_oriskill'));
+        $mform->addElement('static', 'buttonintro', '', get_string('orderform:button_intro', 'local_oriskill'));
+        foreach (['btncolor', 'btntextcolor'] as $name) {
+            $mform->addElement('text', $name, get_string('orderform:' . $name, 'local_oriskill'), ['size' => 9,
+                'placeholder' => '#7c3aed']);
+            $mform->setType($name, PARAM_RAW_TRIMMED);
+        }
+        $mform->addHelpButton('btncolor', 'orderform:btncolor', 'local_oriskill');
+        $choices = fn(string $prefix, array $keys) => array_combine($keys, array_map(fn($k) => get_string($prefix . $k,
+            'local_oriskill'), $keys));
+        $mform->addElement('select', 'btnsize', get_string('orderform:btnsize', 'local_oriskill'),
+            $choices('orderform:btnsize_', array_keys(orderform_service::BUTTON_SIZES)));
+        $mform->setDefault('btnsize', 'md');
+        $mform->addElement('select', 'btnalign', get_string('orderform:btnalign', 'local_oriskill'),
+            $choices('orderform:btnalign_', orderform_service::BUTTON_ALIGNS));
+        $mform->setDefault('btnalign', 'center');
+        $mform->addElement('select', 'btnicon', get_string('orderform:btnicon', 'local_oriskill'),
+            $choices('orderform:btnicon_', array_keys(orderform_service::BUTTON_ICONS)));
+        $mform->addElement('text', 'btnradius', get_string('orderform:btnradius', 'local_oriskill'), ['size' => 4]);
+        $mform->setType('btnradius', PARAM_RAW_TRIMMED);
 
         // Extra at the order step (order bump) and offer after payment (upsell).
         foreach (['bump', 'upsell'] as $kind) {
@@ -187,7 +237,19 @@ class orderform_form extends \moodleform {
                     $errors["offerinstalfirst[$i]"] = get_string('error:instalfirst', 'local_oriskill');
                 }
             }
+            [, $bad] = orderform_service::parse_plans((string) ($data['offerinstalplans'][$i] ?? ''));
+            if ($bad) {
+                $errors["offerinstalplans[$i]"] = get_string('orderform:planlines', 'local_oriskill', implode(', ', $bad));
+            }
             $valid++;
+        }
+        foreach (['btncolor', 'btntextcolor'] as $name) {
+            if (trim((string) ($data[$name] ?? '')) !== '' && !preg_match('/^#[0-9a-f]{6}$/i', trim($data[$name]))) {
+                $errors[$name] = get_string('orderform:btncolor_help', 'local_oriskill');
+            }
+        }
+        if (trim((string) ($data['redirecturl'] ?? '')) !== '' && !preg_match('~^https?://\S+$~i', trim($data['redirecturl']))) {
+            $errors['redirecturl'] = get_string('invalidurl', 'error');
         }
         foreach (['bump', 'upsell'] as $kind) {
             if (trim((string) ($data[$kind . 'label'] ?? '')) === '') {

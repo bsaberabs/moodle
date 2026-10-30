@@ -28,7 +28,8 @@
         "image": "", "cansell": true, "year": "2026", "links": [{"url": "#", "label": "Conditions générales"}],
         "offers": [{"label": "Essentiel", "details": ["Accès 1 an"], "courses": [{"name": "Excel"}],
                     "displayprice": "199,00 €", "url": "#", "buttonlabel": "Commander", "highlight": true,
-                    "instalments": {"label": "ou 3 × 70,00 €", "url": "#"} }]
+                    "buttonstyle": "font-size: 1rem", "buttonalign": "center",
+                    "others": [{"label": "ou 3 × 70,00 €", "url": "#"}] }]
     }
 }}
 <div class="oriskill-vitrine" style="--v-primary: {{style.primary}}; --v-on-primary: {{style.onprimary}}; --v-accent: {{style.accent}}; --v-on-accent: {{style.onaccent}}; --v-ink: {{style.ink}}; --v-font: {{style.font}};">
@@ -67,9 +68,10 @@
                             {{#details}}<li>{{.}}</li>{{/details}}
                         </ul>
                         {{#cansell}}
-                            <a href="{{url}}" class="oriskill-vitrine-cta">{{buttonlabel}}</a>
-                            {{#instalments}}<a href="{{url}}" class="oriskill-offer-instalments">{{label}}</a>{{/instalments}}
-                            {{#subscription}}<a href="{{url}}" class="oriskill-offer-instalments">{{label}}</a>{{/subscription}}
+                            <div class="oriskill-offer-cta is-{{buttonalign}}">
+                                <a href="{{url}}" class="oriskill-vitrine-cta" style="{{buttonstyle}}">{{{buttonlabel}}}</a>
+                            </div>
+                            {{#others}}<a href="{{url}}" class="oriskill-offer-instalments">{{label}}</a>{{/others}}
                         {{/cansell}}
                     </article>
                 {{/offers}}

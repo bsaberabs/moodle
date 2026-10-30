@@ -46,6 +46,11 @@ if ($paid && optional_param('upsell', 0, PARAM_BOOL) && confirm_sesskey()) {
     redirect($payurl);
 }
 $upsell = $paid ? orderform_service::upsell_for_order($order) : null;
+// The trainer's own page after a payment (after the offer that follows the payment, if any).
+$redirect = trim((string) ($form->redirecturl ?? ''));
+if ($paid && $redirect !== '' && !$upsell) {
+    redirect(new moodle_url($redirect));
+}
 
 echo $OUTPUT->header();
 echo html_writer::start_div('card mx-auto', ['style' => 'max-width: 38rem']);
@@ -76,7 +81,7 @@ if ($paid) {
                 html_writer::tag('button', get_string('orderform:upsellyes', 'local_oriskill',
                     \local_moderncommerce\services\pricing_service::format_price($offer->price, $currency)),
                     ['type' => 'submit', 'class' => 'btn btn-primary']) . ' ' .
-                html_writer::link(new moodle_url('/local/moderncommerce/learner/index.php'),
+                html_writer::link($redirect !== '' ? new moodle_url($redirect) : new moodle_url('/local/moderncommerce/learner/index.php'),
                     get_string('orderform:upsellno', 'local_oriskill'), ['class' => 'btn btn-link']),
                 ['method' => 'post', 'action' => $PAGE->url->out(false)]) .
             html_writer::div(get_string('orderform:upsellcard', 'local_oriskill'), 'small text-muted mt-2'),

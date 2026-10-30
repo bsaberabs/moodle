@@ -585,7 +585,7 @@ class billing_service {
 
         if ($order) {
             $buyer = $DB->get_record('user', ['id' => $order->userid], '*', MUST_EXIST);
-            $billing = json_decode((string) ($order->billingaddress ?? ''), true) ?: [];
+            $billing = orderform_service::billing_of_order((int) $order->id);
             $country = $billing['country'] ?? $buyer->country;
             $country = get_string_manager()->get_list_of_countries()[$country] ?? $country;
             $buyerdata = [

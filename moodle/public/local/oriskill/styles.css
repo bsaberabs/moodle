@@ -954,3 +954,21 @@
 .table.oriskill-courselist td:last-child {
     white-space: nowrap !important;
 }
+
+/* Order form: alignment of the order button. */
+.oriskill-offer-cta.is-left {
+    text-align: left;
+}
+.oriskill-offer-cta.is-center {
+    text-align: center;
+}
+.oriskill-offer-cta.is-right {
+    text-align: right;
+}
+.oriskill-offer-cta {
+    align-self: stretch;
+    width: 100%;
+}
+.oriskill-offer-cta .oriskill-vitrine-cta {
+    display: inline-block;
+}

@@ -98,7 +98,7 @@ class stats_service {
             if ($order && !isset($methods[$order->id])) {
                 $methods[$order->id] = billing_service::payment_method($order);
             }
-            $billing = $order ? (json_decode((string) ($order->billingaddress ?? ''), true) ?: []) : [];
+            $billing = $order ? orderform_service::billing_of_order((int) $order->id) : [];
             $code = (string) ($billing['country'] ?? '');
             if ($code === '' && $document->userid) {
                 $code = (string) $DB->get_field('user', 'country', ['id' => $document->userid]);

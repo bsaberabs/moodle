@@ -53,6 +53,214 @@ class orderform_service {
      * @param \stdClass $form Order form.
      * @return array
      */
+    /** Fields of the buyer the order step can ask for (name and e-mail come from the account). */
+    const BUYER_FIELDS = ['address', 'zipcode', 'city', 'country', 'phone'];
+
+    /** How a field of the buyer is asked. */
+    const FIELD_STATES = ['hidden', 'optional', 'required'];
+
+    /** Sizes of the order button. */
+    const BUTTON_SIZES = ['sm' => '.875rem', 'md' => '1rem', 'lg' => '1.15rem', 'xl' => '1.35rem'];
+
+    /** Icons of the order button. */
+    const BUTTON_ICONS = ['' => '', 'arrow' => 'fa-arrow-right', 'cart' => 'fa-cart-shopping', 'lock' => 'fa-lock',
+        'check' => 'fa-check'];
+
+    /** Alignments of the order button. */
+    const BUTTON_ALIGNS = ['left', 'center', 'right'];
+
+    /**
+     * How each field of the buyer is asked on an order form (hidden when never set).
+     *
+     * @param \stdClass $form Order form.
+     * @return array field => hidden, optional or required
+     */
+    public static function buyer_fields(\stdClass $form): array {
+        $saved = json_decode((string) ($form->buyerfields ?? ''), true) ?: [];
+        $fields = [];
+        foreach (self::BUYER_FIELDS as $field) {
+            $fields[$field] = in_array($saved[$field] ?? '', self::FIELD_STATES, true) ? $saved[$field] : 'hidden';
+        }
+        return $fields;
+    }
+
+    /**
+     * Look of the order button of a form.
+     *
+     * @param \stdClass $form Order form.
+     * @return \stdClass {color, textcolor ('' for the brand's), size, align, icon, radius (null for the default)}
+     */
+    public static function button(\stdClass $form): \stdClass {
+        $saved = json_decode((string) ($form->buttonstyle ?? ''), true) ?: [];
+        $color = fn($value) => preg_match('/^#[0-9a-f]{6}$/i', (string) $value) ? strtolower($value) : '';
+        return (object) [
+            'color' => $color($saved['color'] ?? ''),
+            'textcolor' => $color($saved['textcolor'] ?? ''),
+            'size' => isset(self::BUTTON_SIZES[$saved['size'] ?? '']) ? $saved['size'] : 'md',
+            'align' => in_array($saved['align'] ?? '', self::BUTTON_ALIGNS, true) ? $saved['align'] : 'center',
+            'icon' => isset(self::BUTTON_ICONS[$saved['icon'] ?? '']) ? $saved['icon'] : '',
+            'radius' => isset($saved['radius']) && $saved['radius'] !== '' ? max(0, min(40, (int) $saved['radius'])) : null,
+        ];
+    }
+
+    /**
+     * Inline style of the order button.
+     *
+     * @param \stdClass $button button().
+     * @return string CSS declarations.
+     */
+    public static function button_css(\stdClass $button): string {
+        $css = ['font-size: ' . self::BUTTON_SIZES[$button->size]];
+        if ($button->color) {
+            $css[] = 'background: ' . $button->color;
+            $css[] = 'border-color: ' . $button->color;
+        }
+        if ($button->textcolor) {
+            $css[] = 'color: ' . $button->textcolor;
+        }
+        if ($button->radius !== null) {
+            $css[] = 'border-radius: ' . $button->radius . 'px';
+        }
+        return implode('; ', $css);
+    }
+
+    /**
+     * Content of the order button: its text and its icon.
+     *
+     * @param \stdClass $button button().
+     * @param string $label Text, escaped.
+     * @return string HTML.
+     */
+    public static function button_content(\stdClass $button, string $label): string {
+        return $label . ($button->icon ? ' <i class="fa ' . self::BUTTON_ICONS[$button->icon] . ' ms-1" aria-hidden="true"></i>' : '');
+    }
+
+    /**
+     * Read the other payments in instalments of an offer, one per line: "number ; total" or "number ; total ; deposit".
+     *
+     * @param string $text Lines typed by the trainer.
+     * @return array [plans (list of {count, total, first}), numbers of the lines that cannot be read]
+     */
+    public static function parse_plans(string $text): array {
+        $plans = [];
+        $bad = [];
+        $number = fn(string $value) => unformat_float(preg_replace('/[\s\x{00a0}\x{202f}€]/u', '', $value), true);
+        foreach (preg_split('/\R/', $text) as $n => $line) {
+            if (trim($line) === '') {
+                continue;
+            }
+            $parts = array_map('trim', explode(';', $line));
+            $count = (int) preg_replace('/\D/', '', $parts[0]);
+            $total = $number($parts[1] ?? '');
+            $first = isset($parts[2]) && $parts[2] !== '' ? $number($parts[2]) : 0;
+            if (!in_array($count, instalment_service::COUNTS, true) || !$total || $total <= 0 || $first === false
+                    || $first < 0 || ($first && $first >= $total) || count($parts) > 3) {
+                $bad[] = $n + 1;
+                continue;
+            }
+            $plans[] = ['count' => $count, 'total' => round($total, 2), 'first' => round((float) $first, 2)];
+        }
+        return [$plans, $bad];
+    }
+
+    /**
+     * The other payments in instalments of an offer, as lines to edit.
+     *
+     * @param \stdClass $offer Offer.
+     * @return string
+     */
+    public static function plans_text(\stdClass $offer): string {
+        $lines = [];
+        foreach (json_decode((string) ($offer->instalplans ?? ''), true) ?: [] as $plan) {
+            $lines[] = $plan['count'] . ' ; ' . format_float($plan['total'], 2, true) .
+                (!empty($plan['first']) ? ' ; ' . format_float($plan['first'], 2, true) : '');
+        }
+        return implode("\n", $lines);
+    }
+
+    /**
+     * Payments in instalments of an offer: its main one (plan 0), then the others.
+     *
+     * @param \stdClass $offer Offer.
+     * @return array of {count, total, first}
+     */
+    public static function plans(\stdClass $offer): array {
+        $plans = [];
+        if ($offer->instalcount && (float) $offer->instaltotal > 0) {
+            $plans[] = (object) ['count' => (int) $offer->instalcount, 'total' => (float) $offer->instaltotal,
+                'first' => (float) ($offer->instalfirst ?? 0)];
+        }
+        foreach (json_decode((string) ($offer->instalplans ?? ''), true) ?: [] as $plan) {
+            $plans[] = (object) ['count' => (int) $plan['count'], 'total' => (float) $plan['total'],
+                'first' => (float) ($plan['first'] ?? 0)];
+        }
+        return $plans;
+    }
+
+    /**
+     * The offer as paid with one of its payments in instalments (the rest of the order goes on as for the main one).
+     *
+     * @param \stdClass $offer Offer.
+     * @param int $index Plan, from plans().
+     * @return \stdClass|null The offer, or null when it has no such plan.
+     */
+    public static function with_plan(\stdClass $offer, int $index): ?\stdClass {
+        $plan = self::plans($offer)[$index] ?? null;
+        if (!$plan) {
+            return null;
+        }
+        $copy = clone $offer;
+        $copy->instalcount = $plan->count;
+        $copy->instaltotal = $plan->total;
+        $copy->instalfirst = $plan->first;
+        return $copy;
+    }
+
+    /**
+     * The ways an offer can be paid, the one chosen by default first.
+     *
+     * @param \stdClass $offer Offer.
+     * @param string $currency Currency.
+     * @param bool $instalments Payments in instalments and subscription can be sold.
+     * @return array of {key (once, plan0..., subscription), mode, plan, price (shown), other ("or ..." text)}
+     */
+    public static function payment_options(\stdClass $offer, string $currency, bool $instalments): array {
+        $price = pricing_service::format_price((float) $offer->price, $currency);
+        $options = ['once' => (object) ['key' => 'once', 'mode' => 'once', 'plan' => 0, 'price' => $price,
+            'other' => get_string('orderform:oronce', 'local_oriskill', $price)]];
+        if ($instalments) {
+            foreach (self::plans($offer) as $i => $plan) {
+                $split = self::split($plan->count, $plan->total, $plan->first, $currency);
+                $options['plan' . $i] = (object) ['key' => 'plan' . $i, 'mode' => 'instalments', 'plan' => $i,
+                    'price' => $split->label, 'other' => get_string('instalments:or', 'local_oriskill', $split->label)];
+            }
+            if ((float) ($offer->subprice ?? 0) > 0) {
+                $amount = pricing_service::format_price((float) $offer->subprice, $currency);
+                $options['subscription'] = (object) ['key' => 'subscription', 'mode' => 'subscription', 'plan' => 0,
+                    'price' => get_string('subscription:summary', 'local_oriskill', $amount),
+                    'other' => get_string('subscription:orshort', 'local_oriskill', $amount)];
+            }
+        }
+        $default = $options[$offer->defaultmode ?? 'once'] ?? $options['once'];
+        return array_values([$default->key => $default] + $options);
+    }
+
+    /**
+     * Billing address of an order (typed by the buyer at the payment step).
+     *
+     * @param int $orderid Order.
+     * @return array address, zipcode, city, country (code), phone; empty when none was typed.
+     */
+    public static function billing_of_order(int $orderid): array {
+        global $DB;
+
+        $address = $DB->get_record('local_moderncommerce_order_addresses', ['orderid' => $orderid, 'addresstype' => 'billing'],
+            '*', IGNORE_MULTIPLE);
+        return $address ? array_filter(['address' => (string) $address->address1, 'zipcode' => (string) $address->postcode,
+            'city' => (string) $address->city, 'country' => (string) $address->country, 'phone' => (string) $address->phone],
+            'strlen') : [];
+    }
+
     public static function offers(\stdClass $form): array {
         global $DB;
         return $DB->get_records('local_oriskill_formoffers', ['formid' => $form->id], 'sortorder ASC, id ASC');
@@ -113,6 +321,11 @@ class orderform_service {
             'upsellprice' => round(max(0, (float) ($data->upsellprice ?? 0)), 2),
             'status' => $data->status === 'published' ? 'published' : 'draft',
             'domainid' => isset(domain_service::domains($creator)[(int) ($data->domainid ?? 0)]) ? (int) $data->domainid : 0,
+            'buyerfields' => json_encode(array_intersect_key(array_map(fn($state) => in_array($state, self::FIELD_STATES, true)
+                ? $state : 'hidden', (array) ($data->buyerfields ?? [])), array_flip(self::BUYER_FIELDS))),
+            'buttonstyle' => json_encode((array) ($data->buttonstyle ?? [])),
+            'redirecturl' => preg_match('~^https?://~i', trim((string) ($data->redirecturl ?? '')))
+                ? clean_param(trim($data->redirecturl), PARAM_URL) : '',
             'timemodified' => $now,
         ];
         if (!empty($data->id)) {
@@ -137,6 +350,7 @@ class orderform_service {
             // A first instalment of its own only makes sense below the total, the rest being spread over the others.
             $instalfirst = round(max(0, (float) ($offer->instalfirst ?? 0)), 2);
             $instalfirst = $count && $instalfirst < $instaltotal ? $instalfirst : 0;
+            [$plans] = self::parse_plans((string) ($offer->instalplans ?? ''));
             $DB->insert_record('local_oriskill_formoffers', (object) [
                 'formid' => $record->id,
                 'label' => trim($offer->label),
@@ -148,6 +362,9 @@ class orderform_service {
                 'instalfirst' => $instalfirst,
                 'instalcut' => in_array((int) ($offer->instalcut ?? 1), instalment_service::CUTS, true) ? (int) $offer->instalcut : 1,
                 'groupids' => self::offer_groupids((array) ($offer->groupids ?? []), $courseids),
+                'instalplans' => $plans ? json_encode($plans) : null,
+                'defaultmode' => preg_match('/^(once|subscription|plan\d)$/', (string) ($offer->defaultmode ?? ''))
+                    ? $offer->defaultmode : 'once',
                 'highlight' => empty($offer->highlight) ? 0 : 1,
                 'actags' => activecampaign_service::clean_tags((string) ($offer->actags ?? '')),
                 'subprice' => round(max(0, (float) ($offer->subprice ?? 0)), 2),
@@ -499,10 +716,12 @@ class orderform_service {
      * @param string $mode once or instalments.
      * @param \stdClass|null $coupon Promo code that applies (see coupon_service::find()).
      * @param bool $withextra The buyer ticked the form's extra (order bump).
+     * @param array $billing Details typed by the buyer (BUYER_FIELDS): billing address of the order, and the empty
+     *                       fields of their profile.
      * @return array [order, moodle_url where the buyer pays]
      */
     public static function create_order(int $userid, \stdClass $form, \stdClass $offer, string $mode,
-            ?\stdClass $coupon = null, bool $withextra = false): array {
+            ?\stdClass $coupon = null, bool $withextra = false, array $billing = []): array {
         global $DB;
 
         $creator = $DB->get_record('local_oriskill_creators', ['id' => $form->creatorid], '*', MUST_EXIST);
@@ -564,6 +783,29 @@ class orderform_service {
             $DB->update_record('local_moderncommerce_orders', (object) ['id' => $order->id,
                 'subtotal' => $quote->base + $quote->extra, 'discount' => $quote->discount, 'total' => $quote->total,
                 'couponcode' => $coupon->code ?? null]);
+            $order = order_api::get_order($order->id);
+        }
+        if ($billing = array_filter(array_intersect_key($billing, array_flip(self::BUYER_FIELDS)), 'strlen')) {
+            $user = \core_user::get_user($userid);
+            // Modern Commerce's billing address of the order.
+            $now = time();
+            $DB->insert_record('local_moderncommerce_order_addresses', (object) ['orderid' => $order->id,
+                'addresstype' => 'billing', 'firstname' => $user->firstname, 'lastname' => $user->lastname,
+                'email' => $user->email, 'phone' => \core_text::substr($billing['phone'] ?? '', 0, 50),
+                'address1' => \core_text::substr($billing['address'] ?? '', 0, 255),
+                'city' => \core_text::substr($billing['city'] ?? '', 0, 120),
+                'country' => \core_text::substr($billing['country'] ?? '', 0, 2),
+                'postcode' => \core_text::substr($billing['zipcode'] ?? '', 0, 20), 'timecreated' => $now, 'timemodified' => $now]);
+            $profile = ['address' => 'address', 'city' => 'city', 'country' => 'country', 'phone' => 'phone1'];
+            $update = [];
+            foreach ($profile as $field => $userfield) {
+                if (isset($billing[$field]) && trim((string) $user->$userfield) === '') {
+                    $update[$userfield] = \core_text::substr($billing[$field], 0, $userfield === 'address' ? 255 : 120);
+                }
+            }
+            if ($update) {
+                $DB->update_record('user', (object) (['id' => $userid] + $update));
+            }
             $order = order_api::get_order($order->id);
         }
         // A prospect until paid: reminded by the form's abandon sequence.

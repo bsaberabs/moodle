@@ -475,5 +475,28 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103046, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103047) {
+        // Order forms: fields of the buyer, order button, page after payment; several payments in instalments per offer.
+        $fields = [
+            'local_oriskill_orderforms' => [
+                new xmldb_field('buyerfields', XMLDB_TYPE_TEXT, null, null, null, null, null, 'domainid'),
+                new xmldb_field('buttonstyle', XMLDB_TYPE_TEXT, null, null, null, null, null, 'buyerfields'),
+                new xmldb_field('redirecturl', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'buttonstyle'),
+            ],
+            'local_oriskill_formoffers' => [
+                new xmldb_field('instalplans', XMLDB_TYPE_TEXT, null, null, null, null, null, 'groupids'),
+                new xmldb_field('defaultmode', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, 'once', 'instalplans'),
+            ],
+        ];
+        foreach ($fields as $tablename => $list) {
+            $table = new xmldb_table($tablename);
+            foreach ($list as $field) {
+                if (!$dbman->field_exists($table, $field)) {
+                    $dbman->add_field($table, $field);
+                }
+            }
+        }
+        upgrade_plugin_savepoint(true, 2026103047, 'local', 'oriskill');
+    }
     return true;
 }
