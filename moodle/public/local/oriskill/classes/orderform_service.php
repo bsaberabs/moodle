@@ -439,6 +439,8 @@ class orderform_service {
                 'couponcode' => $coupon->code ?? null]);
             $order = order_api::get_order($order->id);
         }
+        // A prospect until paid: reminded by the form's abandon sequence.
+        abandon_service::checkout($form, $order);
         if ($quote->instalments) {
             $reference = gateway::start_instalments($order);
             return [$order, new moodle_url('/local/secureandpay/pay.php', ['orderid' => $order->id, 'ref' => $reference])];

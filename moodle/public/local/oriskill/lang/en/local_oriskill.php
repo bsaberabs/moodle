@@ -24,6 +24,51 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+$string['abandon:amount'] = 'Amount';
+$string['abandon:body'] = 'Text';
+$string['abandon:default1_body'] = 'Hello {firstname},
+
+You started ordering "{form}" but did not finish. Your place is still waiting for you:
+{link}
+
+Any question? Just reply to this e-mail.
+
+{trainer}';
+$string['abandon:default1_subject'] = '{firstname}, your order is waiting for you';
+$string['abandon:default2_body'] = 'Hello {firstname},
+
+A last reminder: your order of "{form}" is not finished yet. You can complete it here:
+{link}
+
+{trainer}';
+$string['abandon:default2_subject'] = 'Last reminder: {form}';
+$string['abandon:delay'] = 'Sent after (hours)';
+$string['abandon:emptystep'] = 'An e-mail left without a subject or text is not sent. Each one is sent the given number of hours after the order; one more than two days late (sequence turned on afterwards) is skipped. Reminders stop as soon as the prospect pays.';
+$string['abandon:enabled'] = 'Send these reminders';
+$string['abandon:intro'] = 'People who placed an order on this form without paying. They become customers as soon as one of their orders on the form is paid.';
+$string['abandon:none'] = 'No prospects here.';
+$string['abandon:offer'] = 'Offer';
+$string['abandon:opencount'] = 'prospects without payment';
+$string['abandon:rate'] = 'recovered';
+$string['abandon:recoveredcount'] = 'became customers';
+$string['abandon:reminders'] = 'Reminders';
+$string['abandon:saved'] = 'Reminder sequence saved.';
+$string['abandon:sent'] = '{$a->count} sent, last on {$a->date}';
+$string['abandon:sequence'] = 'Abandon sequence';
+$string['abandon:sequenceintro'] = 'E-mails sent to prospects who did not pay, in your name. Words replaced: {$a}. A link to stop the reminders is added at the bottom.';
+$string['abandon:state'] = 'State';
+$string['abandon:state_all'] = 'All';
+$string['abandon:state_open'] = 'Not paid';
+$string['abandon:state_recovered'] = 'Customer';
+$string['abandon:state_stopped'] = 'Reminders stopped';
+$string['abandon:step'] = 'E-mail {$a}';
+$string['abandon:stopask'] = 'Stop receiving reminders about this order?';
+$string['abandon:stopbutton'] = 'Stop the reminders';
+$string['abandon:stopline'] = 'To stop these reminders: {$a}';
+$string['abandon:stopped'] = 'Done: you will not receive any more reminders about this order.';
+$string['abandon:stoptitle'] = 'Order reminders';
+$string['abandon:subject'] = 'Subject';
+$string['abandon:title'] = 'Abandons';
 $string['aboutcreator'] = 'About';
 $string['ac:apikey'] = 'API key';
 $string['ac:apiurl'] = 'API address';
@@ -310,6 +355,7 @@ $string['invoices:documents'] = 'Invoices and credit notes';
 $string['invoices:intro'] = 'Your sales are paid to your own account: invoices are issued in your name, numbered in your own continuous sequence (F-000001…). A credit note (AV-000001…) cancels all or part of an invoice, for example after a refund; it is issued automatically when the store refunds an order.';
 $string['invoices:none'] = 'No invoice yet: one is issued for each paid sale.';
 $string['learner:payment'] = 'Payment';
+$string['log:abandon_saved'] = 'Abandon sequence of "{$a->title}" saved ({$a->count} e-mail(s) on)';
 $string['log:access_addgroup'] = 'Group "{$a->name}" created in "{$a->course}"';
 $string['log:access_deletegroup'] = 'Group deleted in "{$a->course}"';
 $string['log:access_rules'] = 'Module release rules changed in "{$a->course}"';
@@ -564,6 +610,7 @@ $string['substatus:late'] = 'Charge refused';
 $string['substatus:stopped'] = 'Charges stopped';
 $string['substatus:suspended'] = 'Suspended for non-payment';
 $string['suspend'] = 'Suspend';
+$string['task:abandonreminders'] = 'Send the abandon sequence e-mails of the order forms';
 $string['task:activecampaignsync'] = 'Send a buyer to ActiveCampaign';
 $string['task:creditrefunds'] = 'Issue credit notes for refunded orders';
 $string['task:suspendunpaid'] = 'Suspend access for unpaid instalments';

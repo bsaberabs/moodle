@@ -70,6 +70,8 @@ if (!$forms) {
             \local_moderncommerce\services\pricing_service::format_price($figures->revenue, $currency),
             html_writer::link(new moodle_url('/local/oriskill/orderformstats.php', ['id' => $form->id]),
                 get_string('stats:title', 'local_oriskill'), ['class' => 'btn btn-sm btn-outline-secondary']) . ' ' .
+            html_writer::link(new moodle_url('/local/oriskill/abandons.php', ['id' => $form->id]),
+                get_string('abandon:title', 'local_oriskill'), ['class' => 'btn btn-sm btn-outline-secondary']) . ' ' .
             html_writer::link(new moodle_url('/local/oriskill/orderform.php', ['id' => $form->id]),
                 get_string('edit'), ['class' => 'btn btn-sm btn-outline-secondary']),
         ];

@@ -250,5 +250,46 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103025, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103026) {
+        // Abandoned order forms: the prospects and the reminder sequence of each form.
+        $table = new xmldb_table('local_oriskill_orderforms');
+        foreach ([new xmldb_field('abandonon', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'upsellprice'),
+                new xmldb_field('abandonsteps', XMLDB_TYPE_TEXT, null, null, null, null, null, 'abandonon')] as $field) {
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+        if (!$dbman->table_exists('local_oriskill_abandons')) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', 'local_oriskill_abandons');
+        }
+        // Orders already placed on the forms, oldest first: unpaid ones make prospects, paid ones recover them.
+        $orders = $DB->get_recordset_select('local_moderncommerce_orders', $DB->sql_like('notes', ':pattern'),
+            ['pattern' => '%"orderform":%'], 'timecreated ASC, id ASC');
+        foreach ($orders as $order) {
+            $notes = json_decode((string) $order->notes, true) ?: [];
+            $form = !empty($notes['orderform']) && empty($notes['upsellof'])
+                ? $DB->get_record('local_oriskill_orderforms', ['id' => (int) $notes['orderform']]) : null;
+            if (!$form) {
+                continue;
+            }
+            \local_oriskill\abandon_service::checkout($form, $order);
+            $DB->set_field('local_oriskill_abandons', 'timecreated', $order->timecreated,
+                ['formid' => $form->id, 'userid' => $order->userid, 'state' => 'open']);
+            if (in_array($order->status, ['paid', 'completed'], true)) {
+                \local_oriskill\abandon_service::order_paid((int) $order->id);
+            }
+        }
+        $orders->close();
+        upgrade_plugin_savepoint(true, 2026103026, 'local', 'oriskill');
+    }
+    if ($oldversion < 2026103027) {
+        // Abandon reminders actually sent, apart from those skipped.
+        $field = new xmldb_field('sent', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '0', 'step');
+        $table = new xmldb_table('local_oriskill_abandons');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_plugin_savepoint(true, 2026103027, 'local', 'oriskill');
+    }
     return true;
 }

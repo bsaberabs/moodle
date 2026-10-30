@@ -50,6 +50,7 @@ class observer {
             return;
         }
         affiliate_service::record_commissions((int) $event->objectid);
+        abandon_service::order_paid((int) $event->objectid);
         instalment_service::group_buyers((int) $event->objectid);
         billing_service::issue_invoice((int) $event->objectid);
         activecampaign_service::order_paid((int) $event->objectid);

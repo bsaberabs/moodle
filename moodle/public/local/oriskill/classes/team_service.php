@@ -53,6 +53,7 @@ class team_service {
         '/local/oriskill/orderforms.php' => ['admin'],
         '/local/oriskill/orderform.php' => ['admin'],
         '/local/oriskill/orderformstats.php' => ['admin'],
+        '/local/oriskill/abandons.php' => ['admin'],
         '/local/oriskill/coupons.php' => ['admin'],
         '/local/oriskill/capturepages.php' => ['admin'],
         '/local/oriskill/capturepage.php' => ['admin'],

@@ -24,6 +24,51 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+$string['abandon:amount'] = 'Montant';
+$string['abandon:body'] = 'Texte';
+$string['abandon:default1_body'] = 'Bonjour {firstname},
+
+Vous avez commencé votre commande « {form} » sans la terminer. Votre place vous attend toujours :
+{link}
+
+Une question ? Répondez simplement à cet e-mail.
+
+{trainer}';
+$string['abandon:default1_subject'] = '{firstname}, votre commande vous attend';
+$string['abandon:default2_body'] = 'Bonjour {firstname},
+
+Dernier rappel : votre commande « {form} » n\'est pas encore terminée. Vous pouvez la finaliser ici :
+{link}
+
+{trainer}';
+$string['abandon:default2_subject'] = 'Dernier rappel : {form}';
+$string['abandon:delay'] = 'Envoyé après (heures)';
+$string['abandon:emptystep'] = 'Un e-mail sans objet ou sans texte n\'est pas envoyé. Chacun part le nombre d\'heures indiqué après la commande ; un e-mail en retard de plus de deux jours (séquence activée après coup) est sauté. Les relances s\'arrêtent dès que le prospect paie.';
+$string['abandon:enabled'] = 'Envoyer ces relances';
+$string['abandon:intro'] = 'Les personnes qui ont passé commande sur ce bon sans payer. Elles deviennent clientes dès qu\'une de leurs commandes sur ce bon est payée.';
+$string['abandon:none'] = 'Aucun prospect ici.';
+$string['abandon:offer'] = 'Offre';
+$string['abandon:opencount'] = 'prospects sans paiement';
+$string['abandon:rate'] = 'récupérés';
+$string['abandon:recoveredcount'] = 'devenus clients';
+$string['abandon:reminders'] = 'Relances';
+$string['abandon:saved'] = 'Séquence de relance enregistrée.';
+$string['abandon:sent'] = '{$a->count} envoyée(s), la dernière le {$a->date}';
+$string['abandon:sequence'] = 'Séquence abandon de panier';
+$string['abandon:sequenceintro'] = 'E-mails envoyés en votre nom aux prospects qui n\'ont pas payé. Mots remplacés : {$a}. Un lien pour arrêter les relances est ajouté en bas.';
+$string['abandon:state'] = 'État';
+$string['abandon:state_all'] = 'Tous';
+$string['abandon:state_open'] = 'Non payé';
+$string['abandon:state_recovered'] = 'Client';
+$string['abandon:state_stopped'] = 'Relances arrêtées';
+$string['abandon:step'] = 'E-mail {$a}';
+$string['abandon:stopask'] = 'Ne plus recevoir de relances pour cette commande ?';
+$string['abandon:stopbutton'] = 'Arrêter les relances';
+$string['abandon:stopline'] = 'Pour ne plus recevoir ces relances : {$a}';
+$string['abandon:stopped'] = 'C\'est fait : vous ne recevrez plus de relances pour cette commande.';
+$string['abandon:stoptitle'] = 'Relances de commande';
+$string['abandon:subject'] = 'Objet';
+$string['abandon:title'] = 'Abandons';
 $string['aboutcreator'] = 'Présentation';
 $string['ac:apikey'] = 'Clé API';
 $string['ac:apiurl'] = 'Adresse de l\'API';
@@ -310,6 +355,7 @@ $string['invoices:documents'] = 'Factures et avoirs';
 $string['invoices:intro'] = 'Vous encaissez vos ventes sur votre propre compte : les factures sont émises à votre nom, avec une numérotation continue qui vous est propre (F-000001…). Un avoir (AV-000001…) annule tout ou partie d\'une facture, par exemple après un remboursement ; il est émis automatiquement quand une commande est remboursée par la boutique.';
 $string['invoices:none'] = 'Aucune facture pour le moment : elles sont émises à chaque vente payée.';
 $string['learner:payment'] = 'Paiement';
+$string['log:abandon_saved'] = 'Séquence abandon de panier de « {$a->title} » enregistrée ({$a->count} e-mail(s) actif(s))';
 $string['log:access_addgroup'] = 'Groupe « {$a->name} » créé dans « {$a->course} »';
 $string['log:access_deletegroup'] = 'Groupe supprimé dans « {$a->course} »';
 $string['log:access_rules'] = 'Règles de déblocage des modules modifiées dans « {$a->course} »';
@@ -564,6 +610,7 @@ $string['substatus:late'] = 'Prélèvement refusé';
 $string['substatus:stopped'] = 'Prélèvements arrêtés';
 $string['substatus:suspended'] = 'Suspendu pour impayé';
 $string['suspend'] = 'Suspendre';
+$string['task:abandonreminders'] = 'Envoyer les relances d\'abandon de panier des bons de commande';
 $string['task:activecampaignsync'] = 'Envoyer un acheteur dans ActiveCampaign';
 $string['task:creditrefunds'] = 'Émettre les avoirs des commandes remboursées';
 $string['task:suspendunpaid'] = 'Suspendre les accès des échéances impayées';
