@@ -30,8 +30,39 @@ use local_oriskill\creator_service;
 use local_oriskill\form\billing_form;
 use local_secureandpay\refund_service;
 
-$url = new moodle_url('/local/oriskill/invoices.php');
+$search = trim(optional_param('q', '', PARAM_TEXT));
+$url = new moodle_url('/local/oriskill/invoices.php', $search !== '' ? ['q' => $search] : []);
 $creator = creator_service::require_current_creator($url, 'menu:invoices');
+
+// For the accountant: a period's journal and PDFs (zip), or the journal of every document (CSV).
+if (($export = optional_param('export', '', PARAM_ALPHA)) !== '') {
+    if ($export === 'period') {
+        $from = make_timestamp(required_param('fromyear', PARAM_INT), required_param('frommonth', PARAM_INT), 1);
+        $to = make_timestamp(required_param('toyear', PARAM_INT), required_param('tomonth', PARAM_INT) + 1, 1);
+        if ($to <= $from) {
+            redirect($url, get_string('journal:badperiod', 'local_oriskill'), null, \core\output\notification::NOTIFY_ERROR);
+        }
+        require_once($CFG->libdir . '/filelib.php');
+        \local_oriskill\log_service::add($creator, 'accounting_exported', ['from' => userdate($from, '%m/%Y'),
+            'to' => userdate($to - 1, '%m/%Y')]);
+        send_file(billing_service::export_zip($creator, $from, $to), clean_filename(get_string('journal:filename',
+            'local_oriskill') . '-' . userdate($from, '%Y-%m') . '-' . userdate($to - 1, '%Y-%m') . '.zip'), 0, 0, false, true,
+            'application/zip');
+    }
+    require_once($CFG->libdir . '/csvlib.class.php');
+    csv_export_writer::download_array(clean_filename(get_string('menu:invoices', 'local_oriskill') . '-' . date('Y-m-d')),
+        billing_service::journal($creator, 0, time() + 1), 'semicolon');
+    exit;
+}
+
+// E-mail a document to its buyer again, PDF attached.
+if (optional_param('action', '', PARAM_ALPHA) === 'mail' && confirm_sesskey()) {
+    $document = $DB->get_record('local_oriskill_invoices', ['id' => required_param('invoiceid', PARAM_INT),
+        'creatorid' => $creator->id], '*', MUST_EXIST);
+    $sent = billing_service::mail_invoice($document, true);
+    redirect($url, get_string($sent ? 'invoicemail:sent' : 'invoicemail:notsent', 'local_oriskill', $document->number), null,
+        $sent ? \core\output\notification::NOTIFY_SUCCESS : \core\output\notification::NOTIFY_ERROR);
+}
 
 // Refund through SecureAndPay of an order of one of the trainer's invoices.
 if (optional_param('action', '', PARAM_ALPHA) === 'refund' && confirm_sesskey()) {
@@ -75,6 +106,9 @@ $form->set_data([
     'vatnumber' => $creator->vatnumber,
     'vatrate' => (string) (float) $creator->vatrate,
     'invoicenotes' => $creator->invoicenotes,
+    'invoicemail' => (int) $creator->invoicemail,
+    'invoicemailsubject' => $creator->invoicemailsubject ?: get_string('invoicemail:defaultsubject', 'local_oriskill'),
+    'invoicemailbody' => $creator->invoicemailbody ?: get_string('invoicemail:defaultbody', 'local_oriskill'),
 ]);
 if ($data = $form->get_data()) {
     billing_service::save_details($creator, $data);
@@ -86,10 +120,61 @@ echo $OUTPUT->header();
 echo creator_service::space_start($creator, '/local/oriskill/invoices.php', get_string('menu:invoices', 'local_oriskill'));
 echo html_writer::tag('p', get_string('invoices:intro', 'local_oriskill'));
 
-// Documents.
+// Documents, found by number or buyer.
 $documents = billing_service::documents($creator);
+if ($search !== '') {
+    $needle = core_text::strtolower($search);
+    $documents = array_filter($documents, function($document) use ($needle) {
+        $buyer = json_decode($document->data, true)['buyer'];
+        return str_contains(core_text::strtolower($document->number . ' ' . $buyer['name'] . ' ' . $buyer['email']), $needle);
+    });
+}
 echo html_writer::start_div('oriskill-card mb-4');
 echo html_writer::tag('h3', get_string('invoices:documents', 'local_oriskill'), ['class' => 'h5']);
+
+// Search, export, accountant's documents.
+$months = [];
+for ($m = 1; $m <= 12; $m++) {
+    $months[$m] = userdate(make_timestamp(2000, $m, 1), '%B');
+}
+$years = [];
+for ($y = (int) date('Y'); $y >= 2025; $y--) {
+    $years[$y] = $y;
+}
+$lastmonth = strtotime('first day of last month');
+$plain = new moodle_url('/local/oriskill/invoices.php');
+echo html_writer::div(
+    html_writer::tag('form',
+        html_writer::empty_tag('input', ['type' => 'search', 'name' => 'q', 'value' => $search,
+            'class' => 'form-control form-control-sm w-auto', 'placeholder' => get_string('invoices:search', 'local_oriskill')]) .
+        html_writer::tag('button', get_string('search'), ['type' => 'submit', 'class' => 'btn btn-sm btn-outline-secondary']),
+        ['method' => 'get', 'action' => $plain->out(false), 'class' => 'd-flex gap-2']) .
+    html_writer::link(new moodle_url($plain, ['export' => 'all']), '<i class="fa fa-download me-1" aria-hidden="true"></i>' .
+        get_string('exportcsv', 'local_oriskill'), ['class' => 'btn btn-sm btn-outline-secondary ms-auto']) .
+    html_writer::tag('details',
+        html_writer::tag('summary', '<i class="fa fa-file-zipper me-1" aria-hidden="true"></i>' .
+            get_string('journal:title', 'local_oriskill'), ['class' => 'btn btn-sm btn-primary']) .
+        html_writer::tag('form',
+            html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'export', 'value' => 'period']) .
+            html_writer::div(get_string('journal:help', 'local_oriskill'), 'small text-muted mb-2') .
+            html_writer::div(
+                html_writer::span(get_string('journal:from', 'local_oriskill'), 'small') .
+                html_writer::select($months, 'frommonth', (int) date('n', $lastmonth), false,
+                    ['class' => 'form-select form-select-sm w-auto', 'aria-label' => get_string('journal:from', 'local_oriskill')]) .
+                html_writer::select($years, 'fromyear', (int) date('Y', $lastmonth), false,
+                    ['class' => 'form-select form-select-sm w-auto', 'aria-label' => get_string('year')]), 'd-flex gap-1 align-items-center mb-1') .
+            html_writer::div(
+                html_writer::span(get_string('journal:to', 'local_oriskill'), 'small') .
+                html_writer::select($months, 'tomonth', (int) date('n', $lastmonth), false,
+                    ['class' => 'form-select form-select-sm w-auto', 'aria-label' => get_string('journal:to', 'local_oriskill')]) .
+                html_writer::select($years, 'toyear', (int) date('Y', $lastmonth), false,
+                    ['class' => 'form-select form-select-sm w-auto', 'aria-label' => get_string('year')]), 'd-flex gap-1 align-items-center mb-2') .
+            html_writer::tag('button', get_string('journal:download', 'local_oriskill'),
+                ['type' => 'submit', 'class' => 'btn btn-sm btn-primary']),
+            ['method' => 'get', 'action' => $plain->out(false), 'class' => 'oriskill-card mt-2 position-absolute end-0',
+                'style' => 'z-index: 5; min-width: 20rem']),
+        ['class' => 'position-relative']),
+    'd-flex flex-wrap gap-2 align-items-center mb-3');
 if (!$documents) {
     echo html_writer::tag('p', get_string('invoices:none', 'local_oriskill'), ['class' => 'text-muted mb-0']);
 } else {
@@ -101,7 +186,15 @@ if (!$documents) {
         $data = json_decode($document->data, true);
         $iscredit = $document->type === 'credit';
         $actions = html_writer::link(billing_service::url($document),
-            '<i class="fa fa-download me-1" aria-hidden="true"></i>PDF', ['class' => 'btn btn-sm btn-outline-secondary']);
+            '<i class="fa fa-download me-1" aria-hidden="true"></i>PDF', ['class' => 'btn btn-sm btn-outline-secondary']) . ' ' .
+            html_writer::tag('form',
+                html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]) .
+                html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'mail']) .
+                html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'invoiceid', 'value' => $document->id]) .
+                html_writer::tag('button', '<i class="fa fa-envelope" aria-hidden="true"></i>', ['type' => 'submit',
+                    'class' => 'btn btn-sm btn-outline-secondary', 'title' => get_string('invoicemail:send', 'local_oriskill'),
+                    'aria-label' => get_string('invoicemail:send', 'local_oriskill')]),
+                ['method' => 'post', 'action' => $url->out(false), 'class' => 'd-inline']);
         if (!$iscredit && ($left = billing_service::creditable($document)) > 0) {
             $actions .= ' ' . html_writer::tag('details',
                 html_writer::tag('summary', get_string('credit:issue', 'local_oriskill'), ['class' => 'btn btn-sm btn-link']) .

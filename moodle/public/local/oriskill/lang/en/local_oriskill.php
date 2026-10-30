@@ -336,6 +336,9 @@ $string['invoice:discount'] = 'Discount';
 $string['invoice:instalments'] = 'Payable in {$a->count} monthly instalments of {$a->amount}.';
 $string['invoice:instalmentsfirst'] = 'Payable in {$a->count} monthly instalments: {$a->first}, then {$a->others} of {$a->amount}.';
 $string['invoice:linetotal'] = 'Amount incl. VAT';
+$string['invoice:method_card'] = 'Card';
+$string['invoice:method_instalments'] = '{$a->name} (in {$a->count} instalments)';
+$string['invoice:method_subscription'] = '{$a} (subscription)';
 $string['invoice:novat'] = 'VAT not applicable, art. 293 B of the CGI.';
 $string['invoice:number'] = 'No.';
 $string['invoice:order'] = 'Order';
@@ -350,15 +353,46 @@ $string['invoice:totalincl'] = 'Total incl. VAT';
 $string['invoice:unitprice'] = 'Unit price incl. VAT';
 $string['invoice:vat'] = 'VAT {$a} %';
 $string['invoice:vatnumber'] = 'VAT number: {$a}';
+$string['invoicemail:body'] = 'E-mail text';
+$string['invoicemail:defaultbody'] = 'Hello [[PRENOM]],
+
+Thank you for your order [[NUMERO_COMMANDE]] of [[DATE]] ([[PRODUITS]]).
+Please find your invoice attached: [[TOTAL_TTC]] incl. VAT.
+
+Kind regards.';
+$string['invoicemail:defaultsubject'] = 'Your invoice for order [[NUMERO_COMMANDE]]';
+$string['invoicemail:enabled'] = 'E-mail each invoice to the customer automatically, PDF attached';
+$string['invoicemail:help'] = 'Words replaced: {$a}. The login details are sent in a separate e-mail.';
+$string['invoicemail:notsent'] = 'Document {$a} could not be sent (no valid e-mail address).';
+$string['invoicemail:send'] = 'Send by e-mail to the customer';
+$string['invoicemail:sent'] = 'Document {$a} sent to the customer.';
+$string['invoicemail:subject'] = 'E-mail subject';
+$string['invoicemail:title'] = 'Sending invoices by e-mail';
 $string['invoices:client'] = 'Client';
 $string['invoices:documents'] = 'Invoices and credit notes';
 $string['invoices:intro'] = 'Your sales are paid to your own account: invoices are issued in your name, numbered in your own continuous sequence (F-000001…). A credit note (AV-000001…) cancels all or part of an invoice, for example after a refund; it is issued automatically when the store refunds an order.';
 $string['invoices:none'] = 'No invoice yet: one is issued for each paid sale.';
+$string['invoices:search'] = 'Number, name or e-mail';
+$string['journal:badperiod'] = 'The end of the period must come after its start.';
+$string['journal:currency'] = 'Currency';
+$string['journal:download'] = 'Download (zip)';
+$string['journal:excl'] = 'Excl. VAT';
+$string['journal:filename'] = 'accounting';
+$string['journal:from'] = 'From';
+$string['journal:help'] = 'For your accountant: the journal of the invoices and credit notes of the period (CSV) and each PDF, in one zip file.';
+$string['journal:incl'] = 'Incl. VAT';
+$string['journal:method'] = 'Payment method';
+$string['journal:parent'] = 'Invoice credited';
+$string['journal:title'] = 'Accounting documents';
+$string['journal:to'] = 'To';
+$string['journal:type'] = 'Type';
+$string['journal:vat'] = 'VAT';
 $string['learner:payment'] = 'Payment';
 $string['log:abandon_saved'] = 'Abandon sequence of "{$a->title}" saved ({$a->count} e-mail(s) on)';
 $string['log:access_addgroup'] = 'Group "{$a->name}" created in "{$a->course}"';
 $string['log:access_deletegroup'] = 'Group deleted in "{$a->course}"';
 $string['log:access_rules'] = 'Module release rules changed in "{$a->course}"';
+$string['log:accounting_exported'] = 'Accounting documents exported ({$a->from} to {$a->to})';
 $string['log:activecampaign_saved'] = 'ActiveCampaign settings changed (enabled: {$a->state})';
 $string['log:affiliaterate_set'] = 'Affiliate commission set to {$a->rate} %';
 $string['log:automatic'] = 'Automatic';

@@ -70,6 +70,9 @@ class billing_service {
             'vatnumber' => trim($data->vatnumber),
             'vatrate' => round(max(0, (float) $data->vatrate), 2),
             'invoicenotes' => trim($data->invoicenotes),
+            'invoicemail' => empty($data->invoicemail) ? 0 : 1,
+            'invoicemailsubject' => trim((string) ($data->invoicemailsubject ?? '')),
+            'invoicemailbody' => trim((string) ($data->invoicemailbody ?? '')),
             'timemodified' => time(),
         ]);
     }
@@ -128,13 +131,185 @@ class billing_service {
                 'first' => pricing_service::format_price($plan['first'], $order->currency),
                 'amount' => pricing_service::format_price($plan['amount'], $order->currency)]);
         }
-        return self::issue($creator, $order, 'invoice', null, $total, round($tax, 2), [
+        $invoice = self::issue($creator, $order, 'invoice', null, $total, round($tax, 2), [
             'lines' => $lines,
             'discount' => round(max(0, $gross - $total), 2),
             // Paid in instalments: the invoice is settled only once the last one is received.
             'paid' => !$plan,
             'mentions' => $mentions,
+            'paymentmethod' => self::payment_method($order),
         ]);
+        self::mail_invoice($invoice);
+        return $invoice;
+    }
+
+    /**
+     * How an order was paid, as shown to the accountant.
+     *
+     * @param \stdClass $order Order.
+     * @return string
+     */
+    public static function payment_method(\stdClass $order): string {
+        global $DB;
+
+        $gateway = (string) $DB->get_field_sql("SELECT gateway FROM {local_moderncommerce_payment_attempts}
+                                                 WHERE orderid = ? ORDER BY id DESC", [$order->id], IGNORE_MULTIPLE);
+        $name = ['secureandpay' => 'SecureAndPay', 'stripe' => 'Stripe', 'paypal' => 'PayPal'][$gateway]
+            ?? ($gateway !== '' ? ucfirst($gateway) : get_string('invoice:method_card', 'local_oriskill'));
+        $plan = gateway::instalment_plan($order);
+        if ($plan && $plan['subscription']) {
+            return get_string('invoice:method_subscription', 'local_oriskill', $name);
+        }
+        return $plan ? get_string('invoice:method_instalments', 'local_oriskill', (object) ['name' => $name,
+            'count' => $plan['count']]) : $name;
+    }
+
+    // ----- Sending the invoice -------------------------------------------------------------------------------
+
+    /** Words replaced in the invoice e-mail. */
+    const MAIL_PLACEHOLDERS = ['[[PRENOM]]', '[[NOM]]', '[[NUMERO_COMMANDE]]', '[[DATE]]', '[[PRODUITS]]', '[[TOTAL_HT]]',
+        '[[TOTAL_TVA]]', '[[TOTAL_TTC]]'];
+
+    /**
+     * E-mail an invoice to its buyer with the PDF attached, when the trainer turned it on.
+     *
+     * @param \stdClass $invoice Invoice just issued.
+     * @param bool $force Send even when the automatic sending is off (the trainer asked for it).
+     * @return bool Whether it was sent.
+     */
+    public static function mail_invoice(\stdClass $invoice, bool $force = false): bool {
+        global $DB;
+
+        $creator = $DB->get_record('local_oriskill_creators', ['id' => $invoice->creatorid]);
+        $buyer = $invoice->userid ? $DB->get_record('user', ['id' => $invoice->userid, 'deleted' => 0]) : null;
+        if (!$creator || (!$creator->invoicemail && !$force)) {
+            return false;
+        }
+        $data = json_decode($invoice->data, true);
+        if (!$buyer) {
+            // A manual invoice for someone without an account: their e-mail address only.
+            if (empty($data['buyer']['email']) || !validate_email($data['buyer']['email'])) {
+                return false;
+            }
+            $buyer = \core_user::get_noreply_user();
+            $buyer->id = -1;
+            $buyer->email = $data['buyer']['email'];
+            $buyer->firstname = $data['buyer']['name'];
+            $buyer->lastname = '';
+            $buyer->mailformat = 1;
+        }
+        [$subject, $text] = self::mail_text($creator, $invoice);
+        $from = \core_user::get_noreply_user();
+        $from->firstname = format_string($creator->displayname);
+        $from->lastname = '';
+        [$filename, $content] = self::pdf($invoice);
+        $path = make_request_directory() . '/' . $filename;
+        file_put_contents($path, $content);
+        try {
+            return (bool) email_to_user($buyer, $from, $subject, $text, '', $path, $filename);
+        } catch (\Throwable $e) {
+            debugging('Invoice e-mail not sent: ' . $e->getMessage(), DEBUG_DEVELOPER);
+            return false;
+        }
+    }
+
+    /**
+     * Subject and text of the invoice e-mail, with the words replaced.
+     *
+     * @param \stdClass $creator Trainer.
+     * @param \stdClass $invoice Invoice.
+     * @return array [subject, text]
+     */
+    public static function mail_text(\stdClass $creator, \stdClass $invoice): array {
+        global $DB;
+
+        $data = json_decode($invoice->data, true);
+        $user = $invoice->userid ? $DB->get_record('user', ['id' => $invoice->userid]) : null;
+        $money = fn(float $value) => pricing_service::format_price($value, $invoice->currency);
+        $values = [
+            $user->firstname ?? $data['buyer']['name'],
+            $user->lastname ?? '',
+            $data['ordernumber'] ?: $invoice->number,
+            userdate($invoice->timecreated, get_string('strftimedate')),
+            implode(', ', array_column($data['lines'], 'name')),
+            $money((float) $invoice->total - (float) $invoice->tax),
+            $money((float) $invoice->tax),
+            $money((float) $invoice->total),
+        ];
+        $subject = trim((string) $creator->invoicemailsubject) ?: get_string('invoicemail:defaultsubject', 'local_oriskill');
+        $body = trim((string) $creator->invoicemailbody) ?: get_string('invoicemail:defaultbody', 'local_oriskill');
+        return [str_replace(self::MAIL_PLACEHOLDERS, $values, $subject),
+            str_replace(self::MAIL_PLACEHOLDERS, $values, html_to_text($body, 0, false))];
+    }
+
+    // ----- For the accountant --------------------------------------------------------------------------------
+
+    /**
+     * Invoices and credit notes of a period, oldest first, one row each (credit notes negative).
+     *
+     * @param \stdClass $creator Trainer.
+     * @param int $from Start (included).
+     * @param int $to End (excluded).
+     * @return array of rows, the first one the column names
+     */
+    public static function journal(\stdClass $creator, int $from, int $to): array {
+        global $DB;
+
+        $rows = [[get_string('journal:type', 'local_oriskill'), get_string('invoice:number', 'local_oriskill'),
+            get_string('date'), get_string('invoices:client', 'local_oriskill'), get_string('email'),
+            get_string('invoice:order', 'local_oriskill'), get_string('journal:method', 'local_oriskill'),
+            get_string('journal:excl', 'local_oriskill'), get_string('journal:vat', 'local_oriskill'),
+            get_string('journal:incl', 'local_oriskill'), get_string('journal:currency', 'local_oriskill'),
+            get_string('journal:parent', 'local_oriskill')]];
+        $documents = $DB->get_records_select('local_oriskill_invoices', 'creatorid = ? AND timecreated >= ? AND timecreated < ?',
+            [$creator->id, $from, $to], 'timecreated ASC, id ASC');
+        foreach ($documents as $document) {
+            $data = json_decode($document->data, true);
+            $sign = $document->type === 'credit' ? -1 : 1;
+            $method = $data['paymentmethod'] ?? '';
+            if ($method === '' && $document->type === 'invoice'
+                    && ($order = $DB->get_record('local_moderncommerce_orders', ['id' => $document->orderid]))) {
+                $method = self::payment_method($order);
+            }
+            $rows[] = [get_string($document->type === 'credit' ? 'credit:title' : 'invoice:title', 'local_oriskill'),
+                $document->number, userdate($document->timecreated, '%Y-%m-%d'), $data['buyer']['name'],
+                $data['buyer']['email'], (string) ($data['ordernumber'] ?? ''), $method,
+                format_float($sign * ((float) $document->total - (float) $document->tax), 2, false),
+                format_float($sign * (float) $document->tax, 2, false), format_float($sign * (float) $document->total, 2, false),
+                $document->currency, (string) ($data['parentnumber'] ?? '')];
+        }
+        return $rows;
+    }
+
+    /**
+     * Zip for the accountant: the journal of the period (CSV) and the PDF of each document.
+     *
+     * @param \stdClass $creator Trainer.
+     * @param int $from Start (included).
+     * @param int $to End (excluded).
+     * @return string Path of the zip file (temporary).
+     */
+    public static function export_zip(\stdClass $creator, int $from, int $to): string {
+        global $DB;
+
+        $dir = make_request_directory();
+        $csv = fopen($dir . '/journal.csv', 'w');
+        fwrite($csv, "\xEF\xBB\xBF");
+        foreach (self::journal($creator, $from, $to) as $row) {
+            fputcsv($csv, $row, ';');
+        }
+        fclose($csv);
+        $files = ['journal.csv' => $dir . '/journal.csv'];
+        $documents = $DB->get_records_select('local_oriskill_invoices', 'creatorid = ? AND timecreated >= ? AND timecreated < ?',
+            [$creator->id, $from, $to], 'timecreated ASC, id ASC');
+        foreach ($documents as $document) {
+            [$filename, $content] = self::pdf($document);
+            file_put_contents($dir . '/' . $filename, $content);
+            $files[($document->type === 'credit' ? 'avoirs/' : 'factures/') . $filename] = $dir . '/' . $filename;
+        }
+        $zip = $dir . '/export.zip';
+        (new \zip_packer())->archive_to_pathname($files, $zip);
+        return $zip;
     }
 
     /**

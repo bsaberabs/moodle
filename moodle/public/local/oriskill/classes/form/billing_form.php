@@ -66,6 +66,20 @@ class billing_form extends \moodleform {
         $mform->setType('invoicenotes', PARAM_TEXT);
         $mform->addHelpButton('invoicenotes', 'billing:notes', 'local_oriskill');
 
+        $mform->addElement('header', 'invoicemailheader', get_string('invoicemail:title', 'local_oriskill'));
+        $mform->setExpanded('invoicemailheader', true);
+        $mform->addElement('advcheckbox', 'invoicemail', get_string('invoicemail:enabled', 'local_oriskill'));
+        $mform->addElement('text', 'invoicemailsubject', get_string('invoicemail:subject', 'local_oriskill'), ['size' => 60]);
+        $mform->setType('invoicemailsubject', PARAM_TEXT);
+        $mform->addElement('textarea', 'invoicemailbody', get_string('invoicemail:body', 'local_oriskill'),
+            ['rows' => 8, 'cols' => 60]);
+        $mform->setType('invoicemailbody', PARAM_TEXT);
+        $mform->addElement('static', 'invoicemailhelp', '', get_string('invoicemail:help', 'local_oriskill',
+            implode(' ', \local_oriskill\billing_service::MAIL_PLACEHOLDERS)));
+        foreach (['invoicemailsubject', 'invoicemailbody'] as $name) {
+            $mform->hideIf($name, 'invoicemail', 'notchecked');
+        }
+
         $this->add_action_buttons(false, get_string('savechanges'));
     }
 

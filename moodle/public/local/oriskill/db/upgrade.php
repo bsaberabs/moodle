@@ -291,5 +291,17 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103027, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103028) {
+        // Invoice e-mailed to the buyer with the PDF attached.
+        $table = new xmldb_table('local_oriskill_creators');
+        foreach ([new xmldb_field('invoicemail', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'invoicenotes'),
+                new xmldb_field('invoicemailsubject', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'invoicemail'),
+                new xmldb_field('invoicemailbody', XMLDB_TYPE_TEXT, null, null, null, null, null, 'invoicemailsubject')] as $field) {
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+        upgrade_plugin_savepoint(true, 2026103028, 'local', 'oriskill');
+    }
     return true;
 }

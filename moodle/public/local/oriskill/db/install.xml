@@ -30,6 +30,9 @@
         <FIELD NAME="vatnumber" TYPE="char" LENGTH="30" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="vatrate" TYPE="number" LENGTH="5" NOTNULL="false" DECIMALS="2" SEQUENCE="false" COMMENT="VAT included in prices, in %; null or 0: not subject to VAT (franchise)"/>
         <FIELD NAME="invoicenotes" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Mentions printed at the bottom of invoices"/>
+        <FIELD NAME="invoicemail" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="E-mail each invoice to the buyer, PDF attached"/>
+        <FIELD NAME="invoicemailsubject" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="invoicemailbody" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>

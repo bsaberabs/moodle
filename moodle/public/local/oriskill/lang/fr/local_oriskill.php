@@ -336,6 +336,9 @@ $string['invoice:discount'] = 'Remise';
 $string['invoice:instalments'] = 'Payable en {$a->count} échéances mensuelles de {$a->amount}.';
 $string['invoice:instalmentsfirst'] = 'Payable en {$a->count} échéances mensuelles : {$a->first}, puis {$a->others} de {$a->amount}.';
 $string['invoice:linetotal'] = 'Montant TTC';
+$string['invoice:method_card'] = 'Carte';
+$string['invoice:method_instalments'] = '{$a->name} (en {$a->count} fois)';
+$string['invoice:method_subscription'] = '{$a} (abonnement)';
 $string['invoice:novat'] = 'TVA non applicable, art. 293 B du CGI.';
 $string['invoice:number'] = 'N°';
 $string['invoice:order'] = 'Commande';
@@ -350,15 +353,46 @@ $string['invoice:totalincl'] = 'Total TTC';
 $string['invoice:unitprice'] = 'Prix unitaire TTC';
 $string['invoice:vat'] = 'TVA {$a} %';
 $string['invoice:vatnumber'] = 'TVA intracommunautaire : {$a}';
+$string['invoicemail:body'] = 'Texte de l\'e-mail';
+$string['invoicemail:defaultbody'] = 'Bonjour [[PRENOM]],
+
+Merci pour votre commande [[NUMERO_COMMANDE]] du [[DATE]] ([[PRODUITS]]).
+Vous trouverez votre facture en pièce jointe : [[TOTAL_TTC]] TTC.
+
+Bien cordialement.';
+$string['invoicemail:defaultsubject'] = 'Votre facture pour la commande [[NUMERO_COMMANDE]]';
+$string['invoicemail:enabled'] = 'Envoyer automatiquement chaque facture au client par e-mail, PDF en pièce jointe';
+$string['invoicemail:help'] = 'Mots remplacés : {$a}. Les identifiants de connexion partent dans un e-mail séparé.';
+$string['invoicemail:notsent'] = 'Le document {$a} n\'a pas pu être envoyé (pas d\'adresse e-mail valide).';
+$string['invoicemail:send'] = 'Envoyer au client par e-mail';
+$string['invoicemail:sent'] = 'Document {$a} envoyé au client.';
+$string['invoicemail:subject'] = 'Objet de l\'e-mail';
+$string['invoicemail:title'] = 'Envoi des factures par e-mail';
 $string['invoices:client'] = 'Client';
 $string['invoices:documents'] = 'Factures et avoirs';
 $string['invoices:intro'] = 'Vous encaissez vos ventes sur votre propre compte : les factures sont émises à votre nom, avec une numérotation continue qui vous est propre (F-000001…). Un avoir (AV-000001…) annule tout ou partie d\'une facture, par exemple après un remboursement ; il est émis automatiquement quand une commande est remboursée par la boutique.';
 $string['invoices:none'] = 'Aucune facture pour le moment : elles sont émises à chaque vente payée.';
+$string['invoices:search'] = 'Numéro, nom ou e-mail';
+$string['journal:badperiod'] = 'La fin de la période doit venir après son début.';
+$string['journal:currency'] = 'Devise';
+$string['journal:download'] = 'Télécharger (zip)';
+$string['journal:excl'] = 'HT';
+$string['journal:filename'] = 'comptabilite';
+$string['journal:from'] = 'De';
+$string['journal:help'] = 'Pour votre expert-comptable : le journal des factures et avoirs de la période (CSV) et chaque PDF, dans un seul fichier zip.';
+$string['journal:incl'] = 'TTC';
+$string['journal:method'] = 'Mode de paiement';
+$string['journal:parent'] = 'Facture avoirée';
+$string['journal:title'] = 'Documents comptables';
+$string['journal:to'] = 'À';
+$string['journal:type'] = 'Type';
+$string['journal:vat'] = 'TVA';
 $string['learner:payment'] = 'Paiement';
 $string['log:abandon_saved'] = 'Séquence abandon de panier de « {$a->title} » enregistrée ({$a->count} e-mail(s) actif(s))';
 $string['log:access_addgroup'] = 'Groupe « {$a->name} » créé dans « {$a->course} »';
 $string['log:access_deletegroup'] = 'Groupe supprimé dans « {$a->course} »';
 $string['log:access_rules'] = 'Règles de déblocage des modules modifiées dans « {$a->course} »';
+$string['log:accounting_exported'] = 'Documents comptables exportés ({$a->from} à {$a->to})';
 $string['log:activecampaign_saved'] = 'Réglages ActiveCampaign modifiés (activé : {$a->state})';
 $string['log:affiliaterate_set'] = 'Commission des affiliés fixée à {$a->rate} %';
 $string['log:automatic'] = 'Automatique';
