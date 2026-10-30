@@ -338,5 +338,19 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103033, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103034) {
+        // CRM of the trainers, filled in the background from their learners, buyers and sign-ups.
+        foreach (['local_oriskill_contacts', 'local_oriskill_contacttags'] as $name) {
+            if (!$dbman->table_exists($name)) {
+                $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', $name);
+            }
+        }
+        foreach ($DB->get_fieldset('local_oriskill_creators', 'id') as $creatorid) {
+            $task = new \local_oriskill\task\contacts_backfill();
+            $task->set_custom_data(['creatorid' => (int) $creatorid]);
+            \core\task\manager::queue_adhoc_task($task, true);
+        }
+        upgrade_plugin_savepoint(true, 2026103034, 'local', 'oriskill');
+    }
     return true;
 }

@@ -57,6 +57,15 @@ $observers = [
         'eventname' => '\local_secureandpay\event\payment_refunded',
         'callback' => '\local_oriskill\billing_service::payment_refunded',
     ],
+    // CRM of the trainers: every learner of their courses is a contact.
+    [
+        'eventname' => '\core\event\user_enrolment_created',
+        'callback' => '\local_oriskill\observer::user_enrolled',
+    ],
+    [
+        'eventname' => '\core\event\user_deleted',
+        'callback' => '\local_oriskill\observer::user_deleted',
+    ],
     // Webhooks of the trainers.
     [
         'eventname' => '\local_secureandpay\event\instalment_paid',

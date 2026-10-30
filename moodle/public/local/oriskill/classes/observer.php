@@ -57,4 +57,31 @@ class observer {
         coupon_service::order_paid((int) $event->objectid);
         webhook_service::order_event((int) $event->objectid, 'order.paid');
     }
+
+    /**
+     * Someone enrolled in a trainer's course is a contact of their CRM.
+     *
+     * @param \core\event\user_enrolment_created $event Event.
+     */
+    public static function user_enrolled(\core\event\user_enrolment_created $event): void {
+        try {
+            contact_service::from_course_user((int) $event->courseid, (int) $event->relateduserid, 'learner');
+        } catch (\Throwable $e) {
+            debugging('CRM: ' . $e->getMessage(), DEBUG_DEVELOPER);
+        }
+    }
+
+    /**
+     * A deleted account leaves the CRMs too.
+     *
+     * @param \core\event\user_deleted $event Event.
+     */
+    public static function user_deleted(\core\event\user_deleted $event): void {
+        global $DB;
+
+        foreach ($DB->get_fieldset_select(contact_service::TABLE, 'id', 'userid = ?', [$event->objectid]) as $contactid) {
+            $DB->delete_records(contact_service::TAGS, ['contactid' => $contactid]);
+            $DB->delete_records(contact_service::TABLE, ['id' => $contactid]);
+        }
+    }
 }

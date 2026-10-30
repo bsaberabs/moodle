@@ -48,6 +48,7 @@ class team_service {
     /** Pages some roles may only look at (no change, no action). */
     const VIEW_ONLY = [
         '/local/oriskill/learners.php' => ['accounting', 'partner', 'coach'],
+        '/local/oriskill/contacts.php' => ['accounting'],
     ];
 
     /** Pages of the trainer space and the collaborator roles allowed on each (the owner is allowed everywhere). */
@@ -72,6 +73,8 @@ class team_service {
         '/local/oriskill/learners.php' => ['admin', 'teaching', 'support', 'accounting', 'partner', 'coach'],
         '/local/oriskill/learner.php' => ['admin', 'teaching', 'support', 'accounting', 'partner', 'coach'],
         '/local/oriskill/access.php' => ['admin', 'teaching'],
+        '/local/oriskill/contacts.php' => ['admin', 'support', 'accounting', 'partner'],
+        '/local/oriskill/contact.php' => ['admin', 'support', 'accounting', 'partner'],
         '/local/oriskill/payment.php' => [],
         '/local/oriskill/apply.php' => ['admin'],
         '/local/oriskill/team.php' => ['admin'],

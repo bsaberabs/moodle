@@ -72,6 +72,9 @@ class abandon_service {
             // Still deciding (or asked for no more e-mails): the latest order counts, the reminders go on.
             $DB->update_record('local_oriskill_abandons', (object) ($fields + ['id' => $row->id]));
         }
+        if ($creator = $DB->get_record('local_oriskill_creators', ['id' => $form->creatorid])) {
+            contact_service::from_user($creator, (int) $order->userid, 'checkout');
+        }
     }
 
     /**

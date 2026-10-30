@@ -61,6 +61,17 @@ class provider implements
             'amount' => 'privacy:metadata:commissions:amount',
             'status' => 'privacy:metadata:commissions:status',
         ], 'privacy:metadata:commissions');
+        $collection->add_database_table('local_oriskill_contacts', [
+            'creatorid' => 'privacy:metadata:contacts:creatorid',
+            'userid' => 'privacy:metadata:contacts:userid',
+            'email' => 'privacy:metadata:contacts:email',
+            'firstname' => 'privacy:metadata:contacts:firstname',
+            'lastname' => 'privacy:metadata:contacts:lastname',
+            'phone' => 'privacy:metadata:contacts:phone',
+            'address' => 'privacy:metadata:contacts:address',
+            'consentdirect' => 'privacy:metadata:contacts:consentdirect',
+            'ltv' => 'privacy:metadata:contacts:ltv',
+        ], 'privacy:metadata:contacts');
         $collection->add_database_table('local_oriskill_studytime', [
             'courseid' => 'privacy:metadata:studytime:courseid',
             'userid' => 'privacy:metadata:studytime:userid',
@@ -151,6 +162,10 @@ class provider implements
         }
         self::delete_affiliate((int) $contextlist->get_user()->id);
         $DB->delete_records('local_oriskill_studytime', ['userid' => $contextlist->get_user()->id]);
+        foreach ($DB->get_records('local_oriskill_contacts', ['userid' => $contextlist->get_user()->id]) as $contact) {
+            $DB->delete_records('local_oriskill_contacttags', ['contactid' => $contact->id]);
+            $DB->delete_records('local_oriskill_contacts', ['id' => $contact->id]);
+        }
     }
 
     /**

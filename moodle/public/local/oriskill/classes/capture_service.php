@@ -228,6 +228,7 @@ class capture_service {
             $DB->insert_record(self::LEADS, (object) ['pageid' => $page->id, 'creatorid' => $creator->id, 'userid' => $user->id,
                 'email' => $user->email, 'firstname' => $user->firstname, 'consent' => $consent ? 1 : 0, 'timecreated' => time()]);
         }
+        contact_service::from_user($creator, (int) $user->id, 'capture', ['consentdirect' => $consent]);
         if ($consent) {
             $account = activecampaign_service::account($creator);
             if ($account && $account->enabled) {

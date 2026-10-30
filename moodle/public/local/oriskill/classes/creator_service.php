@@ -233,6 +233,7 @@ class creator_service {
             '/local/oriskill/capturepages.php' => ['menu:capturepages', 'bi-envelope-paper'],
         ],
         'navgroup:learners' => [
+            '/local/oriskill/contacts.php' => ['menu:contacts', 'bi-person-lines-fill'],
             '/local/oriskill/learners.php' => ['menu:learners', 'bi-people'],
             '/local/oriskill/access.php' => ['menu:access', 'bi-unlock'],
         ],

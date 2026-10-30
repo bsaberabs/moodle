@@ -560,6 +560,14 @@ class billing_service {
         } finally {
             $lock->release();
         }
+        if ($table === 'local_oriskill_invoices' && $record->userid) {
+            // The buyer's lifetime value in the trainer's CRM; never a reason for an invoice to fail.
+            try {
+                contact_service::from_user($creator, (int) $record->userid, 'order');
+            } catch (\Throwable $e) {
+                debugging('CRM: ' . $e->getMessage(), DEBUG_DEVELOPER);
+            }
+        }
         return $record;
     }
 
