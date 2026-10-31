@@ -1106,6 +1106,7 @@ $string['log:webhook_off'] = 'Webhook turned off: {$a->url}';
 $string['log:webhook_on'] = 'Webhook turned on: {$a->url}';
 $string['log:webhook_removed'] = 'Webhook removed: {$a->url}';
 $string['log:webhook_resent'] = 'Webhook event sent again ({$a->event}): {$a->url}';
+$string['log:webinar_saved'] = 'Webinar "{$a->title}" saved';
 $string['log:what'] = 'Action';
 $string['log:who'] = 'By';
 $string['mail:approved_body'] = 'Hello,
@@ -1148,6 +1149,7 @@ $string['menu:team'] = 'Team';
 $string['menu:tickets'] = 'Tickets';
 $string['menu:tools'] = 'Teaching tools';
 $string['menu:unpaid'] = 'Unpaid';
+$string['menu:webinars'] = 'Webinars';
 $string['module:forced'] = 'Access forced';
 $string['mycourses'] = 'My courses';
 $string['nocourses'] = 'No course on sale yet.';
@@ -1787,6 +1789,7 @@ $string['task:coursenotifications'] = 'Course notifications (module opened, remi
 $string['task:creditrefunds'] = 'Issue credit notes for refunded orders';
 $string['task:suspendunpaid'] = 'Suspend access for unpaid instalments';
 $string['task:webhookdeliver'] = 'Send an event to a trainer\'s webhook';
+$string['task:webinarreminders'] = 'Webinar reminders and replays';
 $string['team:accept'] = 'Join the team';
 $string['team:active'] = 'Active';
 $string['team:cancelinvite'] = 'Cancel the invitation';
@@ -2268,3 +2271,71 @@ $string['webhook:turnoff'] = 'Turn off';
 $string['webhook:turnon'] = 'Turn on';
 $string['webhook:unreachable'] = 'Address unreachable';
 $string['webhook:url'] = 'Receiving address (https)';
+
+$string['webinar:attended'] = 'Attended';
+$string['webinar:badsignup'] = 'Give your first name and a valid e-mail address.';
+$string['webinar:counts'] = '{$a->registered} signed up · {$a->attended} attended';
+$string['webinar:description'] = 'Presentation (shown on the sign-up page)';
+$string['webinar:duration'] = 'Duration (minutes)';
+$string['webinar:edit'] = 'Edit the webinar';
+$string['webinar:ended'] = 'This webinar is over. The replay will be here as soon as it is ready.';
+$string['webinar:hello'] = 'You are signed up, {$a}. Keep this page: it is your personal access to the live (the link is also in your e-mail).';
+$string['webinar:host'] = 'Open the room (host)';
+$string['webinar:incomplete'] = 'Give a title and a date; the offer link must start with https://.';
+$string['webinar:intro'] = 'Your live webinars: a public sign-up page (no account), a personal link per person, reminders by e-mail the day before, an hour before and at the start, an offer shown during the live, then the replay sent to everyone signed up.';
+$string['webinar:join'] = 'Join the live';
+$string['webinar:mail_confirm_body'] = 'Hello {$a->firstname},
+
+Your place at the webinar "{$a->title}" by {$a->trainer} is confirmed.
+
+See you on {$a->date}.
+
+Your personal access: {$a->url}';
+$string['webinar:mail_confirm_subject'] = 'Sign-up confirmed: {$a->title}';
+$string['webinar:mail_remind0_body'] = 'Hello {$a->firstname},
+
+The webinar "{$a->title}" starts now!
+
+Join us: {$a->url}';
+$string['webinar:mail_remind0_subject'] = 'Now: {$a->title}';
+$string['webinar:mail_remind1_body'] = 'Hello {$a->firstname},
+
+The webinar "{$a->title}" starts in an hour ({$a->date}).
+
+Your access: {$a->url}';
+$string['webinar:mail_remind1_subject'] = 'In an hour: {$a->title}';
+$string['webinar:mail_remind24_body'] = 'Hello {$a->firstname},
+
+A reminder: the webinar "{$a->title}" is tomorrow, {$a->date}.
+
+Your access: {$a->url}';
+$string['webinar:mail_remind24_subject'] = 'Tomorrow: {$a->title}';
+$string['webinar:mail_replay_body'] = 'Hello {$a->firstname},
+
+The replay of the webinar "{$a->title}" is available for {$a->days} day(s):
+
+{$a->url}
+
+{$a->trainer}';
+$string['webinar:mail_replay_subject'] = 'The replay is available: {$a->title}';
+$string['webinar:minutes'] = '{$a} minutes';
+$string['webinar:new'] = 'New webinar';
+$string['webinar:none'] = 'No webinar yet.';
+$string['webinar:noregistration'] = 'Nobody signed up yet.';
+$string['webinar:noserver'] = 'No BigBlueButton server is set on the site: webinars will not open.';
+$string['webinar:notfound'] = 'This webinar does not exist or is no longer available.';
+$string['webinar:offerafter'] = 'Offer shown after (minutes)';
+$string['webinar:offerdefault'] = 'I take the offer';
+$string['webinar:offerlabel'] = 'Offer button text';
+$string['webinar:offerurl'] = 'Offer link (order form)';
+$string['webinar:opensat'] = 'The room opens at {$a}. Come back to this page then.';
+$string['webinar:past'] = 'Over';
+$string['webinar:registrations'] = 'Signed up ({$a})';
+$string['webinar:replaydays'] = 'Replay available (days)';
+$string['webinar:serverdown'] = 'The video room does not answer right now. Try again in a moment.';
+$string['webinar:signedup'] = 'Signed up';
+$string['webinar:signup'] = 'Sign me up';
+$string['webinar:start'] = 'Date and time ({$a})';
+$string['webinar:tag'] = 'Webinar: {$a}';
+$string['webinar:title'] = 'Title';
+$string['webinar:watchreplay'] = 'Watch the replay';

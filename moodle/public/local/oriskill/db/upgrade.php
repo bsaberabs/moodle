@@ -671,5 +671,14 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103068, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103070) {
+        // Live webinars of the trainers and the people signed up.
+        foreach (['local_oriskill_webinars', 'local_oriskill_webregs'] as $name) {
+            if (!$dbman->table_exists($name)) {
+                $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', $name);
+            }
+        }
+        upgrade_plugin_savepoint(true, 2026103070, 'local', 'oriskill');
+    }
     return true;
 }

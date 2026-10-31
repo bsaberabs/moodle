@@ -81,6 +81,7 @@ class team_service {
         '/local/oriskill/coupons.php' => ['admin'],
         '/local/oriskill/capturepages.php' => ['admin'],
         '/local/oriskill/engage.php' => ['admin'],
+        '/local/oriskill/webinars.php' => ['admin', 'teaching'],
         '/local/oriskill/capturepage.php' => ['admin'],
         '/local/oriskill/learners.php' => ['admin', 'teaching', 'support', 'accounting', 'partner', 'coach'],
         '/local/oriskill/learner.php' => ['admin', 'teaching', 'support', 'accounting', 'partner', 'coach'],

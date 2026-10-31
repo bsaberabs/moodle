@@ -933,6 +933,58 @@
         <INDEX NAME="code" UNIQUE="true" FIELDS="code"/>
       </INDEXES>
     </TABLE>
+    <TABLE NAME="local_oriskill_webinars" COMMENT="Live webinars of a trainer on the BigBlueButton server">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="creatorid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="slug" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false" COMMENT="Address of the sign-up page"/>
+        <FIELD NAME="title" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="description" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="starttime" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="duration" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="60" SEQUENCE="false" COMMENT="Minutes"/>
+        <FIELD NAME="offerurl" TYPE="char" LENGTH="1333" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="offerlabel" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="offerafter" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="45" SEQUENCE="false" COMMENT="Minutes after the start when the offer shows"/>
+        <FIELD NAME="replaydays" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="7" SEQUENCE="false"/>
+        <FIELD NAME="replayurl" TYPE="char" LENGTH="1333" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="moderatorpw" TYPE="char" LENGTH="32" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="attendeepw" TYPE="char" LENGTH="32" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="creatorid" TYPE="foreign" FIELDS="creatorid" REFTABLE="local_oriskill_creators" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="slug" UNIQUE="true" FIELDS="slug"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="local_oriskill_webregs" COMMENT="People signed up to a webinar">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="webinarid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="contactid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="email" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="firstname" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="token" TYPE="char" LENGTH="40" NOTNULL="true" SEQUENCE="false" COMMENT="Personal link"/>
+        <FIELD NAME="remind24" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="remind1" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="remind0" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="replaysent" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="joined" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="webinarid" TYPE="foreign" FIELDS="webinarid" REFTABLE="local_oriskill_webinars" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="token" UNIQUE="true" FIELDS="token"/>
+        <INDEX NAME="webinaremail" UNIQUE="true" FIELDS="webinarid, email"/>
+      </INDEXES>
+    </TABLE>
     <TABLE NAME="local_oriskill_privacy" COMMENT="Privacy settings of a trainer: consent texts, cookie banner, measurement tools">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>

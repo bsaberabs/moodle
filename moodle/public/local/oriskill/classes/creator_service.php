@@ -239,6 +239,7 @@ class creator_service {
             '/local/oriskill/coupons.php' => ['menu:coupons', 'bi-ticket-perforated'],
             '/local/oriskill/capturepages.php' => ['menu:capturepages', 'bi-envelope-paper'],
             '/local/oriskill/engage.php' => ['menu:engage', 'bi-megaphone'],
+            '/local/oriskill/webinars.php' => ['menu:webinars', 'bi-broadcast'],
         ],
         'navgroup:learners' => [
             '/local/oriskill/contacts.php' => ['menu:contacts', 'bi-person-lines-fill'],
