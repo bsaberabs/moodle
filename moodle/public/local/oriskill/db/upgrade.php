@@ -578,5 +578,16 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103057, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103058) {
+        // Offers of the order forms: special offer box, limited number of sales.
+        $table = new xmldb_table('local_oriskill_formoffers');
+        foreach ([new xmldb_field('highlightstyle', XMLDB_TYPE_TEXT, null, null, null, null, null, 'defaultmode'),
+                new xmldb_field('stock', XMLDB_TYPE_INTEGER, '10', null, null, null, null, 'highlightstyle')] as $field) {
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+        upgrade_plugin_savepoint(true, 2026103058, 'local', 'oriskill');
+    }
     return true;
 }

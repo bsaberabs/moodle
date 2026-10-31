@@ -66,6 +66,10 @@ if ($offerid) {
     if (!$offer) {
         redirect($formurl);
     }
+    if (orderform_service::sold_out($offer)) {
+        redirect($formurl, get_string('orderform:soldout', 'local_oriskill'), null,
+            \core\output\notification::NOTIFY_WARNING);
+    }
     // One of the offer's payments in instalments (its main one is plan 0).
     if ($mode === 'instalments') {
         $offer = orderform_service::with_plan($offer, $plan) ?? redirect($formurl);
@@ -270,6 +274,11 @@ foreach ($offers as $offer) {
         'courses' => $described->courses,
         'displayprice' => $main->price,
         'highlight' => (bool) $offer->highlight,
+        'highlightcss' => $offer->highlight ? orderform_service::highlight_box($offer)[0] : '',
+        'highlightlabel' => $offer->highlight ? orderform_service::highlight_box($offer)[1] : '',
+        'soldout' => orderform_service::sold_out($offer),
+        'stockleft' => $offer->stock !== null && (int) $offer->stock > 0 && (int) $offer->stock <= 10
+            ? get_string('orderform:stockleft', 'local_oriskill', (int) $offer->stock) : '',
         'buttonlabel' => orderform_service::button_content($button,
             s(format_string($form->buttonlabel ?: get_string('orderform:buttondefault', 'local_oriskill')))),
         'buttonstyle' => orderform_service::button_css($button),

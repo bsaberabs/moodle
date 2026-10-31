@@ -366,12 +366,70 @@ class orderform_service {
                 'defaultmode' => preg_match('/^(once|subscription|plan\d)$/', (string) ($offer->defaultmode ?? ''))
                     ? $offer->defaultmode : 'once',
                 'highlight' => empty($offer->highlight) ? 0 : 1,
+                'highlightstyle' => json_encode(self::highlight_style((array) ($offer->highlightstyle ?? []))),
+                'stock' => isset($offer->stock) && $offer->stock !== '' && $offer->stock !== null ? max(0, (int) $offer->stock) : null,
                 'actags' => activecampaign_service::clean_tags((string) ($offer->actags ?? '')),
                 'subprice' => round(max(0, (float) ($offer->subprice ?? 0)), 2),
                 'sortorder' => $index,
             ]);
         }
         return $DB->get_record('local_oriskill_orderforms', ['id' => $record->id]);
+    }
+
+    /** Border styles of the special offer box. */
+    const BORDER_STYLES = ['solid', 'dashed', 'dotted', 'double'];
+
+    /**
+     * Special offer box of an offer, cleaned: label, background, border colour and style (empty: the defaults).
+     *
+     * @param array $style label, background, border, borderstyle
+     * @return array
+     */
+    public static function highlight_style(array $style): array {
+        $colour = fn($v) => preg_match('/^#[0-9a-f]{6}$/i', trim((string) $v)) ? strtolower(trim($v)) : '';
+        return ['label' => \core_text::substr(trim(clean_param((string) ($style['label'] ?? ''), PARAM_TEXT)), 0, 40),
+            'background' => $colour($style['background'] ?? ''), 'border' => $colour($style['border'] ?? ''),
+            'borderstyle' => in_array($style['borderstyle'] ?? '', self::BORDER_STYLES, true) ? $style['borderstyle'] : 'solid'];
+    }
+
+    /**
+     * Style and label of the special offer box of an offer.
+     *
+     * @param \stdClass $offer Offer.
+     * @return array [css, label]
+     */
+    public static function highlight_box(\stdClass $offer): array {
+        $style = self::highlight_style(json_decode((string) ($offer->highlightstyle ?? ''), true) ?: []);
+        $css = ($style['background'] !== '' ? 'background: ' . $style['background'] . ';' : '') .
+            ($style['border'] !== '' || $style['borderstyle'] !== 'solid' ? 'border: ' . ($style['borderstyle'] === 'double'
+                ? 4 : 2) . 'px ' . $style['borderstyle'] . ' ' . ($style['border'] ?: 'var(--v-primary)') . ';' : '');
+        return [$css, $style['label'] !== '' ? $style['label'] : get_string('orderform:recommended', 'local_oriskill')];
+    }
+
+    /**
+     * Whether an offer is sold out (a limited number of sales, none left).
+     *
+     * @param \stdClass $offer Offer.
+     * @return bool
+     */
+    public static function sold_out(\stdClass $offer): bool {
+        return isset($offer->stock) && $offer->stock !== null && (int) $offer->stock <= 0;
+    }
+
+    /**
+     * A sale of an order form offer was paid: one less left when its number is limited.
+     *
+     * @param int $orderid Order.
+     */
+    public static function count_sale(int $orderid): void {
+        global $DB;
+
+        $order = $DB->get_record('local_moderncommerce_orders', ['id' => $orderid]);
+        $notes = $order ? (json_decode((string) $order->notes, true) ?: []) : [];
+        if (!empty($notes['offer']) && empty($notes['upsellof'])) {
+            $DB->execute('UPDATE {local_oriskill_formoffers} SET stock = stock - 1 WHERE id = ? AND stock > 0',
+                [(int) $notes['offer']]);
+        }
     }
 
     /**

@@ -983,3 +983,19 @@
 .table.oriskill-txlist td:last-child {
     white-space: nowrap !important;
 }
+
+/* Order form offers: sales left, sold out. */
+.oriskill-offer-stock {
+    margin: 0;
+    color: #b45309;
+    font-weight: 600;
+    font-size: .9rem;
+}
+.oriskill-offer.is-soldout {
+    opacity: .6;
+}
+.oriskill-offer-soldout {
+    margin: 0;
+    font-weight: 700;
+    color: #6b7280;
+}

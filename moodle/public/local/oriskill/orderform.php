@@ -89,6 +89,12 @@ if ($form) {
         $defaults["offerinstalcut[$i]"] = (int) ($offer->instalcut ?? 1) ?: 1;
         $defaults["offergroups[$i]"] = array_values(array_filter(array_map('intval', explode(',', (string) ($offer->groupids ?? '')))));
         $defaults["offerhighlight[$i]"] = $offer->highlight;
+        $box = orderform_service::highlight_style(json_decode((string) ($offer->highlightstyle ?? ''), true) ?: []);
+        $defaults["offerhllabel[$i]"] = $box['label'];
+        $defaults["offerhlbg[$i]"] = $box['background'];
+        $defaults["offerhlborder[$i]"] = $box['border'];
+        $defaults["offerhlstyle[$i]"] = $box['borderstyle'];
+        $defaults["offerstock[$i]"] = $offer->stock === null ? '' : (int) $offer->stock;
         $defaults["offeractags[$i]"] = $offer->actags;
         $defaults["offersubprice[$i]"] = (float) $offer->subprice > 0 ? format_float((float) $offer->subprice, 2, true) : '';
         $defaults["offerinstalplans[$i]"] = orderform_service::plans_text($offer);
@@ -120,6 +126,9 @@ if ($data = $mform->get_data()) {
             'instalcut' => (int) ($data->offerinstalcut[$i] ?? 1),
             'groupids' => $data->offergroups[$i] ?? [],
             'highlight' => !empty($data->offerhighlight[$i]),
+            'highlightstyle' => ['label' => $data->offerhllabel[$i] ?? '', 'background' => $data->offerhlbg[$i] ?? '',
+                'border' => $data->offerhlborder[$i] ?? '', 'borderstyle' => $data->offerhlstyle[$i] ?? 'solid'],
+            'stock' => trim((string) ($data->offerstock[$i] ?? '')) === '' ? null : (int) $data->offerstock[$i],
             'actags' => $data->offeractags[$i] ?? '',
             'subprice' => unformat_float((string) ($data->offersubprice[$i] ?? ''), true) ?: 0,
             'instalplans' => $data->offerinstalplans[$i] ?? '',

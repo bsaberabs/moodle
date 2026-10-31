@@ -304,6 +304,8 @@
         <FIELD NAME="groupids" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Groups the offer gives, comma-separated"/>
         <FIELD NAME="instalplans" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Other payments in instalments, JSON list of {count, total, first}"/>
         <FIELD NAME="defaultmode" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="once" SEQUENCE="false" COMMENT="Payment shown first: once, plan0, plan1... or subscription"/>
+        <FIELD NAME="highlightstyle" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Special offer box: JSON label, background, border colour and style"/>
+        <FIELD NAME="stock" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Sales left, empty for no limit"/>
         <FIELD NAME="sortorder" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>

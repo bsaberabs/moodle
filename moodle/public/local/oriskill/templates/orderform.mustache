@@ -59,20 +59,22 @@
             {{^cansell}}<p class="oriskill-vitrine-empty">{{#str}}error:formunavailable, local_oriskill{{/str}}</p>{{/cansell}}
             <div class="oriskill-offer-grid">
                 {{#offers}}
-                    <article class="oriskill-offer{{#highlight}} is-highlight{{/highlight}}">
-                        {{#highlight}}<span class="oriskill-offer-flag">{{#str}}orderform:recommended, local_oriskill{{/str}}</span>{{/highlight}}
+                    <article class="oriskill-offer{{#highlight}} is-highlight{{/highlight}}{{#soldout}} is-soldout{{/soldout}}"{{#highlightcss}} style="{{highlightcss}}"{{/highlightcss}}>
+                        {{#highlight}}<span class="oriskill-offer-flag">{{highlightlabel}}</span>{{/highlight}}
                         <h3>{{label}}</h3>
                         <p class="oriskill-offer-price">{{displayprice}}</p>
                         <ul>
                             {{#courses}}<li><strong>{{name}}</strong></li>{{/courses}}
                             {{#details}}<li>{{.}}</li>{{/details}}
                         </ul>
-                        {{#cansell}}
+                        {{#stockleft}}<p class="oriskill-offer-stock">{{stockleft}}</p>{{/stockleft}}
+                        {{#soldout}}<p class="oriskill-offer-soldout">{{#str}}orderform:soldout, local_oriskill{{/str}}</p>{{/soldout}}
+                        {{#cansell}}{{^soldout}}
                             <div class="oriskill-offer-cta is-{{buttonalign}}">
                                 <a href="{{url}}" class="oriskill-vitrine-cta" style="{{buttonstyle}}">{{{buttonlabel}}}</a>
                             </div>
                             {{#others}}<a href="{{url}}" class="oriskill-offer-instalments">{{label}}</a>{{/others}}
-                        {{/cansell}}
+                        {{/soldout}}{{/cansell}}
                     </article>
                 {{/offers}}
             </div>
