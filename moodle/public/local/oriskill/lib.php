@@ -106,3 +106,23 @@ function local_oriskill_visitor_page(moodle_url $url, string $intro): void {
     echo $OUTPUT->footer();
     exit;
 }
+
+/**
+ * The cart icon in the top bar for visitors not logged in too (the store shows it to logged-in users only): it leads to
+ * the cart, which asks them to log in first.
+ *
+ * @param renderer_base $output Renderer.
+ * @return string HTML
+ */
+function local_oriskill_render_navbar_output(renderer_base $output): string {
+    global $CFG;
+
+    if (during_initial_install() || !empty($CFG->upgraderunning) || (isloggedin() && !isguestuser())) {
+        return '';
+    }
+    $label = get_string('cart', 'local_moderncommerce');
+    return html_writer::div(html_writer::link(new moodle_url('/local/moderncommerce/cart.php'),
+        html_writer::tag('i', '', ['class' => 'icon fa-solid fa-bag-shopping', 'aria-hidden' => 'true']) .
+        html_writer::span($label, 'visually-hidden'), ['class' => 'nav-link icon-no-margin', 'title' => $label]),
+        'popover-region oriskill-guest-cart');
+}

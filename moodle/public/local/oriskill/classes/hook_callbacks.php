@@ -260,6 +260,11 @@ class hook_callbacks {
         if (!during_initial_install() && $PAGE->pagetype === 'login-index' && !isloggedin()) {
             $PAGE->requires->js_init_code(remember_service::login_script());
         }
+        // In the store, a visitor's "Add to cart" goes through the login (or sign-up), then into their cart.
+        if (!during_initial_install() && (!isloggedin() || isguestuser())
+                && str_starts_with((string) $PAGE->pagetype, 'local-moderncommerce')) {
+            $PAGE->requires->js_init_code(self::guest_cart_script());
+        }
         if (during_initial_install() || !in_array($PAGE->context->contextlevel, [CONTEXT_COURSE, CONTEXT_MODULE])) {
             return;
         }
@@ -276,6 +281,34 @@ class hook_callbacks {
         if ($PAGE->context->contextlevel == CONTEXT_MODULE && $PAGE->cm && str_ends_with($PAGE->pagetype, '-view')) {
             $hook->add_html(comment_service::lesson_html($PAGE->cm));
         }
+    }
+
+    /**
+     * Script of the store for visitors: "Add to cart" leads to tocart.php with the course or bundle of the card (or of the
+     * details page), where the login comes first.
+     *
+     * @return string JavaScript
+     */
+    public static function guest_cart_script(): string {
+        $script = <<<'JS'
+document.addEventListener('click', function(e) {
+    var button = e.target.closest('button, a');
+    if (!button || /cart\.php/.test(button.getAttribute('href') || '')
+            || !(button.querySelector('.bi-cart-plus, .fa-cart-plus') || /panier|cart/i.test(button.textContent))) {
+        return;
+    }
+    var scope = button.closest('article, .mc-course-card, .card') || document;
+    var link = scope.querySelector('a[href*="course_details.php?id="], a[href*="bundle_details.php?id="]');
+    var match = (link ? link.getAttribute('href') : location.href).match(/(course|bundle)_details\.php\?id=(\d+)/);
+    if (!match) {
+        return;
+    }
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    location.href = TARGET + '?' + match[1] + '=' + match[2];
+}, true);
+JS;
+        return str_replace('TARGET', json_encode((new \moodle_url('/local/oriskill/tocart.php'))->out(false)), $script);
     }
 
     /**
