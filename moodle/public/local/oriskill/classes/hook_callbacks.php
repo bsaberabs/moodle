@@ -40,6 +40,14 @@ class hook_callbacks {
         if (CLI_SCRIPT || AJAX_SCRIPT || during_initial_install()) {
             return;
         }
+        // A device kept logged in whose session has ended: the person is logged back in.
+        if (!empty($_COOKIE[remember_service::COOKIE])) {
+            try {
+                remember_service::restore();
+            } catch (\dml_exception $e) {
+                debugging($e->getMessage(), DEBUG_DEVELOPER);
+            }
+        }
         if (!empty($_GET['ref']) && is_string($_GET['ref'])) {
             try {
                 affiliate_service::track_visit($_GET['ref'], (int) ($_GET['cmp'] ?? 0));
@@ -249,6 +257,9 @@ class hook_callbacks {
     public static function before_footer_html_generation(\core\hook\output\before_footer_html_generation $hook): void {
         global $PAGE;
 
+        if (!during_initial_install() && $PAGE->pagetype === 'login-index' && !isloggedin()) {
+            $PAGE->requires->js_init_code(remember_service::login_script());
+        }
         if (during_initial_install() || !in_array($PAGE->context->contextlevel, [CONTEXT_COURSE, CONTEXT_MODULE])) {
             return;
         }

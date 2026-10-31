@@ -589,5 +589,13 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103058, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103060) {
+        // Stay logged in 30 days on a device; otherwise the session ends after 12 hours without activity.
+        if (!$dbman->table_exists('local_oriskill_remember')) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', 'local_oriskill_remember');
+        }
+        set_config('sessiontimeout', 12 * HOURSECS);
+        upgrade_plugin_savepoint(true, 2026103060, 'local', 'oriskill');
+    }
     return true;
 }

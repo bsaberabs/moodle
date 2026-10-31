@@ -1280,6 +1280,7 @@ $string['regularize:settled'] = 'Thank you, your payment is up to date.';
 $string['regularize:suspended'] = 'Your access is suspended until this payment is received; it opens again as soon as it is.';
 $string['regularize:title'] = 'Pay what is due';
 $string['reject'] = 'Reject';
+$string['remember:label'] = 'Stay logged in for {$a} days on this device';
 $string['role:accounting'] = 'Accounting';
 $string['role:accounting_desc'] = 'sales, invoices, credit notes, quotes and accounting exports, schedules and unpaid instalments; sees the learners without changing anything. Two-factor authentication required.';
 $string['role:admin'] = 'Administrator';

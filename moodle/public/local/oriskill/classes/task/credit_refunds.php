@@ -33,5 +33,7 @@ class credit_refunds extends \core\task\scheduled_task {
 
     public function execute() {
         mtrace('Credit notes issued for refunded orders: ' . billing_service::credit_refunded_orders());
+        // Housekeeping done with it: devices whose "stay logged in" has expired.
+        mtrace('Expired stay-logged-in tokens removed: ' . \local_oriskill\remember_service::cleanup());
     }
 }

@@ -1280,6 +1280,7 @@ $string['regularize:settled'] = 'Merci, votre paiement est à jour.';
 $string['regularize:suspended'] = 'Votre accès est suspendu jusqu\'à réception de ce paiement ; il se rouvre dès qu\'il est reçu.';
 $string['regularize:title'] = 'Régler un paiement en attente';
 $string['reject'] = 'Refuser';
+$string['remember:label'] = 'Rester connecté {$a} jours sur cet appareil';
 $string['role:accounting'] = 'Compta';
 $string['role:accounting_desc'] = 'ventes, factures, avoirs, devis et exports comptables, échéanciers et impayés ; voit les élèves sans rien modifier. Connexion en 2 étapes obligatoire.';
 $string['role:admin'] = 'Administrateur';

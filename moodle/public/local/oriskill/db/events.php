@@ -25,6 +25,20 @@
 defined('MOODLE_INTERNAL') || die();
 
 $observers = [
+    // Stay logged in: a token for the device when the box was ticked; forgotten at logout, all of them when the password
+    // changes.
+    [
+        'eventname' => '\core\event\user_loggedin',
+        'callback' => '\local_oriskill\remember_service::user_loggedin',
+    ],
+    [
+        'eventname' => '\core\event\user_loggedout',
+        'callback' => '\local_oriskill\remember_service::user_loggedout',
+    ],
+    [
+        'eventname' => '\core\event\user_password_updated',
+        'callback' => '\local_oriskill\remember_service::password_changed',
+    ],
     // Raised in the buyer's own request: the only moment their referral cookie can be read.
     [
         'eventname' => '\local_moderncommerce\event\order_created',
