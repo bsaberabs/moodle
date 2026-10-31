@@ -181,10 +181,11 @@ class billing_service {
     }
 
     /**
-     * Issue the invoice of a paid order of a trainer's courses, once; a subscription gets one invoice per month paid.
+     * Issue the invoice of a paid order of a trainer's courses, once; a subscription gets one invoice per month paid,
+     * a purchase in instalments one invoice per instalment collected (of that instalment's amount).
      *
      * @param int $orderid Order.
-     * @param int $period Month of a subscription (1 for the first payment, and for any other order).
+     * @param int $period Month of a subscription or instalment (1 for the first payment, and for any other order).
      * @return \stdClass|null The invoice, or null for an order that is not a trainer's (or not paid).
      */
     public static function issue_invoice(int $orderid, int $period = 1): ?\stdClass {
@@ -198,6 +199,12 @@ class billing_service {
             'id ASC'));
         if (count($issued) >= $period) {
             return $issued[$period - 1];
+        }
+        $plan = gateway::instalment_plan($order);
+        if ($issued && $plan && !$plan['subscription']
+                && !array_key_exists('instalment', json_decode($issued[0]->data, true) ?: [])) {
+            // Invoiced in full at purchase, before invoices were issued per instalment: that invoice stays the only one.
+            return $issued[0];
         }
         $sellers = seller_service::purchase_sellers($order, (int) $order->userid);
         $creator = count($sellers) === 1 ? reset($sellers) : null;
@@ -222,8 +229,27 @@ class billing_service {
             $tax = round($tax * $total / $gross, 2);
         }
         $mentions = [];
-        $plan = gateway::instalment_plan($order);
-        if ($plan && $plan['subscription']) {
+        $instalment = null;
+        if ($plan && !$plan['subscription']) {
+            // One instalment: its own amount, the products and the VAT in proportion.
+            $amount = $period === 1 ? $plan['first'] : $plan['amount'];
+            $ratio = $total > 0 ? $amount / $total : 0;
+            foreach ($lines as &$line) {
+                $line['name'] .= ' – ' . get_string('invoice:instalmentline', 'local_oriskill', (object) ['number' => $period,
+                    'count' => $plan['count']]);
+                $line['total'] = round($line['total'] * $ratio, 2);
+                $line['unitprice'] = $line['quantity'] > 0 ? round($line['total'] / $line['quantity'], 2) : $line['total'];
+                $line['tax'] = round($line['tax'] * $ratio, 2);
+            }
+            unset($line);
+            $mentions[] = get_string('invoice:instalmentno', 'local_oriskill', (object) ['number' => $period,
+                'count' => $plan['count'], 'total' => pricing_service::format_price($total, $order->currency)]);
+            $gross = round($gross * $ratio, 2);
+            $tax = round($tax * $ratio, 2);
+            $total = round($amount, 2);
+            $instalment = ['number' => $period, 'count' => $plan['count']];
+            $plan = null;
+        } else if ($plan && $plan['subscription']) {
             // Each month of a subscription is invoiced when it is paid.
             $mentions[] = get_string('invoice:subscription', 'local_oriskill', (object) ['period' => $period,
                 'amount' => pricing_service::format_price($plan['amount'], $order->currency)]);
@@ -241,7 +267,7 @@ class billing_service {
             'paid' => !$plan,
             'mentions' => $mentions,
             'paymentmethod' => self::payment_method($order),
-        ]);
+        ] + ($instalment ? ['instalment' => $instalment] : []));
         self::mail_invoice($invoice);
         return $invoice;
     }
@@ -489,17 +515,58 @@ class billing_service {
     public static function payment_refunded(\local_secureandpay\event\payment_refunded $event): void {
         global $DB;
 
-        $invoice = $DB->get_record('local_oriskill_invoices', ['orderid' => $event->objectid, 'type' => 'invoice']);
-        if (!$invoice) {
+        $amount = min((float) $event->other['amount'], self::order_creditable((int) $event->objectid));
+        if ($amount < 0.01) {
             return;
         }
-        $amount = min((float) $event->other['amount'], self::creditable($invoice));
-        if ($amount > 0) {
-            $credit = self::issue_credit_note($invoice, $amount, get_string('credit:refunded', 'local_oriskill'));
-            $creator = $DB->get_record('local_oriskill_creators', ['id' => $invoice->creatorid]);
-            log_service::add($creator, 'refund_done', ['amount' => pricing_service::format_price($amount, $invoice->currency),
-                'number' => $credit->number], null, (int) $invoice->userid);
+        foreach (self::credit_order((int) $event->objectid, $amount, get_string('credit:refunded', 'local_oriskill')) as $credit) {
+            $creator = $DB->get_record('local_oriskill_creators', ['id' => $credit->creatorid]);
+            log_service::add($creator, 'refund_done', ['amount' => pricing_service::format_price((float) $credit->total,
+                $credit->currency), 'number' => $credit->number], null, (int) $credit->userid);
         }
+    }
+
+    /**
+     * Amount of an order's invoices not yet cancelled by credit notes.
+     *
+     * @param int $orderid Order.
+     * @return float
+     */
+    public static function order_creditable(int $orderid): float {
+        global $DB;
+
+        return round(array_sum(array_map(fn($invoice) => self::creditable($invoice),
+            $DB->get_records('local_oriskill_invoices', ['orderid' => $orderid, 'type' => 'invoice']))), 2);
+    }
+
+    /**
+     * Credit notes for an amount of an order: on its invoices, the latest first (an order in instalments has one invoice
+     * per instalment), as much as each one still shows.
+     *
+     * @param int $orderid Order.
+     * @param float $amount Amount including VAT.
+     * @param string $reason Reason printed on the credit notes.
+     * @return array Credit notes issued.
+     */
+    public static function credit_order(int $orderid, float $amount, string $reason): array {
+        global $DB;
+
+        $amount = round($amount, 2);
+        if ($orderid <= 0 || $amount <= 0 || $amount > self::order_creditable($orderid) + 0.001) {
+            throw new \moodle_exception('error:creditamount', 'local_oriskill');
+        }
+        $credits = [];
+        foreach ($DB->get_records('local_oriskill_invoices', ['orderid' => $orderid, 'type' => 'invoice'], 'id DESC') as $invoice) {
+            $part = min($amount, self::creditable($invoice));
+            if ($part >= 0.01) {
+                $credits[] = self::issue_credit_note($invoice, $part, $reason);
+                $amount = round($amount - $part, 2);
+            }
+            if ($amount < 0.01) {
+                break;
+            }
+        }
+        return $credits;
     }
 
     /**

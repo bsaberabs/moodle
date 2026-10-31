@@ -172,8 +172,8 @@ class instalment_service {
             'latesince' => 0,
             'timemodified' => time(),
         ]);
-        if (!$record->count && $paid > 1) {
-            // Each further month of a subscription gets its own invoice.
+        if ($paid > 1) {
+            // Each further month of a subscription, each further instalment, gets its own invoice.
             billing_service::issue_invoice((int) $record->orderid, $paid);
         }
         unpaid_service::charged($record);

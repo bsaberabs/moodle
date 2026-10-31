@@ -267,7 +267,8 @@ class transaction_service {
                 $row->number = (string) $row->document->number;
             } else if ($order && !empty($invoices[$order->id]) && $row->type === 'payment') {
                 $list = $invoices[$order->id];
-                $index = !empty($plans[$order->id]['subscription'])
+                // A subscription or a purchase in instalments has one invoice per payment.
+                $index = !empty($plans[$order->id])
                     ? max(0, count(array_filter($sappaid[$order->id] ?? [], fn($id) => $id <= $row->eventid)) - 1) : 0;
                 $invoice = $list[min($index, count($list) - 1)];
                 $row->documentid = (int) $invoice->id;

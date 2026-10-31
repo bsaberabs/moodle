@@ -63,6 +63,17 @@ if (($action = optional_param('action', '', PARAM_ALPHA)) && confirm_sesskey()) 
         throw new moodle_exception('error:notallowed', 'local_oriskill');
     }
     $reason = trim(optional_param('reason', '', PARAM_TEXT));
+    // Credit notes over the order's invoices (one per instalment): their numbers.
+    $credit_order = function(float $amount, string $reason) use ($creator, $order, $DB): string {
+        $numbers = [];
+        foreach (billing_service::credit_order((int) $order->id, $amount, $reason) as $credit) {
+            $parent = (string) $DB->get_field('local_oriskill_invoices', 'number', ['id' => $credit->parentid]);
+            log_service::add($creator, 'credit_issued', ['number' => $credit->number, 'invoice' => $parent], null,
+                (int) $order->userid);
+            $numbers[] = $credit->number;
+        }
+        return implode(', ', $numbers);
+    };
     try {
         if ($action === 'refund' && $invoice) {
             // SecureAndPay refunds by itself; another gateway is refunded in its own account, here only the credit note.
@@ -73,17 +84,12 @@ if (($action = optional_param('action', '', PARAM_ALPHA)) && confirm_sesskey()) 
                     null, (int) $order->userid);
                 $message = get_string('refund:requested', 'local_oriskill');
             } else {
-                $credit = billing_service::issue_credit_note($invoice, $amount, $reason);
-                log_service::add($creator, 'credit_issued', ['number' => $credit->number, 'invoice' => $invoice->number],
-                    null, (int) $order->userid);
-                $message = get_string('sale:refundrecorded', 'local_oriskill', $credit->number);
+                $numbers = $credit_order($amount, $reason);
+                $message = get_string('sale:refundrecorded', 'local_oriskill', $numbers);
             }
         } else if ($action === 'credit' && $invoice) {
-            $credit = billing_service::issue_credit_note($invoice,
-                (float) unformat_float(required_param('amount', PARAM_RAW_TRIMMED), true), $reason);
-            log_service::add($creator, 'credit_issued', ['number' => $credit->number, 'invoice' => $invoice->number], null,
-                (int) $order->userid);
-            $message = get_string('credit:issued', 'local_oriskill', $credit->number);
+            $numbers = $credit_order((float) unformat_float(required_param('amount', PARAM_RAW_TRIMMED), true), $reason);
+            $message = get_string('credit:issued', 'local_oriskill', $numbers);
         } else if ($action === 'cancel' && $schedule && !$schedule->count) {
             $confirmed = instalment_service::cancel_subscription($schedule);
             $message = get_string($confirmed ? 'subscription:cancelledtrainer' : 'subscription:cancelledmanual', 'local_oriskill',
@@ -312,14 +318,14 @@ if ($canchange) {
             html_writer::tag('button', $button, ['type' => 'submit', 'class' => 'btn btn-sm btn-primary']), [], $confirm);
     };
     if ($invoice) {
-        $refundable = $sap ? refund_service::refundable($order) : billing_service::creditable($invoice);
+        $refundable = $sap ? refund_service::refundable($order) : billing_service::order_creditable((int) $order->id);
         if ($refundable > 0) {
             $actions .= html_writer::div(html_writer::tag('h4', get_string('refund:action', 'local_oriskill'), ['class' => 'h6']) .
                 $amountform('refund', $refundable, get_string('refund:confirm', 'local_oriskill'),
                     get_string($sap ? 'refund:help' : 'sale:refundother', 'local_oriskill'),
                     get_string('refund:confirmtext', 'local_oriskill')), 'oriskill-card');
         }
-        if (($left = billing_service::creditable($invoice)) > 0) {
+        if (($left = billing_service::order_creditable((int) $order->id)) > 0) {
             $actions .= html_writer::div(html_writer::tag('h4', get_string('credit:issue', 'local_oriskill'), ['class' => 'h6']) .
                 $amountform('credit', $left, get_string('credit:confirm', 'local_oriskill'),
                     get_string('sale:credithelp', 'local_oriskill'), get_string('credit:confirmtext', 'local_oriskill')),
