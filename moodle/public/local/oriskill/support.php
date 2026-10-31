@@ -130,6 +130,15 @@ if ($tickets) {
     echo html_writer::div($rows, 'list-group mb-4');
 }
 
+// Coaching credits left with each trainer.
+foreach ($trainers as $trainer) {
+    $credits = \local_oriskill\coaching_service::balances($trainer, (int) $USER->id)[(int) $USER->id] ?? 0;
+    if ($credits > 0) {
+        echo html_writer::div(get_string('coaching:yours', 'local_oriskill', (object) ['count' => $credits,
+            'trainer' => format_string($trainer->displayname)]), 'alert alert-info');
+    }
+}
+
 // A new ticket.
 echo html_writer::start_div('card card-body');
 echo html_writer::tag('h3', get_string('support:new', 'local_oriskill'), ['class' => 'h5']);

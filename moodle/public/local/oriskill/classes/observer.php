@@ -53,6 +53,7 @@ class observer {
         abandon_service::order_paid((int) $event->objectid);
         orderform_service::grant_groups((int) $event->objectid);
         orderform_service::count_sale((int) $event->objectid);
+        coaching_service::order_paid((int) $event->objectid);
         instalment_service::group_buyers((int) $event->objectid);
         billing_service::issue_invoice((int) $event->objectid);
         activecampaign_service::order_paid((int) $event->objectid);

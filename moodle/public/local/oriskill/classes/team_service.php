@@ -68,6 +68,8 @@ class team_service {
         '/local/oriskill/videos.php' => ['admin', 'teaching'],
         '/local/oriskill/library.php' => ['admin', 'teaching'],
         '/local/oriskill/faq.php' => ['admin', 'teaching', 'support'],
+        '/local/oriskill/gamification.php' => ['admin', 'teaching'],
+        '/local/oriskill/coaching.php' => ['admin', 'teaching', 'support', 'coach'],
         '/local/oriskill/categories.php' => ['admin', 'teaching'],
         '/local/oriskill/share.php' => ['admin'],
         '/local/oriskill/tools.php' => ['admin', 'teaching'],

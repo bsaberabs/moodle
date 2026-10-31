@@ -369,6 +369,7 @@ class orderform_service {
                 'highlight' => empty($offer->highlight) ? 0 : 1,
                 'highlightstyle' => json_encode(self::highlight_style((array) ($offer->highlightstyle ?? []))),
                 'stock' => isset($offer->stock) && $offer->stock !== '' && $offer->stock !== null ? max(0, (int) $offer->stock) : null,
+                'coachingcredits' => max(0, min(999, (int) ($offer->coachingcredits ?? 0))),
                 'actags' => activecampaign_service::clean_tags((string) ($offer->actags ?? '')),
                 'subprice' => round(max(0, (float) ($offer->subprice ?? 0)), 2),
                 'sortorder' => $index,

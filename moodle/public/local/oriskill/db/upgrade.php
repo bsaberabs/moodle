@@ -647,5 +647,17 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103066, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103067) {
+        // Coaching credits of the learners, given with an offer or by the team.
+        if (!$dbman->table_exists('local_oriskill_credits')) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', 'local_oriskill_credits');
+        }
+        $table = new xmldb_table('local_oriskill_formoffers');
+        $field = new xmldb_field('coachingcredits', XMLDB_TYPE_INTEGER, '5', null, XMLDB_NOTNULL, null, '0', 'stock');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_plugin_savepoint(true, 2026103067, 'local', 'oriskill');
+    }
     return true;
 }

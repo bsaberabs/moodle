@@ -307,6 +307,7 @@
         <FIELD NAME="defaultmode" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="once" SEQUENCE="false" COMMENT="Payment shown first: once, plan0, plan1... or subscription"/>
         <FIELD NAME="highlightstyle" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Special offer box: JSON label, background, border colour and style"/>
         <FIELD NAME="stock" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Sales left, empty for no limit"/>
+        <FIELD NAME="coachingcredits" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Coaching credits given with the offer"/>
         <FIELD NAME="sortorder" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
@@ -891,6 +892,25 @@
       </KEYS>
       <INDEXES>
         <INDEX NAME="keytime" UNIQUE="false" FIELDS="keyid, timecreated"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="local_oriskill_credits" COMMENT="Coaching credits of the learners: given (positive) or spent by a session (negative)">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="creatorid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="delta" TYPE="int" LENGTH="5" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="note" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="byuserid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Team member who recorded it, 0 for an order"/>
+        <FIELD NAME="orderid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="creatorid" TYPE="foreign" FIELDS="creatorid" REFTABLE="local_oriskill_creators" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="creatoruser" UNIQUE="false" FIELDS="creatorid, userid"/>
       </INDEXES>
     </TABLE>
     <TABLE NAME="local_oriskill_privacy" COMMENT="Privacy settings of a trainer: consent texts, cookie banner, measurement tools">
