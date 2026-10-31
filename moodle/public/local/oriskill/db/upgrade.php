@@ -551,5 +551,14 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103054, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103055) {
+        // The idea box of the learners goes with the support tickets.
+        $table = new xmldb_table('local_oriskill_tickets');
+        $field = new xmldb_field('kind', XMLDB_TYPE_CHAR, '10', null, XMLDB_NOTNULL, null, 'ticket', 'subject');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_plugin_savepoint(true, 2026103055, 'local', 'oriskill');
+    }
     return true;
 }

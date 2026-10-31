@@ -41,6 +41,18 @@ class ticket_service {
     /** Roles of the team told of a new ticket or a learner's answer (the trainer always is). */
     const NOTIFIED_ROLES = ['admin', 'support'];
 
+    /** Support tickets, and ideas of the idea box. */
+    const KINDS = ['ticket', 'idea'];
+
+    /** Files attached to a message: how many, how big, which kinds. */
+    const MAXFILES = 3;
+    const MAXBYTES = 10485760;
+    const EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'odt',
+        'txt', 'csv', 'mp3', 'm4a', 'wav', 'mp4', 'mov', 'zip'];
+
+    /** File area of the attachments (item = message). */
+    const FILEAREA = 'ticketfile';
+
     /**
      * Trainers a learner can write to: those whose courses they are enrolled in.
      *
@@ -88,9 +100,12 @@ class ticket_service {
      * @param string $subject Subject.
      * @param string $message Message (plain text).
      * @param int $courseid Course concerned, 0 for none.
+     * @param string $kind ticket or idea.
+     * @param array $files Attached files, see uploaded().
      * @return \stdClass Ticket.
      */
-    public static function create(\stdClass $creator, int $userid, string $subject, string $message, int $courseid = 0): \stdClass {
+    public static function create(\stdClass $creator, int $userid, string $subject, string $message, int $courseid = 0,
+            string $kind = 'ticket', array $files = []): \stdClass {
         global $DB;
 
         $subject = \core_text::substr(trim($subject), 0, 255);
@@ -103,9 +118,10 @@ class ticket_service {
         }
         $now = time();
         $ticket = (object) ['creatorid' => $creator->id, 'userid' => $userid, 'courseid' => $courseid ?: null,
-            'subject' => $subject, 'status' => 'open', 'timecreated' => $now, 'timemodified' => $now];
+            'subject' => $subject, 'kind' => in_array($kind, self::KINDS, true) ? $kind : 'ticket', 'status' => 'open',
+            'timecreated' => $now, 'timemodified' => $now];
         $ticket->id = $DB->insert_record(self::TABLE, $ticket);
-        self::add_message($ticket, $userid, $message, false);
+        self::add_message($ticket, $userid, $message, false, $files);
         log_service::add($creator, 'ticket_created', ['subject' => $subject], $courseid ?: null, $userid);
         self::notify_team($creator, $ticket, $message, true);
         return $ticket;
@@ -120,8 +136,10 @@ class ticket_service {
      * @param string $message Message (plain text).
      * @param bool $fromteam Written by the trainer's team.
      * @param bool $internal Internal note (team only).
+     * @param array $files Attached files, see uploaded().
      */
-    public static function reply(\stdClass $ticket, int $userid, string $message, bool $fromteam, bool $internal = false): void {
+    public static function reply(\stdClass $ticket, int $userid, string $message, bool $fromteam, bool $internal = false,
+            array $files = []): void {
         global $DB;
 
         $message = trim($message);
@@ -129,7 +147,7 @@ class ticket_service {
             throw new \moodle_exception('tickets:empty', 'local_oriskill');
         }
         $creator = $DB->get_record('local_oriskill_creators', ['id' => $ticket->creatorid], '*', MUST_EXIST);
-        self::add_message($ticket, $userid, $message, $internal && $fromteam);
+        self::add_message($ticket, $userid, $message, $internal && $fromteam, $files);
         if ($internal && $fromteam) {
             return;
         }
@@ -217,13 +235,15 @@ class ticket_service {
      * @param string $status A status, or '' for all.
      * @param string $search Part of the subject, or of the learner's name or e-mail.
      * @param int $page Page, from 0.
+     * @param string $kind ticket or idea.
      * @return array [tickets, total]
      */
-    public static function list(\stdClass $creator, string $status, string $search = '', int $page = 0): array {
+    public static function list(\stdClass $creator, string $status, string $search = '', int $page = 0,
+            string $kind = 'ticket'): array {
         global $DB;
 
-        $where = ['t.creatorid = :creatorid'];
-        $params = ['creatorid' => $creator->id];
+        $where = ['t.creatorid = :creatorid', 't.kind = :kind'];
+        $params = ['creatorid' => $creator->id, 'kind' => $kind];
         if (in_array($status, self::STATUSES, true)) {
             $where[] = 't.status = :status';
             $params['status'] = $status;
@@ -289,12 +309,139 @@ class ticket_service {
      * @param int $userid Author.
      * @param string $message Plain text.
      * @param bool $internal Internal note.
+     * @param array $files Attached files, see uploaded().
+     * @return int Message.
      */
-    protected static function add_message(\stdClass $ticket, int $userid, string $message, bool $internal): void {
+    protected static function add_message(\stdClass $ticket, int $userid, string $message, bool $internal,
+            array $files = []): int {
         global $DB;
 
-        $DB->insert_record(self::MESSAGES, (object) ['ticketid' => $ticket->id, 'userid' => $userid,
+        $id = $DB->insert_record(self::MESSAGES, (object) ['ticketid' => $ticket->id, 'userid' => $userid,
             'message' => \core_text::substr($message, 0, 20000), 'internal' => (int) $internal, 'timecreated' => time()]);
+        $fs = get_file_storage();
+        foreach (array_slice($files, 0, self::MAXFILES) as $file) {
+            $fs->create_file_from_pathname(['contextid' => \context_system::instance()->id, 'component' => 'local_oriskill',
+                'filearea' => self::FILEAREA, 'itemid' => $id, 'filepath' => '/', 'filename' => $file['name'],
+                'userid' => $userid], $file['path']);
+        }
+        return $id;
+    }
+
+    /**
+     * Files sent with a form (input "attachments[]"), checked: at most MAXFILES, MAXBYTES each, EXTENSIONS only.
+     *
+     * @param string $field Name of the file input.
+     * @return array of ['name' => clean file name, 'path' => uploaded file]
+     */
+    public static function uploaded(string $field = 'attachments'): array {
+        $input = $_FILES[$field] ?? null;
+        if (!$input || !is_array($input['name'])) {
+            return [];
+        }
+        $files = [];
+        $names = [];
+        foreach ($input['name'] as $i => $name) {
+            if (($input['error'][$i] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE || $name === '') {
+                continue;
+            }
+            $name = clean_filename(\core_text::substr($name, -120));
+            $extension = \core_text::strtolower(pathinfo($name, PATHINFO_EXTENSION));
+            if ($input['error'][$i] !== UPLOAD_ERR_OK || !is_uploaded_file($input['tmp_name'][$i])
+                    || $input['size'][$i] > self::MAXBYTES) {
+                throw new \moodle_exception('tickets:filetoobig', 'local_oriskill', '', $name);
+            }
+            if (!in_array($extension, self::EXTENSIONS, true)) {
+                throw new \moodle_exception('tickets:filetype', 'local_oriskill', '', $name);
+            }
+            // Two files of the same name: the second gets a number.
+            $base = $name;
+            for ($n = 2; isset($names[$name]); $n++) {
+                $name = pathinfo($base, PATHINFO_FILENAME) . '-' . $n . '.' . $extension;
+            }
+            $names[$name] = true;
+            $files[] = ['name' => $name, 'path' => $input['tmp_name'][$i]];
+        }
+        if (count($files) > self::MAXFILES) {
+            throw new \moodle_exception('tickets:toomanyfiles', 'local_oriskill', '', self::MAXFILES);
+        }
+        return $files;
+    }
+
+    /**
+     * Files attached to messages.
+     *
+     * @param int[] $messageids Messages.
+     * @return array message id => list of {name, size, url}
+     */
+    public static function attachments(array $messageids): array {
+        $result = [];
+        $context = \context_system::instance();
+        $fs = get_file_storage();
+        foreach ($messageids as $id) {
+            foreach ($fs->get_area_files($context->id, 'local_oriskill', self::FILEAREA, $id, 'filename', false) as $file) {
+                $result[$id][] = (object) ['name' => $file->get_filename(), 'size' => $file->get_filesize(),
+                    'url' => \moodle_url::make_pluginfile_url($context->id, 'local_oriskill', self::FILEAREA, $id, '/',
+                        $file->get_filename(), true)];
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Links to the files attached to a message.
+     *
+     * @param array $files See attachments().
+     * @return string HTML
+     */
+    public static function attachments_html(array $files): string {
+        if (!$files) {
+            return '';
+        }
+        return \html_writer::div(implode('', array_map(fn($f) => \html_writer::link($f->url,
+            '<i class="fa fa-paperclip me-1" aria-hidden="true"></i>' . s($f->name) . ' ' .
+            \html_writer::span('(' . display_size($f->size) . ')', 'text-muted'), ['class' => 'me-3 small']), $files)), 'mt-2');
+    }
+
+    /**
+     * Field to attach files to a message.
+     *
+     * @param string $id Id of the input.
+     * @return string HTML
+     */
+    public static function file_input(string $id): string {
+        return \html_writer::div(
+            \html_writer::tag('label', get_string('tickets:attach', 'local_oriskill'), ['for' => $id, 'class' => 'form-label small']) .
+            \html_writer::empty_tag('input', ['type' => 'file', 'name' => 'attachments[]', 'id' => $id, 'multiple' => 'multiple',
+                'class' => 'form-control form-control-sm', 'accept' => implode(',', array_map(fn($e) => '.' . $e, self::EXTENSIONS))]) .
+            \html_writer::div(get_string('tickets:attach_help', 'local_oriskill', (object) ['count' => self::MAXFILES,
+                'size' => display_size(self::MAXBYTES)]), 'form-text'), 'mb-2');
+    }
+
+    /**
+     * Whether a user may download a file attached to a message: the learner of the ticket (not an internal note), or
+     * the team of the trainer (a coach for their learners only).
+     *
+     * @param int $messageid Message.
+     * @param int $userid User.
+     * @return bool
+     */
+    public static function can_read_file(int $messageid, int $userid): bool {
+        global $DB;
+
+        $message = $DB->get_record(self::MESSAGES, ['id' => $messageid]);
+        $ticket = $message ? $DB->get_record(self::TABLE, ['id' => $message->ticketid]) : null;
+        if (!$ticket) {
+            return false;
+        }
+        if ((int) $ticket->userid === $userid && !$message->internal) {
+            return true;
+        }
+        $space = team_service::spaces_of($userid)[$ticket->creatorid] ?? null;
+        if (!$space || !team_service::can($space['role'], '/local/oriskill/tickets.php')) {
+            return false;
+        }
+        return $space['role'] !== 'coach'
+            || (int) (team_service::coach_map($space['creator'])[(int) $ticket->userid] ?? 0) === $userid;
     }
 
     /**

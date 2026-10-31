@@ -35,7 +35,21 @@
  * @return bool False if the file is not found.
  */
 function local_oriskill_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = []) {
-    global $DB;
+    global $DB, $USER;
+
+    // Files attached to a ticket: its learner and the trainer's team only.
+    if ($context->contextlevel === CONTEXT_SYSTEM && $filearea === \local_oriskill\ticket_service::FILEAREA) {
+        require_login(null, false);
+        $itemid = (int) array_shift($args);
+        if (!\local_oriskill\ticket_service::can_read_file($itemid, (int) $USER->id)) {
+            return false;
+        }
+        $file = get_file_storage()->get_file($context->id, 'local_oriskill', $filearea, $itemid, '/', array_pop($args));
+        if (!$file || $file->is_directory()) {
+            return false;
+        }
+        send_stored_file($file, 0, 0, true, $options);
+    }
 
     if ($context->contextlevel !== CONTEXT_SYSTEM || !in_array($filearea, ['logo', 'banner', 'orderform', 'capturepage'], true)) {
         return false;

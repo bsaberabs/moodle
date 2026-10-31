@@ -44,7 +44,7 @@ if ($id && ($action = optional_param('action', '', PARAM_ALPHA)) && confirm_sess
     $back = new moodle_url($baseurl, ['id' => $id]);
     try {
         if ($action === 'reply' || $action === 'note') {
-            ts::reply($ticket, (int) $USER->id, required_param('message', PARAM_TEXT), true, $action === 'note');
+            ts::reply($ticket, (int) $USER->id, required_param('message', PARAM_TEXT), true, $action === 'note', ts::uploaded());
             if ($action === 'reply' && optional_param('andclose', 0, PARAM_BOOL)) {
                 ts::set_status($ticket, 'closed');
             }
@@ -84,13 +84,16 @@ if ($id) {
     echo html_writer::link(new moodle_url($baseurl, ['status' => $ticket->status]), '← ' .
         get_string('tickets:back', 'local_oriskill'), ['class' => 'd-inline-block mb-3']);
     echo html_writer::div(
-        html_writer::div(html_writer::tag('h3', '#' . $ticket->id . ' · ' . s($ticket->subject), ['class' => 'h5 mb-1']) .
+        html_writer::div(html_writer::tag('h3', ($ticket->kind === 'idea' ? html_writer::span(get_string('support:idea', 'local_oriskill'),
+            'oriskill-badge is-warn me-2') : '') . '#' . $ticket->id . ' · ' . s($ticket->subject), ['class' => 'h5 mb-1']) .
             html_writer::div($who . ($ticket->courseid ? ' · ' . $coursename($ticket->courseid) : '') . ' · ' .
                 get_string('tickets:opened', 'local_oriskill', $date((int) $ticket->timecreated)), 'small text-muted')) .
         $badge($ticket->status), 'oriskill-card mb-3 d-flex justify-content-between align-items-start gap-3');
 
     $authors = [];
-    foreach (ts::messages($ticket, true) as $message) {
+    $messages = ts::messages($ticket, true);
+    $files = ts::attachments(array_keys($messages));
+    foreach ($messages as $message) {
         $authors[$message->userid] = $authors[$message->userid] ?? core_user::get_user($message->userid);
         $fromlearner = (int) $message->userid === (int) $ticket->userid;
         $style = $message->internal ? 'background: #fef9c3; border-color: #facc15'
@@ -100,7 +103,8 @@ if ($id) {
                 $date((int) $message->timecreated) . ($message->internal
                     ? ' · ' . html_writer::tag('strong', get_string('tickets:internal', 'local_oriskill')) : ''),
                 'small text-muted mb-1') .
-            html_writer::div(nl2br(s($message->message)), '', ['style' => 'white-space: normal']),
+            html_writer::div(nl2br(s($message->message)), '', ['style' => 'white-space: normal']) .
+            ts::attachments_html($files[$message->id] ?? []),
             'oriskill-card mb-2 ' . ($fromlearner ? 'me-md-5' : 'ms-md-5'), ['style' => $style]);
     }
 
@@ -108,7 +112,7 @@ if ($id) {
         echo html_writer::tag('form', $hidden('reply') .
             html_writer::tag('label', get_string('tickets:answer', 'local_oriskill'), ['for' => 'message', 'class' => 'form-label']) .
             html_writer::tag('textarea', '', ['name' => 'message', 'id' => 'message', 'rows' => 6, 'required' => 'required',
-                'class' => 'form-control mb-2']) .
+                'class' => 'form-control mb-2']) . ts::file_input('attachments') .
             html_writer::div(
                 html_writer::tag('button', get_string('tickets:send', 'local_oriskill'), ['type' => 'submit',
                     'class' => 'btn btn-primary']) .
@@ -118,7 +122,8 @@ if ($id) {
                     'name' => 'action', 'value' => 'note', 'class' => 'btn btn-outline-secondary']),
                 'd-flex flex-wrap gap-2') .
             html_writer::div(get_string('tickets:note_help', 'local_oriskill'), 'small text-muted mt-2'),
-            ['method' => 'post', 'action' => $baseurl->out(false), 'class' => 'oriskill-card mt-3']);
+            ['method' => 'post', 'action' => $baseurl->out(false), 'class' => 'oriskill-card mt-3',
+                'enctype' => 'multipart/form-data']);
         echo html_writer::tag('form', $hidden($ticket->status === 'closed' ? 'reopen' : 'close') .
             html_writer::tag('button', get_string($ticket->status === 'closed' ? 'tickets:reopen' : 'tickets:close',
                 'local_oriskill'), ['type' => 'submit', 'class' => 'btn btn-link px-0']),
@@ -131,7 +136,7 @@ if ($id) {
 
 // The list: one tab per status.
 $tabs = '';
-foreach (array_merge(ts::STATUSES, ['all']) as $tab) {
+foreach (array_merge(ts::STATUSES, ['all', 'ideas']) as $tab) {
     $label = get_string('tickets:tab_' . $tab, 'local_oriskill');
     if ($tab === 'open' && ($open = ts::open_count($creator))) {
         $label .= ' (' . $open . ')';
@@ -147,7 +152,8 @@ echo html_writer::tag('form',
     html_writer::tag('button', get_string('search'), ['type' => 'submit', 'class' => 'btn btn-outline-secondary']),
     ['method' => 'get', 'action' => $baseurl->out(false), 'class' => 'd-flex gap-2 mb-3', 'style' => 'max-width: 32rem']);
 
-[$tickets, $total] = ts::list($creator, $status === 'all' ? '' : $status, $search, $page);
+[$tickets, $total] = ts::list($creator, in_array($status, ['all', 'ideas'], true) ? '' : $status, $search, $page,
+    $status === 'ideas' ? 'idea' : 'ticket');
 if (!$tickets) {
     echo html_writer::div('<i class="fa fa-life-ring" aria-hidden="true"></i>' .
         get_string('tickets:none', 'local_oriskill'), 'oriskill-card oriskill-empty');

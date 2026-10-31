@@ -45,14 +45,15 @@ if (($action = optional_param('action', '', PARAM_ALPHA)) && confirm_sesskey()) 
             if (!$creator) {
                 throw new moodle_exception('error:notallowed', 'local_oriskill');
             }
+            $kind = optional_param('kind', 'ticket', PARAM_ALPHA);
             $ticket = ts::create($creator, (int) $USER->id, required_param('subject', PARAM_TEXT),
-                required_param('message', PARAM_TEXT), optional_param('courseid', 0, PARAM_INT));
-            redirect(new moodle_url($url, ['id' => $ticket->id]), get_string('support:sent', 'local_oriskill'), null,
-                \core\output\notification::NOTIFY_SUCCESS);
+                required_param('message', PARAM_TEXT), optional_param('courseid', 0, PARAM_INT), $kind, ts::uploaded());
+            redirect(new moodle_url($url, ['id' => $ticket->id]), get_string($kind === 'idea' ? 'support:ideasent' : 'support:sent',
+                'local_oriskill'), null, \core\output\notification::NOTIFY_SUCCESS);
         }
         $ticket = ts::require_own((int) $USER->id, required_param('id', PARAM_INT));
         if ($action === 'reply') {
-            ts::reply($ticket, (int) $USER->id, required_param('message', PARAM_TEXT), false);
+            ts::reply($ticket, (int) $USER->id, required_param('message', PARAM_TEXT), false, false, ts::uploaded());
             $message = get_string('support:sent', 'local_oriskill');
         } else if ($action === 'close') {
             ts::set_status($ticket, 'closed');
@@ -85,21 +86,24 @@ if ($id) {
         html_writer::div(format_string($creator->displayname) . ($ticket->courseid
             ? ' · ' . format_string((string) $DB->get_field('course', 'fullname', ['id' => $ticket->courseid])) : '') .
             ' · ' . $badge($ticket->status), 'text-muted small'), 'mb-3');
-    foreach (ts::messages($ticket, false) as $message) {
+    $messages = ts::messages($ticket, false);
+    $files = ts::attachments(array_keys($messages));
+    foreach ($messages as $message) {
         $mine = (int) $message->userid === (int) $USER->id;
         $author = $mine ? get_string('support:you', 'local_oriskill') : format_string($creator->displayname);
         echo html_writer::div(
             html_writer::div(s($author) . ' · ' . $date((int) $message->timecreated), 'small text-muted mb-1') .
-            html_writer::div(nl2br(s($message->message)), '', ['style' => 'white-space: normal']),
+            html_writer::div(nl2br(s($message->message)), '', ['style' => 'white-space: normal']) .
+            ts::attachments_html($files[$message->id] ?? []),
             'card card-body mb-2 ' . ($mine ? 'ms-md-5 bg-light' : 'me-md-5 border-primary'));
     }
     echo html_writer::tag('form', $hidden('reply', (int) $ticket->id) .
         html_writer::tag('label', get_string($ticket->status === 'closed' ? 'support:reopen' : 'support:answer', 'local_oriskill'),
             ['for' => 'message', 'class' => 'form-label mt-3']) .
         html_writer::tag('textarea', '', ['name' => 'message', 'id' => 'message', 'rows' => 5, 'required' => 'required',
-            'class' => 'form-control mb-2']) .
+            'class' => 'form-control mb-2']) . ts::file_input('attachments') .
         html_writer::tag('button', get_string('support:send', 'local_oriskill'), ['type' => 'submit', 'class' => 'btn btn-primary']),
-        ['method' => 'post', 'action' => $url->out(false)]);
+        ['method' => 'post', 'action' => $url->out(false), 'enctype' => 'multipart/form-data']);
     if ($ticket->status !== 'closed') {
         echo html_writer::tag('form', $hidden('close', (int) $ticket->id) .
             html_writer::tag('button', get_string('support:close', 'local_oriskill'), ['type' => 'submit',
@@ -116,7 +120,8 @@ if ($tickets) {
     foreach ($tickets as $ticket) {
         $trainer = $trainers[$ticket->creatorid] ?? $DB->get_record('local_oriskill_creators', ['id' => $ticket->creatorid]);
         $rows .= html_writer::link(new moodle_url($url, ['id' => $ticket->id]),
-            html_writer::div(html_writer::div(s($ticket->subject), 'fw-semibold') .
+            html_writer::div(html_writer::div(($ticket->kind === 'idea' ? html_writer::span(get_string('support:idea',
+                'local_oriskill'), 'badge bg-warning text-dark me-1') : '') . s($ticket->subject), 'fw-semibold') .
                 html_writer::div(($trainer ? format_string($trainer->displayname) . ' · ' : '') . $date((int) $ticket->timemodified),
                     'small text-muted')) . $badge($ticket->status),
             ['class' => 'list-group-item list-group-item-action d-flex justify-content-between align-items-center gap-3']);
@@ -151,9 +156,32 @@ if (!$trainers) {
         $field(get_string('subject'), html_writer::empty_tag('input', ['type' => 'text', 'name' => 'subject', 'id' => 'subject',
             'maxlength' => 255, 'required' => 'required', 'class' => 'form-control']), 'subject') .
         $field(get_string('message', 'message'), html_writer::tag('textarea', '', ['name' => 'message', 'id' => 'message',
-            'rows' => 6, 'required' => 'required', 'class' => 'form-control']), 'message') .
+            'rows' => 6, 'required' => 'required', 'class' => 'form-control']), 'message') . ts::file_input('attachments') .
         html_writer::tag('button', get_string('support:send', 'local_oriskill'), ['type' => 'submit', 'class' => 'btn btn-primary']),
-        ['method' => 'post', 'action' => $url->out(false)]);
+        ['method' => 'post', 'action' => $url->out(false), 'enctype' => 'multipart/form-data']);
 }
 echo html_writer::end_div();
+
+// The idea box: a suggestion to the trainer's team.
+if ($trainers) {
+    echo html_writer::start_div('card card-body mt-4');
+    echo html_writer::tag('h3', get_string('support:ideabox', 'local_oriskill'), ['class' => 'h5']);
+    echo html_writer::tag('p', get_string('support:ideabox_help', 'local_oriskill'), ['class' => 'text-muted small']);
+    echo html_writer::tag('form', $hidden('create') .
+        html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'kind', 'value' => 'idea']) .
+        (count($trainers) > 1
+            ? $field(get_string('support:trainer', 'local_oriskill'), html_writer::select(array_map(fn($t) =>
+                format_string($t->displayname), $trainers), 'creatorid', $selected, false,
+                ['class' => 'form-select', 'id' => 'ideacreatorid']), 'ideacreatorid')
+            : html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'creatorid', 'value' => $selected])) .
+        $field(get_string('support:ideatitle', 'local_oriskill'), html_writer::empty_tag('input', ['type' => 'text',
+            'name' => 'subject', 'id' => 'ideasubject', 'maxlength' => 255, 'required' => 'required', 'class' => 'form-control']),
+            'ideasubject') .
+        $field(get_string('support:ideatext', 'local_oriskill'), html_writer::tag('textarea', '', ['name' => 'message',
+            'id' => 'ideamessage', 'rows' => 4, 'required' => 'required', 'class' => 'form-control']), 'ideamessage') .
+        html_writer::tag('button', get_string('support:ideasend', 'local_oriskill'), ['type' => 'submit',
+            'class' => 'btn btn-outline-primary']),
+        ['method' => 'post', 'action' => $url->out(false)]);
+    echo html_writer::end_div();
+}
 echo $OUTPUT->footer();
