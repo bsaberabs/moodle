@@ -62,9 +62,12 @@ class webhook_service {
      * @param \stdClass $creator Trainer.
      * @param string $url https address.
      * @param string[] $events Events it receives.
+     * @param int[] $courseids Only the sales of these courses of the trainer (none: all).
+     * @param int[] $formids Only the sales of these order forms of the trainer (none: all).
      * @return \stdClass
      */
-    public static function add(\stdClass $creator, string $url, array $events): \stdClass {
+    public static function add(\stdClass $creator, string $url, array $events, array $courseids = [],
+            array $formids = []): \stdClass {
         global $DB;
 
         $url = trim($url);
@@ -72,8 +75,20 @@ class webhook_service {
         if (!preg_match('~^https://[^\s/$.?#][^\s]*$~i', $url) || !$events) {
             throw new \moodle_exception('error:webhook', 'local_oriskill');
         }
+        // Filters: only the trainer's own courses and order forms.
+        $own = function(string $table, string $owner, int $ownerid, array $ids) use ($DB): array {
+            if (!$ids) {
+                return [];
+            }
+            [$insql, $params] = $DB->get_in_or_equal(array_map('intval', $ids));
+            return array_keys($DB->get_records_select($table, "$owner = ? AND id $insql", array_merge([$ownerid], $params),
+                'id', 'id'));
+        };
+        $courseids = $own('course', 'category', (int) $creator->categoryid, $courseids);
+        $formids = $own('local_oriskill_orderforms', 'creatorid', (int) $creator->id, $formids);
         $record = (object) ['creatorid' => $creator->id, 'url' => $url, 'secret' => \core\encryption::encrypt(random_string(40)),
-            'events' => implode(',', $events), 'enabled' => 1, 'timecreated' => time()];
+            'events' => implode(',', $events), 'courseids' => implode(',', $courseids) ?: null,
+            'formids' => implode(',', $formids) ?: null, 'enabled' => 1, 'timecreated' => time()];
         $record->id = $DB->insert_record(self::TABLE, $record);
         return $record;
     }
@@ -122,10 +137,30 @@ class webhook_service {
      */
     public static function dispatch(\stdClass $creator, string $event, array $data): void {
         foreach (self::hooks($creator) as $hook) {
-            if ($hook->enabled && in_array($event, explode(',', $hook->events), true)) {
+            if ($hook->enabled && in_array($event, explode(',', $hook->events), true) && self::matches($hook, $data)) {
                 self::queue($hook, $event, $data);
             }
         }
+    }
+
+    /**
+     * Whether an event passes the filters of a webhook: a sale of one of its courses and of one of its order forms.
+     * Events that are not about a sale (a new lead) are not filtered.
+     *
+     * @param \stdClass $hook Webhook.
+     * @param array $data Event data.
+     * @return bool
+     */
+    public static function matches(\stdClass $hook, array $data): bool {
+        if (!array_key_exists('courses', $data)) {
+            return true;
+        }
+        $courseids = array_filter(array_map('intval', explode(',', (string) $hook->courseids)));
+        $formids = array_filter(array_map('intval', explode(',', (string) $hook->formids)));
+        if ($courseids && !array_intersect($courseids, array_map(fn($c) => (int) $c['id'], $data['courses']))) {
+            return false;
+        }
+        return !$formids || in_array((int) ($data['orderform']['id'] ?? 0), $formids, true);
     }
 
     /**
@@ -330,6 +365,8 @@ class webhook_service {
             'courses' => $courses,
             'offer' => !empty($notes['offer']) ? (string) $DB->get_field('local_oriskill_formoffers', 'label',
                 ['id' => $notes['offer']]) : null,
+            'orderform' => !empty($notes['orderform']) ? ['id' => (int) $notes['orderform'],
+                'name' => (string) $DB->get_field('local_oriskill_orderforms', 'title', ['id' => $notes['orderform']])] : null,
             'instalments' => $instalments ? ['paid' => (int) $instalments->paid, 'count' => (int) $instalments->count,
                 'amount' => (float) $instalments->amount, 'first' => (float) ($instalments->firstamount ?: $instalments->amount),
                 'status' => $instalments->status] : null,

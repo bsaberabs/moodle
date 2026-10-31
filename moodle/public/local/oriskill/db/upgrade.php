@@ -560,5 +560,16 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103055, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103056) {
+        // A webhook can receive only the sales of some courses or order forms.
+        $table = new xmldb_table('local_oriskill_webhooks');
+        foreach (['courseids' => 'events', 'formids' => 'courseids'] as $name => $after) {
+            $field = new xmldb_field($name, XMLDB_TYPE_CHAR, '1333', null, null, null, null, $after);
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+        upgrade_plugin_savepoint(true, 2026103056, 'local', 'oriskill');
+    }
     return true;
 }

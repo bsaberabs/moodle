@@ -361,6 +361,8 @@
         <FIELD NAME="url" TYPE="char" LENGTH="1333" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="secret" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="Signing secret, encrypted"/>
         <FIELD NAME="events" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Comma-separated events"/>
+        <FIELD NAME="courseids" TYPE="char" LENGTH="1333" NOTNULL="false" SEQUENCE="false" COMMENT="Only sales of these courses (comma-separated), empty for all"/>
+        <FIELD NAME="formids" TYPE="char" LENGTH="1333" NOTNULL="false" SEQUENCE="false" COMMENT="Only sales of these order forms (comma-separated), empty for all"/>
         <FIELD NAME="enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
         <FIELD NAME="lastresult" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>

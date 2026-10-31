@@ -216,7 +216,7 @@ $paymenthtml = $facts([
     get_string('sale:nextdue', 'local_oriskill') => $nextdue,
     get_string('sale:refundedtotal', 'local_oriskill') => (float) $order->refundedtotal > 0
         ? $money((float) $order->refundedtotal) : '',
-    get_string('sale:orderform', 'local_oriskill') => $form ? format_string($form->name) .
+    get_string('sale:orderform', 'local_oriskill') => $form ? format_string($form->title) .
         ($offer !== false ? ' · ' . format_string($offer) : '') : '',
     get_string('sale:coupon', 'local_oriskill') => s((string) $order->couponcode),
     get_string('sale:affiliate', 'local_oriskill') => $commission ? fullname($commission) . ' · ' .

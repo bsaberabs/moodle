@@ -68,7 +68,8 @@ if (($action = optional_param('hookaction', '', PARAM_ALPHA)) && confirm_sesskey
     try {
         if ($action === 'add') {
             $hook = webhook_service::add($creator, required_param('hookurl', PARAM_RAW_TRIMMED),
-                optional_param_array('hookevents', [], PARAM_RAW_TRIMMED));
+                optional_param_array('hookevents', [], PARAM_RAW_TRIMMED), optional_param_array('hookcourses', [], PARAM_INT),
+                optional_param_array('hookforms', [], PARAM_INT));
             log_service::add($creator, 'webhook_added', ['url' => $hook->url]);
         } else {
             $hook = $DB->get_record(webhook_service::TABLE, ['id' => required_param('hookid', PARAM_INT),
@@ -198,6 +199,21 @@ $last = function(stdClass $hook) use ($DB): string {
         ($failed ? ' · ' . html_writer::span(get_string('webhook:failedweek', 'local_oriskill', $failed), 'text-danger') : ''),
         'small ' . ($sent->status === 'ok' ? 'text-success' : 'text-muted'));
 };
+// Courses and order forms a webhook can be limited to.
+$hookcourses = array_map(fn($c) => format_string($c->fullname), $DB->get_records('course', ['category' => $creator->categoryid],
+    'sortorder', 'id, fullname'));
+$hookforms = array_map(fn($f) => format_string($f->title), $DB->get_records('local_oriskill_orderforms',
+    ['creatorid' => $creator->id], 'title', 'id, title'));
+$filters = function(stdClass $hook) use ($hookcourses, $hookforms): string {
+    $names = fn(string $ids, array $all) => implode(', ', array_filter(array_map(fn($id) => $all[(int) $id] ?? null,
+        array_filter(explode(',', $ids)))));
+    $parts = array_filter([
+        ($c = $names((string) $hook->courseids, $hookcourses)) !== '' ? get_string('webhook:onlycourses', 'local_oriskill', $c) : '',
+        ($f = $names((string) $hook->formids, $hookforms)) !== '' ? get_string('webhook:onlyforms', 'local_oriskill', $f) : '',
+    ]);
+    return $parts ? html_writer::div('<i class="fa fa-filter me-1" aria-hidden="true"></i>' . s(implode(' · ', $parts)),
+        'small') : '';
+};
 echo html_writer::start_div('oriskill-card mt-4', ['id' => 'webhooks']);
 echo html_writer::tag('h3', get_string('webhook:title', 'local_oriskill'), ['class' => 'h5']);
 echo html_writer::tag('p', get_string('webhook:intro', 'local_oriskill'), ['class' => 'text-muted']);
@@ -208,6 +224,7 @@ foreach (webhook_service::hooks($creator) as $hook) {
         html_writer::div(html_writer::tag('code', s($hook->url)) . ($hook->enabled ? '' : ' ' .
             html_writer::span(get_string('webhook:off', 'local_oriskill'), 'oriskill-badge is-warn')), 'fw-semibold text-break') .
         html_writer::div($events, 'small text-muted') .
+        $filters($hook) .
         html_writer::tag('details', html_writer::tag('summary', get_string('webhook:showsecret', 'local_oriskill'),
             ['class' => 'small']) . html_writer::tag('code', s(webhook_service::secret($hook))), ['class' => 'my-1']) .
         $last($hook) .
@@ -242,6 +259,15 @@ echo html_writer::tag('form', $hidden('add') .
     html_writer::empty_tag('input', ['type' => 'url', 'name' => 'hookurl', 'id' => 'hookurl', 'required' => 'required',
         'class' => 'form-control mb-2', 'placeholder' => 'https://hooks.zapier.com/...']) .
     html_writer::div($checks, 'mb-2') .
+    html_writer::tag('details', html_writer::tag('summary', get_string('webhook:filters', 'local_oriskill'), ['class' => 'small mb-2']) .
+        html_writer::div(get_string('webhook:filters_help', 'local_oriskill'), 'small text-muted mb-2') .
+        ($hookcourses ? html_writer::tag('label', get_string('webhook:filtercourses', 'local_oriskill'), ['for' => 'hookcourses',
+            'class' => 'form-label small']) . html_writer::select($hookcourses, 'hookcourses[]', [], false,
+            ['multiple' => 'multiple', 'id' => 'hookcourses', 'class' => 'form-select mb-2', 'size' => min(6, count($hookcourses))]) : '') .
+        ($hookforms ? html_writer::tag('label', get_string('webhook:filterforms', 'local_oriskill'), ['for' => 'hookforms',
+            'class' => 'form-label small']) . html_writer::select($hookforms, 'hookforms[]', [], false,
+            ['multiple' => 'multiple', 'id' => 'hookforms', 'class' => 'form-select mb-2', 'size' => min(6, count($hookforms))]) : ''),
+        ['class' => 'mb-2']) .
     html_writer::tag('button', get_string('webhook:add', 'local_oriskill'), ['type' => 'submit', 'class' => 'btn btn-primary']),
     ['method' => 'post', 'action' => $url->out(false)]);
 echo html_writer::end_div();
