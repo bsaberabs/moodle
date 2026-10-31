@@ -52,6 +52,59 @@ $canexport = \local_oriskill\team_service::can_export();
 $coaches = \local_oriskill\team_service::coaches($creator);
 $coachmap = \local_oriskill\team_service::coach_map($creator);
 
+// Actions on the learners ticked in the list.
+if ($course && ($bulk = optional_param('bulk', '', PARAM_ALPHA)) && confirm_sesskey()) {
+    $known = learning_service::learners($creator, $course);
+    if (($mine = \local_oriskill\team_service::visible_learners($creator)) !== null) {
+        $known = array_intersect_key($known, array_flip($mine));
+    }
+    $ids = array_values(array_intersect(optional_param_array('ids', [], PARAM_INT), array_keys($known)));
+    $back = new moodle_url($url, json_decode(optional_param('filters', '{}', PARAM_RAW), true) ?: []);
+    if (!$ids) {
+        redirect($back, get_string('learners:noneselected', 'local_oriskill'), null, \core\output\notification::NOTIFY_WARNING);
+    }
+    if ($bulk === 'export') {
+        $selectedids = $ids;
+    } else {
+        if (!$canchange) {
+            throw new moodle_exception('error:notallowed', 'local_oriskill');
+        }
+        try {
+            if ($bulk === 'email') {
+                $subject = required_param('subject', PARAM_TEXT);
+                $body = required_param('message', PARAM_TEXT);
+                $sent = 0;
+                foreach ($ids as $userid) {
+                    $learner = $known[$userid];
+                    $text = str_replace(['[[PRENOM]]', '[[NOM]]', '[[FORMATION]]'], [$learner->firstname, $learner->lastname,
+                        format_string($course->fullname)], $body);
+                    $sent += (int) \local_oriskill\email_log::send_direct($creator, (object) ['userid' => $userid,
+                        'email' => $learner->email, 'firstname' => $learner->firstname, 'lastname' => $learner->lastname],
+                        $subject, $text);
+                }
+                \local_oriskill\log_service::add($creator, 'learners_mailed', ['count' => $sent, 'subject' => $subject],
+                    (int) $course->id);
+                $message = get_string('learners:mailed', 'local_oriskill', $sent);
+            } else {
+                foreach ($ids as $userid) {
+                    if ($bulk === 'setgroup') {
+                        learning_service::set_learner_group($course, $userid, optional_param('bulkgroup', 0, PARAM_INT));
+                    } else if ($bulk === 'suspend' || $bulk === 'reactivate') {
+                        learning_service::set_suspended($course, $userid, $bulk === 'suspend');
+                    } else {
+                        throw new moodle_exception('invaliddata', 'error');
+                    }
+                    \local_oriskill\log_service::add($creator, 'learner_' . $bulk, [], (int) $course->id, $userid);
+                }
+                $message = get_string('learners:bulkdone', 'local_oriskill', count($ids));
+            }
+            redirect($back, $message, null, \core\output\notification::NOTIFY_SUCCESS);
+        } catch (moodle_exception $e) {
+            redirect($back, $e->getMessage(), null, \core\output\notification::NOTIFY_ERROR);
+        }
+    }
+}
+
 if ($course && ($action = optional_param('action', '', PARAM_ALPHA)) && confirm_sesskey()) {
     if (!$canchange) {
         throw new moodle_exception('error:notallowed', 'local_oriskill');
@@ -129,10 +182,56 @@ if (($mine = \local_oriskill\team_service::visible_learners($creator)) !== null)
 }
 $groups = $course ? groups_get_all_groups($course->id) : [];
 $dateformat = get_string('strftimedate', 'langconfig');
+$instalments = $course ? \local_oriskill\instalment_service::course_records((int) $course->id) : [];
+$allcount = count($learners);
+$newsince = strtotime('-30 days', usergetmidnight(time()));
+
+// Filters of the list, kept in the address.
+$filters = array_filter([
+    'q' => trim(optional_param('q', '', PARAM_TEXT)),
+    'state' => optional_param('state', '', PARAM_ALPHA),
+    'progress' => optional_param('progress', '', PARAM_ALPHA),
+    'payment' => optional_param('payment', '', PARAM_ALPHA),
+    'fgroup' => optional_param('fgroup', 0, PARAM_INT),
+    'fcoach' => optional_param('fcoach', 0, PARAM_INT),
+    'from' => optional_param('from', '', PARAM_RAW_TRIMMED),
+    'to' => optional_param('to', '', PARAM_RAW_TRIMMED),
+    'sort' => optional_param('sort', '', PARAM_ALPHA),
+]);
+$payment = function(int $userid, stdClass $learner) use ($instalments): string {
+    if (isset($instalments[$userid])) {
+        return in_array($instalments[$userid]->status, ['late', 'suspended', 'stopped'], true) ? 'late'
+            : ($instalments[$userid]->status === 'cancelled' ? 'cancelled' : 'instalments');
+    }
+    return $learner->source === 'purchase' ? 'once' : 'offered';
+};
+$fromtime = preg_match('/^\d{4}-\d{2}-\d{2}$/', $filters['from'] ?? '') ? make_timestamp(...array_map('intval',
+    explode('-', $filters['from']))) : 0;
+$totime = local_oriskill_end_of_day($filters['to'] ?? '');
+$selectedids = $selectedids ?? null;
+$learners = array_filter($learners, function($l, $userid) use ($filters, $payment, $coachmap, $fromtime, $totime, $selectedids) {
+    if ($selectedids !== null) {
+        return in_array($userid, $selectedids, true);
+    }
+    $q = core_text::strtolower($filters['q'] ?? '');
+    return ($q === '' || str_contains(core_text::strtolower(fullname($l) . ' ' . $l->email), $q))
+        && (empty($filters['state']) || $filters['state'] === ($l->suspended ? 'suspended' : ($l->expired ? 'expired' : 'active')))
+        && (empty($filters['progress']) || $filters['progress'] === ($l->completed || ($l->progress ?? 0) >= 100 ? 'done'
+            : (!$l->progress ? 'none' : 'ongoing')))
+        && (empty($filters['payment']) || $filters['payment'] === $payment($userid, $l))
+        && (empty($filters['fgroup']) || in_array((int) $filters['fgroup'], array_map(fn($g) => (int) $g->id, $l->groups), true))
+        && (empty($filters['fcoach']) || (int) ($coachmap[$userid] ?? 0) === (int) $filters['fcoach'])
+        && (!$fromtime || $l->timestart >= $fromtime) && (!$totime || $l->timestart <= $totime);
+}, ARRAY_FILTER_USE_BOTH);
+$sorts = ['name' => fn($a, $b) => strcmp(core_text::strtolower(fullname($a)), core_text::strtolower(fullname($b))),
+    'start' => fn($a, $b) => $b->timestart <=> $a->timestart,
+    'access' => fn($a, $b) => (int) $b->lastaccess <=> (int) $a->lastaccess,
+    'progress' => fn($a, $b) => (float) $b->progress <=> (float) $a->progress];
+uasort($learners, $sorts[$filters['sort'] ?? 'name'] ?? $sorts['name']);
 $canloginas = $course && has_capability('moodle/user:loginas', context_course::instance($course->id));
 
 // CSV export.
-if ($course && optional_param('download', '', PARAM_ALPHA) === 'csv') {
+if ($course && (optional_param('download', '', PARAM_ALPHA) === 'csv' || $selectedids !== null)) {
     \local_oriskill\team_service::export_allowed($creator, get_string('menu:learners', 'local_oriskill') . ' – ' .
         format_string($course->fullname));
     $rows = [[get_string('lastname'), get_string('firstname'), get_string('email'), get_string('learner:access', 'local_oriskill'),
@@ -170,23 +269,39 @@ if (!$course) {
 }
 echo creator_service::course_picker($creator, $course, new moodle_url('/local/oriskill/learners.php'));
 
-// Key figures.
-$active = array_filter($learners, fn($l) => !$l->suspended && !$l->expired);
-$progresses = array_filter(array_map(fn($l) => $l->progress, $active), fn($p) => $p !== null);
+// Summary of the course: four figures, each opening the list filtered.
+$everyone = learning_service::learners($creator, $course);
+if (($mine = \local_oriskill\team_service::visible_learners($creator)) !== null) {
+    $everyone = array_intersect_key($everyone, array_flip($mine));
+}
 $stats = '';
 foreach ([
-    ['fa-users', count($learners), get_string('stat:learnerstotal', 'local_oriskill')],
-    ['fa-user-check', count($active), get_string('stat:learnersactive', 'local_oriskill')],
-    ['fa-chart-simple', $progresses ? round(array_sum($progresses) / count($progresses)) . ' %' : '–',
-        get_string('stat:avgprogress', 'local_oriskill')],
-    ['fa-award', count(array_filter($learners, fn($l) => $l->completed)), get_string('stat:completed', 'local_oriskill')],
-] as [$icon, $value, $label]) {
-    $stats .= html_writer::div(
+    ['fa-users', count($everyone), get_string('stat:learnerstotal', 'local_oriskill'), []],
+    ['fa-user-plus', count(array_filter($everyone, fn($l) => $l->timestart >= $newsince)),
+        get_string('stat:new30', 'local_oriskill'), ['from' => userdate($newsince, '%Y-%m-%d', 99, false), 'sort' => 'start']],
+    ['fa-hourglass-start', count(array_filter($everyone, fn($l) => !$l->completed && !$l->progress)),
+        get_string('stat:noprogress', 'local_oriskill'), ['progress' => 'none']],
+    ['fa-award', count(array_filter($everyone, fn($l) => $l->completed || ($l->progress ?? 0) >= 100)),
+        get_string('stat:completed', 'local_oriskill'), ['progress' => 'done']],
+] as [$icon, $value, $label, $params]) {
+    $stats .= html_writer::link(new moodle_url($url, $params), html_writer::div(
         html_writer::span('<i class="fa ' . $icon . '" aria-hidden="true"></i>', 'oriskill-stat-icon') .
         html_writer::div(html_writer::div(s($value), 'oriskill-stat-value') . html_writer::div($label, 'oriskill-stat-label')),
-        'oriskill-card oriskill-stat');
+        'oriskill-card oriskill-stat'), ['class' => 'text-decoration-none text-reset']);
 }
 echo html_writer::div($stats, 'oriskill-stats');
+// Waiting for the team in this course: tickets and comments under the lessons.
+$opentickets = $DB->count_records(\local_oriskill\ticket_service::TABLE, ['creatorid' => $creator->id,
+    'courseid' => $course->id, 'status' => 'open']);
+$opencomments = \local_oriskill\comment_service::pending($creator, true)[$course->id] ?? 0;
+if ($opentickets || $opencomments) {
+    echo html_writer::div('<i class="fa fa-inbox me-2" aria-hidden="true"></i>' . get_string('learners:tohandle', 'local_oriskill') .
+        ' ' . ($opentickets ? html_writer::link(new moodle_url('/local/oriskill/tickets.php', ['status' => 'open']),
+            get_string('learners:tickets', 'local_oriskill', $opentickets)) : '') .
+        ($opentickets && $opencomments ? ' · ' : '') .
+        ($opencomments ? html_writer::link(new moodle_url('/local/oriskill/comments.php', ['courseid' => $course->id]),
+            get_string('learners:comments', 'local_oriskill', $opencomments)) : ''), 'oriskill-card mb-3 py-2');
+}
 
 $groupoptions = [0 => get_string('learner:nogroup', 'local_oriskill')];
 foreach ($groups as $group) {
@@ -221,9 +336,47 @@ if ($canchange) {
         ['class' => 'oriskill-card mb-4', 'open' => $learners ? null : 'open']);
 }
 
+// Filters.
+$select = fn(string $name, array $options, $value, string $label) => html_writer::div(
+    html_writer::tag('label', $label, ['for' => 'f-' . $name, 'class' => 'form-label small mb-1']) .
+    html_writer::select($options, $name, $value, ['' => get_string('all')], ['class' => 'form-select form-select-sm',
+        'id' => 'f-' . $name]));
+$states = array_combine(['active', 'suspended', 'expired'], array_map(fn($s) => get_string('learner:' . $s, 'local_oriskill'),
+    ['active', 'suspended', 'expired']));
+$progressoptions = array_combine(['none', 'ongoing', 'done'], array_map(fn($s) => get_string('learners:progress_' . $s,
+    'local_oriskill'), ['none', 'ongoing', 'done']));
+$paymentoptions = array_combine(['once', 'instalments', 'late', 'cancelled', 'offered'], array_map(fn($s) =>
+    get_string('learners:payment_' . $s, 'local_oriskill'), ['once', 'instalments', 'late', 'cancelled', 'offered']));
+$groupfilter = array_map(fn($g) => format_string($g->name), $groups);
+echo !$allcount ? '' : html_writer::tag('form', html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'courseid', 'value' => $course->id]) .
+    html_writer::div(
+        html_writer::div(html_writer::tag('label', get_string('search'), ['for' => 'f-q', 'class' => 'form-label small mb-1']) .
+            html_writer::empty_tag('input', ['type' => 'search', 'name' => 'q', 'id' => 'f-q', 'value' => $filters['q'] ?? '',
+                'class' => 'form-control form-control-sm', 'placeholder' => get_string('learners:search', 'local_oriskill')])) .
+        $select('state', $states, $filters['state'] ?? '', get_string('status')) .
+        $select('progress', $progressoptions, $filters['progress'] ?? '', get_string('learner:progress', 'local_oriskill')) .
+        $select('payment', $paymentoptions, $filters['payment'] ?? '', get_string('learners:payment', 'local_oriskill')) .
+        ($groupfilter ? $select('fgroup', $groupfilter, $filters['fgroup'] ?? '', get_string('group')) : '') .
+        ($coaches ? $select('fcoach', array_map('fullname', $coaches), $filters['fcoach'] ?? '', get_string('role:coach',
+            'local_oriskill')) : '') .
+        html_writer::div(html_writer::tag('label', get_string('learners:startfrom', 'local_oriskill'), ['for' => 'f-from',
+            'class' => 'form-label small mb-1']) . html_writer::empty_tag('input', ['type' => 'date', 'name' => 'from',
+            'id' => 'f-from', 'value' => $filters['from'] ?? '', 'class' => 'form-control form-control-sm'])) .
+        html_writer::div(html_writer::tag('label', get_string('learners:startto', 'local_oriskill'), ['for' => 'f-to',
+            'class' => 'form-label small mb-1']) . html_writer::empty_tag('input', ['type' => 'date', 'name' => 'to',
+            'id' => 'f-to', 'value' => $filters['to'] ?? '', 'class' => 'form-control form-control-sm'])) .
+        html_writer::div(html_writer::tag('label', get_string('sortby'), ['for' => 'f-sort', 'class' => 'form-label small mb-1']) .
+            html_writer::select(array_combine(array_keys($sorts), array_map(fn($s) => get_string('learners:sort_' . $s,
+                'local_oriskill'), array_keys($sorts))), 'sort', $filters['sort'] ?? 'name', false,
+                ['class' => 'form-select form-select-sm', 'id' => 'f-sort'])) .
+        html_writer::div(html_writer::tag('button', get_string('transactions:apply', 'local_oriskill'), ['type' => 'submit',
+            'class' => 'btn btn-sm btn-primary']) . ' ' . html_writer::link($url, get_string('learners:reset', 'local_oriskill'),
+            ['class' => 'btn btn-sm btn-link']), 'align-self-end'),
+        'd-flex flex-wrap gap-2'), ['method' => 'get', 'action' => $url->out(false), 'class' => 'oriskill-card mb-3']);
+
 if (!$learners) {
     echo html_writer::div('<i class="fa fa-user-graduate" aria-hidden="true"></i>' .
-        get_string('nolearners', 'local_oriskill'), 'oriskill-card oriskill-empty');
+        get_string($allcount ? 'learners:nomatch' : 'nolearners', 'local_oriskill'), 'oriskill-card oriskill-empty');
     echo creator_service::space_end();
     echo $OUTPUT->footer();
     exit;
@@ -236,14 +389,20 @@ $hidden = fn(string $action, int $userid) =>
     html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'userid', 'value' => $userid]);
 $table = new html_table();
 $table->attributes['class'] = 'table oriskill-learners align-middle';
-$table->head = [get_string('learner', 'local_oriskill'), get_string('learner:access', 'local_oriskill'),
+$perpage = optional_param('perpage', 25, PARAM_INT);
+$perpage = in_array($perpage, [10, 25, 50, 100], true) ? $perpage : 25;
+$page = optional_param('page', 0, PARAM_INT);
+$total = count($learners);
+$learners = array_slice($learners, $page * $perpage, $perpage, true);
+$table->head = [html_writer::empty_tag('input', ['type' => 'checkbox', 'class' => 'form-check-input', 'id' => 'learners-all',
+    'aria-label' => get_string('selectall'), 'onclick' => "document.querySelectorAll('.oriskill-pick').forEach(c => c.checked = this.checked)"]),
+    get_string('learner', 'local_oriskill'), get_string('learner:access', 'local_oriskill'),
     get_string('learner:until', 'local_oriskill'), get_string('group'), get_string('learner:progress', 'local_oriskill'),
     get_string('learner:grade', 'local_oriskill'), get_string('learner:lastaccess', 'local_oriskill'), ''];
 $coachoptions = [0 => get_string('learner:nocoach', 'local_oriskill')] + array_map('fullname', $coaches);
 if ($coaches) {
-    array_splice($table->head, 4, 0, [get_string('role:coach', 'local_oriskill')]);
+    array_splice($table->head, 5, 0, [get_string('role:coach', 'local_oriskill')]);
 }
-$instalments = \local_oriskill\instalment_service::course_records((int) $course->id);
 foreach ($learners as $userid => $learner) {
     $ficheurl = new moodle_url('/local/oriskill/learner.php', ['courseid' => $course->id, 'userid' => $userid]);
     $badges = html_writer::span(get_string('source:' . $learner->source, 'local_oriskill'),
@@ -311,6 +470,8 @@ foreach ($learners as $userid => $learner) {
                  fullname($learner))) . ')']);
     }
     $table->data[] = [
+        html_writer::empty_tag('input', ['type' => 'checkbox', 'name' => 'ids[]', 'value' => $userid, 'form' => 'learners-bulk',
+            'class' => 'form-check-input oriskill-pick', 'aria-label' => fullname($learner)]),
         html_writer::link($ficheurl, fullname($learner), ['class' => 'fw-semibold']) .
             html_writer::div(s($learner->email), 'small text-muted') .
             html_writer::div(get_string('learner:sincedate', 'local_oriskill', userdate($learner->timestart, $dateformat)),
@@ -326,13 +487,56 @@ foreach ($learners as $userid => $learner) {
         html_writer::div($actions, 'd-flex flex-wrap gap-1'),
     ];
 }
+// Actions on the learners ticked.
+$bulkactions = ($canexport ? ['export' => get_string('learners:bulk_export', 'local_oriskill')] : []) +
+    ($canchange ? ['setgroup' => get_string('learners:bulk_setgroup', 'local_oriskill'),
+        'suspend' => get_string('learners:bulk_suspend', 'local_oriskill'),
+        'reactivate' => get_string('learners:bulk_reactivate', 'local_oriskill'),
+        'email' => get_string('learners:bulk_email', 'local_oriskill')] : []);
+$bulkform = '';
+if ($bulkactions) {
+    $bulkform = html_writer::tag('form',
+        html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]) .
+        html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'filters', 'value' => json_encode($filters)]) .
+        html_writer::div(
+            html_writer::tag('label', get_string('learners:withselected', 'local_oriskill'), ['for' => 'bulk',
+                'class' => 'small fw-semibold']) .
+            html_writer::select($bulkactions, 'bulk', '', ['' => get_string('choosedots')], ['class' => 'form-select form-select-sm w-auto',
+                'id' => 'bulk', 'required' => 'required',
+                'onchange' => "this.form.querySelectorAll('[data-for]').forEach(e => e.hidden = e.dataset.for !== this.value)"]) .
+            ($canchange ? html_writer::span(html_writer::select($groupoptions, 'bulkgroup', 0, false,
+                ['class' => 'form-select form-select-sm w-auto', 'aria-label' => get_string('group')]), '', ['data-for' => 'setgroup',
+                'hidden' => 'hidden']) : '') .
+            html_writer::tag('button', get_string('learners:apply', 'local_oriskill'), ['type' => 'submit',
+                'class' => 'btn btn-sm btn-outline-primary']),
+            'd-flex flex-wrap align-items-center gap-2') .
+        ($canchange ? html_writer::div(
+            html_writer::empty_tag('input', ['type' => 'text', 'name' => 'subject', 'class' => 'form-control form-control-sm mb-2',
+                'placeholder' => get_string('subject'), 'aria-label' => get_string('subject')]) .
+            html_writer::tag('textarea', '', ['name' => 'message', 'rows' => 4, 'class' => 'form-control form-control-sm',
+                'aria-label' => get_string('message', 'message')]) .
+            html_writer::div(get_string('learners:mail_help', 'local_oriskill'), 'form-text'),
+            'mt-2', ['data-for' => 'email', 'hidden' => 'hidden', 'style' => 'max-width: 40rem']) : ''),
+        ['method' => 'post', 'action' => $url->out(false), 'id' => 'learners-bulk', 'class' => 'mb-3']);
+}
+$pageurl = new moodle_url($url, $filters + ['perpage' => $perpage]);
 echo html_writer::div(
-    html_writer::div(html_writer::tag('h3', get_string('learnerscount', 'local_oriskill', count($learners)), ['class' => 'mb-0']) .
-        ($canexport ? html_writer::link(new moodle_url($url, ['download' => 'csv']),
-            '<i class="fa fa-download me-1" aria-hidden="true"></i>' . get_string('exportcsv', 'local_oriskill'),
-            ['class' => 'btn btn-sm btn-outline-secondary']) : ''),
-        'd-flex justify-content-between align-items-center mb-3') .
-    html_writer::div(html_writer::table($table), 'table-responsive'),
+    html_writer::div(html_writer::tag('h3', get_string('learnerscount', 'local_oriskill', $total) .
+        ($total < $allcount ? ' ' . html_writer::span(get_string('learners:outof', 'local_oriskill', $allcount), 'small text-muted')
+            : ''), ['class' => 'mb-0']) .
+        html_writer::div(
+            html_writer::tag('form', html_writer::input_hidden_params($pageurl, ['perpage', 'page']) .
+                html_writer::select(array_combine([10, 25, 50, 100], array_map(fn($n) => get_string('transactions:perpage',
+                    'local_oriskill', $n), [10, 25, 50, 100])), 'perpage', $perpage, false, ['class' => 'form-select form-select-sm',
+                    'onchange' => 'this.form.submit()', 'aria-label' => get_string('transactions:perpage', 'local_oriskill', '')]),
+                ['method' => 'get', 'action' => $url->out(false)]) .
+            ($canexport ? html_writer::link(new moodle_url($url, $filters + ['download' => 'csv']),
+                '<i class="fa fa-download me-1" aria-hidden="true"></i>' . get_string('exportcsv', 'local_oriskill'),
+                ['class' => 'btn btn-sm btn-outline-secondary']) : ''), 'd-flex gap-2'),
+        'd-flex flex-wrap justify-content-between align-items-center gap-2 mb-3') .
+    $bulkform .
+    html_writer::div(html_writer::table($table), 'table-responsive') .
+    $OUTPUT->paging_bar($total, $page, $perpage, $pageurl),
     'oriskill-card');
 
 echo creator_service::space_end();
