@@ -66,6 +66,7 @@ class team_service {
         '/local/oriskill/unpaid.php' => ['admin', 'support', 'accounting'],
         '/local/oriskill/courses.php' => ['admin', 'teaching'],
         '/local/oriskill/videos.php' => ['admin', 'teaching'],
+        '/local/oriskill/library.php' => ['admin', 'teaching'],
         '/local/oriskill/tools.php' => ['admin', 'teaching'],
         '/local/oriskill/pricing.php' => ['admin'],
         '/local/oriskill/orderforms.php' => ['admin'],

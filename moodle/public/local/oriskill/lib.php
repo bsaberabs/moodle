@@ -37,6 +37,12 @@
 function local_oriskill_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = []) {
     global $DB, $USER;
 
+    // Files of a trainer's library: anyone with the link (number and key), unless in the bin.
+    if ($context->contextlevel === CONTEXT_SYSTEM && $filearea === \local_oriskill\library_service::FILEAREA) {
+        $itemid = (int) array_shift($args);
+        return \local_oriskill\library_service::serve($itemid, $args, $options);
+    }
+
     // Files attached to a ticket: its learner and the trainer's team only.
     if ($context->contextlevel === CONTEXT_SYSTEM && $filearea === \local_oriskill\ticket_service::FILEAREA) {
         require_login(null, false);
