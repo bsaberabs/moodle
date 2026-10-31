@@ -95,6 +95,7 @@ class team_service {
         '/local/oriskill/domains.php' => ['admin'],
         '/local/oriskill/privacy.php' => ['admin'],
         '/local/oriskill/webhooks.php' => ['admin'],
+        '/local/oriskill/apikeys.php' => ['admin'],
         '/local/oriskill/log.php' => ['admin'],
     ];
 

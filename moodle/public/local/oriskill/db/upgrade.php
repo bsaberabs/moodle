@@ -638,5 +638,14 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103065, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103066) {
+        // REST API keys of the trainers and the log of their calls.
+        foreach (['local_oriskill_apikeys', 'local_oriskill_apilog'] as $name) {
+            if (!$dbman->table_exists($name)) {
+                $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', $name);
+            }
+        }
+        upgrade_plugin_savepoint(true, 2026103066, 'local', 'oriskill');
+    }
     return true;
 }

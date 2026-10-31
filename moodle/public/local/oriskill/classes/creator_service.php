@@ -253,6 +253,7 @@ class creator_service {
             '/local/oriskill/domains.php' => ['menu:domains', 'bi-globe'],
             '/local/oriskill/privacy.php' => ['menu:privacy', 'bi-shield-lock'],
             '/local/oriskill/integrations.php' => ['menu:integrations', 'bi-plug'],
+            '/local/oriskill/apikeys.php' => ['menu:api', 'bi-key'],
             '/local/oriskill/log.php' => ['menu:log', 'bi-journal-text'],
         ],
     ];
