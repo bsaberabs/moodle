@@ -193,6 +193,10 @@ class team_service {
      * @return bool
      */
     public static function can(string $role, string $path): bool {
+        // The search is open to every role: it only shows what the role may open.
+        if ($path === '/local/oriskill/search.php') {
+            return true;
+        }
         if ($custom = self::custom_role($role)) {
             $path = self::SUBPAGES[$path] ?? $path;
             return !in_array($path, self::NOT_CUSTOM, true) && isset($custom->pagelist[$path]);

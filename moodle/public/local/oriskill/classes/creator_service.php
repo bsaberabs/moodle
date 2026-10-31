@@ -344,6 +344,9 @@ class creator_service {
                 'url' => self::showcase_url($creator), 'attributes' => ['target' => '_blank', 'rel' => 'noopener'],
             ]]);
         }
+        // The search of the whole space, in the header of every page.
+        $actionshtml = \html_writer::div(search_service::box($current === '/local/oriskill/search.php'
+            ? trim(optional_param('q', '', PARAM_TEXT)) : '') . $actionshtml, 'd-flex align-items-center flex-wrap gap-2');
         return $OUTPUT->render_from_template('local_moderncommerce/shell', [
             'title' => $title,
             'actionshtml' => $actionshtml,

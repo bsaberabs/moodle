@@ -49,7 +49,7 @@ class transaction_service {
      * @param \stdClass $creator Trainer.
      * @return array [sql, params]
      */
-    private static function orders_sql(\stdClass $creator): array {
+    public static function orders_sql(\stdClass $creator): array {
         global $DB;
 
         $path = (string) $DB->get_field('course_categories', 'path', ['id' => $creator->categoryid]);
