@@ -691,5 +691,17 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103071, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103072) {
+        // Auto-webinars: a recorded video played as a live at the sessions planned, each person picks one.
+        foreach ([['local_oriskill_webinars', new xmldb_field('schedule', XMLDB_TYPE_TEXT, null, null, null, null, null, 'streamurl')],
+                ['local_oriskill_webregs', new xmldb_field('sessiontime', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0',
+                    'joined')]] as [$name, $field]) {
+            $table = new xmldb_table($name);
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+        upgrade_plugin_savepoint(true, 2026103072, 'local', 'oriskill');
+    }
     return true;
 }

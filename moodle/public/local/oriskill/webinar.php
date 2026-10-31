@@ -46,13 +46,19 @@ if (!$webinar || !$creator) {
 }
 $PAGE->set_title(format_string($webinar->title) . ' – ' . format_string($creator->displayname), false);
 $timezone = \local_oriskill\stats_service::timezone($creator);
+$auto = $webinar->platform === 'auto';
+if ($reg) {
+    // An auto-webinar runs at the session the person chose.
+    $webinar = ws::for_reg($webinar, $reg);
+}
 $end = $webinar->starttime + $webinar->duration * 60;
 
 // Sign-up.
 if (!$reg && optional_param('signup', 0, PARAM_BOOL) && confirm_sesskey()) {
     try {
         $reg = ws::register($webinar, required_param('email', PARAM_RAW_TRIMMED), required_param('firstname', PARAM_TEXT),
-            ['direct' => optional_param('consentdirect', 0, PARAM_BOOL), 'partners' => optional_param('consentpartners', 0, PARAM_BOOL)]);
+            ['direct' => optional_param('consentdirect', 0, PARAM_BOOL), 'partners' => optional_param('consentpartners', 0, PARAM_BOOL)],
+            optional_param('session', 0, PARAM_INT));
         redirect(ws::room_url($reg));
     } catch (moodle_exception $e) {
         redirect($PAGE->url, $e->getMessage(), null, \core\output\notification::NOTIFY_ERROR);
@@ -61,7 +67,7 @@ if (!$reg && optional_param('signup', 0, PARAM_BOOL) && confirm_sesskey()) {
 $youtube = $webinar->platform === 'youtube';
 // Into the room (BigBlueButton; the YouTube live plays on this page).
 if ($reg && optional_param('join', 0, PARAM_BOOL)) {
-    if (!ws::is_open($webinar) || $youtube) {
+    if (!ws::is_open($webinar) || $youtube || $auto) {
         redirect(ws::room_url($reg));
     }
     if (!$reg->joined) {
@@ -74,15 +80,28 @@ if ($reg && optional_param('join', 0, PARAM_BOOL)) {
     }
 }
 
-$date = userdate($webinar->starttime, get_string('strftimedaydatetime', 'langconfig'), $timezone);
+$date = $auto && !$reg ? get_string('webinar:auto', 'local_oriskill') . ' · ' . ws::schedule_summary($webinar)
+    : userdate($webinar->starttime, get_string('strftimedaydatetime', 'langconfig'), $timezone);
 $content = html_writer::tag('p', html_writer::tag('strong', format_string($creator->displayname)), ['class' => 'text-muted mb-1']) .
     html_writer::tag('h1', format_string($webinar->title), ['class' => 'h3']) .
     html_writer::tag('p', '<i class="fa fa-calendar me-2" aria-hidden="true"></i>' . s($date) . ' · ' .
         get_string('webinar:minutes', 'local_oriskill', $webinar->duration), ['class' => 'fw-semibold']) .
     ($webinar->description !== '' ? html_writer::tag('p', nl2br(s($webinar->description))) : '');
 
-if (!$reg) {
-    // The sign-up form.
+if (!$reg && $auto && !ws::sessions($webinar)) {
+    $content .= html_writer::div(get_string('webinar:nosession', 'local_oriskill'), 'alert alert-info');
+} else if (!$reg) {
+    // The sign-up form; for an auto-webinar, the session to pick.
+    $sessionfield = '';
+    if ($auto) {
+        $options = [];
+        foreach (ws::sessions($webinar) as $at) {
+            $options[$at] = userdate($at, get_string('strftimedaydatetime', 'langconfig'), $timezone);
+        }
+        $sessionfield = html_writer::div(html_writer::tag('label', get_string('webinar:session', 'local_oriskill'),
+            ['for' => 'w-session', 'class' => 'form-label']) . html_writer::select($options, 'session', array_key_first($options),
+            false, ['class' => 'form-select', 'id' => 'w-session']), 'mb-2');
+    }
     $content .= html_writer::tag('form',
         html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]) .
         html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'w', 'value' => $slug]) .
@@ -93,16 +112,28 @@ if (!$reg) {
         html_writer::div(html_writer::tag('label', get_string('email'), ['for' => 'w-email', 'class' => 'form-label']) .
             html_writer::empty_tag('input', ['type' => 'email', 'name' => 'email', 'id' => 'w-email', 'required' => 'required',
                 'class' => 'form-control']), 'mb-2') .
-        \local_oriskill\privacy_service::consent_boxes($creator) .
+        $sessionfield . \local_oriskill\privacy_service::consent_boxes($creator) .
         html_writer::tag('button', get_string('webinar:signup', 'local_oriskill'), ['type' => 'submit', 'class' => 'btn btn-primary btn-lg mt-2']),
         ['method' => 'post', 'action' => (new moodle_url('/local/oriskill/webinar.php'))->out(false), 'class' => 'mt-3']);
 } else if (time() > $end) {
     // After the live: the replay while it can be watched.
     $replay = $webinar->replaydays > 0 && time() < $end + $webinar->replaydays * DAYSECS ? ws::replay_url($webinar) : '';
-    $wide = $youtube && $replay !== '';
-    $content .= $wide ? ws::youtube_embed($webinar, false, $PAGE->url->get_host()) : ($replay !== '' ? html_writer::link($replay, '<i class="fa fa-play me-2" aria-hidden="true"></i>' .
+    $wide = ($youtube || $auto) && $replay !== '';
+    $content .= $wide ? ws::video_embed($webinar, $PAGE->url->get_host()) : ($replay !== '' ? html_writer::link($replay, '<i class="fa fa-play me-2" aria-hidden="true"></i>' .
         get_string('webinar:watchreplay', 'local_oriskill'), ['class' => 'btn btn-primary btn-lg', 'target' => '_blank'])
         : html_writer::div(get_string('webinar:ended', 'local_oriskill'), 'alert alert-info'));
+} else if ($auto && time() >= $webinar->starttime) {
+    // The recorded video, from where the session is now, as a live: being on the page counts as attending.
+    if (!$reg->joined) {
+        $DB->set_field(ws::REGS, 'joined', time(), ['id' => $reg->id]);
+    }
+    $wide = true;
+    $content .= html_writer::div(html_writer::span('● ' . get_string('webinar:live', 'local_oriskill'), 'badge bg-danger'), 'mb-2') .
+        ws::auto_player($webinar);
+} else if ($auto && ws::is_open($webinar)) {
+    $content .= html_writer::div(get_string('webinar:hello', 'local_oriskill', s($reg->firstname)), 'alert alert-success') .
+        html_writer::div(get_string('webinar:startsin', 'local_oriskill'), 'text-muted') .
+        html_writer::div('', 'fs-4 fw-bold mt-2', ['id' => 'auto-countdown']);
 } else if ($youtube && ws::is_open($webinar)) {
     // The YouTube live and its chat, here: being on the page counts as attending.
     if (!$reg->joined) {
@@ -140,6 +171,43 @@ $PAGE->requires->js_init_code('(function() {
     tick();
     setInterval(tick, 1000);
 })();');
+if ($auto && $reg) {
+    // Auto-webinar: the page opens the session at its start; the video starts where the session is, without seeking.
+    $PAGE->requires->js_init_code('(function() {
+    var start = ' . (int) $webinar->starttime . ' * 1000, skew = Date.now() - ' . time() . ' * 1000,
+        box = document.getElementById("auto-countdown"), player = document.getElementById("auto-player"),
+        launch = document.getElementById("auto-launch");
+    if (box) {
+        setInterval(function() {
+            var left = Math.max(0, Math.ceil((start - (Date.now() - skew)) / 1000));
+            box.textContent = new Date(left * 1000).toISOString().substr(11, 8);
+            if (left === 0 && !box.dataset.reloaded) {
+                box.dataset.reloaded = 1;
+                setTimeout(function() { location.reload(); }, 1500);
+            }
+        }, 1000);
+    }
+    if (player && launch) {
+        launch.addEventListener("click", function() {
+            var at = Math.max(0, Math.floor((Date.now() - skew - start) / 1000)), media;
+            if (player.dataset.youtube) {
+                media = document.createElement("iframe");
+                media.src = "https://www.youtube-nocookie.com/embed/" + player.dataset.youtube +
+                    "?autoplay=1&controls=0&disablekb=1&rel=0&modestbranding=1&playsinline=1&start=" + at;
+                media.allow = "autoplay; encrypted-media; fullscreen";
+                media.className = "border-0 rounded";
+            } else {
+                media = document.createElement("video");
+                media.src = player.dataset.src;
+                media.playsInline = true;
+                media.className = "rounded bg-dark";
+                media.addEventListener("loadedmetadata", function() { media.currentTime = at; media.play(); });
+            }
+            player.replaceChildren(media);
+        });
+    }
+})();');
+}
 
 echo $OUTPUT->header();
 echo html_writer::div(html_writer::div($content, 'card-body p-4'), 'card mx-auto my-5',
