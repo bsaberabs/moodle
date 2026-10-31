@@ -972,3 +972,14 @@
 .oriskill-offer-cta .oriskill-vitrine-cta {
     display: inline-block;
 }
+
+/* Transactions: cells wrap (the theme keeps table cells on one line). */
+.table.oriskill-txlist td,
+.table.oriskill-txlist th {
+    white-space: normal !important;
+}
+.table.oriskill-txlist td:first-child,
+.table.oriskill-txlist td:nth-child(5),
+.table.oriskill-txlist td:last-child {
+    white-space: nowrap !important;
+}

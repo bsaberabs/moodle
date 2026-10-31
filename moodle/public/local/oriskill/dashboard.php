@@ -116,7 +116,7 @@ if ($can('/local/oriskill/sales.php')) {
             html_writer::div($delta($amount, (float) ($previous[$main]->amount ?? 0), true) . ' · ' .
                 get_string('stats:sales', 'local_oriskill', array_sum(array_map(fn($t) => $t->count, $totals))), 'mb-2')) .
         st::chart(st::series($creator, $movements, $from, $to), get_string('stats:revenue_' . $period, 'local_oriskill')) .
-        ($can('/local/oriskill/stats.php') ? html_writer::div(html_writer::link(new moodle_url('/local/oriskill/stats.php'),
+        ($can('/local/oriskill/sales.php') ? html_writer::div(html_writer::link(new moodle_url('/local/oriskill/sales.php'),
             get_string('stats:alltransactions', 'local_oriskill')), 'small mt-2') : ''),
         'oriskill-card');
     $new = count(st::new_customers($creator, $from, $to));

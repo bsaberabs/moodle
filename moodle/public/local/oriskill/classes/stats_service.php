@@ -19,8 +19,8 @@ namespace local_oriskill;
 use local_moderncommerce\services\pricing_service;
 
 /**
- * Sales figures of a trainer, from the money actually collected: each invoice is a payment (an order paid at once,
- * each instalment on the day it is collected, a manual sale), each credit note a refund on the day of the refund.
+ * Sales figures of a trainer, from the money actually collected (transaction_service): an order paid at once, each
+ * instalment on the day it is collected, a manual sale, and each refund on the day of the refund.
  * Amounts include VAT, in the time zone of the trainer.
  *
  * @package    local_oriskill
@@ -67,59 +67,10 @@ class stats_service {
      * @param \stdClass $creator Trainer.
      * @param int $from Start (included).
      * @param int $to End (included).
-     * @return array of objects {id, time, type, amount (negative for a refund), currency, userid, orderid, number,
-     *               buyer, lines [name => amount], method, country}
+     * @return array See transaction_service::rows() (types payment and refund).
      */
     public static function movements(\stdClass $creator, int $from, int $to): array {
-        global $DB;
-
-        $documents = $DB->get_records_select('local_oriskill_invoices', "creatorid = ? AND type IN ('invoice', 'credit')
-                AND timecreated >= ? AND timecreated <= ?", [$creator->id, $from, $to], 'timecreated ASC, id ASC');
-        $orderids = array_filter(array_unique(array_map(fn($d) => (int) $d->orderid, $documents)));
-        $orders = $orderids ? $DB->get_records_list('local_moderncommerce_orders', 'id', $orderids) : [];
-        $countries = get_string_manager()->get_list_of_countries();
-        $methods = [];
-        $movements = [];
-        foreach ($documents as $document) {
-            $data = json_decode($document->data, true) ?: [];
-            $order = $orders[$document->orderid] ?? null;
-            $sign = $document->type === 'credit' ? -1 : 1;
-            $total = round((float) $document->total, 2);
-            // The amount of each product, the VAT included in proportion.
-            $lines = [];
-            $sum = array_sum(array_map(fn($l) => (float) ($l['total'] ?? 0), $data['lines'] ?? []));
-            foreach ($data['lines'] ?? [] as $line) {
-                $name = trim((string) ($line['name'] ?? '')) ?: '–';
-                $lines[$name] = ($lines[$name] ?? 0) + ($sum > 0 ? $total * (float) $line['total'] / $sum : 0);
-            }
-            if (!$lines) {
-                $lines['–'] = $total;
-            }
-            if ($order && !isset($methods[$order->id])) {
-                $methods[$order->id] = billing_service::payment_method($order);
-            }
-            $billing = $order ? orderform_service::billing_of_order((int) $order->id) : [];
-            $code = (string) ($billing['country'] ?? '');
-            if ($code === '' && $document->userid) {
-                $code = (string) $DB->get_field('user', 'country', ['id' => $document->userid]);
-            }
-            $movements[] = (object) [
-                'id' => (int) $document->id,
-                'time' => (int) $document->timecreated,
-                'type' => $document->type,
-                'amount' => $sign * $total,
-                'currency' => $document->currency,
-                'userid' => (int) $document->userid,
-                'orderid' => (int) $document->orderid,
-                'number' => $document->number,
-                'buyer' => (string) ($data['buyer']['name'] ?? ''),
-                'lines' => $lines,
-                'method' => $order ? $methods[$order->id] : (string) ($data['paymentmethod'] ?? $data['method']
-                    ?? get_string('stats:manual', 'local_oriskill')),
-                'country' => $code !== '' ? ($countries[$code] ?? $code) : '–',
-            ];
-        }
-        return $movements;
+        return array_values(array_filter(transaction_service::rows($creator, $from, $to), fn($t) => $t->type !== 'failed'));
     }
 
     /**

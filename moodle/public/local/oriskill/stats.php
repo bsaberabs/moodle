@@ -28,6 +28,7 @@ require_once(__DIR__ . '/../../config.php');
 use local_moderncommerce\services\pricing_service;
 use local_oriskill\creator_service;
 use local_oriskill\stats_service as st;
+use local_oriskill\transaction_service;
 
 $url = new moodle_url('/local/oriskill/stats.php');
 $creator = creator_service::require_current_creator($url, 'menu:stats');
@@ -38,25 +39,10 @@ $year = optional_param('year', $thisyear, PARAM_INT);
 $month = optional_param('month', 0, PARAM_INT);
 $monthstart = fn(int $y, int $m) => make_timestamp($y, $m, 1, 0, 0, 0, $timezone);
 
-// Sums of a period straight from the invoices: currency => {amount, count}.
-$sums = function(int $from, int $to) use ($DB, $creator): array {
-    $sums = [];
-    foreach ($DB->get_recordset_sql("SELECT currency, type, SUM(total) AS total, COUNT(1) AS n
-                                       FROM {local_oriskill_invoices}
-                                      WHERE creatorid = ? AND type IN ('invoice', 'credit') AND timecreated >= ? AND timecreated < ?
-                                   GROUP BY currency, type", [$creator->id, $from, $to]) as $row) {
-        $s = $sums[$row->currency] ?? (object) ['amount' => 0.0, 'count' => 0, 'refunds' => 0.0];
-        if ($row->type === 'credit') {
-            $s->amount -= (float) $row->total;
-            $s->refunds += (float) $row->total;
-        } else {
-            $s->amount += (float) $row->total;
-            $s->count += (int) $row->n;
-        }
-        $sums[$row->currency] = $s;
-    }
-    return $sums;
-};
+// Sums of a period from the transactions: currency => {amount, count, refunds}.
+$all = array_filter(transaction_service::rows($creator, 0, $now, false), fn($t) => $t->type !== 'failed');
+$sums = fn(int $from, int $to): array => transaction_service::totals(array_filter($all,
+    fn($t) => $t->time >= $from && $t->time < $to));
 $amounts = fn(array $sums, string $field = 'amount') => array_map(fn($s) => $s->$field, $sums);
 $count = fn(array $sums) => array_sum(array_map(fn($s) => $s->count, $sums));
 
@@ -94,7 +80,7 @@ echo html_writer::div(html_writer::tag('h3', get_string('stats:last30', 'local_o
 
 // Month by month.
 $years = [];
-$first = (int) $DB->get_field_sql("SELECT MIN(timecreated) FROM {local_oriskill_invoices} WHERE creatorid = ?", [$creator->id]);
+$first = $all ? min(array_map(fn($t) => $t->time, $all)) : 0;
 for ($y = $thisyear; $y >= ($first ? (int) userdate($first, '%Y', $timezone) : $thisyear); $y--) {
     $years[$y] = $y;
 }
@@ -161,27 +147,10 @@ echo html_writer::div(
     html_writer::div($blocks, 'oriskill-grid-3'), 'mb-4');
 
 // The last transactions.
-$last = $DB->get_records_select('local_oriskill_invoices', "creatorid = ? AND type IN ('invoice', 'credit')", [$creator->id],
-    'timecreated DESC, id DESC', '*', 0, 10);
-$table = new html_table();
-$table->attributes['class'] = 'table align-middle';
-$table->head = [get_string('date'), get_string('invoices:client', 'local_oriskill'), get_string('stats:product', 'local_oriskill'),
-    get_string('invoice:number', 'local_oriskill'), get_string('stats:collected', 'local_oriskill')];
-foreach ($last as $document) {
-    $data = json_decode($document->data, true) ?: [];
-    $credit = $document->type === 'credit';
-    $table->data[] = [
-        userdate($document->timecreated, get_string('strftimedatetimeshort', 'langconfig'), $timezone),
-        s($data['buyer']['name'] ?? '') . html_writer::div(s($data['buyer']['email'] ?? ''), 'small text-muted'),
-        s(implode(', ', array_column($data['lines'] ?? [], 'name'))),
-        html_writer::link(new moodle_url('/local/oriskill/invoice.php', ['id' => $document->id]), s($document->number)),
-        html_writer::span(($credit ? '− ' : '') . pricing_service::format_price((float) $document->total, $document->currency),
-            'oriskill-badge ' . ($credit ? 'is-warn' : 'is-good')),
-    ];
-}
+$last = array_slice(transaction_service::search($creator, ['from' => strtotime('-1 year', $now), 'to' => $now]), 0, 10);
 echo html_writer::div(html_writer::tag('h3', get_string('stats:lasttransactions', 'local_oriskill'), ['class' => 'h5']) .
-    ($last ? html_writer::table($table) . html_writer::div(html_writer::link(new moodle_url('/local/oriskill/invoices.php'),
-        get_string('stats:alltransactions', 'local_oriskill')), 'small')
+    ($last ? transaction_service::table($last, $creator, $timezone) . html_writer::div(html_writer::link(
+        new moodle_url('/local/oriskill/sales.php'), get_string('stats:alltransactions', 'local_oriskill')), 'small')
         : html_writer::div(get_string('nosales', 'local_oriskill'), 'text-muted')), 'oriskill-card table-responsive');
 
 echo creator_service::space_end();

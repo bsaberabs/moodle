@@ -218,7 +218,7 @@ class creator_service {
     const SPACE_MENU = [
         'navgroup:overview' => [
             '/local/oriskill/dashboard.php' => ['menu:dashboard', 'bi-speedometer2'],
-            '/local/oriskill/sales.php' => ['sales', 'bi-graph-up-arrow'],
+            '/local/oriskill/sales.php' => ['sales', 'bi-arrow-left-right'],
             '/local/oriskill/stats.php' => ['menu:stats', 'bi-bar-chart'],
             '/local/oriskill/schedules.php' => ['menu:schedules', 'bi-calendar-check'],
             '/local/oriskill/unpaid.php' => ['menu:unpaid', 'bi-exclamation-triangle'],
