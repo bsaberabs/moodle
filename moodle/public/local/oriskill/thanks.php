@@ -87,6 +87,10 @@ if ($paid) {
             html_writer::div(get_string('orderform:upsellcard', 'local_oriskill'), 'small text-muted mt-2'),
             'oriskill-upsell mt-4');
     }
+    // The purchase for the trainer's measurement tools, sent only with the buyer's consent.
+    if (!empty($form->trackorders)) {
+        echo orderform_service::purchase_script($order);
+    }
 } else {
     // SecureAndPay notifies the payment on its own, usually within seconds of the buyer's return.
     echo html_writer::tag('p', get_string('orderform:waiting', 'local_oriskill'));
@@ -94,4 +98,7 @@ if ($paid) {
 }
 echo html_writer::end_div();
 echo html_writer::end_div();
+if ($creator = $DB->get_record('local_oriskill_creators', ['id' => $form->creatorid])) {
+    echo \local_oriskill\privacy_service::banner($creator, 'funnel');
+}
 echo $OUTPUT->footer();

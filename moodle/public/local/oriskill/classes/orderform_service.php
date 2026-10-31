@@ -326,6 +326,7 @@ class orderform_service {
             'buttonstyle' => json_encode((array) ($data->buttonstyle ?? [])),
             'redirecturl' => preg_match('~^https?://~i', trim((string) ($data->redirecturl ?? '')))
                 ? clean_param(trim($data->redirecturl), PARAM_URL) : '',
+            'trackorders' => empty($data->trackorders) ? 0 : 1,
             'timemodified' => $now,
         ];
         if (!empty($data->id)) {
@@ -374,6 +375,67 @@ class orderform_service {
             ]);
         }
         return $DB->get_record('local_oriskill_orderforms', ['id' => $record->id]);
+    }
+
+    /**
+     * Sales of each order form since it exists: buyers, payments (each instalment counts), amount collected (refunds
+     * taken off).
+     *
+     * @param \stdClass $creator Trainer.
+     * @return array form id => {customers, transactions, revenue (currency => amount)}
+     */
+    public static function sales_figures(\stdClass $creator): array {
+        global $DB;
+
+        [$orders, $params] = transaction_service::orders_sql($creator);
+        $formof = [];
+        foreach ($DB->get_recordset_sql("SELECT id, notes FROM {local_moderncommerce_orders} WHERE id IN ($orders)
+                                         AND " . $DB->sql_like('notes', ':form'), $params + ['form' => '%"orderform":%']) as $order) {
+            $notes = json_decode((string) $order->notes, true) ?: [];
+            if (!empty($notes['orderform'])) {
+                $formof[(int) $order->id] = (int) $notes['orderform'];
+            }
+        }
+        $figures = [];
+        foreach (transaction_service::rows($creator, 0, time(), false) as $row) {
+            if ($row->type === 'failed' || !isset($formof[$row->orderid])) {
+                continue;
+            }
+            $f = $figures[$formof[$row->orderid]] ??= (object) ['customers' => [], 'transactions' => 0, 'revenue' => []];
+            $f->revenue[$row->currency] = ($f->revenue[$row->currency] ?? 0) + $row->amount;
+            if ($row->type === 'payment') {
+                $f->transactions++;
+                $f->customers[$row->userid] = true;
+            }
+        }
+        foreach ($figures as $f) {
+            $f->customers = count($f->customers);
+        }
+        return $figures;
+    }
+
+    /**
+     * Script giving a purchase to the measurement tools of the trainer: queued, it is sent only if the buyer accepted them
+     * in the cookie banner (which loads Google Analytics and the Meta pixel, then plays the queue).
+     *
+     * @param \stdClass $order Paid order.
+     * @return string HTML
+     */
+    public static function purchase_script(\stdClass $order): string {
+        global $DB;
+
+        $items = [];
+        foreach ($DB->get_records('local_moderncommerce_order_items', ['orderid' => $order->id], 'id') as $item) {
+            $items[] = ['item_id' => (string) ($item->courseid ?: $item->id), 'item_name' => format_string($item->itemname),
+                'price' => round((float) $item->unitprice, 2), 'quantity' => (int) $item->quantity];
+        }
+        $value = round((float) $order->total, 2);
+        $event = ['ga' => ['event', 'purchase', ['transaction_id' => $order->ordernumber, 'value' => $value,
+            'currency' => $order->currency, 'items' => $items]],
+            'fb' => ['track', 'Purchase', ['value' => $value, 'currency' => $order->currency,
+                'content_ids' => array_column($items, 'item_id'), 'content_type' => 'product']]];
+        return '<script>window.oriskillEvents = (window.oriskillEvents || []).concat([' .
+            json_encode($event, JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) . ']);</script>';
     }
 
     /** Border styles of the special offer box. */

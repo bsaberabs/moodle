@@ -73,6 +73,8 @@ class orderform_form extends \moodleform {
             'placeholder' => 'https://']);
         $mform->setType('redirecturl', PARAM_RAW_TRIMMED);
         $mform->addHelpButton('redirecturl', 'orderform:redirecturl', 'local_oriskill');
+        $mform->addElement('advcheckbox', 'trackorders', get_string('orderform:trackorders', 'local_oriskill'),
+            get_string('orderform:trackorders_desc', 'local_oriskill'));
 
         $mform->addElement('advcheckbox', 'termsrequired', get_string('orderform:termsrequired', 'local_oriskill'));
         $mform->setDefault('termsrequired', 1);

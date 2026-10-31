@@ -51,30 +51,68 @@ if (!orderform_service::can_sell($creator)) {
 }
 
 $forms = orderform_service::forms($creator);
+// Filters: name, state, course opened.
+$q = trim(optional_param('q', '', PARAM_TEXT));
+$state = optional_param('state', '', PARAM_ALPHA);
+$courseid = optional_param('course', 0, PARAM_INT);
+$courses = array_map(fn($c) => format_string($c->fullname), $DB->get_records('course', ['category' => $creator->categoryid],
+    'fullname', 'id, fullname'));
+$opens = [];
+foreach ($DB->get_records_list('local_oriskill_formoffers', 'formid', array_keys($forms) ?: [0], '', 'id, formid, courseids') as $o) {
+    $opens[$o->formid] = array_unique(array_merge($opens[$o->formid] ?? [], array_map('intval', explode(',', $o->courseids))));
+}
+$all = count($forms);
+$forms = array_filter($forms, fn($f) => ($q === '' || str_contains(core_text::strtolower($f->title . ' ' . $f->slug),
+        core_text::strtolower($q))) && ($state === '' || $f->status === $state)
+    && (!$courseid || in_array($courseid, $opens[$f->id] ?? [], true)));
+if ($all) {
+    echo html_writer::tag('form',
+        html_writer::div(
+            html_writer::empty_tag('input', ['type' => 'search', 'name' => 'q', 'value' => $q, 'class' => 'form-control form-control-sm',
+                'placeholder' => get_string('orderforms:search', 'local_oriskill'), 'aria-label' => get_string('search')]) .
+            html_writer::select(['published' => get_string('orderform:published', 'local_oriskill'),
+                'draft' => get_string('orderform:draft', 'local_oriskill')], 'state', $state,
+                ['' => get_string('orderforms:allstates', 'local_oriskill')], ['class' => 'form-select form-select-sm w-auto',
+                'aria-label' => get_string('status')]) .
+            html_writer::select($courses, 'course', $courseid, ['' => get_string('orderforms:allcourses', 'local_oriskill')],
+                ['class' => 'form-select form-select-sm w-auto', 'aria-label' => get_string('course')]) .
+            html_writer::tag('button', get_string('transactions:apply', 'local_oriskill'), ['type' => 'submit',
+                'class' => 'btn btn-sm btn-primary']),
+            'd-flex flex-wrap gap-2'),
+        ['method' => 'get', 'action' => $url->out(false), 'class' => 'oriskill-card mb-3']);
+}
 if (!$forms) {
     echo html_writer::div('<i class="fa fa-file-lines" aria-hidden="true"></i>' .
-        get_string('orderforms:none', 'local_oriskill'), 'oriskill-card oriskill-empty');
+        get_string($all ? 'orderforms:nomatch' : 'orderforms:none', 'local_oriskill'), 'oriskill-card oriskill-empty');
 } else {
     $currency = \local_moderncommerce\services\pricing_service::get_currency_config()->currency;
+    $sales = orderform_service::sales_figures($creator);
     $table = new html_table();
     $table->attributes['class'] = 'table align-middle oriskill-documents';
-    $table->head = [get_string('orderform:title', 'local_oriskill'), get_string('orderform:address', 'local_oriskill'),
-        get_string('stats:views30', 'local_oriskill'), get_string('stats:orders', 'local_oriskill'),
-        get_string('stats:conversion', 'local_oriskill'), get_string('stats:revenue', 'local_oriskill'), ''];
+    $table->head = [get_string('orderform:title', 'local_oriskill'), get_string('orderforms:courses', 'local_oriskill'),
+        get_string('stats:views30', 'local_oriskill'), get_string('stats:conversion', 'local_oriskill'),
+        get_string('orderforms:customers', 'local_oriskill'), get_string('orderforms:transactions', 'local_oriskill'),
+        get_string('orderforms:revenue', 'local_oriskill'), ''];
     foreach ($forms as $form) {
         $public = orderform_service::url($form, $creator)->out(false);
         $figures = \local_oriskill\formstats_service::figures($form, 30);
         $published = $form->status === 'published';
+        $total = $sales[$form->id] ?? null;
         $table->data[] = [
             html_writer::span(format_string($form->title), 'fw-semibold') . ' ' .
                 html_writer::span(get_string('orderform:' . $form->status, 'local_oriskill'),
-                    'oriskill-badge ' . ($published ? 'is-good' : '')),
-            $published ? html_writer::link($public, s($public), ['target' => '_blank', 'rel' => 'noopener', 'class' => 'small'])
-                : html_writer::span(get_string('orderform:notpublished', 'local_oriskill'), 'small text-muted'),
+                    'oriskill-badge ' . ($published ? 'is-good' : '')) .
+                html_writer::div($published ? html_writer::link($public, s($public), ['target' => '_blank', 'rel' => 'noopener'])
+                    : get_string('orderform:notpublished', 'local_oriskill'), 'small text-muted text-break') .
+                html_writer::div(get_string('orderforms:created', 'local_oriskill', (object) [
+                    'created' => userdate($form->timecreated, get_string('strftimedate', 'langconfig')),
+                    'modified' => userdate($form->timemodified, get_string('strftimedate', 'langconfig'))]), 'small text-muted'),
+            s(implode(', ', array_filter(array_map(fn($id) => $courses[$id] ?? null, $opens[$form->id] ?? []))) ?: '–'),
             $figures->views,
-            $figures->orders,
             format_float($figures->conversion, 1, true, true) . ' %',
-            \local_moderncommerce\services\pricing_service::format_price($figures->revenue, $currency),
+            $total ? $total->customers : 0,
+            $total ? $total->transactions : 0,
+            html_writer::tag('strong', \local_oriskill\stats_service::money($total->revenue ?? [$currency => 0])),
             html_writer::link(new moodle_url('/local/oriskill/orderformstats.php', ['id' => $form->id]),
                 get_string('stats:title', 'local_oriskill'), ['class' => 'btn btn-sm btn-outline-secondary']) . ' ' .
             html_writer::link(new moodle_url('/local/oriskill/abandons.php', ['id' => $form->id]),
@@ -91,7 +129,7 @@ if (!$forms) {
                 ['method' => 'post', 'action' => $url->out(false), 'class' => 'd-inline']),
         ];
     }
-    echo html_writer::div(html_writer::table($table), 'oriskill-card');
+    echo html_writer::div(html_writer::table($table), 'oriskill-card table-responsive');
 }
 echo creator_service::space_end();
 echo $OUTPUT->footer();

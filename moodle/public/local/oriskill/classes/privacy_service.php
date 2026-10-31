@@ -265,6 +265,8 @@ class privacy_service {
                         window.gtag = function() { window.dataLayer.push(arguments); };
                         window.gtag("js", new Date());
                         window.gtag("config", c.ga, {anonymize_ip: true});
+                        // Events of the page waiting for the consent (a purchase on the thank-you page).
+                        (window.oriskillEvents || []).forEach(function(e) { if (e.ga) { window.gtag.apply(null, e.ga); } });
                     }
                     if (choice.marketing && c.pixel && !window.fbq) {
                         !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -273,6 +275,7 @@ class privacy_service {
                         s.parentNode.insertBefore(t,s)}(window,document,"script","https://connect.facebook.net/en_US/fbevents.js");
                         window.fbq("init", c.pixel);
                         window.fbq("track", "PageView");
+                        (window.oriskillEvents || []).forEach(function(e) { if (e.fb) { window.fbq.apply(null, e.fb); } });
                     }
                 }
                 function store(choice) {

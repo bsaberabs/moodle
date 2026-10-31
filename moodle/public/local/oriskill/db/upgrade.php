@@ -613,5 +613,14 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103062, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103063) {
+        // An order form can send its purchases to Google Analytics and the Meta pixel.
+        $table = new xmldb_table('local_oriskill_orderforms');
+        $field = new xmldb_field('trackorders', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'redirecturl');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_plugin_savepoint(true, 2026103063, 'local', 'oriskill');
+    }
     return true;
 }

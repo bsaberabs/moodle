@@ -71,6 +71,7 @@ if ($form) {
         'upsellcourseids' => array_filter(array_map('intval', explode(',', (string) $form->upsellcourseids))),
         'upsellprice' => (float) $form->upsellprice > 0 ? format_float((float) $form->upsellprice, 2, true) : '',
         'redirecturl' => $form->redirecturl ?? '',
+        'trackorders' => (int) ($form->trackorders ?? 0),
     ];
     foreach (orderform_service::buyer_fields($form) as $field => $state) {
         $defaults['field_' . $field] = $state;
