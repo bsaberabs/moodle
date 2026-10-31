@@ -56,12 +56,14 @@ class course_list {
         $tickets = $DB->get_records_sql_menu("SELECT courseid, COUNT(1) FROM {" . ticket_service::TABLE . "}
                                                WHERE status = 'open' AND courseid $insql GROUP BY courseid", $params);
         $comments = comment_service::pending($creator, true);
+        $incategory = !empty($filters['category']) ? category_service::ids((int) $filters['category'], 'course') : null;
         $q = \core_text::strtolower(trim($filters['q'] ?? ''));
         foreach ($rows as $courseid => $row) {
             $on = (bool) $row->course->visible;
             if (($q !== '' && !str_contains(\core_text::strtolower($row->course->fullname . ' ' . $row->course->shortname), $q))
                     || (($filters['state'] ?? '') === 'on' && !$on) || (($filters['state'] ?? '') === 'off' && $on)
-                    || (!empty($filters['favourites']) && !in_array($courseid, $favourites))) {
+                    || (!empty($filters['favourites']) && !in_array($courseid, $favourites))
+                    || ($incategory !== null && !in_array((int) $courseid, $incategory, true))) {
                 unset($rows[$courseid]);
                 continue;
             }
@@ -217,13 +219,14 @@ class course_list {
      * @param bool $withmembers Copy the members, their roles and their progress too.
      * @return int New course id.
      */
-    public static function duplicate(\stdClass $creator, \stdClass $course, bool $withmembers): int {
+    public static function duplicate(\stdClass $creator, \stdClass $course, bool $withmembers, int $categoryid = 0,
+            bool $samename = false): int {
         global $CFG, $DB;
         require_once($CFG->dirroot . '/backup/util/includes/backup_includes.php');
         require_once($CFG->dirroot . '/backup/util/includes/restore_includes.php');
         require_once($CFG->dirroot . '/enrol/locallib.php');
 
-        $name = get_string('courses:copyof', 'local_oriskill', $course->fullname);
+        $name = $samename ? $course->fullname : get_string('courses:copyof', 'local_oriskill', $course->fullname);
         $shortname = $course->shortname . '-' . get_string('courses:copysuffix', 'local_oriskill');
         for ($i = 2; $DB->record_exists('course', ['shortname' => $shortname]); $i++) {
             $shortname = $course->shortname . '-' . get_string('courses:copysuffix', 'local_oriskill') . $i;
@@ -249,7 +252,7 @@ class course_list {
             $file->extract_to_pathname(get_file_packer('application/vnd.moodle.backup'), $basepath);
         }
 
-        $newid = \restore_dbops::create_new_course($name, $shortname, (int) $course->category);
+        $newid = \restore_dbops::create_new_course($name, $shortname, $categoryid ?: (int) $course->category);
         $rc = new \restore_controller($backupid, $newid, \backup::INTERACTIVE_NO, \backup::MODE_SAMESITE, $adminid,
             \backup::TARGET_NEW_COURSE);
         foreach ($settings as $setting => $value) {

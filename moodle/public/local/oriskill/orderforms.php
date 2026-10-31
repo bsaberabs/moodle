@@ -55,6 +55,8 @@ $forms = orderform_service::forms($creator);
 $q = trim(optional_param('q', '', PARAM_TEXT));
 $state = optional_param('state', '', PARAM_ALPHA);
 $courseid = optional_param('course', 0, PARAM_INT);
+$categoryid = optional_param('category', 0, PARAM_INT);
+$incategory = $categoryid ? \local_oriskill\category_service::ids($categoryid, 'orderform') : null;
 $courses = array_map(fn($c) => format_string($c->fullname), $DB->get_records('course', ['category' => $creator->categoryid],
     'fullname', 'id, fullname'));
 $opens = [];
@@ -64,7 +66,8 @@ foreach ($DB->get_records_list('local_oriskill_formoffers', 'formid', array_keys
 $all = count($forms);
 $forms = array_filter($forms, fn($f) => ($q === '' || str_contains(core_text::strtolower($f->title . ' ' . $f->slug),
         core_text::strtolower($q))) && ($state === '' || $f->status === $state)
-    && (!$courseid || in_array($courseid, $opens[$f->id] ?? [], true)));
+    && (!$courseid || in_array($courseid, $opens[$f->id] ?? [], true))
+    && ($incategory === null || in_array((int) $f->id, $incategory, true)));
 if ($all) {
     echo html_writer::tag('form',
         html_writer::div(
@@ -76,6 +79,9 @@ if ($all) {
                 'aria-label' => get_string('status')]) .
             html_writer::select($courses, 'course', $courseid, ['' => get_string('orderforms:allcourses', 'local_oriskill')],
                 ['class' => 'form-select form-select-sm w-auto', 'aria-label' => get_string('course')]) .
+            (($categorymenu = \local_oriskill\category_service::menu($creator)) ? html_writer::select($categorymenu, 'category',
+                $categoryid, ['' => get_string('categories:all', 'local_oriskill')], ['class' => 'form-select form-select-sm w-auto',
+                'aria-label' => get_string('menu:categories', 'local_oriskill')]) : '') .
             html_writer::tag('button', get_string('transactions:apply', 'local_oriskill'), ['type' => 'submit',
                 'class' => 'btn btn-sm btn-primary']),
             'd-flex flex-wrap gap-2'),

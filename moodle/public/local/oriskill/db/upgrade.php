@@ -629,5 +629,14 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103064, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103065) {
+        // FAQ of the courses, categories of the trainers, share codes.
+        foreach (['local_oriskill_faq', 'local_oriskill_categories', 'local_oriskill_catitems', 'local_oriskill_sharecodes'] as $name) {
+            if (!$dbman->table_exists($name)) {
+                $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', $name);
+            }
+        }
+        upgrade_plugin_savepoint(true, 2026103065, 'local', 'oriskill');
+    }
     return true;
 }

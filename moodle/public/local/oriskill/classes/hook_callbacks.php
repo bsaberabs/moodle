@@ -267,6 +267,11 @@ class hook_callbacks {
         if ($mode !== null) {
             $PAGE->requires->js_init_code(studytime_service::page_script((int) $PAGE->course->id, $mode));
         }
+        // At the bottom of a course of a trainer: its frequently asked questions.
+        if ($PAGE->context->contextlevel == CONTEXT_COURSE && str_starts_with($PAGE->pagetype, 'course-view')
+                && comment_service::creator_of($PAGE->course)) {
+            $hook->add_html(faq_service::html((int) $PAGE->course->id, get_string('faq:title', 'local_oriskill')));
+        }
         // Under a lesson: the comments of the learners and the answers of the team.
         if ($PAGE->context->contextlevel == CONTEXT_MODULE && $PAGE->cm && str_ends_with($PAGE->pagetype, '-view')) {
             $hook->add_html(comment_service::lesson_html($PAGE->cm));

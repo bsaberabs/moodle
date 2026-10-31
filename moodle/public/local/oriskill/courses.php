@@ -36,6 +36,7 @@ $filters = [
     'q' => optional_param('q', '', PARAM_TEXT),
     'state' => optional_param('state', '', PARAM_ALPHA),
     'favourites' => optional_param('favourites', 0, PARAM_BOOL),
+    'category' => optional_param('category', 0, PARAM_INT),
     'sort' => optional_param('sort', 'name', PARAM_ALPHA),
     'dir' => optional_param('dir', 'asc', PARAM_ALPHA),
 ];
@@ -108,6 +109,9 @@ echo html_writer::div(
             'placeholder' => get_string('courses:search', 'local_oriskill'), 'aria-label' => get_string('search')]) .
         html_writer::select($states, 'state', $filters['state'], false, ['class' => 'form-select', 'style' => 'width: auto',
             'aria-label' => get_string('courses:state', 'local_oriskill')]) .
+        (($categorymenu = \local_oriskill\category_service::menu($creator)) ? html_writer::select($categorymenu, 'category',
+            $filters['category'], ['' => get_string('categories:all', 'local_oriskill')], ['class' => 'form-select',
+            'style' => 'width: auto', 'aria-label' => get_string('menu:categories', 'local_oriskill')]) : '') .
         html_writer::div(html_writer::checkbox('favourites', 1, (bool) $filters['favourites'],
             get_string('courses:favouritesonly', 'local_oriskill'), ['class' => 'form-check-input']), 'form-check mb-0') .
         html_writer::tag('button', get_string('filter'), ['type' => 'submit', 'class' => 'btn btn-outline-secondary']),
@@ -119,7 +123,7 @@ echo html_writer::div(
 
 if (!$rows) {
     echo html_writer::div('<i class="fa fa-graduation-cap" aria-hidden="true"></i>' . ($filters['q'] !== '' || $filters['state']
-        || $filters['favourites'] ? get_string('courses:nomatch', 'local_oriskill')
+        || $filters['favourites'] || $filters['category'] ? get_string('courses:nomatch', 'local_oriskill')
         : get_string('nocoursesyet', 'local_oriskill', $newcourseurl->out(false))), 'oriskill-card oriskill-empty');
     echo creator_service::space_end();
     echo $OUTPUT->footer();

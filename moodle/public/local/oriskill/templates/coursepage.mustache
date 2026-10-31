@@ -94,6 +94,17 @@
                 </ol>
             </section>
         {{/hasprogram}}
+        {{#hasfaq}}
+            <section aria-labelledby="oriskill-coursepage-faq">
+                <h2 id="oriskill-coursepage-faq">{{#str}}faq:title, local_oriskill{{/str}}</h2>
+                {{#faq}}
+                    <details class="oriskill-coursepage-faq">
+                        <summary>{{question}}</summary>
+                        <p style="white-space: pre-line">{{answer}}</p>
+                    </details>
+                {{/faq}}
+            </section>
+        {{/hasfaq}}
         <section class="oriskill-coursepage-trainer" aria-labelledby="oriskill-coursepage-trainer">
             <h2 id="oriskill-coursepage-trainer">{{#str}}coursepage:trainer, local_oriskill{{/str}}</h2>
             <a href="{{homeurl}}" class="oriskill-vitrine-brand">

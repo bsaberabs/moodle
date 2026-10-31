@@ -125,6 +125,9 @@ echo $OUTPUT->render_from_template('local_oriskill/coursepage', [
     'program' => array_map(fn($module, $i) => $module + ['number' => $i + 1, 'hasactivities' => $module['count'] > 0],
         $program, array_keys($program)),
     'hasprogram' => !empty($program),
+    'faq' => array_map(fn($f) => ['question' => $f->question, 'answer' => $f->answer],
+        \local_oriskill\faq_service::items((int) $course->id)),
+    'hasfaq' => (bool) \local_oriskill\faq_service::items((int) $course->id),
     'year' => userdate(time(), '%Y'),
     'links' => [
         ['url' => (new moodle_url('/local/moderncommerce/terms.php'))->out(false),
