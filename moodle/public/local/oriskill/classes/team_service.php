@@ -49,12 +49,15 @@ class team_service {
     const VIEW_ONLY = [
         '/local/oriskill/learners.php' => ['accounting', 'partner', 'coach'],
         '/local/oriskill/contacts.php' => ['accounting'],
+        // Refunds, credit notes, cancellations and access: not for the support.
+        '/local/oriskill/sale.php' => ['support'],
     ];
 
     /** Pages of the trainer space and the collaborator roles allowed on each (the owner is allowed everywhere). */
     const PAGE_ROLES = [
         '/local/oriskill/dashboard.php' => ['admin', 'teaching', 'support', 'accounting'],
         '/local/oriskill/sales.php' => ['admin', 'support', 'accounting'],
+        '/local/oriskill/sale.php' => ['admin', 'support', 'accounting'],
         '/local/oriskill/stats.php' => ['admin', 'support', 'accounting'],
         '/local/oriskill/invoices.php' => ['admin', 'support', 'accounting'],
         '/local/oriskill/affiliation.php' => ['admin', 'accounting'],

@@ -64,20 +64,52 @@ class transaction_service {
     }
 
     /**
+     * An order of the trainer's courses (or invoiced in their name), or an exception.
+     *
+     * @param \stdClass $creator Trainer.
+     * @param int $orderid Order.
+     * @return \stdClass
+     */
+    public static function require_order(\stdClass $creator, int $orderid): \stdClass {
+        global $DB;
+
+        [$orders, $params] = self::orders_sql($creator);
+        $order = $DB->get_record_sql("SELECT * FROM {local_moderncommerce_orders} WHERE id = :id AND id IN ($orders)",
+            ['id' => $orderid] + $params);
+        if (!$order) {
+            throw new \moodle_exception('error:notallowed', 'local_oriskill');
+        }
+        return $order;
+    }
+
+    /**
+     * Transactions of one order, oldest first.
+     *
+     * @param \stdClass $creator Trainer.
+     * @param \stdClass $order Order.
+     * @return array See rows().
+     */
+    public static function of_order(\stdClass $creator, \stdClass $order): array {
+        return self::rows($creator, 0, time(), true, (int) $order->id);
+    }
+
+    /**
      * Transactions of a period, oldest first.
      *
      * @param \stdClass $creator Trainer.
      * @param int $from Start (included).
      * @param int $to End (included).
      * @param bool $detail With the buyer, products, method, country and documents (false: time, type, amount only).
+     * @param int $orderid Only the transactions of this order (0: all).
      * @return array of objects {key, time, type (payment, failed, refund), amount (negative for a refund), currency,
      *               userid, orderid, and with $detail: buyer, email, lines [name => amount], method, country, instalment
      *               (2/6, empty), reason (of a refusal), number and documentid (invoice or credit note, 0 when none)}
      */
-    public static function rows(\stdClass $creator, int $from, int $to, bool $detail = true): array {
+    public static function rows(\stdClass $creator, int $from, int $to, bool $detail = true, int $orderid = 0): array {
         global $DB;
 
-        [$orders, $params] = self::orders_sql($creator);
+        [$orders, $params] = $orderid ? ['SELECT id FROM {local_moderncommerce_orders} WHERE id = :tonly', ['tonly' => $orderid]]
+            : self::orders_sql($creator);
         $params += ['from' => $from, 'to' => $to];
         $rows = [];
 
@@ -116,6 +148,7 @@ class transaction_service {
         foreach ($DB->get_recordset_sql("SELECT d.*
                                            FROM {local_oriskill_invoices} d
                                           WHERE d.creatorid = :creator AND d.type IN ('invoice', 'credit')
+                                                AND (:onlyorder = 0 OR d.orderid = :onlyorder2)
                                                 AND d.timecreated >= :from AND d.timecreated <= :to
                                                 AND (d.type = 'credit' OR d.orderid = 0 OR (
                                                      NOT EXISTS (SELECT 1 FROM {local_moderncommerce_payment_events} e
@@ -125,7 +158,8 @@ class transaction_service {
                                                                             AND a.status = 'success')
                                                      AND d.id = (SELECT MIN(f.id) FROM {local_oriskill_invoices} f
                                                                   WHERE f.orderid = d.orderid AND f.type = 'invoice')))",
-                ['creator' => (int) $creator->id, 'from' => $from, 'to' => $to]) as $d) {
+                ['creator' => (int) $creator->id, 'from' => $from, 'to' => $to, 'onlyorder' => $orderid,
+                    'onlyorder2' => $orderid]) as $d) {
             $data = json_decode((string) $d->data, true) ?: [];
             if ($d->type === 'invoice' && !$d->orderid && array_key_exists('paid', $data) && !$data['paid']) {
                 // A manual invoice not paid yet.
@@ -322,9 +356,10 @@ class transaction_service {
      * @param array $rows Transactions.
      * @param \stdClass $creator Trainer.
      * @param string $timezone Time zone of the trainer.
+     * @param bool $links With a link to the detail of each sale.
      * @return string HTML
      */
-    public static function table(array $rows, \stdClass $creator, string $timezone): string {
+    public static function table(array $rows, \stdClass $creator, string $timezone, bool $links = true): string {
         global $DB;
 
         $userids = array_values(array_unique(array_filter(array_map(fn($r) => $r->userid, $rows))));
@@ -340,6 +375,9 @@ class transaction_service {
         $table->head = [get_string('date'), get_string('transactions:buyer', 'local_oriskill'),
             get_string('stats:product', 'local_oriskill'), get_string('transactions:method', 'local_oriskill'),
             get_string('transactions:amount', 'local_oriskill'), get_string('status'), get_string('invoice:number', 'local_oriskill')];
+        if ($links) {
+            $table->head[] = '';
+        }
         foreach ($rows as $row) {
             $buyer = s($row->buyer ?: '?');
             if (isset($contacts[$row->userid])) {
@@ -359,8 +397,14 @@ class transaction_service {
                     'oriskill-badge ' . $tones[$row->type]) .
                     ($row->reason !== '' ? \html_writer::div(s($row->reason), 'small text-muted') : ''),
                 $row->documentid ? \html_writer::link(new \moodle_url('/local/oriskill/invoice.php', ['id' => $row->documentid]),
-                    '<i class="fa fa-eye me-1" aria-hidden="true"></i>' . s($row->number)) : '',
+                    '<i class="fa fa-file-lines me-1" aria-hidden="true"></i>' . s($row->number)) : '',
             ];
+            if ($links) {
+                $table->data[array_key_last($table->data)][] = $row->orderid
+                    ? \html_writer::link(new \moodle_url('/local/oriskill/sale.php', ['id' => $row->orderid]),
+                        get_string('transactions:detail', 'local_oriskill'), ['class' => 'btn btn-sm btn-outline-primary'])
+                    : '';
+            }
         }
         return \html_writer::table($table);
     }
