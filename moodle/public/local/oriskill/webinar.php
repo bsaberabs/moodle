@@ -58,9 +58,10 @@ if (!$reg && optional_param('signup', 0, PARAM_BOOL) && confirm_sesskey()) {
         redirect($PAGE->url, $e->getMessage(), null, \core\output\notification::NOTIFY_ERROR);
     }
 }
-// Into the room.
+$youtube = $webinar->platform === 'youtube';
+// Into the room (BigBlueButton; the YouTube live plays on this page).
 if ($reg && optional_param('join', 0, PARAM_BOOL)) {
-    if (!ws::is_open($webinar)) {
+    if (!ws::is_open($webinar) || $youtube) {
         redirect(ws::room_url($reg));
     }
     if (!$reg->joined) {
@@ -98,9 +99,17 @@ if (!$reg) {
 } else if (time() > $end) {
     // After the live: the replay while it can be watched.
     $replay = $webinar->replaydays > 0 && time() < $end + $webinar->replaydays * DAYSECS ? ws::replay_url($webinar) : '';
-    $content .= $replay !== '' ? html_writer::link($replay, '<i class="fa fa-play me-2" aria-hidden="true"></i>' .
+    $wide = $youtube && $replay !== '';
+    $content .= $wide ? ws::youtube_embed($webinar, false, $PAGE->url->get_host()) : ($replay !== '' ? html_writer::link($replay, '<i class="fa fa-play me-2" aria-hidden="true"></i>' .
         get_string('webinar:watchreplay', 'local_oriskill'), ['class' => 'btn btn-primary btn-lg', 'target' => '_blank'])
-        : html_writer::div(get_string('webinar:ended', 'local_oriskill'), 'alert alert-info');
+        : html_writer::div(get_string('webinar:ended', 'local_oriskill'), 'alert alert-info'));
+} else if ($youtube && ws::is_open($webinar)) {
+    // The YouTube live and its chat, here: being on the page counts as attending.
+    if (!$reg->joined) {
+        $DB->set_field(ws::REGS, 'joined', time(), ['id' => $reg->id]);
+    }
+    $wide = true;
+    $content .= ws::youtube_embed($webinar, true, $PAGE->url->get_host());
 } else {
     $content .= html_writer::div(get_string('webinar:hello', 'local_oriskill', s($reg->firstname)), 'alert alert-success') .
         (ws::is_open($webinar) ? html_writer::link(new moodle_url($PAGE->url, ['join' => 1]),
@@ -133,6 +142,7 @@ $PAGE->requires->js_init_code('(function() {
 })();');
 
 echo $OUTPUT->header();
-echo html_writer::div(html_writer::div($content, 'card-body p-4'), 'card mx-auto my-5', ['style' => 'max-width: 40rem']);
+echo html_writer::div(html_writer::div($content, 'card-body p-4'), 'card mx-auto my-5',
+    ['style' => 'max-width: ' . (!empty($wide) ? '72rem' : '40rem')]);
 echo \local_oriskill\privacy_service::banner($creator, 'funnel');
 echo $OUTPUT->footer();

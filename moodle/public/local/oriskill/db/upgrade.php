@@ -680,5 +680,16 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103070, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103071) {
+        // Each webinar is broadcast on BigBlueButton or on YouTube Live.
+        $table = new xmldb_table('local_oriskill_webinars');
+        foreach ([new xmldb_field('platform', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, 'bbb', 'replayurl'),
+                new xmldb_field('streamurl', XMLDB_TYPE_CHAR, '1333', null, null, null, null, 'platform')] as $field) {
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+        upgrade_plugin_savepoint(true, 2026103071, 'local', 'oriskill');
+    }
     return true;
 }

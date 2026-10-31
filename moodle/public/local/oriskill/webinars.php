@@ -63,7 +63,8 @@ if (optional_param('action', '', PARAM_ALPHA) === 'save' && confirm_sesskey()) {
             'description' => optional_param('description', '', PARAM_TEXT), 'starttime' => $start,
             'duration' => optional_param('duration', 60, PARAM_INT), 'offerurl' => optional_param('offerurl', '', PARAM_RAW_TRIMMED),
             'offerlabel' => optional_param('offerlabel', '', PARAM_TEXT), 'offerafter' => optional_param('offerafter', 45, PARAM_INT),
-            'replaydays' => optional_param('replaydays', 7, PARAM_INT)]);
+            'replaydays' => optional_param('replaydays', 7, PARAM_INT), 'platform' => optional_param('platform', 'bbb', PARAM_ALPHA),
+            'streamurl' => optional_param('streamurl', '', PARAM_RAW_TRIMMED)]);
         redirect(new moodle_url($url, ['id' => $saved->id]), get_string('changessaved'), null, \core\output\notification::NOTIFY_SUCCESS);
     } catch (moodle_exception $e) {
         redirect($url, $e->getMessage(), null, \core\output\notification::NOTIFY_ERROR);
@@ -90,7 +91,11 @@ foreach (ws::webinars($creator) as $w) {
                 'small text-muted') .
             html_writer::div(html_writer::tag('code', s($public), ['class' => 'small user-select-all']), 'mt-1')) .
         html_writer::div(
-            (!$past ? html_writer::tag('form', html_writer::input_hidden_params(new moodle_url($url, ['id' => $w->id, 'host' => 1,
+            (!$past && $w->platform === 'youtube' ? html_writer::link('https://studio.youtube.com/video/' .
+                ws::youtube_id($w->streamurl) . '/livestreaming', '<i class="fa fa-video me-1" aria-hidden="true"></i>' .
+                get_string('webinar:studio', 'local_oriskill'), ['class' => 'btn btn-sm btn-primary', 'target' => '_blank']) . ' '
+            : '') .
+            (!$past && $w->platform !== 'youtube' ? html_writer::tag('form', html_writer::input_hidden_params(new moodle_url($url, ['id' => $w->id, 'host' => 1,
                 'sesskey' => sesskey()])) . html_writer::tag('button', '<i class="fa fa-video me-1" aria-hidden="true"></i>' .
                 get_string('webinar:host', 'local_oriskill'), ['type' => 'submit', 'class' => 'btn btn-sm btn-primary']),
                 ['method' => 'post', 'action' => $url->out(false), 'target' => '_blank', 'class' => 'd-inline']) . ' ' : '') .
@@ -133,6 +138,12 @@ echo html_writer::div(html_writer::tag('h3', get_string($webinar ? 'webinar:edit
             'maxlength' => 255]), 'col-12') .
         $field(get_string('webinar:description', 'local_oriskill'), html_writer::tag('textarea', s($webinar->description ?? ''),
             ['name' => 'description', 'rows' => 3, 'class' => 'form-control', 'aria-label' => 'description']), 'col-12') .
+        $field(get_string('webinar:platform', 'local_oriskill'), html_writer::select(['bbb' => get_string('webinar:platform_bbb',
+            'local_oriskill'), 'youtube' => get_string('webinar:platform_youtube', 'local_oriskill')], 'platform',
+            $webinar->platform ?? (ws::available() ? 'bbb' : 'youtube'), false, ['class' => 'form-select', 'id' => 'webinar-platform'])) .
+        $field(get_string('webinar:streamurl', 'local_oriskill'), $input('streamurl', $webinar->streamurl ?? '',
+            ['placeholder' => 'https://www.youtube.com/live/…']) .
+            html_writer::div(get_string('webinar:streamurl_help', 'local_oriskill'), 'form-text')) .
         $field(get_string('webinar:start', 'local_oriskill', $timezone), $input('start', $start, ['type' => 'datetime-local',
             'required' => 'required'])) .
         $field(get_string('webinar:duration', 'local_oriskill'), $input('duration', (string) ($webinar->duration ?? 60),

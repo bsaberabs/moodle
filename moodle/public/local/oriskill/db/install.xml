@@ -947,6 +947,8 @@
         <FIELD NAME="offerafter" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="45" SEQUENCE="false" COMMENT="Minutes after the start when the offer shows"/>
         <FIELD NAME="replaydays" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="7" SEQUENCE="false"/>
         <FIELD NAME="replayurl" TYPE="char" LENGTH="1333" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="platform" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="bbb" SEQUENCE="false" COMMENT="bbb or youtube"/>
+        <FIELD NAME="streamurl" TYPE="char" LENGTH="1333" NOTNULL="false" SEQUENCE="false" COMMENT="Link of the YouTube live"/>
         <FIELD NAME="moderatorpw" TYPE="char" LENGTH="32" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="attendeepw" TYPE="char" LENGTH="32" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>

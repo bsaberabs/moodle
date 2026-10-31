@@ -42,6 +42,9 @@ class webinar_service {
     /** The room opens this long before the start. */
     const EARLY = 900;
 
+    /** Where a webinar is broadcast: a BigBlueButton room or a YouTube live. */
+    const PLATFORMS = ['bbb', 'youtube'];
+
     /**
      * Whether the site has a BigBlueButton server.
      *
@@ -109,12 +112,18 @@ class webinar_service {
         if ($title === '' || (int) $data->starttime <= 0 || ($offerurl !== '' && !preg_match('~^https?://\S+$~i', $offerurl))) {
             throw new \moodle_exception('webinar:incomplete', 'local_oriskill');
         }
+        $platform = in_array($data->platform ?? 'bbb', self::PLATFORMS, true) ? $data->platform ?? 'bbb' : 'bbb';
+        $streamurl = trim((string) ($data->streamurl ?? ''));
+        if ($platform === 'youtube' && self::youtube_id($streamurl) === '') {
+            throw new \moodle_exception('webinar:badstream', 'local_oriskill');
+        }
         $record = (object) ['creatorid' => $creator->id, 'title' => $title,
             'description' => \core_text::substr(trim(clean_param((string) ($data->description ?? ''), PARAM_TEXT)), 0, 5000),
             'starttime' => (int) $data->starttime, 'duration' => max(15, min(480, (int) ($data->duration ?? 60))),
             'offerurl' => $offerurl !== '' ? clean_param($offerurl, PARAM_URL) : '',
             'offerlabel' => \core_text::substr(trim(clean_param((string) ($data->offerlabel ?? ''), PARAM_TEXT)), 0, 100),
             'offerafter' => max(0, min(480, (int) ($data->offerafter ?? 45))), 'replaydays' => max(0, min(365, (int) ($data->replaydays ?? 7))),
+            'platform' => $platform, 'streamurl' => $platform === 'youtube' ? clean_param($streamurl, PARAM_URL) : '',
             'timemodified' => time()];
         if (!empty($data->id)) {
             $existing = $DB->get_record(self::TABLE, ['id' => $data->id, 'creatorid' => $creator->id], '*', MUST_EXIST);
@@ -233,6 +242,10 @@ class webinar_service {
      * @return string Empty when there is none (yet).
      */
     public static function replay_url(\stdClass $webinar): string {
+        if (($webinar->platform ?? 'bbb') === 'youtube') {
+            // YouTube keeps the live as a video at the same address.
+            return 'https://www.youtube.com/watch?v=' . self::youtube_id((string) $webinar->streamurl);
+        }
         if (!empty($webinar->replayurl)) {
             return $webinar->replayurl;
         }
@@ -250,6 +263,40 @@ class webinar_service {
             $DB->set_field(self::TABLE, 'replayurl', $url, ['id' => $webinar->id]);
         }
         return $url;
+    }
+
+    /**
+     * Id of the video in a YouTube link (watch, live, embed, shorts or youtu.be), or '' when it is not one.
+     *
+     * @param string $url Link.
+     * @return string Id of 11 characters.
+     */
+    public static function youtube_id(string $url): string {
+        return preg_match('~^https?://(?:www\.|m\.)?(?:youtube\.com/(?:watch\?(?:\S*&)?v=|live/|embed/|shorts/)|youtu\.be/)' .
+            '([A-Za-z0-9_-]{11})(?![A-Za-z0-9_-])~i', trim($url), $m) ? $m[1] : '';
+    }
+
+    /**
+     * The YouTube player of the webinar, with the live chat beside it during the live.
+     *
+     * @param \stdClass $webinar Webinar on YouTube.
+     * @param bool $chat Show the live chat.
+     * @param string $host Host of the page (YouTube only shows its chat on the domain named).
+     * @return string HTML.
+     */
+    public static function youtube_embed(\stdClass $webinar, bool $chat, string $host): string {
+        $id = self::youtube_id((string) $webinar->streamurl);
+        $player = \html_writer::div(\html_writer::tag('iframe', '', ['src' => 'https://www.youtube-nocookie.com/embed/' . $id .
+            '?autoplay=1&rel=0&modestbranding=1', 'title' => format_string($webinar->title), 'class' => 'border-0 rounded',
+            'allow' => 'autoplay; encrypted-media; picture-in-picture; fullscreen', 'allowfullscreen' => 'allowfullscreen']),
+            'ratio ratio-16x9');
+        if (!$chat) {
+            return $player;
+        }
+        return \html_writer::div(\html_writer::div($player, 'col-lg-8') . \html_writer::div(\html_writer::tag('iframe', '', [
+            'src' => 'https://www.youtube.com/live_chat?v=' . $id . '&embed_domain=' . rawurlencode($host),
+            'title' => get_string('webinar:chat', 'local_oriskill'), 'class' => 'w-100 border rounded',
+            'style' => 'height: 100%; min-height: 24rem']), 'col-lg-4'), 'row g-3');
     }
 
     /**
