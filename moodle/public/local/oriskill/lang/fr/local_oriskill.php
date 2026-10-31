@@ -1085,6 +1085,7 @@ $string['log:quote_invoiced'] = 'Devis {$a->number} facturé ({$a->invoice})';
 $string['log:quote_issued'] = 'Devis {$a->number} émis';
 $string['log:refund_done'] = 'Remboursement de {$a->amount} confirmé par SecureAndPay ({$a->user}) : avoir {$a->number}';
 $string['log:refund_requested'] = 'Remboursement de {$a->amount} demandé à SecureAndPay (facture {$a->invoice}, {$a->user})';
+$string['log:seat_redeemed'] = 'Place utilisée avec le code {$a->code} par {$a->user}';
 $string['log:segment_saved'] = 'Segment enregistré : {$a->name}';
 $string['log:share_created'] = 'Code de partage {$a->code} créé';
 $string['log:share_imported'] = 'Copie reçue avec le code {$a->code}';
@@ -1285,6 +1286,8 @@ $string['orderform:offerinstaltotal'] = 'Prix total en plusieurs fois (vide = m�
 $string['orderform:offerinstalfirst'] = 'Premier versement (vide = échéances égales)';
 $string['orderform:offerinstalfirst_help'] = 'Montant du premier versement, s\'il est différent des suivants (un acompte). Le reste du prix total en plusieurs fois est réparti en mensualités égales. Exemple : 2 497 € en 6 fois avec un premier versement de 300 € donne 300 € puis 5 × 439,40 €. Un code promo ou une offre complémentaire change les mensualités suivantes, pas le premier versement.';
 $string['orderform:offerlabel'] = 'Nom de l\'offre';
+$string['orderform:offermaxseats'] = 'Places par commande';
+$string['orderform:offermaxseats_help'] = 'Pour vendre l\'offre à plusieurs personnes en une commande (payée en une fois) : nombre maximal de places. L\'acheteuse reçoit un code par place en plus de la sienne, à donner aux personnes concernées. 0 ou 1 : une seule place.';
 $string['orderform:offerprice'] = 'Prix comptant TTC';
 $string['orderform:offers'] = 'Offres';
 $string['orderform:offers_intro'] = 'Chaque offre ouvre une ou plusieurs de vos formations dès le paiement. Elle peut aussi être payée en plusieurs fois (mensualités prélevées par SecureAndPay). Laissez le nom vide pour supprimer une offre.';
@@ -1573,6 +1576,31 @@ $string['search:none'] = 'Aucun résultat pour « {$a} ».';
 $string['search:placeholder'] = 'Rechercher : personne, commande, facture…';
 $string['search:title'] = 'Recherche';
 $string['search:tooshort'] = 'Tapez au moins {$a} caractères.';
+$string['seat:code'] = 'Code';
+$string['seat:free'] = 'pas encore utilisé';
+$string['seat:help'] = 'Donnez un code à chaque personne : elle le saisit sur {$a} (après s\'être inscrite ou connectée) et ses formations s\'ouvrent.';
+$string['seat:howmany'] = 'Nombre de places';
+$string['seat:howmany_help'] = 'Vous gardez une place ; vous recevrez un code pour chaque autre place, à donner aux personnes concernées.';
+$string['seat:intro'] = 'Vous avez reçu un code de place pour une formation ? Saisissez-le ici : la formation s\'ouvre dans votre espace.';
+$string['seat:loginfirst'] = 'Connectez-vous ou créez votre compte pour utiliser votre code de place.';
+$string['seat:mail_body'] = 'Bonjour {$a->firstname},
+
+Merci pour votre commande « {$a->offer} ». Voici les codes des places en plus de la vôtre, à donner à chaque personne :
+
+{$a->codes}
+
+Chaque personne saisit son code sur {$a->url} (après s\'être inscrite ou connectée) pour accéder à la formation.
+
+{$a->trainer}';
+$string['seat:mail_subject'] = 'Vos codes de places pour « {$a->offer} »';
+$string['seat:pagetitle'] = 'Utiliser un code de place';
+$string['seat:places'] = '{$a} places';
+$string['seat:redeemed'] = 'Code accepté : vous avez maintenant accès à {$a}.';
+$string['seat:title'] = 'Codes des places à donner ({$a})';
+$string['seat:unknown'] = 'Ce code n\'existe pas. Vérifiez qu\'il est bien recopié.';
+$string['seat:use'] = 'Utiliser le code';
+$string['seat:used'] = 'Ce code a déjà été utilisé.';
+$string['seat:usedby'] = 'utilisé par {$a}';
 $string['segment:delete'] = 'Supprimer le segment {$a}';
 $string['segment:delete_confirm'] = 'Supprimer ce segment ? Les contacts restent.';
 $string['segment:invalid'] = 'Donnez un nom au segment et choisissez au moins un filtre.';

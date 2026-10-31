@@ -659,5 +659,17 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103067, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103068) {
+        // Several places in one order, with codes to give.
+        if (!$dbman->table_exists('local_oriskill_seatcodes')) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', 'local_oriskill_seatcodes');
+        }
+        $table = new xmldb_table('local_oriskill_formoffers');
+        $field = new xmldb_field('maxseats', XMLDB_TYPE_INTEGER, '5', null, XMLDB_NOTNULL, null, '0', 'coachingcredits');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_plugin_savepoint(true, 2026103068, 'local', 'oriskill');
+    }
     return true;
 }

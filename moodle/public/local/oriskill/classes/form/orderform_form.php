@@ -144,6 +144,7 @@ class orderform_form extends \moodleform {
                     'local_oriskill'), orderform_service::BORDER_STYLES))),
             $mform->createElement('text', 'offerstock', get_string('orderform:offerstock', 'local_oriskill'), ['size' => 6]),
             $mform->createElement('text', 'offercredits', get_string('orderform:offercredits', 'local_oriskill'), ['size' => 4]),
+            $mform->createElement('text', 'offermaxseats', get_string('orderform:offermaxseats', 'local_oriskill'), ['size' => 4]),
             $mform->createElement('text', 'offeractags', get_string('orderform:offeractags', 'local_oriskill'), ['size' => 50]),
         ];
         $options = [
@@ -164,6 +165,7 @@ class orderform_form extends \moodleform {
             'offerhlstyle' => ['type' => PARAM_ALPHA, 'hideif' => ['offerhighlight', 'notchecked']],
             'offerstock' => ['type' => PARAM_RAW_TRIMMED, 'helpbutton' => ['orderform:offerstock', 'local_oriskill']],
             'offercredits' => ['type' => PARAM_INT, 'default' => 0, 'helpbutton' => ['orderform:offercredits', 'local_oriskill']],
+            'offermaxseats' => ['type' => PARAM_INT, 'default' => 0, 'helpbutton' => ['orderform:offermaxseats', 'local_oriskill']],
             'offersubprice' => ['type' => PARAM_RAW_TRIMMED, 'helpbutton' => ['orderform:offersubprice', 'local_oriskill']],
             'offerinstalplans' => ['type' => PARAM_TEXT, 'helpbutton' => ['orderform:offerinstalplans', 'local_oriskill']],
             'offerdefault' => ['type' => PARAM_ALPHANUM, 'default' => 'once',

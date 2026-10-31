@@ -242,6 +242,11 @@ $table->data[] = [html_writer::tag('strong', get_string('sale:total', 'local_ori
 echo $card(get_string('sale:products', 'local_oriskill'), html_writer::div(html_writer::table($table), 'table-responsive'),
     'mb-3');
 
+// Codes of the places bought for other people, and who used them.
+if ($seathtml = \local_oriskill\seat_service::codes_html((int) $order->id)) {
+    echo html_writer::div($seathtml, 'oriskill-card mb-3');
+}
+
 // Every payment, refusal and refund.
 echo $card(get_string('sale:transactions', 'local_oriskill'), $transactions
     ? html_writer::div(ts::table(array_reverse($transactions), $creator, $timezone, false), 'table-responsive')

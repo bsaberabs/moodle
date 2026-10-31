@@ -85,9 +85,11 @@ if ($offerid) {
     [$coupon, $couponerror] = $code !== '' ? coupon_service::find($form, $code, $mode) : [null, null];
     $bump = $mode === 'subscription' ? null : orderform_service::bump($form);
     $withextra = $bump && optional_param('extra', 0, PARAM_BOOL);
-    $quote = orderform_service::quote($offer, $mode, $coupon, $withextra ? $bump->price : 0);
+    $seats = \local_oriskill\seat_service::seats($offer, optional_param('seats', 1, PARAM_INT), $mode);
+    $quote = orderform_service::quote($offer, $mode, $coupon, $withextra ? $bump->price : 0, $seats);
     $url = new moodle_url($formurl, array_filter(['offer' => $offerid, 'mode' => $mode,
-        'plan' => $mode === 'instalments' ? $plan : 0, 'coupon' => $coupon->code ?? '', 'extra' => $withextra ? 1 : 0]));
+        'plan' => $mode === 'instalments' ? $plan : 0, 'coupon' => $coupon->code ?? '', 'extra' => $withextra ? 1 : 0,
+        'seats' => $seats > 1 ? $seats : 0]));
     $button = orderform_service::button($form);
     $fields = array_filter(orderform_service::buyer_fields($form), fn($state) => $state !== 'hidden');
     $PAGE->set_url($url);
@@ -108,7 +110,8 @@ if ($offerid) {
     if ($withextra) {
         $price .= html_writer::div(get_string('orderform:extraincluded', 'local_oriskill', s($bump->label)), 'small text-muted');
     }
-    $recap = html_writer::tag('p', html_writer::tag('strong', s($offer->label)) . ' – ' . $price, ['class' => 'lead']) .
+    $recap = html_writer::tag('p', html_writer::tag('strong', s($offer->label)) . ($seats > 1 ? ' × ' .
+        get_string('seat:places', 'local_oriskill', $seats) : '') . ' – ' . $price, ['class' => 'lead']) .
         html_writer::tag('ul', implode('', array_map(fn($c) => html_writer::tag('li', s($c->name)), $described->courses)));
     if (!optional_param('confirm', 0, PARAM_BOOL)) {
         \local_oriskill\formstats_service::track($form, (int) $offerid, 'checkout');
@@ -137,7 +140,7 @@ if ($offerid) {
         } else {
             try {
                 [, $payurl] = orderform_service::create_order((int) $USER->id, $form, $offer, $mode, $coupon, $withextra,
-                    $billing);
+                    $billing, $seats);
                 \local_oriskill\privacy_service::record($creator, (int) $USER->id, [
                     'direct' => optional_param('consentdirect', 0, PARAM_BOOL),
                     'partners' => optional_param('consentpartners', 0, PARAM_BOOL)], $formurl->out(false), 'order');
@@ -162,6 +165,19 @@ if ($offerid) {
     } else if ($quote->instalments) {
         echo html_writer::tag('p', get_string($quote->instalments->first ? 'instalments:howitworksfirst'
             : 'instalments:howitworks', 'local_oriskill', $quote->instalments), ['class' => 'small text-muted']);
+    }
+
+    // Places (an offer sold for several people, paid at once): changing the number reloads the step with the new price.
+    $maxseats = min(\local_oriskill\seat_service::MAX, (int) ($offer->maxseats ?? 0));
+    if ($mode === 'once' && $maxseats > 1) {
+        echo html_writer::tag('form', html_writer::input_hidden_params(new moodle_url($url), ['seats']) .
+            html_writer::tag('label', get_string('seat:howmany', 'local_oriskill'), ['for' => 'orderform-seats',
+                'class' => 'form-label fw-semibold me-2']) .
+            html_writer::select(array_combine(range(1, $maxseats), range(1, $maxseats)), 'seats', $seats, false,
+                ['id' => 'orderform-seats', 'class' => 'form-select form-select-sm d-inline-block w-auto',
+                 'onchange' => 'this.form.submit()']) .
+            html_writer::div(get_string('seat:howmany_help', 'local_oriskill'), 'small text-muted mt-1'),
+            ['method' => 'get', 'action' => (new moodle_url('/local/oriskill/order.php'))->out(false), 'class' => 'mb-3']);
     }
 
     // Extra (order bump): ticking or unticking reloads the step with the new price.

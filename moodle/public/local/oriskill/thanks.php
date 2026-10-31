@@ -68,6 +68,8 @@ if ($paid) {
         }
     }
     echo html_writer::tag('p', get_string('orderform:accessopen', 'local_oriskill')) . html_writer::tag('ul', $links);
+    // The codes of the other places bought, to give.
+    echo \local_oriskill\seat_service::codes_html((int) $order->id);
     if ($upsell) {
         [, $offer] = $upsell;
         $currency = $order->currency;

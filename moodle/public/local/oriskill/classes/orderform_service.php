@@ -370,6 +370,7 @@ class orderform_service {
                 'highlightstyle' => json_encode(self::highlight_style((array) ($offer->highlightstyle ?? []))),
                 'stock' => isset($offer->stock) && $offer->stock !== '' && $offer->stock !== null ? max(0, (int) $offer->stock) : null,
                 'coachingcredits' => max(0, min(999, (int) ($offer->coachingcredits ?? 0))),
+                'maxseats' => max(0, min(seat_service::MAX, (int) ($offer->maxseats ?? 0))),
                 'actags' => activecampaign_service::clean_tags((string) ($offer->actags ?? '')),
                 'subprice' => round(max(0, (float) ($offer->subprice ?? 0)), 2),
                 'sortorder' => $index,
@@ -787,7 +788,8 @@ class orderform_service {
      * @return \stdClass {base, extra, discount, total, instalments: {count, amount}|null, displaybase, displaytotal,
      *                    displayamount}
      */
-    public static function quote(\stdClass $offer, string $mode, ?\stdClass $coupon = null, float $extra = 0): \stdClass {
+    public static function quote(\stdClass $offer, string $mode, ?\stdClass $coupon = null, float $extra = 0,
+            int $seats = 1): \stdClass {
         $currency = pricing_service::get_currency_config()->currency;
         $described = self::describe_offer($offer, $currency);
         if ($mode === 'subscription') {
@@ -812,7 +814,8 @@ class orderform_service {
             $instalments = self::split($described->instalments->count, $wanted, $described->instalments->first, $currency);
             $total = $instalments->total;
         } else {
-            $base = $described->price;
+            // Several places, paid at once: the price of one place times the places.
+            $base = round($described->price * seat_service::seats($offer, $seats, 'once'), 2);
             $total = round($base - ($coupon ? coupon_service::discount($coupon, $base) : 0) + $extra, 2);
             $instalments = null;
         }
@@ -839,10 +842,11 @@ class orderform_service {
      * @param bool $withextra The buyer ticked the form's extra (order bump).
      * @param array $billing Details typed by the buyer (BUYER_FIELDS): billing address of the order, and the empty
      *                       fields of their profile.
+     * @param int $seats Places bought (paid at once): the buyer's, and codes for the others.
      * @return array [order, moodle_url where the buyer pays]
      */
     public static function create_order(int $userid, \stdClass $form, \stdClass $offer, string $mode,
-            ?\stdClass $coupon = null, bool $withextra = false, array $billing = []): array {
+            ?\stdClass $coupon = null, bool $withextra = false, array $billing = [], int $seats = 1): array {
         global $DB;
 
         $creator = $DB->get_record('local_oriskill_creators', ['id' => $form->creatorid], '*', MUST_EXIST);
@@ -872,9 +876,11 @@ class orderform_service {
         if ($bump && !array_filter($bumpcourses, fn($id) => !$enrolled($id))) {
             $bump = null;
         }
-        $quote = self::quote($offer, $mode, $coupon, $bump ? $bump->price : 0);
+        $seats = seat_service::seats($offer, $seats, $mode);
+        $quote = self::quote($offer, $mode, $coupon, $bump ? $bump->price : 0, $seats);
 
-        $notes = ['orderform' => (int) $form->id, 'offer' => (int) $offer->id, 'returnpath' => '/local/oriskill/thanks.php'];
+        $notes = ['orderform' => (int) $form->id, 'offer' => (int) $offer->id, 'returnpath' => '/local/oriskill/thanks.php']
+            + ($seats > 1 ? ['seats' => $seats] : []);
         if ($coupon) {
             $notes['coupon'] = (int) $coupon->id;
         }

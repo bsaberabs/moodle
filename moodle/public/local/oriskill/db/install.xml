@@ -308,6 +308,7 @@
         <FIELD NAME="highlightstyle" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Special offer box: JSON label, background, border colour and style"/>
         <FIELD NAME="stock" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="Sales left, empty for no limit"/>
         <FIELD NAME="coachingcredits" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Coaching credits given with the offer"/>
+        <FIELD NAME="maxseats" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Most places of one order (codes to give), 0 or 1 for one place"/>
         <FIELD NAME="sortorder" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
@@ -911,6 +912,25 @@
       </KEYS>
       <INDEXES>
         <INDEX NAME="creatoruser" UNIQUE="false" FIELDS="creatorid, userid"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="local_oriskill_seatcodes" COMMENT="Codes of the places bought on top of the buyer's, to give to other people">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="creatorid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="orderid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="offerid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="code" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="redeemedby" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timeredeemed" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="orderid" TYPE="foreign" FIELDS="orderid" REFTABLE="local_moderncommerce_orders" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="code" UNIQUE="true" FIELDS="code"/>
       </INDEXES>
     </TABLE>
     <TABLE NAME="local_oriskill_privacy" COMMENT="Privacy settings of a trainer: consent texts, cookie banner, measurement tools">

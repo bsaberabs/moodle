@@ -97,6 +97,7 @@ if ($form) {
         $defaults["offerhlstyle[$i]"] = $box['borderstyle'];
         $defaults["offerstock[$i]"] = $offer->stock === null ? '' : (int) $offer->stock;
         $defaults["offercredits[$i]"] = (int) ($offer->coachingcredits ?? 0);
+        $defaults["offermaxseats[$i]"] = (int) ($offer->maxseats ?? 0);
         $defaults["offeractags[$i]"] = $offer->actags;
         $defaults["offersubprice[$i]"] = (float) $offer->subprice > 0 ? format_float((float) $offer->subprice, 2, true) : '';
         $defaults["offerinstalplans[$i]"] = orderform_service::plans_text($offer);
@@ -132,6 +133,7 @@ if ($data = $mform->get_data()) {
                 'border' => $data->offerhlborder[$i] ?? '', 'borderstyle' => $data->offerhlstyle[$i] ?? 'solid'],
             'stock' => trim((string) ($data->offerstock[$i] ?? '')) === '' ? null : (int) $data->offerstock[$i],
             'coachingcredits' => (int) ($data->offercredits[$i] ?? 0),
+            'maxseats' => (int) ($data->offermaxseats[$i] ?? 0),
             'actags' => $data->offeractags[$i] ?? '',
             'subprice' => unformat_float((string) ($data->offersubprice[$i] ?? ''), true) ?: 0,
             'instalplans' => $data->offerinstalplans[$i] ?? '',

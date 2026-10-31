@@ -1085,6 +1085,7 @@ $string['log:quote_invoiced'] = 'Quote {$a->number} invoiced ({$a->invoice})';
 $string['log:quote_issued'] = 'Quote {$a->number} issued';
 $string['log:refund_done'] = 'Refund of {$a->amount} confirmed by SecureAndPay ({$a->user}): credit note {$a->number}';
 $string['log:refund_requested'] = 'Refund of {$a->amount} asked of SecureAndPay (invoice {$a->invoice}, {$a->user})';
+$string['log:seat_redeemed'] = 'Place used with the code {$a->code} by {$a->user}';
 $string['log:segment_saved'] = 'Segment saved: {$a->name}';
 $string['log:share_created'] = 'Share code {$a->code} created';
 $string['log:share_imported'] = 'Copy received with the code {$a->code}';
@@ -1285,6 +1286,8 @@ $string['orderform:offerinstaltotal'] = 'Total price in instalments (empty = sam
 $string['orderform:offerinstalfirst'] = 'First instalment (empty = equal instalments)';
 $string['orderform:offerinstalfirst_help'] = 'Amount of the first instalment, when it differs from the following ones (a deposit). The rest of the total price in instalments is spread in equal monthly instalments. Example: 2,497 € in 6 times with a first instalment of 300 € gives 300 € then 5 × 439.40 €. A promo code or an extra changes the following instalments, not the first one.';
 $string['orderform:offerlabel'] = 'Offer name';
+$string['orderform:offermaxseats'] = 'Places per order';
+$string['orderform:offermaxseats_help'] = 'To sell the offer to several people in one order (paid at once): most places. The buyer gets one code per place on top of theirs, to give to the people concerned. 0 or 1: one place.';
 $string['orderform:offerprice'] = 'Price paid at once, incl. VAT';
 $string['orderform:offers'] = 'Offers';
 $string['orderform:offers_intro'] = 'Each offer opens one or more of your courses on payment. It can also be paid in instalments (monthly charges by SecureAndPay). Leave the name empty to remove an offer.';
@@ -1573,6 +1576,31 @@ $string['search:none'] = 'No result for "{$a}".';
 $string['search:placeholder'] = 'Search: person, order, invoice…';
 $string['search:title'] = 'Search';
 $string['search:tooshort'] = 'Type at least {$a} characters.';
+$string['seat:code'] = 'Code';
+$string['seat:free'] = 'not used yet';
+$string['seat:help'] = 'Give one code to each person: they type it on {$a} (after signing up or logging in) and their courses open.';
+$string['seat:howmany'] = 'Number of places';
+$string['seat:howmany_help'] = 'You keep one place; you will get a code for each other place, to give to the people concerned.';
+$string['seat:intro'] = 'You received a place code for a course? Type it here: the course opens in your space.';
+$string['seat:loginfirst'] = 'Log in or create your account to use your place code.';
+$string['seat:mail_body'] = 'Hello {$a->firstname},
+
+Thank you for your order "{$a->offer}". Here are the codes of the places on top of yours, to give to each person:
+
+{$a->codes}
+
+Each person types their code on {$a->url} (after signing up or logging in) to access the course.
+
+{$a->trainer}';
+$string['seat:mail_subject'] = 'Your place codes for "{$a->offer}"';
+$string['seat:pagetitle'] = 'Use a place code';
+$string['seat:places'] = '{$a} places';
+$string['seat:redeemed'] = 'Code accepted: you now have access to {$a}.';
+$string['seat:title'] = 'Codes of the places to give ({$a})';
+$string['seat:unknown'] = 'This code does not exist. Check it is copied right.';
+$string['seat:use'] = 'Use the code';
+$string['seat:used'] = 'This code was already used.';
+$string['seat:usedby'] = 'used by {$a}';
 $string['segment:delete'] = 'Delete the segment {$a}';
 $string['segment:delete_confirm'] = 'Delete this segment? The contacts stay.';
 $string['segment:invalid'] = 'Give the segment a name and choose at least one filter.';
