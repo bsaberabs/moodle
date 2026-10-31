@@ -55,6 +55,7 @@ class course_list {
             $params);
         $tickets = $DB->get_records_sql_menu("SELECT courseid, COUNT(1) FROM {" . ticket_service::TABLE . "}
                                                WHERE status = 'open' AND courseid $insql GROUP BY courseid", $params);
+        $comments = comment_service::pending($creator, true);
         $q = \core_text::strtolower(trim($filters['q'] ?? ''));
         foreach ($rows as $courseid => $row) {
             $on = (bool) $row->course->visible;
@@ -73,6 +74,7 @@ class course_list {
             $row->sales = $sales[$courseid]->count ?? 0;
             $row->revenue = $sales[$courseid]->revenue ?? [];
             $row->tickets = (int) ($tickets[$courseid] ?? 0);
+            $row->comments = (int) ($comments[$courseid] ?? 0);
             $row->favourite = in_array($courseid, $favourites);
         }
         $sort = in_array($filters['sort'] ?? '', self::SORTS, true) ? $filters['sort'] : 'name';

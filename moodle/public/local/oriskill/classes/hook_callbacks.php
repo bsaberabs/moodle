@@ -256,6 +256,10 @@ class hook_callbacks {
         if ($mode !== null) {
             $PAGE->requires->js_init_code(studytime_service::page_script((int) $PAGE->course->id, $mode));
         }
+        // Under a lesson: the comments of the learners and the answers of the team.
+        if ($PAGE->context->contextlevel == CONTEXT_MODULE && $PAGE->cm && str_ends_with($PAGE->pagetype, '-view')) {
+            $hook->add_html(comment_service::lesson_html($PAGE->cm));
+        }
     }
 
     /**

@@ -237,6 +237,7 @@ class creator_service {
         'navgroup:learners' => [
             '/local/oriskill/contacts.php' => ['menu:contacts', 'bi-person-lines-fill'],
             '/local/oriskill/tickets.php' => ['menu:tickets', 'bi-life-preserver'],
+            '/local/oriskill/comments.php' => ['menu:comments', 'bi-chat-left-text'],
             '/local/oriskill/learners.php' => ['menu:learners', 'bi-people'],
             '/local/oriskill/access.php' => ['menu:access', 'bi-unlock'],
         ],
@@ -307,7 +308,8 @@ class creator_service {
                     continue;
                 }
                 // Tickets waiting for the team, next to the menu entry.
-                $badge = $path === '/local/oriskill/tickets.php' ? ticket_service::open_count($creator) : 0;
+                $badge = $path === '/local/oriskill/tickets.php' ? ticket_service::open_count($creator)
+                    : ($path === comment_service::PAGE ? comment_service::pending($creator) : 0);
                 $items[] = ['key' => basename($path, '.php'), 'url' => (new moodle_url($path))->out(false),
                     'label' => get_string($key, 'local_oriskill'), 'icon' => $icon,
                     'active' => $path === $current, 'current' => $path === $current,

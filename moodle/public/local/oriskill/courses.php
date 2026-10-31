@@ -136,7 +136,7 @@ $table = new html_table();
 $table->attributes['class'] = 'table align-middle oriskill-courselist';
 $table->head = [$header('name', get_string('course')), get_string('courses:state', 'local_oriskill'),
     $header('members', get_string('courses:members', 'local_oriskill')),
-    $header('revenue', get_string('courses:sales', 'local_oriskill')), get_string('menu:tickets', 'local_oriskill'), ''];
+    $header('revenue', get_string('courses:sales', 'local_oriskill')), get_string('courses:tohandle', 'local_oriskill'), ''];
 foreach ($rows as $courseid => $row) {
     $course = $row->course;
     $image = course_summary_exporter::get_course_image($course) ?: $OUTPUT->get_generated_image_for_id($courseid);
@@ -194,8 +194,14 @@ foreach ($rows as $courseid => $row) {
                 get_string('courses:groupscount', 'local_oriskill', $row->groups), 'small')),
         html_writer::div(s($revenue), 'fw-semibold') . html_writer::div(get_string('stats:sales', 'local_oriskill', $row->sales),
             'small text-muted'),
-        $row->tickets ? html_writer::link(new moodle_url('/local/oriskill/tickets.php', ['status' => 'open']),
-            html_writer::span($row->tickets, 'badge bg-danger')) : html_writer::span('0', 'text-muted'),
+        // Tickets and comments under the lessons waiting for the team.
+        ($row->tickets || $row->comments ? '' : html_writer::span('0', 'text-muted')) .
+        ($row->tickets ? html_writer::div(html_writer::link(new moodle_url('/local/oriskill/tickets.php', ['status' => 'open']),
+            html_writer::span($row->tickets, 'badge bg-danger') . ' ' . get_string('menu:tickets', 'local_oriskill')), 'small')
+            : '') .
+        ($row->comments ? html_writer::div(html_writer::link(new moodle_url('/local/oriskill/comments.php',
+            ['courseid' => $courseid]), html_writer::span($row->comments, 'badge bg-danger') . ' ' .
+            get_string('menu:comments', 'local_oriskill')), 'small') : ''),
         html_writer::div(
             html_writer::link($preview, '<i class="fa fa-eye" aria-hidden="true"></i>', ['class' => 'btn btn-sm btn-outline-secondary',
                 'title' => get_string('courses:preview', 'local_oriskill'), 'aria-label' => get_string('courses:preview', 'local_oriskill')]) .

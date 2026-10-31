@@ -544,5 +544,12 @@ function xmldb_local_oriskill_upgrade($oldversion) {
             'local_moderncommerce_order_items', ['id']));
         upgrade_plugin_savepoint(true, 2026103050, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103054) {
+        // Comments and questions of the learners under the lessons.
+        if (!$dbman->table_exists('local_oriskill_comments')) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', 'local_oriskill_comments');
+        }
+        upgrade_plugin_savepoint(true, 2026103054, 'local', 'oriskill');
+    }
     return true;
 }
