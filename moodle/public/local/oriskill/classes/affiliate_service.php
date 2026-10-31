@@ -102,8 +102,9 @@ class affiliate_service {
      * Called on every web request (after_config). A repeated visit with the same code is not counted again.
      *
      * @param string $code Value of ?ref=.
+     * @param int $campaignid Value of ?cmp= (link of an affiliate campaign), 0 when none.
      */
-    public static function track_visit(string $code): void {
+    public static function track_visit(string $code, int $campaignid = 0): void {
         global $CFG, $DB;
 
         $code = strtolower(clean_param($code, PARAM_ALPHANUM));
@@ -124,6 +125,9 @@ class affiliate_service {
         $_COOKIE[self::COOKIE] = $code;
         $_COOKIE[self::COOKIE_TIME] = (string) time();
         $DB->execute('UPDATE {local_oriskill_affiliates} SET clicks = clicks + 1 WHERE id = ?', [$affiliate->id]);
+        if ($campaignid) {
+            campaign_service::count_click($campaignid, $affiliate);
+        }
     }
 
     /**

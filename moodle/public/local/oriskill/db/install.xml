@@ -680,6 +680,22 @@
         <INDEX NAME="creatorstatus" UNIQUE="false" FIELDS="creatorid, status"/>
       </INDEXES>
     </TABLE>
+    <TABLE NAME="local_oriskill_campaignclicks" COMMENT="Clicks on the links of an affiliate campaign, per affiliate">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="campaignid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="affiliateid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="clicks" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="campaignid" TYPE="foreign" FIELDS="campaignid" REFTABLE="local_oriskill_campaigns" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="campaignaffiliate" UNIQUE="true" FIELDS="campaignid, affiliateid"/>
+      </INDEXES>
+    </TABLE>
     <TABLE NAME="local_oriskill_privacy" COMMENT="Privacy settings of a trainer: consent texts, cookie banner, measurement tools">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>

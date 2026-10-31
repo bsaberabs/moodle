@@ -148,7 +148,8 @@ if ($tab === 'campaigns' && $edit >= 0) {
         $table->attributes['class'] = 'table align-middle';
         $table->head = [get_string('campaign:campaign', 'local_oriskill'), get_string('status'),
             get_string('campaign:formid', 'local_oriskill'), get_string('commissioncol', 'local_oriskill'),
-            get_string('courses:sales', 'local_oriskill'), get_string('campaign:totalcommissions', 'local_oriskill')];
+            get_string('campaign:clicks', 'local_oriskill'), get_string('courses:sales', 'local_oriskill'),
+            get_string('campaign:conversion', 'local_oriskill'), get_string('campaign:totalcommissions', 'local_oriskill')];
         foreach ($campaigns as $campaign) {
             $figures = cs::figures($campaign);
             $table->data[] = [
@@ -159,7 +160,9 @@ if ($tab === 'campaigns' && $edit >= 0) {
                 $campaign->formid ? format_string((string) $DB->get_field('local_oriskill_orderforms', 'title',
                     ['id' => $campaign->formid])) : get_string('campaign:allforms', 'local_oriskill'),
                 s(cs::describe($campaign)),
+                $figures->clicks,
                 $figures->sales,
+                $figures->clicks ? format_float(100 * $figures->sales / $figures->clicks, 1, true, true) . ' %' : '–',
                 $money($figures->amount),
             ];
         }

@@ -36,6 +36,9 @@ class campaign_service {
     /** Affiliates of the private campaigns. */
     const MEMBERS = 'local_oriskill_campaignaff';
 
+    /** Clicks on the campaign links, per affiliate. */
+    const CLICKS = 'local_oriskill_campaignclicks';
+
     /**
      * Campaigns of a trainer, newest first.
      *
@@ -244,15 +247,40 @@ class campaign_service {
     }
 
     /**
+     * Count a click on an affiliate's link of a campaign (one they may promote: enabled, public or chosen for it).
+     *
+     * @param int $campaignid Campaign.
+     * @param \stdClass $affiliate Affiliate.
+     */
+    public static function count_click(int $campaignid, \stdClass $affiliate): void {
+        global $DB;
+
+        $campaign = $DB->get_record(self::TABLE, ['id' => $campaignid, 'enabled' => 1]);
+        if (!$campaign || ($campaign->visibility !== 'public'
+                && !$DB->record_exists(self::MEMBERS, ['campaignid' => $campaignid, 'affiliateid' => $affiliate->id]))) {
+            return;
+        }
+        $row = $DB->get_record(self::CLICKS, ['campaignid' => $campaignid, 'affiliateid' => $affiliate->id]);
+        if ($row) {
+            $DB->execute('UPDATE {' . self::CLICKS . '} SET clicks = clicks + 1, timemodified = ? WHERE id = ?', [time(), $row->id]);
+        } else {
+            $DB->insert_record(self::CLICKS, (object) ['campaignid' => $campaignid, 'affiliateid' => $affiliate->id,
+                'clicks' => 1, 'timemodified' => time()]);
+        }
+    }
+
+    /**
      * Figures of a campaign: sales and commissions (cancelled ones left out).
      *
      * @param \stdClass $campaign Campaign.
-     * @return \stdClass {sales, amount (currency => amount)}
+     * @return \stdClass {sales, amount (currency => amount), clicks}
      */
     public static function figures(\stdClass $campaign): \stdClass {
         global $DB;
 
-        $figures = (object) ['sales' => 0, 'amount' => []];
+        $clicks = (int) $DB->get_field_sql('SELECT COALESCE(SUM(clicks), 0) FROM {' . self::CLICKS . '} WHERE campaignid = ?',
+            [$campaign->id]);
+        $figures = (object) ['sales' => 0, 'amount' => [], 'clicks' => $clicks];
         foreach ($DB->get_records_select('local_oriskill_commissions', "campaignid = ? AND status <> 'cancelled'", [$campaign->id])
                 as $commission) {
             $figures->sales += (int) $commission->level === 1 ? 1 : 0;
@@ -349,7 +377,7 @@ class campaign_service {
             $form = $campaign->formid ? $DB->get_record('local_oriskill_orderforms', ['id' => $campaign->formid,
                 'status' => 'published']) : null;
             $target = $form ? orderform_service::url($form, $creator) : creator_service::showcase_url($creator);
-            $campaign->url = affiliate_service::link($affiliate, $target)->out(false);
+            $campaign->url = affiliate_service::link($affiliate, $target)->out(false) . '&cmp=' . $campaign->id;
             $campaign->terms = self::describe($campaign);
         }
         return $campaigns;

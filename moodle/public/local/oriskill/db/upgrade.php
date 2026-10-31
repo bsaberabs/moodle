@@ -571,5 +571,12 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103056, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103057) {
+        // Clicks on the links of each affiliate campaign.
+        if (!$dbman->table_exists('local_oriskill_campaignclicks')) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', 'local_oriskill_campaignclicks');
+        }
+        upgrade_plugin_savepoint(true, 2026103057, 'local', 'oriskill');
+    }
     return true;
 }

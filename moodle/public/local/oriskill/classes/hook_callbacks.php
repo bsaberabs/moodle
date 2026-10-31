@@ -42,7 +42,7 @@ class hook_callbacks {
         }
         if (!empty($_GET['ref']) && is_string($_GET['ref'])) {
             try {
-                affiliate_service::track_visit($_GET['ref']);
+                affiliate_service::track_visit($_GET['ref'], (int) ($_GET['cmp'] ?? 0));
             } catch (\dml_exception $e) {
                 // Plugin tables not installed yet (upgrade pending): the visit is simply not tracked.
                 debugging($e->getMessage(), DEBUG_DEVELOPER);
