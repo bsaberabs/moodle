@@ -622,5 +622,12 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103063, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103064) {
+        // Pop-ups of the trainers' public pages.
+        if (!$dbman->table_exists('local_oriskill_popups')) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', 'local_oriskill_popups');
+        }
+        upgrade_plugin_savepoint(true, 2026103064, 'local', 'oriskill');
+    }
     return true;
 }

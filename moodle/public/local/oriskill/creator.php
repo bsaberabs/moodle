@@ -90,4 +90,5 @@ echo $OUTPUT->render_from_template('local_oriskill/showcase', [
     ],
 ]);
 echo \local_oriskill\privacy_service::banner($creator, 'site');
+echo \local_oriskill\engage_service::html($creator, 'site');
 echo $OUTPUT->footer();

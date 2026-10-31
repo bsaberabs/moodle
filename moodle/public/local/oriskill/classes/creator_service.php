@@ -234,6 +234,7 @@ class creator_service {
             '/local/oriskill/orderforms.php' => ['menu:orderforms', 'bi-file-earmark-text'],
             '/local/oriskill/coupons.php' => ['menu:coupons', 'bi-ticket-perforated'],
             '/local/oriskill/capturepages.php' => ['menu:capturepages', 'bi-envelope-paper'],
+            '/local/oriskill/engage.php' => ['menu:engage', 'bi-megaphone'],
         ],
         'navgroup:learners' => [
             '/local/oriskill/contacts.php' => ['menu:contacts', 'bi-person-lines-fill'],

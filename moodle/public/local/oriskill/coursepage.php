@@ -134,4 +134,5 @@ echo $OUTPUT->render_from_template('local_oriskill/coursepage', [
     ],
 ]);
 echo \local_oriskill\privacy_service::banner($creator, 'site');
+echo \local_oriskill\engage_service::html($creator, 'coursepage');
 echo $OUTPUT->footer();

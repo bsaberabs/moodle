@@ -311,4 +311,5 @@ echo $OUTPUT->render_from_template('local_oriskill/orderform', [
     ],
 ]);
 echo \local_oriskill\privacy_service::banner($creator, 'funnel');
+echo \local_oriskill\engage_service::html($creator, 'orderform', (int) $form->id);
 echo $OUTPUT->footer();

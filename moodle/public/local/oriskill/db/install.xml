@@ -770,6 +770,30 @@
         <INDEX NAME="creatorfolder" UNIQUE="false" FIELDS="creatorid, folderid"/>
       </INDEXES>
     </TABLE>
+    <TABLE NAME="local_oriskill_popups" COMMENT="Pop-ups of a trainer's public pages">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="creatorid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="name" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="title" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="body" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="buttonlabel" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="buttonurl" TYPE="char" LENGTH="1333" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="opentrigger" TYPE="char" LENGTH="10" NOTNULL="true" DEFAULT="delay" SEQUENCE="false" COMMENT="delay, scroll or exit"/>
+        <FIELD NAME="triggervalue" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="5" SEQUENCE="false" COMMENT="Seconds, or percent scrolled"/>
+        <FIELD NAME="pages" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="Comma-separated: site, coursepage, orderform, capture"/>
+        <FIELD NAME="frequency" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="7" SEQUENCE="false" COMMENT="Days before showing it again to a visitor"/>
+        <FIELD NAME="views" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="clicks" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="creatorid" TYPE="foreign" FIELDS="creatorid" REFTABLE="local_oriskill_creators" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
     <TABLE NAME="local_oriskill_privacy" COMMENT="Privacy settings of a trainer: consent texts, cookie banner, measurement tools">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>

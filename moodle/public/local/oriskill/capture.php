@@ -142,4 +142,5 @@ echo $OUTPUT->render_from_template('local_oriskill/capture', [
     ],
 ]);
 echo \local_oriskill\privacy_service::banner($creator, 'funnel');
+echo \local_oriskill\engage_service::html($creator, 'capture');
 echo $OUTPUT->footer();
