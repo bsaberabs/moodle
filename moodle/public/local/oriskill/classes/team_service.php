@@ -93,6 +93,29 @@ class team_service {
         '/local/oriskill/log.php' => ['admin'],
     ];
 
+    /** Roles made by the trainers: their name in the member records is "custom" and the role id. */
+    const CUSTOM = 'local_oriskill_roles';
+
+    /** Pages a role made by a trainer can never open (the team and the payment account stay the owner's). */
+    const NOT_CUSTOM = ['/local/oriskill/team.php', '/local/oriskill/payment.php'];
+
+    /** Pages that go with a page of the menu: a role made by a trainer opens them with it. */
+    const SUBPAGES = [
+        '/local/oriskill/sale.php' => '/local/oriskill/sales.php',
+        '/local/oriskill/document.php' => '/local/oriskill/invoices.php',
+        '/local/oriskill/orderform.php' => '/local/oriskill/orderforms.php',
+        '/local/oriskill/orderformstats.php' => '/local/oriskill/orderforms.php',
+        '/local/oriskill/abandons.php' => '/local/oriskill/orderforms.php',
+        '/local/oriskill/capturepage.php' => '/local/oriskill/capturepages.php',
+        '/local/oriskill/learner.php' => '/local/oriskill/learners.php',
+        '/local/oriskill/contact.php' => '/local/oriskill/contacts.php',
+        '/local/oriskill/contactimport.php' => '/local/oriskill/contacts.php',
+        '/local/oriskill/webhooks.php' => '/local/oriskill/integrations.php',
+    ];
+
+    /** @var array Roles made by trainers, read once per request. */
+    private static array $customs = [];
+
     /** Days an invitation link stays valid. */
     const INVITATION_DAYS = 14;
 
@@ -170,7 +193,152 @@ class team_service {
      * @return bool
      */
     public static function can(string $role, string $path): bool {
+        if ($custom = self::custom_role($role)) {
+            $path = self::SUBPAGES[$path] ?? $path;
+            return !in_array($path, self::NOT_CUSTOM, true) && isset($custom->pagelist[$path]);
+        }
         return $role === 'owner' || in_array($role, self::PAGE_ROLES[$path] ?? [], true);
+    }
+
+    /**
+     * A role made by a trainer, from its name in a member record ("custom12"), or null.
+     *
+     * @param string $role Role.
+     * @return \stdClass|null With pagelist (path => view or change).
+     */
+    public static function custom_role(string $role): ?\stdClass {
+        global $DB;
+
+        if (!preg_match('/^custom(\d+)$/', $role, $m)) {
+            return null;
+        }
+        if (!array_key_exists($role, self::$customs)) {
+            $record = $DB->get_record(self::CUSTOM, ['id' => (int) $m[1]]) ?: null;
+            if ($record) {
+                $record->pagelist = json_decode($record->pages, true) ?: [];
+            }
+            self::$customs[$role] = $record;
+        }
+        return self::$customs[$role];
+    }
+
+    /**
+     * Roles made by a trainer.
+     *
+     * @param \stdClass $creator Trainer.
+     * @return array role name ("custom12") => record
+     */
+    public static function custom_roles(\stdClass $creator): array {
+        global $DB;
+
+        $roles = [];
+        foreach ($DB->get_records(self::CUSTOM, ['creatorid' => $creator->id], 'name') as $record) {
+            $record->pagelist = json_decode($record->pages, true) ?: [];
+            $roles['custom' . $record->id] = self::$customs['custom' . $record->id] = $record;
+        }
+        return $roles;
+    }
+
+    /**
+     * Pages a trainer can give to a role they make: the pages of the menu but the team and the payment account.
+     *
+     * @return array group label => [path => label]
+     */
+    public static function customisable_pages(): array {
+        $groups = [];
+        foreach (creator_service::SPACE_MENU as $group => $pages) {
+            foreach ($pages as $path => [$key]) {
+                if (!in_array($path, self::NOT_CUSTOM, true)) {
+                    $groups[get_string($group, 'local_oriskill')][$path] = get_string($key, 'local_oriskill');
+                }
+            }
+        }
+        return $groups;
+    }
+
+    /**
+     * Create or change a role of the trainer.
+     *
+     * @param \stdClass $creator Trainer.
+     * @param \stdClass $data id (0 for a new one), name, pages (path => none, view or change), canexport, mfa
+     * @return \stdClass
+     */
+    public static function save_custom_role(\stdClass $creator, \stdClass $data): \stdClass {
+        global $DB;
+
+        $name = \core_text::substr(trim(clean_param((string) $data->name, PARAM_TEXT)), 0, 100);
+        $allowed = array_merge(...array_map('array_keys', array_values(self::customisable_pages())));
+        $pages = [];
+        foreach ((array) ($data->pages ?? []) as $path => $level) {
+            if (in_array($path, $allowed, true) && in_array($level, ['view', 'change'], true)) {
+                $pages[$path] = $level;
+            }
+        }
+        if ($name === '' || !$pages) {
+            throw new \moodle_exception('customrole:incomplete', 'local_oriskill');
+        }
+        $record = (object) ['creatorid' => $creator->id, 'name' => $name, 'pages' => json_encode($pages),
+            'canexport' => empty($data->canexport) ? 0 : 1, 'mfa' => empty($data->mfa) ? 0 : 1, 'timemodified' => time()];
+        if (!empty($data->id)) {
+            $existing = $DB->get_record(self::CUSTOM, ['id' => $data->id, 'creatorid' => $creator->id], '*', MUST_EXIST);
+            $record->id = $existing->id;
+            $DB->update_record(self::CUSTOM, $record);
+            // Moodle rights follow what the role now does.
+            foreach ($DB->get_records('local_oriskill_members', ['creatorid' => $creator->id, 'role' => 'custom' . $record->id])
+                    as $member) {
+                unset(self::$customs['custom' . $record->id]);
+                self::revoke($creator, $member);
+                self::grant($creator, $member);
+            }
+        } else {
+            $record->timecreated = time();
+            $record->id = $DB->insert_record(self::CUSTOM, $record);
+        }
+        unset(self::$customs['custom' . $record->id]);
+        log_service::add($creator, 'customrole_saved', ['name' => $name]);
+        return $DB->get_record(self::CUSTOM, ['id' => $record->id]);
+    }
+
+    /**
+     * Delete a role of the trainer that nobody has.
+     *
+     * @param \stdClass $creator Trainer.
+     * @param int $id Role.
+     */
+    public static function delete_custom_role(\stdClass $creator, int $id): void {
+        global $DB;
+
+        $record = $DB->get_record(self::CUSTOM, ['id' => $id, 'creatorid' => $creator->id], '*', MUST_EXIST);
+        if ($DB->record_exists('local_oriskill_members', ['creatorid' => $creator->id, 'role' => 'custom' . $id])) {
+            throw new \moodle_exception('customrole:inuse', 'local_oriskill');
+        }
+        $DB->delete_records(self::CUSTOM, ['id' => $id]);
+        log_service::add($creator, 'customrole_deleted', ['name' => $record->name]);
+    }
+
+    /**
+     * Name of a role, built in or made by the trainer.
+     *
+     * @param string $role Role.
+     * @return string
+     */
+    public static function role_name(string $role): string {
+        if (str_starts_with($role, 'custom')) {
+            return ($custom = self::custom_role($role)) ? format_string($custom->name) : '?';
+        }
+        return get_string('role:' . $role, 'local_oriskill');
+    }
+
+    /**
+     * Whether a role can be given to a member of a trainer: built in, or made by that trainer.
+     *
+     * @param \stdClass $creator Trainer.
+     * @param string $role Role.
+     * @return bool
+     */
+    public static function valid_role(\stdClass $creator, string $role): bool {
+        $custom = self::custom_role($role);
+        return in_array($role, self::ROLES, true) || ($custom && (int) $custom->creatorid === (int) $creator->id);
     }
 
     /**
@@ -181,6 +349,9 @@ class team_service {
      * @return bool
      */
     public static function can_change(string $role, string $path): bool {
+        if ($custom = self::custom_role($role)) {
+            return self::can($role, $path) && ($custom->pagelist[self::SUBPAGES[$path] ?? $path] ?? '') === 'change';
+        }
         return self::can($role, $path) && !in_array($role, self::VIEW_ONLY[$path] ?? [], true);
     }
 
@@ -210,7 +381,8 @@ class team_service {
     public static function needs_mfa(string $role, int $userid): bool {
         global $DB;
 
-        if (!in_array($role, self::MFA_ROLES, true) || !get_config('tool_mfa', 'enabled')) {
+        $custom = self::custom_role($role);
+        if (!($custom ? $custom->mfa : in_array($role, self::MFA_ROLES, true)) || !get_config('tool_mfa', 'enabled')) {
             return false;
         }
         return !$DB->record_exists_select('tool_mfa', "userid = ? AND factor IN ('totp', 'webauthn') AND revoked = 0",
@@ -229,6 +401,9 @@ class team_service {
         $space = self::current_space();
         if (!$space) {
             return false;
+        }
+        if ($custom = self::custom_role($space['role'])) {
+            return (bool) $custom->canexport;
         }
         if ($space['role'] !== 'partner') {
             return true;
@@ -386,7 +561,7 @@ class team_service {
         if (!validate_email($email)) {
             throw new \moodle_exception('invalidemail');
         }
-        if (!in_array($role, self::ROLES, true)) {
+        if (!self::valid_role($creator, $role)) {
             throw new \moodle_exception('invaliddata', 'error');
         }
         $owneremail = \core_text::strtolower((string) $DB->get_field('user', 'email', ['id' => $creator->userid]));
@@ -434,7 +609,7 @@ class team_service {
         $a = (object) [
             'trainer' => format_string($creator->displayname),
             'inviter' => fullname($USER),
-            'role' => get_string('role:' . $member->role, 'local_oriskill'),
+            'role' => self::role_name($member->role),
             'url' => (new moodle_url('/local/oriskill/join.php', ['token' => $member->token]))->out(false),
             'days' => self::INVITATION_DAYS,
         ];
@@ -497,7 +672,7 @@ class team_service {
     public static function set_role(\stdClass $creator, \stdClass $member, string $role): void {
         global $DB;
 
-        if (!in_array($role, self::ROLES, true) || (int) $member->creatorid !== (int) $creator->id) {
+        if (!self::valid_role($creator, $role) || (int) $member->creatorid !== (int) $creator->id) {
             throw new \moodle_exception('invaliddata', 'error');
         }
         if ($member->role === $role) {
@@ -547,8 +722,9 @@ class team_service {
         if ($member->status !== 'active' || !$member->userid || !$creator->categoryid) {
             return;
         }
-        $shortname = in_array($member->role, self::COURSE_EDITORS, true) ? 'manager'
-            : ($member->role === 'coach' ? 'teacher' : '');
+        // A role made by the trainer that changes the courses edits them like the teaching role.
+        $editor = in_array($member->role, self::COURSE_EDITORS, true) || self::can_change($member->role, '/local/oriskill/courses.php');
+        $shortname = $editor ? 'manager' : ($member->role === 'coach' ? 'teacher' : '');
         if ($shortname !== '') {
             role_assign(self::role_id($shortname), (int) $member->userid, context_coursecat::instance($creator->categoryid)->id,
                 'local_oriskill', (int) $member->id);

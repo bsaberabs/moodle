@@ -196,10 +196,10 @@ class log_service {
         $a = (object) (json_decode((string) $entry->details, true) ?: []);
         unset($a->_changes);
         if (!empty($a->role)) {
-            $a->role = get_string('role:' . $a->role, 'local_oriskill');
+            $a->role = team_service::role_name($a->role);
         }
         if (!empty($a->from)) {
-            $a->from = get_string('role:' . $a->from, 'local_oriskill');
+            $a->from = team_service::role_name($a->from);
         }
         $a->course = $entry->courseid
             ? format_string((string) $DB->get_field('course', 'fullname', ['id' => $entry->courseid])) : '';

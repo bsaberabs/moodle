@@ -43,8 +43,9 @@ if (!$member) {
 }
 $creator = $DB->get_record('local_oriskill_creators', ['id' => $member->creatorid], '*', MUST_EXIST);
 $a = (object) ['trainer' => format_string($creator->displayname),
-    'role' => get_string('role:' . $member->role, 'local_oriskill'),
-    'desc' => get_string('role:' . $member->role . '_desc', 'local_oriskill')];
+    'role' => \local_oriskill\team_service::role_name($member->role),
+    'desc' => str_starts_with($member->role, 'custom') ? get_string('customrole:desc', 'local_oriskill')
+        : get_string('role:' . $member->role . '_desc', 'local_oriskill')];
 if (!isloggedin() || isguestuser()) {
     local_oriskill_visitor_page($url, html_writer::tag('p', get_string('team:joinintro', 'local_oriskill', $a), ['class' => 'lead']));
 }

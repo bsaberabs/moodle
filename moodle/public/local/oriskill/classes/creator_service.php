@@ -336,7 +336,7 @@ class creator_service {
             }
             $content = \html_writer::div(get_string('team:workingin', 'local_oriskill', (object) [
                 'trainer' => format_string($creator->displayname),
-                'role' => get_string('role:' . $role, 'local_oriskill')]) . $switch, 'alert alert-info py-2') . $content;
+                'role' => team_service::role_name($role)]) . $switch, 'alert alert-info py-2') . $content;
         }
         if ($actionshtml === '') {
             $actionshtml = \local_moderncommerce\output\admin_shell::action_group([[

@@ -597,5 +597,12 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         set_config('sessiontimeout', 12 * HOURSECS);
         upgrade_plugin_savepoint(true, 2026103060, 'local', 'oriskill');
     }
+    if ($oldversion < 2026103061) {
+        // Roles made by the trainers for their team.
+        if (!$dbman->table_exists('local_oriskill_roles')) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', 'local_oriskill_roles');
+        }
+        upgrade_plugin_savepoint(true, 2026103061, 'local', 'oriskill');
+    }
     return true;
 }
