@@ -265,7 +265,11 @@ class hook_callbacks {
                 && str_starts_with((string) $PAGE->pagetype, 'local-moderncommerce')) {
             $PAGE->requires->js_init_code(self::guest_cart_script());
         }
-        if (during_initial_install() || !in_array($PAGE->context->contextlevel, [CONTEXT_COURSE, CONTEXT_MODULE])) {
+        // Store home page and login page: download links of the mobile app.
+        if (!during_initial_install() && mobile_app::shown_on((string) $PAGE->pagetype)) {
+            $hook->add_html(mobile_app::html());
+        }
+        if (during_initial_install() ||!in_array($PAGE->context->contextlevel, [CONTEXT_COURSE, CONTEXT_MODULE])) {
             return;
         }
         $mode = studytime_service::page_mode($PAGE->course);

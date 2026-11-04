@@ -999,3 +999,48 @@
     font-weight: 700;
     color: #6b7280;
 }
+
+/* Application mobile : bloc de téléchargement (accueil de la boutique, page de connexion). */
+.oriskill-mobileapp {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem 2rem;
+    max-width: 1100px;
+    margin: 2rem auto;
+    padding: 1.25rem 1.5rem;
+    border: 1px solid #ddd6fe;
+    border-radius: 12px;
+    background: #f5f3ff;
+}
+.oriskill-mobileapp-text {
+    flex: 1 1 320px;
+}
+.oriskill-mobileapp-stores {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem;
+}
+.oriskill-mobileapp .oriskill-mobileapp-store {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .55rem 1rem;
+    border-radius: 8px;
+    background: #111827;
+    color: #fff;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.oriskill-mobileapp .oriskill-mobileapp-store:hover,
+.oriskill-mobileapp .oriskill-mobileapp-store:focus {
+    background: #7c3aed;
+    color: #fff;
+}
+.oriskill-mobileapp .oriskill-mobileapp-store i {
+    font-size: 1.35rem;
+}
+.path-login .oriskill-mobileapp {
+    max-width: 560px;
+}

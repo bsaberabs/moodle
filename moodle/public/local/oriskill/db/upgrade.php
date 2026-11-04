@@ -703,5 +703,10 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026103072, 'local', 'oriskill');
     }
+    if ($oldversion < 2026110400) {
+        // Phones visiting the site are offered the mobile app (Safari banner on iPhone, install prompt on Android).
+        set_config('enablesmartappbanners', 1, 'tool_mobile');
+        upgrade_plugin_savepoint(true, 2026110400, 'local', 'oriskill');
+    }
     return true;
 }
