@@ -169,7 +169,8 @@ class stats_service {
         $bottom = 22;
         $top = 8;
         $plot = $height - $bottom - $top;
-        $max = max(1, ...array_map(fn($p) => $p->amount, $points));
+        // As a list: with no point, max(1) alone is an error.
+        $max = max([1, ...array_values(array_map(fn($p) => $p->amount, $points))]);
         // Clean ticks: 1, 2 or 5 times a power of ten.
         $step = 10 ** floor(log10($max / 3));
         foreach ([1, 2, 5, 10] as $m) {

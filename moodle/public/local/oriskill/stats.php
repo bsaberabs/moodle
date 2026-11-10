@@ -122,7 +122,8 @@ for ($mm = 1; $mm <= 12 && $monthstart($year, $mm) <= $now; $mm++) {
 $blocks = '';
 foreach (['product', 'method', 'country'] as $by) {
     $rows = st::breakdown($bmovements, $by);
-    $max = max(1, ...array_values(array_map(fn($r) => $r->amount, $rows)));
+    // As a list: with no sale in the period, max(1) alone is an error.
+    $max = max([1, ...array_values(array_map(fn($r) => $r->amount, $rows))]);
     $items = '';
     foreach (array_slice($rows, 0, 12, true) as $label => $row) {
         $items .= html_writer::tag('li',
