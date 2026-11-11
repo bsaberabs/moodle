@@ -27,8 +27,10 @@ use local_secureandpay\notification_handler;
  *
  * The schedules are imported from a file: who, which course, how many instalments, how many already paid. SecureAndPay
  * then notifies each charge: it goes to the imported schedule of that orderID, or to the only one still waiting for
- * its orderID with that e-mail address and amount. Any other charge is held for the team to attach to a schedule or
- * to ignore: nothing is invoiced for it.
+ * its orderID with that e-mail address and amount whose next instalment SecureAndPay numbers it (a payment, of a known
+ * amount and number). Any other charge is held for the team to attach to a schedule or to ignore: nothing is invoiced
+ * for it. So is a charge of a schedule taken over that SecureAndPay numbers as an instalment paid before the takeover,
+ * as one already counted here, as a later one than the next one counted here, or beyond the last one.
  *
  * @package    local_oriskill
  * @copyright  2026 Advanced TM
@@ -65,11 +67,33 @@ class resume_service {
     /** Most instalments of a schedule taken over. */
     const MAX_COUNT = 60;
 
-    /** SecureAndPay statuses a charge is attached to a waiting schedule for: paid, refused, schedule stopped. */
-    const MATCHED = ['00', '02', '05', '06'];
+    /**
+     * SecureAndPay statuses a charge is attached on its own to a waiting schedule for: paid. A refusal or a stop would
+     * tie the schedule to that orderID for good on the strength of an e-mail address alone: held for the team.
+     */
+    const MATCHED = ['00', '02'];
+
+    /**
+     * Why a charge of a schedule taken over is held, and whether the team can still apply it: number, a later instalment
+     * than the next one (applied once checked); counted, one already counted here since the takeover; paidbefore, one
+     * paid before the takeover; beyond, past the last instalment (never applied: counted and invoiced twice, or beyond).
+     */
+    const REASONS = ['number' => true, 'counted' => false, 'paidbefore' => false, 'beyond' => false];
+
+    /** SecureAndPay statuses of a charge of a schedule taken over that is checked against it: paid or refused. */
+    const CHECKED = ['00', '02', '05'];
 
     /** @var bool Held charges are being applied again: the hook leaves them alone. */
     protected static bool $replaying = false;
+
+    /** @var bool The team applies a held charge whose number is not the next one: it is not held again for that. */
+    protected static bool $forcing = false;
+
+    /** @var array Trainers whose lock this request holds (creator id => true). */
+    protected static array $locked = [];
+
+    /** @var array|null Trainers' SecureAndPay accounts, read once per request: [creator, merchant]. */
+    protected static ?array $merchants = null;
 
     // ----- Importing the schedules ---------------------------------------------------------------------------
 
@@ -214,41 +238,71 @@ class resume_service {
         $first = $first > 0 && abs($first - $amount) >= 0.01 ? $first : 0.0;
         $reference = trim((string) ($row['reference'] ?? ''));
 
-        // The same buyer, course, number and amount of instalments: imported before.
-        foreach ($DB->get_records(self::TABLE, ['creatorid' => $creator->id, 'email' => $email,
-                'courseid' => $course->id]) as $existing) {
-            $schedule = $DB->get_record('local_oriskill_instalments', ['id' => $existing->instalmentid]);
-            if ($schedule && (int) $schedule->count === $count && abs((float) $schedule->amount - $amount) < 0.005) {
-                if ($reference !== '' && $existing->reference === null) {
-                    self::set_reference($existing, $reference);
-                    self::replay($creator, $reference);
+        // One at a time per trainer, as the charges notified: the same file imported twice at once must not create a
+        // schedule twice, and a charge held meanwhile must be there for replay() below.
+        return self::locked((int) $creator->id, function() use ($CFG, $DB, $creator, $course, $row, $email, $count, $paid,
+                $amount, $first, $start, $cut, $enrol, $reference, $error): bool {
+            // The same buyer, course, number and amount of instalments: imported before.
+            foreach ($DB->get_records(self::TABLE, ['creatorid' => $creator->id, 'email' => $email,
+                    'courseid' => $course->id]) as $existing) {
+                $schedule = $DB->get_record('local_oriskill_instalments', ['id' => $existing->instalmentid]);
+                if ($schedule && (int) $schedule->count === $count && abs((float) $schedule->amount - $amount) < 0.005) {
+                    if ($reference !== '' && $existing->reference === null) {
+                        self::set_reference($existing, $reference);
+                        self::replay($creator, $reference);
+                    }
+                    return false;
                 }
-                return false;
             }
-        }
-        if (\core_text::strlen($reference) > 100 || ($reference !== '' && $DB->record_exists(
-                'local_moderncommerce_payment_attempts', ['gateway' => gateway::GATEWAY, 'reference' => $reference]))) {
-            throw $error('resume:err_reference');
-        }
-        $user = $DB->get_record_select('user', 'LOWER(email) = ? AND deleted = 0 AND mnethostid = ?',
-            [$email, $CFG->mnet_localhost_id], '*', IGNORE_MULTIPLE);
-        if (!$user && !$enrol) {
-            throw $error('resume:err_noaccount');
-        }
+            if (\core_text::strlen($reference) > 100 || ($reference !== '' && $DB->record_exists(
+                    'local_moderncommerce_payment_attempts', ['gateway' => gateway::GATEWAY, 'reference' => $reference]))) {
+                throw $error('resume:err_reference');
+            }
+            $user = $DB->get_record_select('user', 'LOWER(email) = ? AND deleted = 0 AND mnethostid = ?',
+                [$email, $CFG->mnet_localhost_id], '*', IGNORE_MULTIPLE);
+            if (!$user && !$enrol) {
+                throw $error('resume:err_noaccount');
+            }
 
-        $transaction = $DB->start_delegated_transaction();
+            $transaction = $DB->start_delegated_transaction();
+            try {
+                self::insert($creator, $course, $user ?: null, $email, $row, $count, $paid, $amount, $first, $start,
+                    $cut, $enrol, $reference);
+                $transaction->allow_commit();
+            } catch (\Throwable $e) {
+                $transaction->rollback($e);
+            }
+            if ($reference !== '') {
+                // Charges of this schedule notified before it was imported.
+                self::replay($creator, $reference);
+            }
+            return true;
+        });
+    }
+
+    /**
+     * Run under the trainer's lock, which the charges notified to the trainer's account and the team's actions share.
+     * Taken once per request: a call made while it is held (a charge replayed during an import) runs at once.
+     *
+     * @param int $creatorid Trainer.
+     * @param callable $callback What to run.
+     * @return mixed What it returns.
+     */
+    protected static function locked(int $creatorid, callable $callback) {
+        if (!empty(self::$locked[$creatorid])) {
+            return $callback();
+        }
+        $lock = \core\lock\lock_config::get_lock_factory('local_oriskill_resume')->get_lock('creator' . $creatorid, 30);
+        if (!$lock) {
+            throw new \moodle_exception('locktimeout');
+        }
+        self::$locked[$creatorid] = true;
         try {
-            self::insert($creator, $course, $user ?: null, $email, $row, $count, $paid, $amount, $first, $start, $cut,
-                $enrol, $reference);
-            $transaction->allow_commit();
-        } catch (\Throwable $e) {
-            $transaction->rollback($e);
+            return $callback();
+        } finally {
+            unset(self::$locked[$creatorid]);
+            $lock->release();
         }
-        if ($reference !== '') {
-            // Charges of this schedule notified before it was imported.
-            self::replay($creator, $reference);
-        }
-        return true;
     }
 
     /**
@@ -311,7 +365,8 @@ class resume_service {
     /**
      * SecureAndPay notified a charge no order here was paid with. Signed by a trainer's account, it goes to the schedule
      * taken over with that orderID, or to the only one still waiting for its orderID with that e-mail address and
-     * amount; otherwise it is held for the team. Not signed by a trainer: left alone (rejected as before).
+     * amount whose next instalment it is; otherwise it is held for the team. Not signed by a trainer: left alone
+     * (rejected as before).
      *
      * @param unmatched_notification $hook Hook.
      */
@@ -328,25 +383,22 @@ class resume_service {
             return;
         }
         // One at a time per trainer: two charges of a schedule notified together must not both attach it.
-        $lock = \core\lock\lock_config::get_lock_factory('local_oriskill_resume')->get_lock('creator' . $creator->id, 30);
-        if (!$lock) {
-            throw new \moodle_exception('locktimeout');
-        }
-        try {
+        self::locked((int) $creator->id, function() use ($DB, $hook, $creator, $reference) {
             $resumed = $DB->get_record(self::TABLE, ['creatorid' => $creator->id, 'reference' => $reference], '*',
                 IGNORE_MULTIPLE) ?: self::waiting_schedule($creator, $hook->data);
             if (!$resumed) {
-                self::hold($creator, $hook, $reference);
+                self::hold($creator, $hook->data, $hook->rawdata, $hook->signature, $reference);
                 $hook->set_outcome('held');
                 return;
             }
             if ($resumed->reference === null) {
                 self::set_reference($resumed, $reference);
+                // Charges of this orderID held before, oldest first, ahead of this one: none is left behind, and this
+                // one is then checked against the instalments they paid.
+                self::replay($creator, $reference);
             }
             $hook->set_order(order_api::get_order((int) $resumed->orderid));
-        } finally {
-            $lock->release();
-        }
+        });
     }
 
     /**
@@ -358,13 +410,24 @@ class resume_service {
     protected static function signing_creator(unmatched_notification $hook): ?\stdClass {
         global $DB;
 
-        foreach ($DB->get_records_select('local_oriskill_creators', 'sap_key IS NOT NULL') as $creator) {
-            try {
-                $merchant = seller_service::merchant($creator);
-            } catch (\Throwable $e) {
-                continue;
+        if (trim($hook->signature) === '') {
+            return null;
+        }
+        // The accounts are read once per request (a replay goes through several notifications).
+        if (self::$merchants === null) {
+            self::$merchants = [];
+            foreach ($DB->get_records_select('local_oriskill_creators', 'sap_key IS NOT NULL') as $creator) {
+                try {
+                    if ($merchant = seller_service::merchant($creator)) {
+                        self::$merchants[] = [$creator, $merchant];
+                    }
+                } catch (\Throwable $e) {
+                    continue;
+                }
             }
-            if ($merchant && $hook->signed_by($merchant)) {
+        }
+        foreach (self::$merchants as [$creator, $merchant]) {
+            if ($hook->signed_by($merchant)) {
                 return $creator;
             }
         }
@@ -372,8 +435,10 @@ class resume_service {
     }
 
     /**
-     * The only schedule of the trainer still waiting for its orderID that a charge can belong to: same e-mail address,
-     * same instalment amount, still running.
+     * The only schedule of the trainer still waiting for its orderID that a charge can belong to: a payment of a known
+     * amount, same e-mail address, same instalment amount, still running, and numbered by SecureAndPay as the
+     * schedule's next instalment. A charge SecureAndPay does not number is held: the e-mail address and the amount alone
+     * do not tie a schedule to an orderID for good.
      *
      * @param \stdClass $creator Trainer.
      * @param array $data Notification.
@@ -383,48 +448,58 @@ class resume_service {
         global $DB;
 
         $email = \core_text::strtolower(trim((string) ($data['MailClient'] ?? '')));
-        if ($email === '' || !in_array((string) ($data['TransStatus'] ?? ''), self::MATCHED, true)) {
+        if ($email === '' || !in_array((string) ($data['TransStatus'] ?? ''), self::MATCHED, true)
+                || !is_numeric($data['PayAmount'] ?? null)) {
             return null;
         }
-        $amount = is_numeric($data['PayAmount'] ?? null) ? (float) $data['PayAmount'] / 100 : null;
+        $amount = round((float) $data['PayAmount'] / 100, 2);
         // The instalment as SecureAndPay numbers it (echeanceNumber, the first payment being number 1), 0 when not told.
-        $number = (int) ($data['echeanceNumber'] ?? 0);
+        $number = is_numeric($data['echeanceNumber'] ?? null) ? max(0, (int) $data['echeanceNumber']) : 0;
+        if ($number <= 0) {
+            return null;
+        }
         $found = [];
-        $next = [];
         foreach ($DB->get_records(self::TABLE, ['creatorid' => $creator->id, 'email' => $email, 'reference' => null])
                 as $resumed) {
             $schedule = $DB->get_record('local_oriskill_instalments', ['id' => $resumed->instalmentid]);
-            if ($schedule && !in_array($schedule->status, ['completed', 'cancelled'], true)
-                    && ($amount === null || abs((float) $schedule->amount - $amount) < 0.005)
-                    // An instalment beyond the last one of the schedule cannot be its own.
-                    && $number <= (int) $schedule->count) {
-                $found[] = $resumed;
-                $next[] = (int) $schedule->paid + (int) $schedule->extrapaid + 1;
+            if (!$schedule || in_array($schedule->status, ['completed', 'cancelled'], true)
+                    || abs((float) $schedule->amount - $amount) >= 0.005) {
+                continue;
             }
-        }
-        // Several schedules of the same buyer and amount: the one whose next instalment is the one SecureAndPay tells.
-        // A single one is taken even when the numbers differ (the file may be one instalment off): the log tells it.
-        if (count($found) > 1 && $number > 0) {
-            $found = array_values(array_filter($found, fn($i) => $next[$i] === $number, ARRAY_FILTER_USE_KEY));
+            $next = (int) $schedule->paid + (int) $schedule->extrapaid + 1;
+            // Beyond the last instalment, or another one than the next: not this schedule's charge, even when it is the
+            // only schedule of the buyer (the file may be wrong): the team decides.
+            if ($next <= (int) $schedule->count && $number === $next) {
+                $found[] = $resumed;
+            }
         }
         return count($found) === 1 ? $found[0] : null;
     }
 
     /**
-     * Keep a charge no schedule explains, once, for the team to attach or ignore.
+     * Keep a charge, once, for the team to attach, apply or ignore.
      *
      * @param \stdClass $creator Trainer whose account signed it.
-     * @param unmatched_notification $hook Hook.
+     * @param array $data Notification, decoded.
+     * @param string $rawdata Base64 'data' field as posted.
+     * @param string $signature 'signature' field as posted.
      * @param string $reference SecureAndPay orderID.
+     * @param string|null $reason Why a charge of a schedule taken over is held (one of REASONS), null for a charge no
+     *                            schedule explains.
      */
-    protected static function hold(\stdClass $creator, unmatched_notification $hook, string $reference): void {
+    protected static function hold(\stdClass $creator, array $data, string $rawdata, string $signature, string $reference,
+            ?string $reason = null): void {
         global $DB;
 
-        $data = $hook->data;
         $key = ['creatorid' => $creator->id, 'reference' => $reference,
             'bankid' => \core_text::substr((string) ($data['banqueId'] ?? ''), 0, 64),
             'transstatus' => \core_text::substr((string) ($data['TransStatus'] ?? ''), 0, 5)];
-        if ($DB->record_exists(self::INBOX, $key)) {
+        if ($existing = $DB->get_record(self::INBOX, $key, 'id, state, outcome', IGNORE_MULTIPLE)) {
+            if ($existing->state === 'held' && $reason !== null && $existing->outcome !== $reason) {
+                // Held again on replay, for this reason now.
+                $DB->update_record(self::INBOX, (object) ['id' => $existing->id, 'outcome' => $reason,
+                    'timemodified' => time()]);
+            }
             return;
         }
         $now = time();
@@ -433,14 +508,88 @@ class resume_service {
             'email' => \core_text::substr(trim((string) ($data['MailClient'] ?? '')), 0, 255),
             'buyer' => \core_text::substr(trim(($data['PrenomClient'] ?? '') . ' ' . ($data['NomClient'] ?? '')), 0, 255),
             'label' => \core_text::substr(trim((string) ($data['InfosCommande'] ?? '')), 0, 255),
-            'rawdata' => $hook->rawdata, 'signature' => \core_text::substr($hook->signature, 0, 128), 'state' => 'held',
-            'resumedid' => 0, 'handledby' => 0, 'timecreated' => $now, 'timemodified' => $now]));
+            'rawdata' => $rawdata, 'signature' => \core_text::substr($signature, 0, 128), 'state' => 'held',
+            'resumedid' => 0, 'outcome' => $reason, 'handledby' => 0, 'timecreated' => $now, 'timemodified' => $now]));
     }
 
     /**
-     * An instalment of a schedule taken over was paid: when SecureAndPay numbers it otherwise than counted here (the
-     * file told a wrong number of instalments paid, or a charge was never notified), the team is told in the log.
-     * Nothing is corrected: the invoice keeps the number counted here.
+     * A charge (paid or refused) of a schedule taken over, verified and not recorded yet: held for the team, rather
+     * than applied, when SecureAndPay numbers it as an instalment paid before the takeover or already counted here
+     * (never applied: it would be counted and invoiced twice), as a later one than the next one counted here (applied
+     * once the team checked it), or when it goes beyond the last instalment (never applied).
+     *
+     * Notified directly (not replayed under the trainer's lock), the whole charge is handled again under that lock, as
+     * the replays and the team's actions are: two charges notified together are then checked one after the other
+     * against the instalments counted, never both against the same count.
+     *
+     * @param \local_secureandpay\hook\resumed_charge $hook Hook.
+     */
+    public static function resumed_charge(\local_secureandpay\hook\resumed_charge $hook): void {
+        global $DB;
+
+        $resumed = $DB->get_record(self::TABLE, ['orderid' => $hook->order->id]);
+        $schedule = $resumed ? $DB->get_record('local_oriskill_instalments', ['id' => $resumed->instalmentid]) : null;
+        $creator = $resumed ? $DB->get_record('local_oriskill_creators', ['id' => $resumed->creatorid]) : null;
+        if (!$schedule || !$creator) {
+            return;
+        }
+        if (empty(self::$locked[(int) $creator->id])) {
+            // The notification is verified, decided and applied again, from the start, under the lock (the invoices'
+            // lock is taken inside it, never the other way round): its outcome is this one's.
+            $hook->set_outcome(self::locked((int) $creator->id,
+                fn() => notification_handler::handle($hook->rawdata, $hook->signature)));
+            return;
+        }
+        $reason = self::reason($resumed, $schedule, $hook->number(),
+            in_array((string) ($hook->data['TransStatus'] ?? ''), self::MATCHED, true), $hook->paid);
+        if ($reason === null || ($reason === 'number' && self::$forcing)) {
+            return;
+        }
+        self::hold($creator, $hook->data, $hook->rawdata, $hook->signature, (string) $hook->data['PAYID'], $reason);
+        $hook->set_outcome('held');
+    }
+
+    /**
+     * Why a charge (paid or refused) of a schedule taken over is not applied as the next instalment.
+     *
+     * @param \stdClass $resumed Schedule taken over.
+     * @param \stdClass $schedule Its instalments (local_oriskill_instalments).
+     * @param int $number The instalment as SecureAndPay numbers it, 0 when not told.
+     * @param bool $paying A payment (else a refusal).
+     * @param int $paid Instalments counted as paid so far (those paid before the takeover included).
+     * @return string|null One of REASONS, null when it is applied.
+     */
+    protected static function reason(\stdClass $resumed, \stdClass $schedule, int $number, bool $paying, int $paid): ?string {
+        // The next instalment: instalments caught up through a payment link (extrapaid) count too.
+        $next = $paid + (int) $schedule->extrapaid + 1;
+        if ($number && $number <= (int) $resumed->paidbefore) {
+            return 'paidbefore';
+        }
+        if ($number > (int) $schedule->count || ($paying && $next > (int) $schedule->count)) {
+            return 'beyond';
+        }
+        if ($number && $number < $next) {
+            // Counted here already, since the takeover: applying it would count and invoice that instalment twice.
+            return 'counted';
+        }
+        return $number > $next ? 'number' : null;
+    }
+
+    /**
+     * The instalment a held charge is, as SecureAndPay numbers it.
+     *
+     * @param \stdClass $held Held charge (with its notification).
+     * @return int 0 when the notification does not tell.
+     */
+    protected static function held_number(\stdClass $held): int {
+        $data = json_decode((string) base64_decode((string) $held->rawdata, true), true);
+        return is_numeric($data['echeanceNumber'] ?? null) ? max(0, (int) $data['echeanceNumber']) : 0;
+    }
+
+    /**
+     * An instalment of a schedule taken over was paid: when SecureAndPay numbers it otherwise than counted here (applied
+     * by the team although the number differed), the team is told in the log. Nothing is corrected: the invoice keeps
+     * the number counted here.
      *
      * @param \local_secureandpay\event\instalment_paid $event Event.
      */
@@ -448,11 +597,12 @@ class resume_service {
         global $DB;
 
         $number = (int) ($event->other['number'] ?? 0);
-        $paid = (int) $event->other['paid'];
-        if (!$number || $number === $paid || !($resumed = $DB->get_record(self::TABLE, ['orderid' => $event->objectid]))) {
+        if (!$number || !($resumed = $DB->get_record(self::TABLE, ['orderid' => $event->objectid]))) {
             return;
         }
-        if ($creator = $DB->get_record('local_oriskill_creators', ['id' => $resumed->creatorid])) {
+        $paid = (int) $event->other['paid'] + (int) $DB->get_field('local_oriskill_instalments', 'extrapaid',
+            ['id' => $resumed->instalmentid]);
+        if ($number !== $paid && ($creator = $DB->get_record('local_oriskill_creators', ['id' => $resumed->creatorid]))) {
             log_service::add($creator, 'instalments_mismatch', ['number' => $number, 'paid' => $paid,
                 'count' => (int) $event->other['count']], (int) $resumed->courseid, (int) $resumed->userid);
         }
@@ -476,21 +626,25 @@ class resume_service {
 
     /**
      * Apply the held charges of an orderID, oldest first, now that a schedule has it. A charge that cannot be applied
-     * stays held.
+     * stays held, and so does one that is still not the next instalment, unless the team applies that very charge.
      *
      * @param \stdClass $creator Trainer.
      * @param string $reference SecureAndPay orderID.
+     * @param int $force Held charge the team applies although its number is not the next one (0 for none): only it is
+     *                   applied then.
      * @return int Charges applied.
      */
-    protected static function replay(\stdClass $creator, string $reference): int {
+    protected static function replay(\stdClass $creator, string $reference, int $force = 0): int {
         global $DB, $USER;
 
         $resumedid = (int) $DB->get_field(self::TABLE, 'id', ['creatorid' => $creator->id, 'reference' => $reference],
             IGNORE_MULTIPLE);
         $applied = 0;
-        foreach ($DB->get_records(self::INBOX, ['creatorid' => $creator->id, 'reference' => $reference, 'state' => 'held'],
-                'timecreated ASC, id ASC') as $held) {
+        $conditions = ['creatorid' => $creator->id, 'reference' => $reference, 'state' => 'held'] +
+            ($force ? ['id' => $force] : []);
+        foreach ($DB->get_records(self::INBOX, $conditions, 'timecreated ASC, id ASC') as $held) {
             self::$replaying = true;
+            self::$forcing = $force > 0;
             try {
                 $outcome = notification_handler::handle((string) $held->rawdata, (string) $held->signature);
             } catch (\Throwable $e) {
@@ -498,6 +652,11 @@ class resume_service {
                 continue;
             } finally {
                 self::$replaying = false;
+                self::$forcing = false;
+            }
+            if ($outcome === 'held') {
+                // Still not the next instalment (or never to be applied): it stays held, with its reason.
+                continue;
             }
             // Dealt with: the notification itself is not kept any longer.
             $DB->update_record(self::INBOX, (object) ['id' => $held->id, 'state' => 'applied', 'resumedid' => $resumedid,
@@ -521,8 +680,15 @@ class resume_service {
         $held = $DB->get_records(self::INBOX, ['creatorid' => $creator->id, 'state' => 'held'], 'timecreated DESC, id DESC');
         foreach ($held as $charge) {
             // The instalment as SecureAndPay numbers it, 0 when the notification does not tell.
-            $data = json_decode((string) base64_decode((string) $charge->rawdata, true), true);
-            $charge->number = max(0, (int) ($data['echeanceNumber'] ?? 0));
+            $charge->number = self::held_number($charge);
+            // The schedule that has its orderID already (it is applied to that one, or ignored), 0 when none has it.
+            $charge->scheduleid = (int) $DB->get_field(self::TABLE, 'id', ['creatorid' => $creator->id,
+                'reference' => $charge->reference], IGNORE_MULTIPLE);
+            // Why it is held (one of REASONS), '' for a charge no schedule explains.
+            $charge->reason = array_key_exists((string) $charge->outcome, self::REASONS) ? (string) $charge->outcome : '';
+            // Whether the team can apply it: never an instalment paid before the takeover or counted here already, nor
+            // one beyond the last.
+            $charge->applicable = $charge->reason === '' || self::REASONS[$charge->reason];
         }
         return $held;
     }
@@ -574,8 +740,9 @@ class resume_service {
         $options = [];
         foreach (self::schedules($creator, 1000) as $s) {
             if ($s->reference === null && !in_array($s->status, ['completed', 'cancelled'], true)) {
-                $options[$s->id] = ($s->user ? fullname($s->user) : $s->email) . ' · ' . format_string($s->coursename) .
-                    ' · ' . $s->count . ' × ' . format_float((float) $s->amount, 2) . ' ' . $s->currency;
+                // html_writer::select() does not escape the labels.
+                $options[$s->id] = s($s->user ? fullname($s->user) : $s->email) . ' · ' . format_string($s->coursename) .
+                    ' · ' . $s->count . ' × ' . format_float((float) $s->amount, 2) . ' ' . s($s->currency);
             }
         }
         return $options;
@@ -593,21 +760,70 @@ class resume_service {
     public static function attach(\stdClass $creator, int $heldid, int $resumedid): int {
         global $DB;
 
+        // Under the lock of the charges notified: one notified meanwhile is held before the replay, or applied after.
+        return self::locked((int) $creator->id, function() use ($DB, $creator, $heldid, $resumedid): int {
+            $held = $DB->get_record(self::INBOX, ['id' => $heldid, 'creatorid' => $creator->id, 'state' => 'held'], '*',
+                MUST_EXIST);
+            $resumed = $DB->get_record(self::TABLE, ['id' => $resumedid, 'creatorid' => $creator->id], '*', MUST_EXIST);
+            if ($resumed->reference !== null && $resumed->reference !== $held->reference) {
+                throw new \moodle_exception('resume:err_hasreference', 'local_oriskill');
+            }
+            // Checked against this schedule first, as SecureAndPay numbers it, with the rules of resumed_charge(): an
+            // instalment paid before the takeover, counted here already, or beyond the last one is refused before the
+            // schedule takes the orderID for good. (The replay below only counts more instalments: what is refused now
+            // would be refused then too.)
+            $schedule = $DB->get_record('local_oriskill_instalments', ['id' => $resumed->instalmentid], '*', MUST_EXIST);
+            if (in_array((string) $held->transstatus, self::CHECKED, true)) {
+                $reason = self::reason($resumed, $schedule, self::held_number($held),
+                    in_array((string) $held->transstatus, self::MATCHED, true),
+                    gateway::instalments_paid($DB->get_record('local_moderncommerce_orders', ['id' => $resumed->orderid],
+                        '*', MUST_EXIST)));
+                if ($reason !== null && !self::REASONS[$reason]) {
+                    throw new \moodle_exception('resume:err_' . $reason, 'local_oriskill');
+                }
+            }
+            if ($resumed->reference === null) {
+                self::set_reference($resumed, (string) $held->reference);
+            }
+            // Every held charge of the orderID, oldest first, as SecureAndPay numbers them; then this one, chosen by the
+            // team, even if its number is not the next one.
+            $applied = self::replay($creator, (string) $held->reference);
+            $reason = $DB->get_field(self::INBOX, 'outcome', ['id' => $held->id, 'state' => 'held']);
+            if ($reason !== false && ($reason === null || !empty(self::REASONS[$reason]))) {
+                $applied += self::replay($creator, (string) $held->reference, (int) $held->id);
+                $reason = $DB->get_field(self::INBOX, 'outcome', ['id' => $held->id, 'state' => 'held']);
+            }
+            if ($reason !== false) {
+                // This charge is still held: never applied (paid before the takeover, beyond the last instalment), or
+                // it could not be (SecureAndPay account or key changed).
+                throw new \moodle_exception(isset(self::REASONS[(string) $reason]) && !self::REASONS[$reason]
+                    ? 'resume:err_' . $reason : 'resume:err_replay', 'local_oriskill');
+            }
+            log_service::add($creator, 'instalments_attached', ['reference' => $held->reference],
+                (int) $resumed->courseid, (int) $resumed->userid);
+            return $applied;
+        });
+    }
+
+    /**
+     * Apply a held charge whose orderID a schedule taken over has already (it was held for its number, or notified
+     * while the schedule was being given its orderID).
+     *
+     * @param \stdClass $creator Trainer.
+     * @param int $heldid Held charge.
+     * @return int Charges applied.
+     */
+    public static function apply(\stdClass $creator, int $heldid): int {
+        global $DB;
+
         $held = $DB->get_record(self::INBOX, ['id' => $heldid, 'creatorid' => $creator->id, 'state' => 'held'], '*',
             MUST_EXIST);
-        $resumed = $DB->get_record(self::TABLE, ['id' => $resumedid, 'creatorid' => $creator->id], '*', MUST_EXIST);
-        if ($resumed->reference !== null && $resumed->reference !== $held->reference) {
-            throw new \moodle_exception('resume:err_hasreference', 'local_oriskill');
+        $resumedid = (int) $DB->get_field(self::TABLE, 'id', ['creatorid' => $creator->id, 'reference' => $held->reference],
+            IGNORE_MULTIPLE);
+        if (!$resumedid) {
+            throw new \moodle_exception('resume:err_noschedule', 'local_oriskill');
         }
-        if ($resumed->reference === null) {
-            self::set_reference($resumed, (string) $held->reference);
-        }
-        if (!$applied = self::replay($creator, (string) $held->reference)) {
-            throw new \moodle_exception('resume:err_replay', 'local_oriskill');
-        }
-        log_service::add($creator, 'instalments_attached', ['reference' => $held->reference], (int) $resumed->courseid,
-            (int) $resumed->userid);
-        return $applied;
+        return self::attach($creator, $heldid, $resumedid);
     }
 
     /**
@@ -619,11 +835,15 @@ class resume_service {
     public static function ignore(\stdClass $creator, int $heldid): void {
         global $DB, $USER;
 
-        $held = $DB->get_record(self::INBOX, ['id' => $heldid, 'creatorid' => $creator->id, 'state' => 'held'], '*',
-            MUST_EXIST);
-        $DB->update_record(self::INBOX, (object) ['id' => $held->id, 'state' => 'ignored', 'rawdata' => null,
-            'signature' => null, 'handledby' => (int) $USER->id, 'timemodified' => time()]);
-        log_service::add($creator, 'instalments_ignored', ['reference' => $held->reference,
-            'amount' => format_float((float) $held->amount, 2)]);
+        // Under the lock of the charges notified and of the team's actions: a charge applied meanwhile (attached,
+        // replayed) is no longer held when read here, and is not marked ignored after being invoiced.
+        self::locked((int) $creator->id, function() use ($DB, $USER, $creator, $heldid): void {
+            $held = $DB->get_record(self::INBOX, ['id' => $heldid, 'creatorid' => $creator->id, 'state' => 'held'], '*',
+                MUST_EXIST);
+            $DB->update_record(self::INBOX, (object) ['id' => $held->id, 'state' => 'ignored', 'rawdata' => null,
+                'signature' => null, 'handledby' => (int) $USER->id, 'timemodified' => time()]);
+            log_service::add($creator, 'instalments_ignored', ['reference' => $held->reference,
+                'amount' => format_float((float) $held->amount, 2)]);
+        });
     }
 }

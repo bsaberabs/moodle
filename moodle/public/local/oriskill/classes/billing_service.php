@@ -198,6 +198,20 @@ class billing_service {
         $issued = array_values($DB->get_records('local_oriskill_invoices', ['orderid' => $orderid, 'type' => 'invoice'],
             'id ASC'));
         $plan = gateway::instalment_plan($order);
+        if ($plan && !$plan['subscription'] && $period > $plan['count']) {
+            // Never an invoice beyond the last instalment of a schedule (no "instalment 11 of 10"). The payment was
+            // received all the same: the trainer's log tells the team, to refund it or invoice it by hand.
+            $sellers = seller_service::purchase_sellers($order, (int) $order->userid);
+            if (count($sellers) === 1 && ($seller = reset($sellers))) {
+                $courseid = $DB->get_field_select('local_moderncommerce_order_items', 'courseid',
+                    'orderid = ? AND courseid IS NOT NULL', [$orderid], IGNORE_MULTIPLE);
+                log_service::add($seller, 'invoice_beyondcount', ['order' => $order->ordernumber,
+                    'number' => $period, 'count' => $plan['count'],
+                    'amount' => pricing_service::format_price((float) $plan['amount'], $order->currency)],
+                    $courseid ? (int) $courseid : null, (int) $order->userid);
+            }
+            return null;
+        }
         // A schedule taken over from another platform: its first instalments were invoiced there, not here.
         $before = $plan['paidbefore'] ?? 0;
         if ($period <= $before) {

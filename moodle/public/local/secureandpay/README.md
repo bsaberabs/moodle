@@ -78,6 +78,11 @@ notification est alors appliquée comme les autres) ou répond lui-même (`set_o
 - `echeanceNumber` (numéro de l'échéance prélevée, le premier paiement étant supposé porter le numéro 1) est transmis
   dans l'événement `instalment_paid` (`other['number']`, 0 s'il est absent). Il ne remplace pas le compte des
   échéances fait ici : il sert au rattachement et au contrôle.
+- Une fois la signature vérifiée, chaque prélèvement (00, 02, 05) d'une commande reprise qui n'a pas encore été
+  enregistré passe par le hook `\local_secureandpay\hook\resumed_charge` (avec le nombre d'échéances déjà comptées) :
+  un autre plugin peut le mettre de côté (`set_outcome()`), par exemple quand `echeanceNumber` désigne une échéance
+  payée avant la reprise ou une autre que la suivante. `local_oriskill` le met alors en attente pour l'équipe ; rien
+  n'est enregistré ni facturé. Une notification répétée n'y passe pas : elle reste un doublon.
 
 ## Limites
 

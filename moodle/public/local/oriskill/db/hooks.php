@@ -51,6 +51,11 @@ $callbacks = [
         'callback' => [\local_oriskill\resume_service::class, 'unmatched_notification'],
     ],
     [
+        // A charge of a schedule taken over that is not the next instalment (or one paid before the takeover): held.
+        'hook' => \local_secureandpay\hook\resumed_charge::class,
+        'callback' => [\local_oriskill\resume_service::class, 'resumed_charge'],
+    ],
+    [
         'hook' => \local_moderncommerce\hook\filter_payment_methods::class,
         'callback' => [\local_oriskill\hook_callbacks::class, 'filter_payment_methods'],
     ],

@@ -70,6 +70,15 @@ class notification_handler {
         }
 
         $status = (string) ($data['TransStatus'] ?? '');
+        // A charge of a schedule taken over from another platform, not recorded yet: another plugin may keep it aside
+        // (an instalment already paid there, or not the next one counted here). A repeated one goes on as a duplicate.
+        if (gateway::is_resumed($order) && in_array($status, ['00', '02', '05'], true) && !self::recorded($data)) {
+            $hook = new hook\resumed_charge($order, $data, $rawdata, $signature, gateway::instalments_paid($order));
+            \core\di::get(\core\hook\manager::class)->dispatch($hook);
+            if ($hook->get_outcome() !== null) {
+                return $hook->get_outcome();
+            }
+        }
         $paid = in_array($order->status, ['paid', 'completed'], true);
         $subscription = self::find_subscription($order);
 
@@ -313,8 +322,7 @@ class notification_handler {
             'orderreference' => $order->ordernumber,
             'reference' => (string) $data['PAYID'],
             'gatewaytransactionid' => $banqueid ?: (string) $data['PAYID'],
-            // Modern Commerce deduplicates events across all orders, so scope the bank reference to the orderID.
-            'gatewayeventid' => $transstatus . '-' . $data['PAYID'] . '-' . $banqueid,
+            'gatewayeventid' => self::event_id($data),
             'amount' => is_numeric($amount) ? ((float) $amount / 100) : null,
             'currency' => $order->currency,
             'channel' => 'card',
@@ -323,6 +331,30 @@ class notification_handler {
             'eventtype' => 'secureandpay.' . $transstatus,
             'rawdata' => $data,
         ]);
+    }
+
+    /**
+     * Event id a notification is recorded with: Modern Commerce deduplicates events across all orders, so the bank
+     * reference (banqueId, one per instalment) is scoped to the status and the orderID.
+     *
+     * @param array $data Notification.
+     * @return string
+     */
+    private static function event_id(array $data): string {
+        return (string) ($data['TransStatus'] ?? '') . '-' . $data['PAYID'] . '-' . (string) ($data['banqueId'] ?? '');
+    }
+
+    /**
+     * Whether this notification was recorded before (read only: the same event that record() would find a duplicate).
+     *
+     * @param array $data Notification.
+     * @return bool
+     */
+    private static function recorded(array $data): bool {
+        global $DB;
+
+        return $DB->record_exists('local_moderncommerce_payment_events', ['gateway' => gateway::GATEWAY,
+            'eventtype' => 'secureandpay.' . (string) ($data['TransStatus'] ?? ''), 'gatewayeventid' => self::event_id($data)]);
     }
 
     /**

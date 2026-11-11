@@ -324,6 +324,10 @@ JS;
         if ($invoice = billing_service::issue_invoice((int) $hook->order->id)) {
             [$filename, $content] = billing_service::pdf($invoice);
             $hook->provide($filename, $content);
+        } else if (\local_secureandpay\gateway::is_resumed($hook->order)) {
+            // A schedule taken over from another platform: invoiced here one instalment at a time, never in full (what
+            // was paid before was invoiced there). No instalment invoiced here yet: no document rather than the store's.
+            throw new \moodle_exception('resume:noinvoice', 'local_oriskill');
         }
     }
 }

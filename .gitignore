@@ -1,2 +1,7 @@
 .env
 *.log
+
+# Journaux locaux des agents (.claude/routage)
+.claude/routage/usage.jsonl
+.claude/routage/logs/
+routage-proposition/

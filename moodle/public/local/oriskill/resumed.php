@@ -52,6 +52,11 @@ if (($action = optional_param('action', '', PARAM_ALPHA)) && confirm_sesskey()) 
             $applied = rs::attach($creator, required_param('id', PARAM_INT), required_param('schedule', PARAM_INT));
             redirect($url, get_string('resume:attached', 'local_oriskill', $applied), null,
                 \core\output\notification::NOTIFY_SUCCESS);
+        } else if ($action === 'apply') {
+            // A held charge whose orderID a schedule taken over has already.
+            $applied = rs::apply($creator, required_param('id', PARAM_INT));
+            redirect($url, get_string('resume:attached', 'local_oriskill', $applied), null,
+                \core\output\notification::NOTIFY_SUCCESS);
         } else if ($action === 'ignore') {
             rs::ignore($creator, required_param('id', PARAM_INT));
             redirect($url, get_string('resume:ignored', 'local_oriskill'), null, \core\output\notification::NOTIFY_SUCCESS);
@@ -103,7 +108,12 @@ if ($held = rs::held($creator)) {
     foreach ($held as $h) {
         $status = $statuses[$h->transstatus] ?? 'other';
         $actions = '';
-        if ($canchange && $options) {
+        if ($canchange && $h->scheduleid && $h->applicable) {
+            // Its orderID is a schedule's already: applied to that one, once the team has checked it.
+            $actions .= html_writer::tag('form', $hidden('apply', ['id' => $h->id]) .
+                $button(get_string('resume:apply', 'local_oriskill'), 'btn-primary'),
+                ['method' => 'post', 'action' => $url->out(false), 'class' => 'mb-1']);
+        } else if ($canchange && !$h->scheduleid && $options) {
             $actions .= html_writer::tag('form', $hidden('attach', ['id' => $h->id]) .
                 html_writer::select($options, 'schedule', '', ['' => get_string('resume:choose', 'local_oriskill')],
                     ['class' => 'form-select form-select-sm', 'required' => 'required', 'style' => 'max-width: 22rem',
@@ -124,7 +134,9 @@ if ($held = rs::held($creator)) {
                 get_string('resume:number', 'local_oriskill', $h->number) : ''), 'small text-muted'),
             format_float((float) $h->amount, 2),
             html_writer::span(get_string('resume:status_' . $status, 'local_oriskill', s($h->transstatus)),
-                'oriskill-badge ' . ($status === 'paid' ? 'is-good' : 'is-warn')),
+                'oriskill-badge ' . ($status === 'paid' ? 'is-good' : 'is-warn')) .
+                ($h->reason !== '' ? html_writer::div(get_string('resume:reason_' . $h->reason, 'local_oriskill'),
+                    'small text-muted mt-1') : ''),
             $actions,
         ];
     }
