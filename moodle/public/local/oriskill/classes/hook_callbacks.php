@@ -121,8 +121,77 @@ class hook_callbacks {
                 // is locked goes nowhere (no redirect loop to an enrolment page).
                 $label = $child['label'] . ($child['locked'] ? ' ' . get_string('menus:locked', 'local_oriskill') : '');
                 $node->add($label, $child['url'] ?? new \moodle_url('#'), \navigation_node::TYPE_CUSTOM);
+                // The main navigation dropdown has two levels: the lessons of a module are shown as a flyout (third
+                // level) built by a small script from the data kept here.
+                if (!empty($child['lessons']) && $child['url']) {
+                    $items = [];
+                    foreach ($child['lessons'] as $lesson) {
+                        $items[] = ['t' => $lesson['label'], 'u' => $lesson['url']->out(false)];
+                    }
+                    self::$flyouts[$child['url']->out(false)] = $items;
+                }
             }
         }
+    }
+
+    /** @var array Lessons of each module of the trainer's menu, by module address. */
+    private static $flyouts = [];
+
+    /**
+     * Script that adds the lessons flyout (hover with a mouse, accordion on touch) to the modules of the trainer's menu.
+     *
+     * @return string HTML (script tag), empty when there is nothing to add.
+     */
+    private static function flyout_html(): string {
+        if (!self::$flyouts) {
+            return '';
+        }
+        $flags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES;
+        $data = json_encode(self::$flyouts, $flags);
+        $toggle = json_encode(get_string('menus:showlessons', 'local_oriskill'), $flags);
+        $js = <<<JS
+(function() {
+    var data = $data, label = $toggle;
+    function build() {
+        document.querySelectorAll('.primary-navigation .dropdown-menu a[href]').forEach(function(a) {
+            var items = data[a.href];
+            var li = a.closest('li');
+            if (!items || !li || li.getAttribute('data-oriskill-flyout')) { return; }
+            li.setAttribute('data-oriskill-flyout', '1');
+            li.classList.add('oriskill-hasflyout');
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'oriskill-flyout-toggle';
+            btn.setAttribute('aria-label', label);
+            btn.setAttribute('aria-expanded', 'false');
+            btn.textContent = '\\u25B8';
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var open = li.classList.toggle('oriskill-open');
+                btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            });
+            var ul = document.createElement('ul');
+            ul.className = 'oriskill-flyout';
+            items.forEach(function(it) {
+                var l = document.createElement('li');
+                var x = document.createElement('a');
+                x.className = 'dropdown-item';
+                x.href = it.u;
+                x.textContent = it.t;
+                l.appendChild(x);
+                ul.appendChild(l);
+            });
+            a.insertAdjacentElement('afterend', btn);
+            li.appendChild(ul);
+        });
+    }
+    document.addEventListener('DOMContentLoaded', build);
+    window.addEventListener('load', build);
+    document.addEventListener('shown.bs.dropdown', build);
+})();
+JS;
+        return \html_writer::tag('script', $js);
     }
 
     /**
@@ -297,6 +366,7 @@ class hook_callbacks {
     public static function before_footer_html_generation(\core\hook\output\before_footer_html_generation $hook): void {
         global $PAGE;
 
+        $hook->add_html(self::flyout_html());
         if (!during_initial_install() && $PAGE->pagetype === 'login-index' && !isloggedin()) {
             $PAGE->requires->js_init_code(remember_service::login_script());
         }

@@ -32,6 +32,9 @@ class menu_service {
     /** Most modules shown under one course in the menu. */
     const MAXSECTIONS = 40;
 
+    /** Most lessons listed under one module in the menu. */
+    const MAXLESSONS = 30;
+
     /**
      * Menu entries of a trainer, in order, each with its courses (courseid => section ids, empty = all modules).
      *
@@ -156,7 +159,7 @@ class menu_service {
      *
      * @param \stdClass $creator Trainer.
      * @param int $userid Learner.
-     * @return array of ['label', 'children' => [['label', 'url' (moodle_url|null), 'locked' (bool)]]]
+     * @return array of ['label', 'children' => [['label', 'url' (moodle_url|null), 'locked' (bool), 'lessons' => [['label', 'url']]]]]
      */
     public static function for_user(\stdClass $creator, int $userid): array {
         $menu = [];
@@ -174,11 +177,9 @@ class menu_service {
                     && (is_enrolled($context, $userid, '', true) || has_capability('moodle/course:view', $context, $userid));
                 $name = format_string($course->fullname, true, ['context' => $context]);
                 if (!$canaccess) {
-                    $children[] = ['label' => $name, 'url' => null, 'locked' => true];
+                    $children[] = ['label' => $name, 'url' => null, 'locked' => true, 'lessons' => []];
                     continue;
                 }
-                $children[] = ['label' => $name, 'url' => new \moodle_url('/course/view.php', ['id' => $courseid]),
-                    'locked' => false];
                 $modinfo = get_fast_modinfo($course, $userid);
                 $shown = 0;
                 foreach ($modinfo->get_section_info_all() as $num => $info) {
@@ -190,8 +191,28 @@ class menu_service {
                         break;
                     }
                     $open = $info->uservisible;
-                    $children[] = ['label' => '- ' . get_section_name($course, $info), 'locked' => !$open,
+                    // Lessons of the module, shown as a third level on hover.
+                    $lessons = [];
+                    if ($open) {
+                        foreach ($modinfo->get_cms() as $cm) {
+                            if ((int) $cm->sectionnum !== (int) $num || !$cm->uservisible || !$cm->has_view()
+                                    || $cm->modname === 'label' || $cm->is_stealth()) {
+                                continue;
+                            }
+                            if (count($lessons) >= self::MAXLESSONS) {
+                                break;
+                            }
+                            $lessons[] = ['label' => format_string($cm->name, true, ['context' => $context]),
+                                'url' => $cm->url];
+                        }
+                    }
+                    $children[] = ['label' => get_section_name($course, $info), 'locked' => !$open, 'lessons' => $lessons,
                         'url' => $open ? new \moodle_url('/course/section.php', ['id' => $info->id]) : null];
+                }
+                if (!$shown) {
+                    // No module to show: the course itself is the only thing the entry can lead to.
+                    $children[] = ['label' => $name, 'url' => new \moodle_url('/course/view.php', ['id' => $courseid]),
+                        'locked' => false, 'lessons' => []];
                 }
             }
             if ($children) {
@@ -242,19 +263,22 @@ class menu_service {
         $deeper = self::shade($primary, 0.7);
         $font = $style['font'];
         $logo = creator_service::logo_url($creator);
-        $coursename = preg_replace('/[^\p{L}\p{N} \'\-\.,]/u', '', html_entity_decode(format_string($course->fullname, true), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
         $css = <<<CSS
 body {
     font-family: $font;
 }
-.navbar.fixed-top, .navbar.navbar-expand {
+.navbar, nav.navbar, .navbar.fixed-top, .navbar.navbar-expand, .navbar.bg-white, .navbar.navbar-light {
     background: linear-gradient(90deg, $primary 0%, $dark 100%) !important;
     border-bottom: 0;
     box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
 }
-.navbar .nav-link, .navbar .navbar-nav .nav-link, .navbar .dropdown-toggle, .navbar .navbar-brand,
-.navbar .usermenu .login, .navbar .btn-link, .navbar .icon, .navbar .nav-link.active {
+.navbar a, .navbar .nav-link, .navbar .navbar-nav .nav-link, .navbar .dropdown-toggle, .navbar .navbar-brand,
+.navbar .usermenu .login, .navbar .btn-link, .navbar .icon, .navbar .nav-link.active, .navbar .nav-link.active:focus,
+.navbar .navbar-nav .nav-item > .nav-link, .navbar .moremenu .nav-link, .navbar .dropdown-toggle::after {
     color: $on !important;
+}
+.navbar .dropdown-menu a, .navbar .dropdown-menu a.dropdown-item, .navbar .dropdown-menu .dropdown-item.active {
+    color: #1f2937 !important;
 }
 .navbar .nav-link.active, .navbar .nav-link:hover {
     box-shadow: inset 0 -3px 0 $accent;
@@ -275,6 +299,7 @@ body {
 #theme_boost-drawers-courseindex, .courseindex {
     background: #fff;
 }
+#theme_boost-drawers-courseindex .courseindex-section-title { white-space: normal; height: auto; }
 #theme_boost-drawers-courseindex .drawerheader {
     background: linear-gradient(180deg, $primary, $dark);
     color: $on;
@@ -282,14 +307,6 @@ body {
 #theme_boost-drawers-courseindex .drawerheader .btn, #theme_boost-drawers-courseindex .drawerheader .icon,
 #theme_boost-drawers-courseindex .drawerheader h3, #theme_boost-drawers-courseindex .drawerheader .drawer-header-title {
     color: $on !important;
-}
-.courseindex::before {
-    content: "$coursename";
-    display: block;
-    padding: .75rem 1rem .25rem;
-    font-weight: 700;
-    font-size: 1.1rem;
-    color: $primary;
 }
 .courseindex .courseindex-section-title .courseindex-link {
     font-style: italic;
@@ -300,6 +317,8 @@ body {
     white-space: normal !important;
     overflow: visible !important;
     text-overflow: clip !important;
+    height: auto !important;
+    max-height: none !important;
     overflow-wrap: anywhere;
     line-height: 1.35;
 }
@@ -310,6 +329,10 @@ body {
     border-radius: .35rem;
 }
 .courseindex .courseindex-item .completion-dot, .courseindex .courseindex-item .icon { flex-shrink: 0; }
+/* Lesson page: same frame whatever the content (empty, short, video, audio, PDF). */
+.path-mod-page #region-main { width: 100%; max-width: 1100px; margin-left: auto; margin-right: auto; }
+.path-mod-page #region-main .box.generalbox, .path-mod-page #region-main .no-overflow { min-height: 10rem; max-width: 100%; }
+.path-mod-page #region-main img { max-width: 100%; height: auto; }
 /* Lesson page: wide video first, resources as buttons. */
 .path-mod-page #region-main h2 { color: $primary; font-weight: 700; }
 .path-mod-page #region-main iframe, .path-mod-page #region-main video, .path-mod-page #region-main .video-container {
@@ -360,7 +383,7 @@ CSS;
 .navbar .navbar-brand img, .navbar .navbar-brand .logo { display: none; }
 CSS;
         }
-        // Colours are validated #rrggbb, the font stack is a constant, the course name is reduced to letters and digits.
+        // Colours are validated #rrggbb, the font stack is a constant.
         return $css;
     }
 

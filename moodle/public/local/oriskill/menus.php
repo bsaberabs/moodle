@@ -103,6 +103,21 @@ foreach ($entries as $entry) {
 
 // Form: label, order, shown, then every course of the trainer with "All modules" and one box per module.
 $boxes = '';
+// Modules already used in another entry (allowed, only mentioned): section id => labels of those entries.
+$usedelsewhere = [];
+foreach ($entries as $other) {
+    if ($editing && (int) $other->id === (int) $editing->id) {
+        continue;
+    }
+    foreach ($other->courses as $othercourseid => $othersections) {
+        if (!$othersections && isset($mycourses[$othercourseid])) {
+            $othersections = array_keys(ms::course_sections(get_course($othercourseid)));
+        }
+        foreach ($othersections as $othersectionid) {
+            $usedelsewhere[$othersectionid][] = format_string($other->label);
+        }
+    }
+}
 foreach ($mycourses as $courseid => $mycourse) {
     $chosen = $editing && isset($editing->courses[$courseid]);
     $picked = $chosen ? $editing->courses[$courseid] : [];
@@ -113,10 +128,13 @@ foreach ($mycourses as $courseid => $mycourse) {
             'name' => "sec_{$courseid}[]", 'value' => $sectionid, 'id' => "sec-$courseid-$sectionid",
             'class' => 'form-check-input',
             'onclick' => "document.getElementById('all-$courseid').checked = !document.querySelector("
-                . "'input[name=\"sec_{$courseid}[]\"]:checked')"]
+                . "'input[name=\"sec_{$courseid}[]\"]:checked'); if (this.checked) { document.getElementById('course-$courseid')"
+                . ".checked = true; }"]
             + (in_array($sectionid, $picked, true) ? ['checked' => 'checked'] : [])) .
-            html_writer::label($sectionname,"sec-$courseid-$sectionid", true, ['class' => 'form-check-label']),
-            'form-check form-check-inline');
+            html_writer::label(s($sectionname), "sec-$courseid-$sectionid", true, ['class' => 'form-check-label']) .
+            (!empty($usedelsewhere[$sectionid]) ? html_writer::span(get_string('menus:usedin', 'local_oriskill',
+                implode(', ', array_unique($usedelsewhere[$sectionid]))), 'text-muted fst-italic ms-1 small') : ''),
+            'form-check');
     }
     $boxes .= html_writer::div(
         html_writer::div(html_writer::empty_tag('input', ['type' => 'checkbox', 'name' => 'course[]', 'value' => $courseid,
@@ -127,7 +145,15 @@ foreach ($mycourses as $courseid => $mycourse) {
             'id' => "all-$courseid", 'class' => 'form-check-input', 'disabled' => 'disabled'] + ($allmodules ? ['checked' => 'checked'] : [])) .
             html_writer::label(get_string('menus:allmodules', 'local_oriskill'), "all-$courseid", true,
                 ['class' => 'form-check-label']), 'form-check ms-4') .
-        ($sectionboxes ? html_writer::div($sectionboxes, 'ms-4 small') : ''),
+        ($sectionboxes ? html_writer::div(
+            html_writer::tag('button', get_string('menus:checkall', 'local_oriskill'), ['type' => 'button',
+                'class' => 'btn btn-sm btn-link p-0 me-2', 'onclick' => "document.querySelectorAll('input[name=\"sec_{$courseid}[]\"]')"
+                . ".forEach(function (b) { b.checked = true; }); document.getElementById('all-$courseid').checked = false;"
+                . " document.getElementById('course-$courseid').checked = true;"]) .
+            html_writer::tag('button', get_string('menus:uncheckall', 'local_oriskill'), ['type' => 'button',
+                'class' => 'btn btn-sm btn-link p-0', 'onclick' => "document.querySelectorAll('input[name=\"sec_{$courseid}[]\"]')"
+                . ".forEach(function (b) { b.checked = false; }); document.getElementById('all-$courseid').checked = true;"]) .
+            html_writer::div($sectionboxes, 'mt-1'), 'ms-4 small') : ''),
         'border rounded-3 p-2 mb-2');
 }
 echo html_writer::div(
@@ -149,6 +175,7 @@ echo html_writer::div(
             html_writer::label(get_string('menus:visible', 'local_oriskill'), 'menu-visible', true,
                 ['class' => 'form-check-label']), 'form-check mb-3') .
         html_writer::tag('h4', get_string('menus:modules', 'local_oriskill'), ['class' => 'h6']) .
+        html_writer::div(get_string('menus:freehelp', 'local_oriskill'), 'small text-muted mb-2') .
         ($boxes ?: html_writer::div(get_string('menus:nocourses', 'local_oriskill'), 'text-muted mb-3')) .
         html_writer::tag('button', get_string('savechanges'), ['type' => 'submit', 'class' => 'btn btn-primary mt-2']),
         ['method' => 'post', 'action' => $url->out(false)]),
