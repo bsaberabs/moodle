@@ -51,7 +51,19 @@ class notification_handler {
         if (!is_array($data) || empty($data['PAYID'])) {
             throw new moodle_exception('invalidnotification', 'local_secureandpay');
         }
-        $order = self::find_order($data);
+        try {
+            $order = self::find_order($data);
+        } catch (moodle_exception $e) {
+            // No order here was paid with this orderID: another plugin may know it (a schedule started elsewhere).
+            $hook = new hook\unmatched_notification($data, $rawdata, $signature);
+            \core\di::get(\core\hook\manager::class)->dispatch($hook);
+            if ($hook->get_outcome() !== null) {
+                return $hook->get_outcome();
+            }
+            if (!$order = $hook->get_order()) {
+                throw $e;
+            }
+        }
         $merchant = gateway::merchant_for_order($order, false);
         if (!$merchant->is_configured() || !hash_equals($merchant->sign($rawdata), strtolower(trim($signature)))) {
             throw new moodle_exception('invalidsignature', 'local_secureandpay');
@@ -85,7 +97,7 @@ class notification_handler {
                     if (self::record($order, $data, 'success')->duplicate) {
                         return 'duplicate';
                     }
-                    self::instalment_event('instalment_paid', $order);
+                    self::instalment_event('instalment_paid', $order, $data);
                     return 'instalment_paid';
                 }
                 if ($subscription && !self::record($order, $data, 'success')->duplicate) {
@@ -167,10 +179,12 @@ class notification_handler {
                 $orderid = $oscid;
             }
         }
-        if (!$orderid || ($oscid && $oscid !== $orderid)) {
+        $order = $orderid ? order_api::get_order($orderid) : null;
+        // A schedule taken over from another platform keeps that platform's own order number as osc_id.
+        if (!$order || ($oscid && $oscid !== $orderid && !gateway::is_resumed($order))) {
             throw new moodle_exception('invalidorder', 'local_moderncommerce');
         }
-        return order_api::get_order($orderid);
+        return $order;
     }
 
     /**
@@ -208,14 +222,16 @@ class notification_handler {
      * @param string $name Event class in local_secureandpay\event.
      * @param object $order Order.
      */
-    private static function instalment_event(string $name, object $order): void {
+    private static function instalment_event(string $name, object $order, array $data = []): void {
         $class = '\\local_secureandpay\\event\\' . $name;
         $plan = gateway::instalment_plan($order);
         $class::create([
             'objectid' => $order->id,
             'context' => \context_system::instance(),
             'relateduserid' => (int) $order->userid,
-            'other' => ['paid' => gateway::instalments_paid($order), 'count' => $plan['count']],
+            // 'number': the instalment as SecureAndPay numbers it (echeanceNumber of the notification), 0 when not told.
+            'other' => ['paid' => gateway::instalments_paid($order), 'count' => $plan['count'],
+                'number' => max(0, (int) ($data['echeanceNumber'] ?? 0))],
         ])->trigger();
     }
 

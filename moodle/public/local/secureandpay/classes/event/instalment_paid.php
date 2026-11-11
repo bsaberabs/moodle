@@ -19,7 +19,8 @@ namespace local_secureandpay\event;
 /**
  * An instalment of a purchase paid in several times was received (the first one included).
  *
- * Other: 'paid' instalments received so far, 'count' instalments in all.
+ * Other: 'paid' instalments received so far, 'count' instalments in all, and for an instalment after the first
+ * 'number', the instalment as SecureAndPay numbers it (0 when the notification does not tell).
  *
  * @package    local_secureandpay
  * @copyright  2026 Advanced TM

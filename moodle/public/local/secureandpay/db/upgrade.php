@@ -57,5 +57,11 @@ function xmldb_local_secureandpay_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026102906, 'local', 'secureandpay');
     }
+
+    if ($oldversion < 2026111100) {
+        // Schedules started on another platform can be taken over (hook unmatched_notification): nothing to change in
+        // the database.
+        upgrade_plugin_savepoint(true, 2026111100, 'local', 'secureandpay');
+    }
     return true;
 }

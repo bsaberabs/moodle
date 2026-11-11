@@ -66,6 +66,11 @@ $observers = [
         'eventname' => '\local_secureandpay\event\instalments_stopped',
         'callback' => '\local_oriskill\instalment_service::instalments_stopped',
     ],
+    // A schedule taken over from another platform: SecureAndPay's instalment number is checked against the one counted here.
+    [
+        'eventname' => '\local_secureandpay\event\instalment_paid',
+        'callback' => '\local_oriskill\resume_service::instalment_paid',
+    ],
     // A refund confirmed by SecureAndPay: credit note in the trainer's name.
     [
         'eventname' => '\local_secureandpay\event\payment_refunded',

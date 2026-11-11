@@ -473,7 +473,9 @@ class gateway implements gateway_interface {
         }
         $first = round((float) ($notes['instalments']['first'] ?? 0), 2);
         return ['count' => $count, 'amount' => $amount, 'first' => $first > 0 && !$subscription ? $first : $amount,
-            'subscription' => $subscription];
+            'subscription' => $subscription,
+            // Instalments paid on another platform before the schedule was taken over here (see is_resumed()).
+            'paidbefore' => max(0, (int) ($notes['instalments']['paidbefore'] ?? 0))];
     }
 
     /**
@@ -493,6 +495,39 @@ class gateway implements gateway_interface {
     }
 
     /**
+     * Take over a purchase in instalments started on another platform (see is_resumed()): its SecureAndPay orderID is
+     * kept as if the first payment had been made here, so the charges SecureAndPay goes on notifying find the order.
+     *
+     * @param object $order Order with an instalment plan, already marked paid.
+     * @param string $reference SecureAndPay orderID the schedule was started with.
+     */
+    public static function resume_instalments(object $order, string $reference): void {
+        global $DB;
+
+        $plan = self::is_resumed($order) ? self::instalment_plan($order) : null;
+        if (!$plan || $reference === '' || $DB->record_exists('local_moderncommerce_payment_attempts',
+                ['gateway' => self::GATEWAY, 'reference' => $reference])) {
+            throw new moodle_exception('referenceused', 'local_secureandpay', '', s($reference));
+        }
+        $notes = json_decode((string) $order->notes, true) ?: [];
+        $notes['instalments']['secureandpay_reference'] = $reference;
+        $DB->set_field('local_moderncommerce_orders', 'notes', json_encode($notes), ['id' => $order->id]);
+        $paid = (int) ($order->timepaid ?: $order->timecreated);
+        $DB->insert_record('local_moderncommerce_payment_attempts', (object) [
+            'orderid' => $order->id,
+            'gateway' => self::GATEWAY,
+            'reference' => $reference,
+            'amount' => $plan['first'],
+            'currency' => $order->currency,
+            'status' => 'success',
+            'idempotencykey' => hash('sha256', $order->id . '|' . self::GATEWAY . '|' . $reference),
+            'timecreated' => $paid,
+            'timemodified' => time(),
+            'timecompleted' => $paid,
+        ]);
+    }
+
+    /**
      * Charges received for an order (refused or refunded ones are not counted, nor a card registration at 0).
      *
      * Counted from SecureAndPay's own status: Modern Commerce keeps an order's payment "success" once it was paid,
@@ -504,9 +539,24 @@ class gateway implements gateway_interface {
     public static function instalments_paid(object $order): int {
         global $DB;
 
-        return $DB->count_records_select('local_moderncommerce_payment_events',
+        // A schedule taken over from another platform: the instalments paid there count too.
+        $before = (int) (json_decode((string) ($order->notes ?? ''), true)['instalments']['paidbefore'] ?? 0);
+        return max(0, $before) + $DB->count_records_select('local_moderncommerce_payment_events',
             "orderid = :orderid AND gateway = :gateway AND eventtype IN ('secureandpay.00', 'secureandpay.02')
              AND amount > 0", ['orderid' => $order->id, 'gateway' => self::GATEWAY]);
+    }
+
+    /**
+     * Whether a purchase in instalments was started on another platform and taken over here: SecureAndPay goes on
+     * charging it and notifies each charge with that platform's orderID and order number ("resumed" in the notes,
+     * with "paidbefore", the instalments paid there).
+     *
+     * @param object $order Order.
+     * @return bool
+     */
+    public static function is_resumed(object $order): bool {
+        $notes = json_decode((string) ($order->notes ?? ''), true);
+        return !empty($notes['instalments']['resumed']);
     }
 
     /**

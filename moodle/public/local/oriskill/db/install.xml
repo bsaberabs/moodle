@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="local/oriskill/db" VERSION="20261030" COMMENT="XMLDB file for local/oriskill"
+<XMLDB PATH="local/oriskill/db" VERSION="20261111" COMMENT="XMLDB file for local/oriskill"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -1305,6 +1305,60 @@
       </KEYS>
       <INDEXES>
         <INDEX NAME="creatoruser" UNIQUE="true" FIELDS="creatorid, userid"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="local_oriskill_resumed" COMMENT="Payment schedules started on another platform and taken over: SecureAndPay goes on charging them">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="creatorid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="orderid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Order created for the schedule, paid for the instalments charged before"/>
+        <FIELD NAME="instalmentid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="Buyer"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="email" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="Buyer's e-mail address in the file, lower case: SecureAndPay notifies the charges with it"/>
+        <FIELD NAME="reference" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" COMMENT="SecureAndPay orderID of the schedule, null until known"/>
+        <FIELD NAME="paidbefore" TYPE="int" LENGTH="3" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Instalments paid on the other platform"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="creatorid" TYPE="foreign" FIELDS="creatorid" REFTABLE="local_oriskill_creators" REFFIELDS="id"/>
+        <KEY NAME="orderid" TYPE="foreign-unique" FIELDS="orderid" REFTABLE="local_moderncommerce_orders" REFFIELDS="id"/>
+        <KEY NAME="userid" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+        <KEY NAME="courseid" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="creatorreference" UNIQUE="false" FIELDS="creatorid, reference"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="local_oriskill_sapinbox" COMMENT="Charges notified by SecureAndPay to a trainer's account that match no order: held until attached to a schedule taken over, or ignored">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="creatorid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="reference" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" COMMENT="SecureAndPay orderID (PAYID)"/>
+        <FIELD NAME="bankid" TYPE="char" LENGTH="64" NOTNULL="false" SEQUENCE="false" COMMENT="SecureAndPay transaction of the charge (banqueId)"/>
+        <FIELD NAME="transstatus" TYPE="char" LENGTH="5" NOTNULL="true" SEQUENCE="false" COMMENT="SecureAndPay status: 00 or 02 paid, 05 refused, 06 stopped, 03 or 04 refunded"/>
+        <FIELD NAME="amount" TYPE="number" LENGTH="20" NOTNULL="true" DEFAULT="0" DECIMALS="2" SEQUENCE="false"/>
+        <FIELD NAME="email" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="buyer" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="label" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="What was ordered, as SecureAndPay tells it"/>
+        <FIELD NAME="rawdata" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Notification as posted, kept until it is dealt with"/>
+        <FIELD NAME="signature" TYPE="char" LENGTH="128" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="state" TYPE="char" LENGTH="10" NOTNULL="true" DEFAULT="held" SEQUENCE="false" COMMENT="held, applied (to a schedule) or ignored"/>
+        <FIELD NAME="resumedid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Schedule it was applied to"/>
+        <FIELD NAME="outcome" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="handledby" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="creatorid" TYPE="foreign" FIELDS="creatorid" REFTABLE="local_oriskill_creators" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="creatorstate" UNIQUE="false" FIELDS="creatorid, state"/>
+        <INDEX NAME="creatorreference" UNIQUE="false" FIELDS="creatorid, reference"/>
       </INDEXES>
     </TABLE>
   </TABLES>

@@ -197,10 +197,15 @@ class billing_service {
         }
         $issued = array_values($DB->get_records('local_oriskill_invoices', ['orderid' => $orderid, 'type' => 'invoice'],
             'id ASC'));
-        if (count($issued) >= $period) {
-            return $issued[$period - 1];
-        }
         $plan = gateway::instalment_plan($order);
+        // A schedule taken over from another platform: its first instalments were invoiced there, not here.
+        $before = $plan['paidbefore'] ?? 0;
+        if ($period <= $before) {
+            return $issued[0] ?? null;
+        }
+        if (count($issued) >= $period - $before) {
+            return $issued[$period - $before - 1];
+        }
         if ($issued && $plan && !$plan['subscription']
                 && !array_key_exists('instalment', json_decode($issued[0]->data, true) ?: [])) {
             // Invoiced in full at purchase, before invoices were issued per instalment: that invoice stays the only one.

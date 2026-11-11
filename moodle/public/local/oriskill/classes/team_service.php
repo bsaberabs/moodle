@@ -64,6 +64,8 @@ class team_service {
         '/local/oriskill/document.php' => ['admin', 'accounting'],
         '/local/oriskill/schedules.php' => ['admin', 'support', 'accounting'],
         '/local/oriskill/unpaid.php' => ['admin', 'support', 'accounting'],
+        // Taking over schedules makes invoices: not for the support.
+        '/local/oriskill/resumed.php' => ['admin', 'accounting'],
         '/local/oriskill/courses.php' => ['admin', 'teaching'],
         '/local/oriskill/videos.php' => ['admin', 'teaching'],
         '/local/oriskill/library.php' => ['admin', 'teaching'],
@@ -112,6 +114,7 @@ class team_service {
     const SUBPAGES = [
         '/local/oriskill/sale.php' => '/local/oriskill/sales.php',
         '/local/oriskill/document.php' => '/local/oriskill/invoices.php',
+        '/local/oriskill/resumed.php' => '/local/oriskill/schedules.php',
         '/local/oriskill/orderform.php' => '/local/oriskill/orderforms.php',
         '/local/oriskill/orderformstats.php' => '/local/oriskill/orderforms.php',
         '/local/oriskill/abandons.php' => '/local/oriskill/orderforms.php',

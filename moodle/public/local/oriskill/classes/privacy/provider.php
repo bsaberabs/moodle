@@ -91,6 +91,16 @@ class provider implements
             'day' => 'privacy:metadata:studytime:day',
             'seconds' => 'privacy:metadata:studytime:seconds',
         ], 'privacy:metadata:studytime');
+        $collection->add_database_table('local_oriskill_resumed', [
+            'userid' => 'privacy:metadata:resumed:userid',
+            'email' => 'privacy:metadata:resumed:email',
+            'reference' => 'privacy:metadata:resumed:reference',
+        ], 'privacy:metadata:resumed');
+        $collection->add_database_table('local_oriskill_sapinbox', [
+            'email' => 'privacy:metadata:sapinbox:email',
+            'buyer' => 'privacy:metadata:sapinbox:buyer',
+            'amount' => 'privacy:metadata:sapinbox:amount',
+        ], 'privacy:metadata:sapinbox');
         $collection->add_cookie(\local_oriskill\affiliate_service::COOKIE, 'privacy:metadata:cookie');
         return $collection;
     }

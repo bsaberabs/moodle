@@ -59,6 +59,18 @@ echo creator_service::space_start($creator, '/local/oriskill/schedules.php', get
 echo html_writer::tag('p', get_string('schedules:intro', 'local_oriskill', instalment_service::GRACE_DAYS),
     ['class' => 'text-muted']);
 
+// Schedules started on another platform: taken over on their own page; charges waiting to be attached are told here.
+if (\local_oriskill\team_service::can(creator_service::current_role(), '/local/oriskill/resumed.php')) {
+    $resumeurl = new moodle_url('/local/oriskill/resumed.php');
+    if ($heldcount = \local_oriskill\resume_service::held_count($creator)) {
+        echo $OUTPUT->notification(get_string('resume:heldcount', 'local_oriskill', $heldcount) . ' ' .
+            html_writer::link($resumeurl, get_string('resume:title', 'local_oriskill')),
+            \core\output\notification::NOTIFY_WARNING);
+    }
+    echo html_writer::div(html_writer::link($resumeurl, '<i class="fa fa-right-left me-1" aria-hidden="true"></i>' .
+        get_string('resume:title', 'local_oriskill'), ['class' => 'btn btn-sm btn-outline-secondary']), 'mb-3');
+}
+
 // Key figures, over all schedules.
 $currency = pricing_service::get_currency_config()->currency;
 $running = array_filter($all, fn($r) => in_array($r->status, ['active', 'late', 'suspended'], true));

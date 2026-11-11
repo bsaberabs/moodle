@@ -43,6 +43,7 @@ $string['notconfigured'] = 'SecureAndPay is not configured: enter the site ID an
 $string['oneclick'] = 'One-click payment (upsell)';
 $string['oneclick_desc'] = 'The first purchase registers the buyer\'s card at SecureAndPay; later purchases reuse it, so the buyer only confirms the payment. The buyer is told before paying that the card will be kept.';
 $string['paymentrefused'] = 'This order cannot be paid: {$a}';
+$string['referenceused'] = 'The SecureAndPay reference "{$a}" cannot be taken over: it is empty, already used by another order, or the order is not a schedule taken over.';
 $string['planpayments'] = 'Number of payments per plan';
 $string['planpayments_cycle_monthly'] = 'month';
 $string['planpayments_cycle_yearly'] = 'year';

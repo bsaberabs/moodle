@@ -62,6 +62,23 @@ formateurs.
 - Les jetons de carte (paiement en un clic) sont rangés par compte : un jeton enregistré chez un
   vendeur ne sert jamais chez un autre.
 
+## Échéanciers commencés sur une autre plateforme
+
+Une notification dont l'`orderID` ne correspond à aucune commande payée ici est normalement rejetée. Un autre
+plugin peut la reconnaître en écoutant le hook `\local_secureandpay\hook\unmatched_notification` : il vérifie
+d'abord qui l'a signée (`signed_by()`), puis désigne la commande à laquelle elle appartient (`set_order()`, la
+notification est alors appliquée comme les autres) ou répond lui-même (`set_outcome()`). C'est ce que fait
+`local_oriskill` pour les échéanciers repris de LearnyBox.
+
+- Une commande reprise porte `instalments.resumed` et `instalments.paidbefore` (échéances payées ailleurs) dans ses
+  notes ; `gateway::resume_instalments()` lui donne l'`orderID` de l'échéancier d'origine.
+- Pour ces commandes, l'`osc_id` de la notification (numéro de commande de l'autre plateforme) n'est pas comparé
+  au numéro de la commande.
+- SecureAndPay doit envoyer les notifications de ces échéanciers à `notify.php` de ce site.
+- `echeanceNumber` (numéro de l'échéance prélevée, le premier paiement étant supposé porter le numéro 1) est transmis
+  dans l'événement `instalment_paid` (`other['number']`, 0 s'il est absent). Il ne remplace pas le compte des
+  échéances fait ici : il sert au rattachement et au contrôle.
+
 ## Limites
 
 - Résiliation dans Moodle : l'échéancier est arrêté par le web service `desabonnerWs.php` (`IdSite` +

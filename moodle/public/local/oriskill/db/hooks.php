@@ -46,6 +46,11 @@ $callbacks = [
         'callback' => [\local_oriskill\hook_callbacks::class, 'resolve_merchant'],
     ],
     [
+        // A charge of a schedule started on another platform: applied to the schedule taken over, or held.
+        'hook' => \local_secureandpay\hook\unmatched_notification::class,
+        'callback' => [\local_oriskill\resume_service::class, 'unmatched_notification'],
+    ],
+    [
         'hook' => \local_moderncommerce\hook\filter_payment_methods::class,
         'callback' => [\local_oriskill\hook_callbacks::class, 'filter_payment_methods'],
     ],

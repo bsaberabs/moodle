@@ -251,7 +251,9 @@ class transaction_service {
             if ($order && $row->source === 'sap') {
                 $plan = $plans[$order->id] ??= (gateway::instalment_plan($order) ?: []);
                 $paid = $sappaid[$order->id] ?? [];
-                $rank = count(array_filter($paid, fn($id) => $id <= $row->eventid)) + ($row->type === 'failed' ? 1 : 0);
+                // A schedule taken over from another platform: the instalments paid there come first.
+                $rank = (int) ($plan['paidbefore'] ?? 0) + count(array_filter($paid, fn($id) => $id <= $row->eventid))
+                    + ($row->type === 'failed' ? 1 : 0);
                 if ($plan && !empty($plan['subscription'])) {
                     $row->instalment = get_string('transactions:month', 'local_oriskill', max(1, $rank));
                 } else if ($plan && (int) $plan['count'] > 1) {

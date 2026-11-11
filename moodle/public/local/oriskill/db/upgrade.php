@@ -708,5 +708,14 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         set_config('enablesmartappbanners', 1, 'tool_mobile');
         upgrade_plugin_savepoint(true, 2026110400, 'local', 'oriskill');
     }
+    if ($oldversion < 2026111100) {
+        // Schedules started on another platform and taken over; charges SecureAndPay notifies that match no order.
+        foreach (['local_oriskill_resumed', 'local_oriskill_sapinbox'] as $name) {
+            if (!$dbman->table_exists($name)) {
+                $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', $name);
+            }
+        }
+        upgrade_plugin_savepoint(true, 2026111100, 'local', 'oriskill');
+    }
     return true;
 }

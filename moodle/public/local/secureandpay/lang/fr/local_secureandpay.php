@@ -43,6 +43,7 @@ $string['notconfigured'] = 'SecureAndPay n\'est pas configuré : saisissez l\'id
 $string['oneclick'] = 'Paiement en un clic (upsell)';
 $string['oneclick_desc'] = 'Le premier achat enregistre la carte de l\'acheteur chez SecureAndPay ; les achats suivants la réutilisent, l\'acheteur n\'a plus qu\'à confirmer le paiement. L\'acheteur est informé avant de payer que sa carte sera conservée.';
 $string['paymentrefused'] = 'Cette commande ne peut pas être payée : {$a}';
+$string['referenceused'] = 'La référence SecureAndPay « {$a} » ne peut pas être reprise : elle est vide, déjà utilisée par une autre commande, ou la commande n\'est pas un échéancier repris.';
 $string['planpayments'] = 'Nombre de prélèvements par formule';
 $string['planpayments_cycle_monthly'] = 'mois';
 $string['planpayments_cycle_yearly'] = 'an';
