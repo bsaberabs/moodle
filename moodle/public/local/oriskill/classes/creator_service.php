@@ -232,6 +232,7 @@ class creator_service {
             '/local/oriskill/faq.php' => ['menu:faq', 'bi-question-circle'],
             '/local/oriskill/gamification.php' => ['menu:gamification', 'bi-trophy'],
             '/local/oriskill/categories.php' => ['menu:categories', 'bi-tags'],
+            '/local/oriskill/menus.php' => ['menu:menus', 'bi-list-ul'],
             '/local/oriskill/share.php' => ['menu:share', 'bi-share-fill'],
             '/local/oriskill/tools.php' => ['menu:tools', 'bi-tools'],
             '/local/oriskill/pricing.php' => ['pricing', 'bi-tag'],

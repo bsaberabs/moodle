@@ -23,6 +23,7 @@
         <FIELD NAME="primarycolor" TYPE="char" LENGTH="7" NOTNULL="false" SEQUENCE="false" COMMENT="Showcase main colour (#rrggbb); empty = Oriskill's"/>
         <FIELD NAME="accentcolor" TYPE="char" LENGTH="7" NOTNULL="false" SEQUENCE="false" COMMENT="Showcase accent colour (#rrggbb)"/>
         <FIELD NAME="fontstyle" TYPE="char" LENGTH="20" NOTNULL="false" SEQUENCE="false" COMMENT="Showcase typeface: modern, elegant or classic"/>
+        <FIELD NAME="studentskin" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Apply the trainer brand (colours, logo, layout) to the learner space of their courses"/>
         <FIELD NAME="customdomain" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Own domain that opens the showcase (lowercase, no www)"/>
         <FIELD NAME="legalname" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Seller name on invoices (company or person)"/>
         <FIELD NAME="legaladdress" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
@@ -1359,6 +1360,37 @@
       <INDEXES>
         <INDEX NAME="creatorstate" UNIQUE="false" FIELDS="creatorid, state"/>
         <INDEX NAME="creatorreference" UNIQUE="false" FIELDS="creatorid, reference"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="local_oriskill_menus" COMMENT="Entries of the header menu that learners see in a trainer's courses">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="creatorid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="label" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="sortorder" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="visible" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="creatorid" TYPE="foreign" FIELDS="creatorid" REFTABLE="local_oriskill_creators" REFFIELDS="id"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="local_oriskill_menucourses" COMMENT="Courses of a header menu entry, and the modules (sections) shown under it">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="menuid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="sections" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Comma-separated section ids shown; empty = all modules"/>
+        <FIELD NAME="sortorder" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="menuid" TYPE="foreign" FIELDS="menuid" REFTABLE="local_oriskill_menus" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="menucourse" UNIQUE="true" FIELDS="menuid, courseid"/>
       </INDEXES>
     </TABLE>
   </TABLES>

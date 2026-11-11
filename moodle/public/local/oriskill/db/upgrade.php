@@ -717,5 +717,19 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026111100, 'local', 'oriskill');
     }
+    if ($oldversion < 2026111102) {
+        // Header menu of the learner space and trainer brand on it (off until the trainer turns it on).
+        foreach (['local_oriskill_menus', 'local_oriskill_menucourses'] as $name) {
+            if (!$dbman->table_exists($name)) {
+                $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', $name);
+            }
+        }
+        $table = new xmldb_table('local_oriskill_creators');
+        $field = new xmldb_field('studentskin', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'fontstyle');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_plugin_savepoint(true, 2026111102, 'local', 'oriskill');
+    }
     return true;
 }

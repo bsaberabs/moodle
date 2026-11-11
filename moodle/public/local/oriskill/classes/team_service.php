@@ -73,6 +73,7 @@ class team_service {
         '/local/oriskill/gamification.php' => ['admin', 'teaching'],
         '/local/oriskill/coaching.php' => ['admin', 'teaching', 'support', 'coach'],
         '/local/oriskill/categories.php' => ['admin', 'teaching'],
+        '/local/oriskill/menus.php' => ['admin', 'teaching'],
         '/local/oriskill/share.php' => ['admin'],
         '/local/oriskill/tools.php' => ['admin', 'teaching'],
         '/local/oriskill/pricing.php' => ['admin'],

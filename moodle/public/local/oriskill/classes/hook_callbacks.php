@@ -78,6 +78,8 @@ class hook_callbacks {
             $hook->get_primaryview()->add(get_string('editshowcase', 'local_oriskill'),
                 new \moodle_url('/local/oriskill/dashboard.php'), \navigation_node::TYPE_CUSTOM, null, 'oriskilltrainer');
         }
+        // Header menu the trainer set up for their learners, in the courses of that trainer only.
+        self::add_trainer_menu($hook);
         // Learners of a trainer write to the trainer's team.
         if (isloggedin() && !isguestuser() && !self::current_creator()
                 && ($DB->record_exists('local_oriskill_tickets', ['userid' => $USER->id])
@@ -91,6 +93,35 @@ class hook_callbacks {
             $hook->get_primaryview()->add(get_string('subscription:mine', 'local_oriskill'),
                 new \moodle_url('/local/oriskill/mysubscriptions.php'), \navigation_node::TYPE_CUSTOM, null,
                 'oriskillsubscriptions');
+        }
+    }
+
+    /**
+     * Entries of the trainer's menu (a course, with its modules as a sub-menu) for a learner in a course of that trainer.
+     * What the learner cannot open yet is shown greyed, without link.
+     *
+     * @param \core\hook\navigation\primary_extend $hook Hook.
+     */
+    private static function add_trainer_menu(\core\hook\navigation\primary_extend $hook): void {
+        global $PAGE, $USER;
+
+        if (!isloggedin() || isguestuser() || !$PAGE->has_set_url() || empty($PAGE->course->id)
+                || $PAGE->course->id == SITEID) {
+            return;
+        }
+        $creator = comment_service::creator_of($PAGE->course);
+        if (!$creator) {
+            return;
+        }
+        foreach (menu_service::for_user($creator, (int) $USER->id) as $index => $entry) {
+            $node = $hook->get_primaryview()->add($entry['label'], null, \navigation_node::TYPE_CUSTOM, null,
+                'oriskillmenu' . $index);
+            foreach ($entry['children'] as $child) {
+                // The main navigation does not export "classes": the lock is shown in the label, and the link of what
+                // is locked goes nowhere (no redirect loop to an enrolment page).
+                $label = $child['label'] . ($child['locked'] ? ' ' . get_string('menus:locked', 'local_oriskill') : '');
+                $node->add($label, $child['url'] ?? new \moodle_url('#'), \navigation_node::TYPE_CUSTOM);
+            }
         }
     }
 
@@ -212,6 +243,15 @@ class hook_callbacks {
     public static function before_standard_head_html_generation(
         \core\hook\output\before_standard_head_html_generation $hook
     ): void {
+        global $PAGE;
+
+        // Learner space of a trainer who turned their brand on: styles for their courses only.
+        if (!during_initial_install() && $PAGE->has_set_url() && !empty($PAGE->course->id) && $PAGE->course->id != SITEID) {
+            $creator = comment_service::creator_of($PAGE->course);
+            if ($creator && menu_service::skin_enabled($creator)) {
+                $hook->add_html(\html_writer::tag('style', menu_service::skin_css($creator, $PAGE->course)));
+            }
+        }
         if (self::$headmeta === null) {
             return;
         }
