@@ -323,18 +323,42 @@ body {
     line-height: 1.35;
 }
 .courseindex .courseindex-item { align-items: flex-start; padding-top: .35rem; padding-bottom: .35rem; }
-.courseindex .courseindex-item.pageitem, .courseindex .courseindex-item.pageitem .courseindex-link {
-    background: $primary;
-    color: $on !important;
+.courseindex .courseindex-item.pageitem, .courseindex .courseindex-item.active, .courseindex .courseindex-item.pageitem:hover,
+.courseindex .courseindex-item.active:hover {
+    background: $primary !important;
     border-radius: .35rem;
 }
+.courseindex .courseindex-item.pageitem *, .courseindex .courseindex-item.active *,
+.courseindex .courseindex-item.pageitem .courseindex-link, .courseindex .courseindex-item.active .courseindex-link {
+    color: $on !important;
+    background: transparent !important;
+    text-decoration: none;
+}
+.courseindex mark, .courseindex .highlight, .courseindex .courseindex-link mark { background: transparent !important; color: inherit !important; }
 .courseindex .courseindex-item .completion-dot, .courseindex .courseindex-item .icon { flex-shrink: 0; }
+/* Same frame for the course index on every page of the course. */
+#theme_boost-drawers-courseindex {
+    border: 1px solid rgba(0, 0, 0, .12);
+    border-radius: .6rem;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, .08);
+}
+#theme_boost-drawers-courseindex .drawercontent { padding: .5rem; }
+/* Every page of the course (forum, quiz, assignment, resource, URL, course page): same width, colours and buttons. */
+.path-mod #region-main, .path-course-view #region-main { width: 100%; max-width: 1100px; margin-left: auto; margin-right: auto; }
+.path-mod #region-main img, .path-course-view #region-main img { max-width: 100%; height: auto; }
+.path-mod #region-main h2, .path-course-view #region-main h2 { color: $primary; font-weight: 700; }
+#page .btn-primary { background-color: $primary; border-color: $primary; color: $on; }
+#page .btn-primary:hover, #page .btn-primary:focus { background-color: $dark; border-color: $dark; color: $on; }
+#page .btn-outline-primary { color: $primary; border-color: $primary; }
+.breadcrumb a, .breadcrumb-item a, #region-main a:not(.btn):not(.dropdown-item):not([href*="pluginfile.php"]) { color: $primary; }
+.path-mod #region-main .activity-navigation .btn, .path-course-view #region-main .activity-navigation .btn {
+    background: $primary; border-color: $primary; color: $on;
+}
 /* Lesson page: same frame whatever the content (empty, short, video, audio, PDF). */
-.path-mod-page #region-main { width: 100%; max-width: 1100px; margin-left: auto; margin-right: auto; }
 .path-mod-page #region-main .box.generalbox, .path-mod-page #region-main .no-overflow { min-height: 10rem; max-width: 100%; }
 .path-mod-page #region-main img { max-width: 100%; height: auto; }
 /* Lesson page: wide video first, resources as buttons. */
-.path-mod-page #region-main h2 { color: $primary; font-weight: 700; }
 .path-mod-page #region-main iframe, .path-mod-page #region-main video, .path-mod-page #region-main .video-container {
     display: block;
     width: 100%;
@@ -361,7 +385,6 @@ body {
     text-decoration: none;
 }
 .path-mod-page #region-main a[href*="pluginfile.php"]:hover { background: $dark; }
-.path-mod-page #region-main .activity-navigation .btn { background: $primary; border-color: $primary; color: $on; }
 @media (max-width: 767.98px) {
     .navbar.fixed-top { padding-left: .5rem; padding-right: .5rem; }
     .navbar .navbar-toggler, .navbar .nav-link, .navbar .dropdown-item { min-height: 44px; }

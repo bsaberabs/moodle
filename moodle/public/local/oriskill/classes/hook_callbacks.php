@@ -149,15 +149,43 @@ class hook_callbacks {
         $flags = JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES;
         $data = json_encode(self::$flyouts, $flags);
         $toggle = json_encode(get_string('menus:showlessons', 'local_oriskill'), $flags);
+        $css = <<<CSS
+.oriskill-hasflyout { position: relative; display: flex; flex-wrap: wrap; align-items: center; }
+.oriskill-hasflyout > a { flex: 1 1 0; min-width: 0; }
+.oriskill-flyout-toggle { border: 0; background: transparent; color: inherit; min-width: 44px; min-height: 36px; cursor: pointer; }
+.oriskill-open > .oriskill-flyout-toggle { transform: rotate(90deg); }
+ul.oriskill-flyout { list-style: none; margin: 0; padding: .25rem 0 .25rem 1rem; display: none; flex: 0 0 100%; }
+ul.oriskill-flyout li { list-style: none; margin: 0; padding: 0; }
+ul.oriskill-flyout li::marker { content: ''; }
+ul.oriskill-flyout .dropdown-item { white-space: normal; color: #1f2937 !important; }
+.oriskill-open > ul.oriskill-flyout { display: block !important; }
+@media (hover: hover) and (min-width: 768px) {
+    .oriskill-flyout-toggle { display: none; }
+    ul.oriskill-flyout {
+        position: absolute; left: 100%; top: 0; min-width: 16rem; max-width: 22rem; padding: .5rem 0;
+        background: #fff; color: #1f2937; border: 1px solid rgba(0, 0, 0, .15); border-radius: .5rem;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, .18); z-index: 1050;
+    }
+    .oriskill-hasflyout:hover > ul.oriskill-flyout, .oriskill-hasflyout:focus-within > ul.oriskill-flyout { display: block !important; }
+}
+CSS;
         $js = <<<JS
 (function() {
     var data = $data, label = $toggle;
     function build() {
         document.querySelectorAll('.primary-navigation .dropdown-menu a[href]').forEach(function(a) {
             var items = data[a.href];
-            var li = a.closest('li');
-            if (!items || !li || li.getAttribute('data-oriskill-flyout')) { return; }
-            li.setAttribute('data-oriskill-flyout', '1');
+            var menu = a.closest('.dropdown-menu');
+            if (!items || !menu || a.hasAttribute('data-oriskill-flyout')) { return; }
+            a.setAttribute('data-oriskill-flyout', '1');
+            // Moodle's dropdown items are links straight in the menu (no li): wrap the link, never use the
+            // first level li of the navigation bar.
+            var li = a.parentElement;
+            if (li === menu || !menu.contains(li)) {
+                li = document.createElement('div');
+                a.parentNode.insertBefore(li, a);
+                li.appendChild(a);
+            }
             li.classList.add('oriskill-hasflyout');
             var btn = document.createElement('button');
             btn.type = 'button';
@@ -173,6 +201,8 @@ class hook_callbacks {
             });
             var ul = document.createElement('ul');
             ul.className = 'oriskill-flyout';
+            ul.style.display = 'none';
+            ul.style.listStyle = 'none';
             items.forEach(function(it) {
                 var l = document.createElement('li');
                 var x = document.createElement('a');
@@ -191,7 +221,7 @@ class hook_callbacks {
     document.addEventListener('shown.bs.dropdown', build);
 })();
 JS;
-        return \html_writer::tag('script', $js);
+        return \html_writer::tag('style', $css) . \html_writer::tag('script', $js);
     }
 
     /**
