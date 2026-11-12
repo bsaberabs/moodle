@@ -10,6 +10,8 @@ RUN install-php-extensions gd intl mysqli zip soap opcache exif \
     && a2enmod rewrite
 
 # poppler-utils : pdftohtml et pdftotext, appelés par local_oriskill pour importer les PDF (signets et texte).
+# Version non épinglée : on suit les mises à jour de sécurité de Debian bookworm.
+# hadolint ignore=DL3008
 RUN apt-get update \
     && apt-get install -y --no-install-recommends poppler-utils \
     && rm -rf /var/lib/apt/lists/*
