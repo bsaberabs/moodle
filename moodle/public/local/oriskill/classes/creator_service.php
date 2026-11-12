@@ -227,6 +227,7 @@ class creator_service {
         ],
         'navgroup:courses' => [
             '/local/oriskill/courses.php' => ['mycourses', 'bi-mortarboard'],
+            '/local/oriskill/pdfimport.php' => ['menu:pdfimport', 'bi-file-earmark-pdf'],
             '/local/oriskill/videos.php' => ['menu:videos', 'bi-camera-video'],
             '/local/oriskill/library.php' => ['menu:library', 'bi-folder2-open'],
             '/local/oriskill/faq.php' => ['menu:faq', 'bi-question-circle'],

@@ -9,6 +9,11 @@ RUN install-php-extensions gd intl mysqli zip soap opcache exif \
     && mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
     && a2enmod rewrite
 
+# poppler-utils : pdftohtml et pdftotext, appelés par local_oriskill pour importer les PDF (signets et texte).
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends poppler-utils \
+    && rm -rf /var/lib/apt/lists/*
+
 # Code Moodle (appartient à root : le serveur web ne peut pas le modifier).
 # Depuis Moodle 5.1 seul le sous-dossier public/ est exposé par Apache.
 COPY moodle/ /var/www/moodle/

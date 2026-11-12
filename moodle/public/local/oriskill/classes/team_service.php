@@ -67,6 +67,7 @@ class team_service {
         // Taking over schedules makes invoices: not for the support.
         '/local/oriskill/resumed.php' => ['admin', 'accounting'],
         '/local/oriskill/courses.php' => ['admin', 'teaching'],
+        '/local/oriskill/pdfimport.php' => ['admin', 'teaching'],
         '/local/oriskill/videos.php' => ['admin', 'teaching'],
         '/local/oriskill/library.php' => ['admin', 'teaching'],
         '/local/oriskill/faq.php' => ['admin', 'teaching', 'support'],
@@ -124,6 +125,7 @@ class team_service {
         '/local/oriskill/contact.php' => '/local/oriskill/contacts.php',
         '/local/oriskill/contactimport.php' => '/local/oriskill/contacts.php',
         '/local/oriskill/webhooks.php' => '/local/oriskill/integrations.php',
+        '/local/oriskill/pdfimport.php' => '/local/oriskill/courses.php',
     ];
 
     /** @var array Roles made by trainers, read once per request. */
