@@ -1056,11 +1056,22 @@
     max-width: 560px;
 }
 
-/* Header menu of a trainer: dropdowns open on hover with a mouse (click and touch keep working). */
+/* Header menu of a trainer: dropdowns open on hover with a mouse (click and touch keep working). Opened this way,
+   Bootstrap does not place the menu: it goes right under its entry (otherwise a long menu is centred on the entry
+   and rises above the header), and stays open while the lessons flyout of one of its modules is in use. */
 @media (hover: hover) and (min-width: 768px) {
-    .primary-navigation .navbar-nav .dropdown:hover > .dropdown-menu {
+    .primary-navigation .navbar-nav .dropdown:hover > .dropdown-menu,
+    .primary-navigation .navbar-nav .dropdown > .dropdown-menu[data-oriskill-keep] {
         display: block;
+        top: 100%;
+        left: 0;
+        right: auto;
         margin-top: 0;
+    }
+    .primary-navigation .navbar-nav .dropdown:hover > .dropdown-menu.dropdown-menu-end,
+    .primary-navigation .navbar-nav .dropdown > .dropdown-menu.dropdown-menu-end[data-oriskill-keep] {
+        left: auto;
+        right: 0;
     }
 }
 /* The lessons flyout of the trainer's menu is styled by the block emitted with its script (hook_callbacks::flyout_html). */

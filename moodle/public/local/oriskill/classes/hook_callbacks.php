@@ -120,8 +120,10 @@ class hook_callbacks {
                 // The main navigation does not export "classes": the lock is shown in the label, and the link of what
                 // is locked goes nowhere (no redirect loop to an enrolment page).
                 // Before the launch of the training, the opening date instead of "locked".
-                $label = self::plain($child['label']) . (!empty($child['note']) ? ' ' . $child['note']
-                    : ($child['locked'] ? ' ' . get_string('menus:locked', 'local_oriskill') : ''));
+                // Everything that goes in the node (title, opening date, "locked") is made plain text.
+                // Each part on its own, so that a title cannot swallow the note after it.
+                $label = self::plain($child['label']) . (!empty($child['note']) ? ' ' . self::plain($child['note'])
+                    : ($child['locked'] ? ' ' . self::plain(get_string('menus:locked', 'local_oriskill')) : ''));
                 $node->add($label, $child['url'] ?? new \moodle_url('#'), \navigation_node::TYPE_CUSTOM);
                 // The main navigation dropdown has two levels: the lessons of a module are shown as a flyout (third
                 // level) built by a small script from the data kept here.
@@ -137,14 +139,25 @@ class hook_callbacks {
     }
 
     /**
-     * Plain text of a label already made safe by format_string(): the navigation (mustache) and the script (textContent)
-     * escape it again, so it must not stay escaped here ("Test & accents", not "Test &amp; accents").
+     * Plain text of a label for the header menu, with no markup of any kind.
      *
-     * @param string $label Label.
+     * The text of a main navigation node is HTML: the mobile drawer prints it raw ({{{text}}}) and the navigation bar
+     * decodes it once more before handing it to React as HTML (core\navigation\output\primary::decode_node_text()).
+     * An escaped tag in a title ("&lt;img ...&gt;", or "&amp;lt;img ...&amp;gt;") would therefore become a real tag.
+     * The real tags of the label are removed, the text is decoded until nothing changes, and any "<" or ">" left is
+     * replaced by "‹" or "›": what remains can never form a tag, whichever way it is printed, and a title such as
+     * "Module 1 > Intro" keeps its meaning. "&" stays a plain "&" ("Questions & réponses").
+     *
+     * @param string $label Label (format_string() output, language string or user text).
      * @return string Plain text.
      */
     private static function plain(string $label): string {
-        return html_entity_decode(strip_tags($label), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $label = strip_tags($label);
+        // Each pass that changes the text consumes a ";" or makes the text shorter: the loop always ends.
+        while (($decoded = html_entity_decode($label, ENT_QUOTES | ENT_HTML5, 'UTF-8')) !== $label) {
+            $label = $decoded;
+        }
+        return trim(str_replace(['<', '>'], ['‹', '›'], $label));
     }
 
     /** @var array Lessons of each module of the trainer's menu, by module address. */
@@ -163,138 +176,200 @@ class hook_callbacks {
         $data = json_encode(self::$flyouts, $flags);
         $toggle = json_encode(get_string('menus:showlessons', 'local_oriskill'), $flags);
         $css = <<<CSS
-.oriskill-hasflyout { position: relative; display: flex; flex-wrap: wrap; align-items: center; }
-.oriskill-hasflyout > a { flex: 1 1 0; min-width: 0; }
-.oriskill-flyout-toggle { border: 0; background: transparent; color: inherit; min-width: 44px; min-height: 36px; cursor: pointer; }
-.oriskill-open > .oriskill-flyout-toggle { transform: rotate(90deg); }
-ul.oriskill-flyout { list-style: none; margin: 0; padding: .25rem 0 .25rem 1rem; display: none; flex: 0 0 100%; }
-ul.oriskill-flyout li { list-style: none; margin: 0; padding: 0; }
-ul.oriskill-flyout li::marker { content: ''; }
-ul.oriskill-flyout .dropdown-item { white-space: normal; color: #1f2937 !important; }
-.oriskill-open > ul.oriskill-flyout { display: block !important; }
-@media (hover: hover) and (min-width: 768px) {
-    .oriskill-flyout-toggle { display: none; }
-    ul.oriskill-flyout.oriskill-fixed {
-        position: fixed; display: block !important; flex: none; margin: 0; padding: .5rem 0; box-sizing: border-box;
-        min-width: 14rem; max-width: 22rem; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;
-        background: #fff; color: #1f2937; border: 1px solid rgba(0, 0, 0, .15); border-radius: .5rem;
-        box-shadow: 0 6px 20px rgba(0, 0, 0, .18); z-index: 2000;
-    }
-    ul.oriskill-flyout.oriskill-fixed .dropdown-item { white-space: normal; overflow-wrap: anywhere; }
-}
 .dropdown-menu.oriskill-menu {
-    overflow-x: hidden; overflow-y: auto; min-width: 16rem; max-width: min(22rem, calc(100vw - 1rem)); max-height: calc(100vh - 6rem);
+    overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;
+    min-width: 16rem; max-width: min(22rem, calc(100vw - 1rem)); max-height: calc(100vh - 4.5rem);
 }
 .dropdown-menu.oriskill-menu .dropdown-item { white-space: normal; overflow-wrap: anywhere; }
+.dropdown-menu.oriskill-menu a.dropdown-item[aria-expanded="true"]:not(.active) { background: #f3f4f6; }
+ul.oriskill-flyout { list-style: none; margin: 0; padding: 0; }
+ul.oriskill-flyout li { list-style: none; margin: 0; padding: 0; }
+ul.oriskill-flyout li::marker { content: ''; }
+ul.oriskill-flyout .dropdown-item {
+    display: block; padding: .4rem 1rem; white-space: normal; overflow-wrap: anywhere; color: #1f2937 !important;
+    text-decoration: none; background: transparent;
+}
+ul.oriskill-flyout .dropdown-item:hover, ul.oriskill-flyout .dropdown-item:focus { background: #f3f4f6; }
+ul.oriskill-flyout.oriskill-fixed {
+    position: fixed; display: none; margin: 0; padding: .4rem 0; box-sizing: border-box;
+    min-width: 14rem; max-width: min(22rem, calc(100vw - 8px)); overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;
+    background: #fff; color: #1f2937; border: 1px solid rgba(0, 0, 0, .15); border-radius: .5rem;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, .18); z-index: 2000;
+}
+.oriskill-flyout-toggle {
+    float: right; clear: both; position: relative; z-index: 2; border: 0; background: transparent; color: inherit;
+    min-width: 44px; height: 2rem; padding: 0; cursor: pointer; line-height: 1; font-size: 1.1rem;
+}
+.oriskill-flyout-toggle + a[data-oriskill-flyout] { clear: none !important; width: auto; }
+.oriskill-flyout-toggle[aria-expanded="true"] { transform: rotate(90deg); }
+ul.oriskill-accordion { clear: both; padding: 0 0 0 1rem; }
+ul.oriskill-accordion:not(.oriskill-open) { display: none; }
+@media (hover: hover) and (min-width: 768px) {
+    .primary-navigation .oriskill-flyout-toggle, .primary-navigation ul.oriskill-accordion { display: none; }
+}
 CSS;
         $js = <<<JS
 (function() {
     var data = $data, label = $toggle;
-    var timer = null, cur = null;
+    var NAV = '.primary-navigation .dropdown-menu', DRAWER = '#theme_boost-drawers-primary';
+    var timer = null, cur = null, flys = {};
     function desktop() { return window.matchMedia('(hover: hover) and (min-width: 768px)').matches; }
+    function list(href, cls) {
+        var ul = document.createElement('ul');
+        ul.className = 'oriskill-flyout ' + cls;
+        data[href].forEach(function(it) {
+            var l = document.createElement('li'), x = document.createElement('a');
+            x.className = 'dropdown-item';
+            x.href = it.u;
+            x.textContent = it.t;
+            l.appendChild(x);
+            ul.appendChild(l);
+        });
+        return ul;
+    }
+    // A menu of the trainer opened under its entry scrolls when it is longer than the window below the entry. A menu
+    // shown in place (a submenu inside "More") is left to the menu around it, other menus of the bar are not touched.
+    function fitMenu(li) {
+        var menu = li ? li.querySelector(':scope > .dropdown-menu.oriskill-menu') : null;
+        var toggle = li ? li.querySelector(':scope > [data-bs-toggle="dropdown"]') : null;
+        if (!menu || !toggle || window.getComputedStyle(menu).position === 'static') { return; }
+        menu.style.maxHeight = Math.max(160, window.innerHeight - toggle.getBoundingClientRect().bottom - 8) + 'px';
+        menu.style.overflowY = 'auto';
+    }
+    // The menu of the module and the menus around it ("More"): kept open while the pointer is in the flyout.
+    function menusOf(a) {
+        var menus = [], m = a.closest('.dropdown-menu');
+        while (m) {
+            menus.push(m);
+            m = m.parentElement ? m.parentElement.closest('.dropdown-menu') : null;
+        }
+        return menus;
+    }
     function closeFly() {
         clearTimeout(timer);
         if (!cur) { return; }
         var c = cur;
         cur = null;
-        c.ul.classList.remove('oriskill-fixed');
-        ['left', 'top', 'maxHeight'].forEach(function(k) { c.ul.style[k] = ''; });
         c.ul.style.display = 'none';
-        c.li.appendChild(c.ul);
         c.a.setAttribute('aria-expanded', 'false');
+        c.menus.forEach(function(m) { m.removeAttribute('data-oriskill-keep'); });
     }
-    function later() { clearTimeout(timer); timer = setTimeout(closeFly, 150); }
-    function openFly(li, ul, a, focusFirst) {
-        if (!desktop()) { return; }
-        clearTimeout(timer);
-        if (cur && cur.ul === ul) { return; }
-        closeFly();
-        cur = {li: li, ul: ul, a: a};
+    function later() { clearTimeout(timer); timer = setTimeout(closeFly, 200); }
+    function flyout(href) {
+        if (flys[href]) { return flys[href]; }
+        var ul = list(href, 'oriskill-fixed');
+        ul.addEventListener('mouseleave', later);
+        ul.addEventListener('focusout', function(e) { if (!ul.contains(e.relatedTarget)) { later(); } });
+        ul.addEventListener('keydown', function(e) {
+            var links = Array.prototype.slice.call(ul.querySelectorAll('a')), i = links.indexOf(document.activeElement);
+            // Back to the module: with the left arrow, and with Tab so that the tab order goes on from the module.
+            if ((e.key === 'ArrowLeft' || e.key === 'Tab') && cur) { e.preventDefault(); var a = cur.a; closeFly(); a.focus(); }
+            else if (e.key === 'ArrowDown' && i < links.length - 1) { e.preventDefault(); links[i + 1].focus(); }
+            else if (e.key === 'ArrowUp' && i > 0) { e.preventDefault(); links[i - 1].focus(); }
+        });
         document.body.appendChild(ul);
-        ul.classList.add('oriskill-fixed');
-        ul.style.display = 'block';
-        ul.style.maxHeight = (window.innerHeight - 16) + 'px';
-        var r = li.getBoundingClientRect(), w = ul.offsetWidth, h = ul.offsetHeight;
-        var left = r.right;
-        if (left + w > window.innerWidth - 4 && r.left - w >= 4) { left = r.left - w; }
-        left = Math.max(4, Math.min(left, window.innerWidth - w - 4));
-        var top = Math.max(8, Math.min(r.top, window.innerHeight - 8 - h));
-        ul.style.left = left + 'px';
-        ul.style.top = top + 'px';
-        a.setAttribute('aria-expanded', 'true');
-        if (focusFirst) { var f = ul.querySelector('a'); if (f) { f.focus(); } }
+        flys[href] = ul;
+        return ul;
     }
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && cur) { var a = cur.a; closeFly(); a.focus(); }
+    // Lessons next to the module, at the right of the menu (at the left when there is no room), in the window.
+    function openFly(a, focusFirst) {
+        clearTimeout(timer);
+        if (!cur || cur.a !== a) {
+            closeFly();
+            var menus = menusOf(a), menu = menus[0] || null, ul = flyout(a.href);
+            cur = {a: a, ul: ul, menus: menus};
+            // Keeps the menus open while the pointer is in the flyout (outside the hovered entry).
+            menus.forEach(function(m) { m.setAttribute('data-oriskill-keep', '1'); });
+            ul.style.maxHeight = (window.innerHeight - 16) + 'px';
+            ul.style.display = 'block';
+            var r = a.getBoundingClientRect(), m = menu ? menu.getBoundingClientRect() : r;
+            var w = ul.offsetWidth, h = ul.offsetHeight, left = m.right - 1;
+            if (left + w > window.innerWidth - 4 && m.left - w + 1 >= 4) { left = m.left - w + 1; }
+            left = Math.max(4, Math.min(left, window.innerWidth - w - 4));
+            ul.style.left = left + 'px';
+            ul.style.top = Math.max(8, Math.min(r.top - 6, window.innerHeight - 8 - h)) + 'px';
+            a.setAttribute('aria-expanded', 'true');
+        }
+        if (focusFirst) { var f = cur.ul.querySelector('a'); if (f) { f.focus(); } }
+    }
+    // Touch screens and the mobile menu: a button beside the module shows its lessons below it. Nothing of the menu
+    // itself is moved or wrapped (the navigation bar is rendered by React, which must find its own elements back).
+    function accordion(a) {
+        var btn = document.createElement('button'), ul = list(a.href, 'oriskill-accordion');
+        btn.type = 'button';
+        btn.className = 'oriskill-flyout-toggle';
+        btn.setAttribute('aria-label', label);
+        btn.setAttribute('aria-expanded', 'false');
+        btn.textContent = '\\u25B8';
+        a.insertAdjacentElement('beforebegin', btn);
+        a.insertAdjacentElement('afterend', ul);
+    }
+    function build() {
+        document.querySelectorAll(NAV + ' a[href], ' + DRAWER + ' a[href]').forEach(function(a) {
+            if (!data[a.href] || a.hasAttribute('data-oriskill-flyout')) { return; }
+            a.setAttribute('data-oriskill-flyout', '1');
+            var menu = a.closest(NAV);
+            if (menu) {
+                menu.classList.add('oriskill-menu');
+                a.setAttribute('aria-haspopup', 'true');
+                a.setAttribute('aria-expanded', 'false');
+            }
+            if (!menu || !desktop()) { accordion(a); }
+        });
+    }
+    // The navigation bar is drawn by a script after the page has loaded: the menu is completed when it is reached.
+    document.addEventListener('mouseover', function(e) {
+        var t = e.target;
+        if (!t || t.nodeType !== 1) { return; }
+        if (t.closest('.primary-navigation')) {
+            build();
+            var li = t.closest('.primary-navigation .dropdown');
+            if (li && desktop()) { fitMenu(li); }
+        }
+        if (!desktop()) { return; }
+        var a = t.closest(NAV + ' a[data-oriskill-flyout]');
+        if (a) { openFly(a, false); return; }
+        if (cur) {
+            if (cur.ul.contains(t)) { clearTimeout(timer); } else { later(); }
+        }
     });
+    document.addEventListener('focusin', function(e) {
+        if (e.target && e.target.closest && e.target.closest('.primary-navigation, ' + DRAWER)) { build(); }
+    });
+    document.addEventListener('keydown', function(e) {
+        var t = e.target;
+        if (e.key === 'Escape' && cur && cur.ul.contains(t)) { var a = cur.a; closeFly(); a.focus(); return; }
+        if (e.key === 'ArrowRight' && desktop() && t && t.matches && t.matches(NAV + ' a[data-oriskill-flyout]')) {
+            e.preventDefault();
+            e.stopPropagation();
+            openFly(t, true);
+        }
+    }, true);
+    // The button that unfolds the lessons, caught before anything else: inside "More", React stops the clicks of a
+    // submenu on their way down, and Bootstrap would close the menu on a click in it.
+    document.addEventListener('click', function(e) {
+        var btn = e.target && e.target.closest ? e.target.closest('.oriskill-flyout-toggle') : null;
+        if (!btn) { return; }
+        e.preventDefault();
+        e.stopPropagation();
+        var ul = btn.nextElementSibling ? btn.nextElementSibling.nextElementSibling : null;
+        if (!ul || !ul.classList.contains('oriskill-accordion')) { return; }
+        var open = ul.classList.toggle('oriskill-open');
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }, true);
     window.addEventListener('resize', closeFly);
     window.addEventListener('scroll', function(e) {
         if (cur && !(e.target && e.target.nodeType === 1 && cur.ul.contains(e.target))) { closeFly(); }
     }, true);
+    document.addEventListener('show.bs.dropdown', function(e) {
+        build();
+        var li = e.target && e.target.closest ? e.target.closest('.dropdown') : null;
+        if (li) { fitMenu(li); }
+    });
     document.addEventListener('hide.bs.dropdown', closeFly);
-    function build() {
-        document.querySelectorAll('.primary-navigation .dropdown-menu a[href]').forEach(function(a) {
-            var items = data[a.href];
-            var menu = a.closest('.dropdown-menu');
-            if (!items || !menu || a.hasAttribute('data-oriskill-flyout')) { return; }
-            a.setAttribute('data-oriskill-flyout', '1');
-            menu.classList.add('oriskill-menu');
-            // Moodle's dropdown items are links straight in the menu (no li): wrap the link, never use the
-            // first level li of the navigation bar.
-            var li = a.parentElement;
-            if (li === menu || !menu.contains(li)) {
-                li = document.createElement('div');
-                a.parentNode.insertBefore(li, a);
-                li.appendChild(a);
-            }
-            li.classList.add('oriskill-hasflyout');
-            var btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'oriskill-flyout-toggle';
-            btn.setAttribute('aria-label', label);
-            btn.setAttribute('aria-expanded', 'false');
-            btn.textContent = '\\u25B8';
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                var open = li.classList.toggle('oriskill-open');
-                btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-            });
-            var ul = document.createElement('ul');
-            ul.className = 'oriskill-flyout';
-            ul.style.display = 'none';
-            ul.style.listStyle = 'none';
-            items.forEach(function(it) {
-                var l = document.createElement('li');
-                var x = document.createElement('a');
-                x.className = 'dropdown-item';
-                x.href = it.u;
-                x.textContent = it.t;
-                l.appendChild(x);
-                ul.appendChild(l);
-            });
-            a.insertAdjacentElement('afterend', btn);
-            li.appendChild(ul);
-            a.setAttribute('aria-haspopup', 'true');
-            a.setAttribute('aria-expanded', 'false');
-            li.addEventListener('mouseenter', function() { openFly(li, ul, a, false); });
-            li.addEventListener('mouseleave', later);
-            ul.addEventListener('mouseenter', function() { clearTimeout(timer); });
-            ul.addEventListener('mouseleave', later);
-            a.addEventListener('keydown', function(e) {
-                if (e.key === 'ArrowRight' && desktop()) { e.preventDefault(); openFly(li, ul, a, true); }
-            });
-            ul.addEventListener('keydown', function(e) {
-                var links = Array.prototype.slice.call(ul.querySelectorAll('a')), i = links.indexOf(document.activeElement);
-                if (e.key === 'ArrowLeft') { e.preventDefault(); closeFly(); a.focus(); }
-                else if (e.key === 'ArrowDown' && i < links.length - 1) { e.preventDefault(); links[i + 1].focus(); }
-                else if (e.key === 'ArrowUp' && i > 0) { e.preventDefault(); links[i - 1].focus(); }
-            });
-        });
-    }
+    document.addEventListener('show.bs.collapse', build);
     document.addEventListener('DOMContentLoaded', build);
     window.addEventListener('load', build);
-    document.addEventListener('shown.bs.dropdown', build);
 })();
 JS;
         return \html_writer::tag('style', $css) . \html_writer::tag('script', $js);
