@@ -731,5 +731,40 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026111102, 'local', 'oriskill');
     }
+    if ($oldversion < 2026111200) {
+        // A menu entry now belongs to one training (course). Nothing is deleted: an entry takes the course of its first
+        // line, and gets a copy (same label and modules) for each other course it listed; an entry without any course
+        // stays at 0, hidden from learners, for the trainer to attach.
+        $table = new xmldb_table('local_oriskill_menus');
+        $field = new xmldb_field('courseid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'creatorid');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        $index = new xmldb_index('creatorcourse', XMLDB_INDEX_NOTUNIQUE, ['creatorid', 'courseid']);
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+        foreach ($DB->get_records('local_oriskill_menus', ['courseid' => 0], 'id') as $menu) {
+            $rows = $DB->get_records('local_oriskill_menucourses', ['menuid' => $menu->id], 'sortorder, id');
+            if (!$rows) {
+                continue;
+            }
+            $first = array_shift($rows);
+            // One transaction per entry: its copies and the course of the original go in together, so an interrupted
+            // upgrade can be replayed without duplicating anything.
+            $transaction = $DB->start_delegated_transaction();
+            foreach ($rows as $row) {
+                $copy = clone $menu;
+                unset($copy->id);
+                $copy->courseid = $row->courseid;
+                $copyid = $DB->insert_record('local_oriskill_menus', $copy);
+                $DB->insert_record('local_oriskill_menucourses', (object) ['menuid' => $copyid, 'courseid' => $row->courseid,
+                    'sections' => $row->sections, 'sortorder' => 0]);
+            }
+            $DB->set_field('local_oriskill_menus', 'courseid', $first->courseid, ['id' => $menu->id]);
+            $transaction->allow_commit();
+        }
+        upgrade_plugin_savepoint(true, 2026111200, 'local', 'oriskill');
+    }
     return true;
 }

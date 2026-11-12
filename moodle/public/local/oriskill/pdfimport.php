@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * Import of a PDF with bookmarks: a new course, one module per chapter, one lesson per sub-chapter.
+ * Import of a PDF with bookmarks: modules and lessons added to an existing training (course).
  *
  * @package    local_oriskill
  * @copyright  2026 Advanced TM
@@ -25,6 +25,7 @@
 require_once(__DIR__ . '/../../config.php');
 
 use local_oriskill\creator_service;
+use local_oriskill\menu_service;
 use local_oriskill\pdf_import_service as pis;
 use local_oriskill\team_service;
 
@@ -32,6 +33,8 @@ $url = new moodle_url('/local/oriskill/pdfimport.php');
 $creator = creator_service::require_current_creator($url, 'menu:pdfimport');
 $courses = new moodle_url('/local/oriskill/courses.php');
 $token = optional_param('token', '', PARAM_ALPHANUM);
+$courseid = optional_param('courseid', 0, PARAM_INT);
+$mycourses = menu_service::trainer_courses($creator);
 
 if ($action = optional_param('action', '', PARAM_ALPHA)) {
     require_sesskey();
@@ -42,6 +45,8 @@ if ($action = optional_param('action', '', PARAM_ALPHA)) {
             throw new moodle_exception('error:notallowed', 'local_oriskill');
         }
         if ($action === 'upload') {
+            // The destination training is checked before anything is read.
+            pis::destination($creator, (int) $USER->id, $courseid);
             $file = $_FILES['pdf'] ?? null;
             if (!$file || $file['error'] === UPLOAD_ERR_NO_FILE) {
                 throw new moodle_exception('pdfimport:err:nofile', 'local_oriskill');
@@ -56,7 +61,7 @@ if ($action = optional_param('action', '', PARAM_ALPHA)) {
                 throw new moodle_exception('pdfimport:err:notpdf', 'local_oriskill');
             }
             $token = pis::stash((int) $USER->id, $file['tmp_name'], (string) $file['name']);
-            redirect(new moodle_url($url, ['token' => $token]));
+            redirect(new moodle_url($url, ['token' => $token, 'courseid' => $courseid]));
         } else if ($action === 'cancel') {
             if (pis::is_queued((int) $USER->id, $token)) {
                 throw new moodle_exception('pdfimport:err:queued', 'local_oriskill');
@@ -64,41 +69,47 @@ if ($action = optional_param('action', '', PARAM_ALPHA)) {
             pis::discard((int) $USER->id, $token);
             redirect($url);
         } else if ($action === 'create') {
-            if (pis::is_queued((int) $USER->id, $token)) {
-                throw new moodle_exception('pdfimport:err:queued', 'local_oriskill');
+            // One import per token at a time: a double click (or a second tab) must not import twice.
+            $lock = \core\lock\lock_config::get_lock_factory('local_oriskill')->get_lock("pdfimport_{$USER->id}_{$token}", 0);
+            if (!$lock) {
+                throw new moodle_exception('pdfimport:err:running', 'local_oriskill');
             }
-            $plan = pis::load((int) $USER->id, $token);
-            $kept = pis::apply_edits($plan,
-                optional_param_array('mt', [], PARAM_TEXT), optional_param_array('mx', [], PARAM_INT),
-                optional_param_array('lt', [], PARAM_TEXT), optional_param_array('lx', [], PARAM_INT));
-            $fullname = pis::clean_title(required_param('fullname', PARAM_TEXT));
-            $shortname = pis::clean_title(required_param('shortname', PARAM_TEXT));
-            if (!$kept->modules) {
-                throw new moodle_exception('pdfimport:err:nothing', 'local_oriskill');
+            $queued = false;
+            try {
+                if (pis::is_queued((int) $USER->id, $token)) {
+                    throw new moodle_exception('pdfimport:err:queued', 'local_oriskill');
+                }
+                // After a first success the files of the token are gone: load() then refuses a second import.
+                $plan = pis::load((int) $USER->id, $token);
+                $kept = pis::apply_edits($plan,
+                    optional_param_array('mt', [], PARAM_TEXT), optional_param_array('mx', [], PARAM_INT),
+                    optional_param_array('lt', [], PARAM_TEXT), optional_param_array('lx', [], PARAM_INT));
+                $course = pis::destination($creator, (int) $USER->id, $courseid);
+                if (!$kept->modules) {
+                    throw new moodle_exception('pdfimport:err:nothing', 'local_oriskill');
+                }
+                $options = pis::options((bool) optional_param('visible', 0, PARAM_BOOL),
+                    optional_param('unlock', 'none', PARAM_ALPHANUM), optional_param('unlockdays', 0, PARAM_INT),
+                    optional_param('startday', 0, PARAM_INT));
+                if (pis::is_large($kept)) {
+                    pis::queue($creator, (int) $USER->id, $token, $kept, (int) $course->id, $options);
+                    $queued = true;
+                } else {
+                    pis::import_modules($creator, (int) $USER->id, $token, $kept, (int) $course->id, $options);
+                    pis::discard((int) $USER->id, $token);
+                }
+            } finally {
+                $lock->release();
             }
-            if ($fullname === '' || $shortname === '') {
-                throw new moodle_exception('pdfimport:err:names', 'local_oriskill');
-            }
-            if (!pis::shortname_free($shortname)) {
-                throw new moodle_exception('pdfimport:err:shortname', 'local_oriskill');
-            }
-            if (pis::is_large($kept)) {
-                pis::queue($creator, (int) $USER->id, $token, $kept, $fullname, $shortname);
+            if ($queued) {
                 redirect($courses, get_string('pdfimport:queued', 'local_oriskill'), null,
                     \core\output\notification::NOTIFY_INFO);
             }
-            $courseid = pis::create_course($creator, (int) $USER->id, $token, $kept, $fullname, $shortname);
-            pis::discard((int) $USER->id, $token);
-            if (pis::$pdfnotattached) {
-                redirect(new moodle_url('/course/view.php', ['id' => $courseid]),
-                    get_string('pdfimport:created', 'local_oriskill') . ' ' . get_string('pdfimport:attachfailed', 'local_oriskill'),
-                    null, \core\output\notification::NOTIFY_WARNING);
-            }
-            redirect(new moodle_url('/course/view.php', ['id' => $courseid]), get_string('pdfimport:created', 'local_oriskill'),
-                null, \core\output\notification::NOTIFY_SUCCESS);
+            redirect(new moodle_url('/course/view.php', ['id' => $course->id]),
+                get_string('pdfimport:created', 'local_oriskill'), null, \core\output\notification::NOTIFY_SUCCESS);
         }
     } catch (moodle_exception $e) {
-        redirect($action === 'create' && $token ? new moodle_url($url, ['token' => $token]) : $url, $e->getMessage(), null,
+        redirect($action === 'create' && $token ? new moodle_url($url, ['token' => $token, 'courseid' => $courseid]) : $url, $e->getMessage(), null,
             \core\output\notification::NOTIFY_ERROR);
     }
 }
@@ -119,10 +130,24 @@ if (!$plan) {
     echo html_writer::tag('p', get_string('pdfimport:intro1', 'local_oriskill'), ['class' => 'text-muted']);
     if ($problem = pis::tools_problem()) {
         echo $OUTPUT->notification(get_string($problem, 'local_oriskill'), \core\output\notification::NOTIFY_ERROR);
+    } else if (!$mycourses) {
+        echo $OUTPUT->notification(get_string('pdfimport:nocourse', 'local_oriskill'),
+            \core\output\notification::NOTIFY_WARNING);
+        echo html_writer::link($courses, get_string('pdfimport:createcourse', 'local_oriskill'), ['class' => 'btn btn-primary']);
     } else {
+        $options = '';
+        foreach ($mycourses as $id => $mine) {
+            $options .= html_writer::tag('option', format_string($mine->fullname), ['value' => $id]);
+        }
         echo html_writer::tag('form',
             html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]) .
             html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'upload']) .
+            html_writer::div(
+                html_writer::label(get_string('pdfimport:destination', 'local_oriskill'), 'pdfimport-course', true,
+                    ['class' => 'form-label']) .
+                html_writer::tag('select', $options, ['name' => 'courseid', 'id' => 'pdfimport-course',
+                    'class' => 'form-select', 'required' => 'required']) .
+                html_writer::div(get_string('pdfimport:destinationhelp', 'local_oriskill'), 'small text-muted mt-1'), 'mb-3') .
             html_writer::div(
                 html_writer::label(get_string('pdfimport:file', 'local_oriskill'), 'pdfimport-file', true,
                     ['class' => 'form-label']) .
@@ -136,16 +161,26 @@ if (!$plan) {
              'class' => 'oriskill-card']);
     }
 } else {
-    // Preview: names, and the tree of modules and lessons to check.
-    $suggest = pis::clean_title(preg_replace('/\.pdf$/i', '', (string) ($plan->filename ?? '')));
-    $short = core_text::strtoupper(core_text::substr(preg_replace('/[^A-Za-z0-9]+/', '', $suggest), 0, 20)) ?: 'PDF';
-    for ($i = 2; !pis::shortname_free($short); $i++) {
-        $short = core_text::substr($short, 0, 17) . $i;
+    // Preview: the destination training, and the tree of modules and lessons to check.
+    try {
+        $destination = pis::destination($creator, (int) $USER->id, $courseid);
+    } catch (moodle_exception $e) {
+        $destination = null;
     }
     $lessons = 0;
     foreach ($plan->modules as $module) {
         $lessons += count($module->lessons);
     }
+    if (!$destination) {
+        echo $OUTPUT->notification(get_string('pdfimport:err:course', 'local_oriskill'),
+            \core\output\notification::NOTIFY_ERROR);
+        echo html_writer::link($url, get_string('cancel'), ['class' => 'btn btn-outline-secondary']);
+        echo creator_service::space_end();
+        echo $OUTPUT->footer();
+        exit;
+    }
+    echo html_writer::tag('p', get_string('pdfimport:into', 'local_oriskill', format_string($destination->fullname)),
+        ['class' => 'fw-semibold']);
     echo html_writer::tag('p', get_string('pdfimport:preview', 'local_oriskill',
         (object) ['modules' => count($plan->modules), 'lessons' => $lessons, 'pages' => $plan->pages]),
         ['class' => 'text-muted']);
@@ -182,17 +217,32 @@ if (!$plan) {
     echo html_writer::tag('form',
         html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]) .
         html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'token', 'value' => $token]) .
-        html_writer::div(
-            html_writer::label(get_string('fullnamecourse'), 'pdfimport-full', true, ['class' => 'form-label']) .
-            html_writer::empty_tag('input', ['type' => 'text', 'name' => 'fullname', 'id' => 'pdfimport-full',
-                'value' => $suggest, 'class' => 'form-control', 'maxlength' => 250, 'required' => 'required']), 'mb-3') .
-        html_writer::div(
-            html_writer::label(get_string('shortnamecourse'), 'pdfimport-short', true, ['class' => 'form-label']) .
-            html_writer::empty_tag('input', ['type' => 'text', 'name' => 'shortname', 'id' => 'pdfimport-short',
-                'value' => $short, 'class' => 'form-control', 'maxlength' => 100, 'required' => 'required']), 'mb-3') .
+        html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'courseid', 'value' => $destination->id]) .
         html_writer::tag('h3', get_string('pdfimport:structure', 'local_oriskill'), ['class' => 'h5']) .
         html_writer::div($tree, 'mb-3') .
-        html_writer::div(get_string('pdfimport:hiddennote', 'local_oriskill'), 'small text-muted mb-3') .
+        html_writer::div(
+            html_writer::empty_tag('input', ['type' => 'checkbox', 'name' => 'visible', 'value' => 1, 'id' => 'pdfimport-visible',
+                'class' => 'form-check-input']) .
+            html_writer::label(get_string('pdfimport:visiblenow', 'local_oriskill'), 'pdfimport-visible', true,
+                ['class' => 'form-check-label']) .
+            html_writer::div(get_string('pdfimport:hiddennote', 'local_oriskill'), 'small text-muted'), 'form-check mb-3') .
+        html_writer::tag('h3', get_string('pdfimport:unlock', 'local_oriskill'), ['class' => 'h5']) .
+        html_writer::div(get_string('pdfimport:unlockhelp', 'local_oriskill'), 'small text-muted mb-2') .
+        html_writer::div(html_writer::select([
+                'none' => get_string('pdfimport:unlock:none', 'local_oriskill'),
+                '7' => get_string('pdfimport:unlock:7', 'local_oriskill'),
+                '14' => get_string('pdfimport:unlock:14', 'local_oriskill'),
+                'custom' => get_string('pdfimport:unlock:custom', 'local_oriskill')], 'unlock', 'none', false,
+                ['class' => 'form-select', 'id' => 'pdfimport-unlock', 'aria-label' => get_string('pdfimport:unlock', 'local_oriskill')]),
+            'mb-2', ['style' => 'max-width: 28rem']) .
+        html_writer::div(
+            html_writer::label(get_string('pdfimport:unlockdays', 'local_oriskill'), 'pdfimport-days', true, ['class' => 'form-label']) .
+            html_writer::empty_tag('input', ['type' => 'number', 'name' => 'unlockdays', 'id' => 'pdfimport-days', 'min' => 1,
+                'max' => 3650, 'value' => 7, 'class' => 'form-control']), 'mb-2', ['style' => 'max-width: 14rem']) .
+        html_writer::div(
+            html_writer::label(get_string('pdfimport:startday', 'local_oriskill'), 'pdfimport-start', true, ['class' => 'form-label']) .
+            html_writer::empty_tag('input', ['type' => 'number', 'name' => 'startday', 'id' => 'pdfimport-start', 'min' => 0,
+                'max' => 3650, 'value' => 0, 'class' => 'form-control']), 'mb-3', ['style' => 'max-width: 14rem']) .
         html_writer::tag('button', get_string('pdfimport:create', 'local_oriskill'),
             ['type' => 'submit', 'name' => 'action', 'value' => 'create', 'class' => 'btn btn-primary me-2']) .
         html_writer::tag('button', get_string('cancel'),

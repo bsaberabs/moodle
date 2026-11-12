@@ -36,23 +36,32 @@ class menu_service {
     const MAXLESSONS = 30;
 
     /**
-     * Menu entries of a trainer, in order, each with its courses (courseid => section ids, empty = all modules).
+     * Menu entries of a trainer, in order, each with its course (courseid => section ids, empty = all modules).
+     * An entry belongs to one training (course); an entry with courseid 0 is not attached yet and is never shown.
      *
      * @param \stdClass $creator Trainer.
      * @param bool $onlyvisible Leave out the hidden entries.
+     * @param int|null $courseid Only the entries of this training (null: all of them).
      * @return array id => record with a "courses" property
      */
-    public static function entries(\stdClass $creator, bool $onlyvisible = false): array {
+    public static function entries(\stdClass $creator, bool $onlyvisible = false, ?int $courseid = null): array {
         global $DB;
 
         $params = ['creatorid' => $creator->id];
         if ($onlyvisible) {
             $params['visible'] = 1;
         }
+        if ($courseid !== null) {
+            $params['courseid'] = $courseid;
+        }
         $entries = $DB->get_records(self::TABLE, $params, 'sortorder, id');
         foreach ($entries as $entry) {
             $entry->courses = [];
             foreach ($DB->get_records(self::COURSES, ['menuid' => $entry->id], 'sortorder, id') as $row) {
+                // Only the course of the entry counts (rows of other courses are leftovers of an older version).
+                if ((int) $row->courseid !== (int) $entry->courseid) {
+                    continue;
+                }
                 $entry->courses[(int) $row->courseid] = array_values(array_filter(array_map('intval',
                     explode(',', (string) $row->sections))));
             }
@@ -91,26 +100,30 @@ class menu_service {
     }
 
     /**
-     * Create or update a menu entry and its courses. Only the trainer's own courses are kept.
+     * Create or update a menu entry of a training and the modules shown under it. The training must be the trainer's own.
      *
      * @param \stdClass $creator Trainer.
      * @param int $id Entry to update (0: new).
      * @param string $label Label.
      * @param int $sortorder Order.
      * @param bool $visible Shown to learners.
-     * @param array $courses courseid => section ids (empty: all modules)
+     * @param int $courseid Training (course) of the entry.
+     * @param int[] $sectionids Modules of that training shown (empty: all modules)
      * @return int Entry id.
      */
-    public static function save(\stdClass $creator, int $id, string $label, int $sortorder, bool $visible, array $courses): int {
+    public static function save(\stdClass $creator, int $id, string $label, int $sortorder, bool $visible, int $courseid,
+            array $sectionids): int {
         global $DB;
 
         $label = \core_text::substr(trim(clean_param($label, PARAM_TEXT)), 0, 100);
         if ($label === '') {
             throw new \moodle_exception('library:noname', 'local_oriskill');
         }
-        $own = self::trainer_courses($creator);
+        if (!isset(self::trainer_courses($creator)[$courseid])) {
+            throw new \moodle_exception('menus:err:course', 'local_oriskill');
+        }
         $now = time();
-        $record = (object) ['label' => $label, 'sortorder' => max(0, min(99999, $sortorder)), 'visible' => (int) $visible,
+        $record = (object) ['label' => $label, 'courseid' => $courseid, 'sortorder' => max(0, min(99999, $sortorder)), 'visible' => (int) $visible,
             'timemodified' => $now];
         if ($id) {
             $record->id = $DB->get_field(self::TABLE, 'id', ['id' => $id, 'creatorid' => $creator->id], MUST_EXIST);
@@ -124,16 +137,10 @@ class menu_service {
             $record->timecreated = $now;
             $id = $DB->insert_record(self::TABLE, $record);
         }
-        $position = 0;
-        foreach ($courses as $courseid => $sectionids) {
-            if (!isset($own[$courseid])) {
-                continue;
-            }
-            $valid = array_keys(self::course_sections($DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST)));
-            $sectionids = array_values(array_intersect($valid, array_map('intval', (array) $sectionids)));
-            $DB->insert_record(self::COURSES, (object) ['menuid' => $id, 'courseid' => $courseid,
-                'sections' => implode(',', $sectionids), 'sortorder' => $position++]);
-        }
+        $valid = array_keys(self::course_sections($DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST)));
+        $sectionids = array_values(array_intersect($valid, array_map('intval', $sectionids)));
+        $DB->insert_record(self::COURSES, (object) ['menuid' => $id, 'courseid' => $courseid,
+            'sections' => implode(',', $sectionids), 'sortorder' => 0]);
         $transaction->allow_commit();
         return $id;
     }
@@ -154,16 +161,17 @@ class menu_service {
     }
 
     /**
-     * Menu as a learner sees it: every entry, with its courses and modules, a link only where the learner can open it
-     * (enrolled, module visible and unlocked); what is locked has no link.
+     * Menu as a learner sees it in a training: only the entries of that training, with its modules (in the order of the
+     * course), a link only where the learner can open it (enrolled, module visible and unlocked); what is locked has no link.
      *
      * @param \stdClass $creator Trainer.
      * @param int $userid Learner.
+     * @param int $courseid Training being viewed.
      * @return array of ['label', 'children' => [['label', 'url' (moodle_url|null), 'locked' (bool), 'lessons' => [['label', 'url']]]]]
      */
-    public static function for_user(\stdClass $creator, int $userid): array {
+    public static function for_user(\stdClass $creator, int $userid, int $courseid): array {
         $menu = [];
-        foreach (self::entries($creator, true) as $entry) {
+        foreach (self::entries($creator, true, $courseid) as $entry) {
             $children = [];
             foreach ($entry->courses as $courseid => $sectionids) {
                 // Courses of another trainer never appear, even if the data were changed by hand.

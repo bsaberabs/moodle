@@ -17,7 +17,8 @@
 namespace local_oriskill;
 
 /**
- * Import of a PDF with bookmarks as a new course: chapters become modules, sub-chapters become lessons (pages).
+ * Import of a PDF with bookmarks into an existing course (a training): chapters become modules (sections) added after
+ * the existing ones, sub-chapters become lessons (pages). The PDF is only a shortcut to create modules and lessons.
  *
  * The PDF is read with the poppler tools (pdftohtml for the outline, pdftotext for the text, pdfinfo for the page
  * count). The analysis (the plan) and the file wait in a temporary folder of the user between the preview and the
@@ -44,9 +45,6 @@ class pdf_import_service {
 
     /** Most bookmarks kept (a safety net against a broken outline). */
     const MAXITEMS = 1000;
-
-    /** Set by create_course: true when the original PDF could not be added to the general section. */
-    public static bool $pdfnotattached = false;
 
     /** Seconds a leftover temporary file is kept. */
     const KEEP = 86400;
@@ -489,70 +487,89 @@ class pdf_import_service {
     }
 
     /**
-     * Whether a short name is free.
+     * The training (course) the modules are added to: one of the trainer's own courses, and one the person importing may
+     * edit. Never trusts a course id that was not checked here.
      *
-     * @param string $shortname Short name.
-     * @return bool
+     * @param \stdClass $creator Trainer.
+     * @param int $userid User who imports.
+     * @param int $courseid Course id sent.
+     * @return \stdClass Course.
      */
-    public static function shortname_free(string $shortname): bool {
+    public static function destination(\stdClass $creator, int $userid, int $courseid): \stdClass {
         global $DB;
-        return !$DB->record_exists_select('course', $DB->sql_equal('shortname', ':s', false, false), ['s' => $shortname]);
+
+        $owner = $courseid > 0 && $courseid != SITEID ? seller_service::owner_of_course($courseid) : null;
+        $course = $owner && (int) $owner->id === (int) $creator->id
+            ? $DB->get_record('course', ['id' => $courseid]) : false;
+        if (!$course) {
+            throw new \moodle_exception('pdfimport:err:course', 'local_oriskill');
+        }
+        // The person importing must be allowed to add activities to the course.
+        $context = \context_course::instance($course->id);
+        if (!has_capability('moodle/course:manageactivities', $context, $userid)) {
+            throw new \moodle_exception('error:notallowed', 'local_oriskill');
+        }
+        return $course;
     }
 
     /**
-     * Create the course: one module per chapter, one page per lesson, the PDF in the general section. The course is
-     * hidden from learners, and the trainer is its teacher. The course is deleted again if a step fails.
+     * Options of the import from the form: shown to learners at once, and progressive release.
+     *
+     * @param bool $visible Make the new modules visible at once.
+     * @param string $mode none, 7, 14 or custom.
+     * @param int $custom Days between two modules, for "custom".
+     * @param int $start Day (after enrolment) the first imported module opens.
+     * @return \stdClass visible (0/1), step (days between modules, 0 = no release rule), start (day of the first one)
+     */
+    public static function options(bool $visible, string $mode, int $custom, int $start): \stdClass {
+        $step = $mode === '7' ? 7 : ($mode === '14' ? 14 : ($mode === 'custom' ? $custom : 0));
+        $step = max(0, min(3650, $step));
+        if ($mode === 'custom' && $step < 1) {
+            throw new \moodle_exception('pdfimport:err:days', 'local_oriskill');
+        }
+        return (object) ['visible' => (int) $visible, 'step' => $step, 'start' => max(0, min(3650, $start))];
+    }
+
+    /**
+     * Add the modules of the plan after the existing ones of the course, one page per lesson. The new modules are hidden
+     * from learners unless asked otherwise, and get a release rule (days after enrolment) when asked. If a step fails,
+     * only the modules and activities added here are deleted again; the course and its other modules are never touched.
      *
      * @param \stdClass $creator Trainer.
-     * @param int $userid User who imports (their temporary folder and draft area).
+     * @param int $userid User who imports (their temporary folder).
      * @param string $token Token of the stashed PDF.
      * @param \stdClass $plan Plan kept (see apply_edits).
-     * @param string $fullname Course name.
-     * @param string $shortname Short name.
-     * @return int Course id (see $pdfnotattached when the original PDF could not be added).
+     * @param int $courseid Destination course (checked again here).
+     * @param \stdClass $options See options().
+     * @return int Course id.
      */
-    public static function create_course(\stdClass $creator, int $userid, string $token, \stdClass $plan, string $fullname,
-            string $shortname): int {
-        global $CFG, $USER;
+    public static function import_modules(\stdClass $creator, int $userid, string $token, \stdClass $plan, int $courseid,
+            \stdClass $options): int {
+        global $CFG;
         require_once($CFG->dirroot . '/course/lib.php');
-        require_once($CFG->dirroot . '/enrol/locallib.php');
         require_once($CFG->libdir . '/resourcelib.php');
 
         $pdf = self::temp_file($userid, $token, 'pdf');
         if (!is_file($pdf)) {
             throw new \moodle_exception('pdfimport:err:expired', 'local_oriskill');
         }
-        if (!$creator->categoryid || !self::shortname_free($shortname)) {
-            throw new \moodle_exception('pdfimport:err:shortname', 'local_oriskill');
-        }
-        self::$pdfnotattached = false;
+        $course = self::destination($creator, $userid, $courseid);
         \core_php_time_limit::raise(0);
         raise_memory_limit(MEMORY_EXTRA);
 
-        $course = create_course((object) ['fullname' => $fullname, 'shortname' => $shortname,
-            'category' => (int) $creator->categoryid, 'format' => 'topics', 'visible' => 0, 'summary' => '',
-            'summaryformat' => FORMAT_HTML]);
+        $created = [];
         try {
-            enrol_try_internal_enrol($course->id, (int) $creator->userid, (int) $CFG->creatornewroleid);
-            if ((int) $USER->id === (int) $creator->userid) {
-                // The new teacher role is not in the capabilities already loaded for this request (or this task).
-                reload_all_capabilities();
-            }
-            course_create_sections_if_missing($course, range(0, count($plan->modules)));
-            rebuild_course_cache($course->id, true);
-            $modinfo = get_fast_modinfo($course->id);
-
-            course_update_section($course, $modinfo->get_section_info(0),
-                ['name' => get_string('pdfimport:general', 'local_oriskill')]);
-            self::$pdfnotattached = !self::attach_pdf($course, $pdf, (string) ($plan->filename ?: 'document.pdf'), $userid);
-
             foreach ($plan->modules as $i => $module) {
-                course_update_section($course, $modinfo->get_section_info($i + 1), ['name' => $module->title]);
+                // Position 0: after the last existing section.
+                $section = course_create_section($course, 0);
+                $created[] = (int) $section->id;
+                // Created visible (name only) so the activities are created visible; hidden afterwards if asked.
+                course_update_section($course, $section, ['name' => $module->title]);
                 foreach ($module->lessons as $lesson) {
                     create_module((object) [
                         'modulename' => 'page',
                         'course' => $course->id,
-                        'section' => $i + 1,
+                        'section' => (int) $section->section,
                         'visible' => 1,
                         'name' => $lesson->title,
                         'introeditor' => ['text' => '', 'format' => FORMAT_HTML, 'itemid' => 0],
@@ -564,62 +581,63 @@ class pdf_import_service {
                         'cmidnumber' => '',
                     ]);
                 }
+                if ($options->step > 0) {
+                    rebuild_course_cache($course->id, true);
+                    learning_service::set_section_rule($course, (int) $section->section, 'days', 0,
+                        (int) $options->start + $i * (int) $options->step, []);
+                }
+                if (!$options->visible) {
+                    // Hides the section and its activities (kept as 'visible before' so showing the section shows them again).
+                    set_section_visible($course->id, (int) $section->section, 0);
+                }
             }
         } catch (\Throwable $e) {
-            delete_course($course, false);
-            fix_course_sortorder();
+            global $DB;
+            if ($DB->is_transaction_started()) {
+                $DB->force_transaction_rollback();
+            }
+            self::rollback($course, $created);
             throw $e;
         }
         rebuild_course_cache($course->id, true);
-        if (self::$pdfnotattached) {
-            log_service::add($creator, 'pdf_attach_failed', ['name' => format_string($fullname)], (int) $course->id);
-        }
-        log_service::add($creator, 'pdf_imported', ['name' => format_string($fullname), 'modules' => count($plan->modules),
+        log_service::add($creator, 'pdf_imported', ['name' => format_string($course->fullname),
+            'modules' => count($plan->modules),
             'lessons' => array_sum(array_map(fn($m) => count($m->lessons), $plan->modules))], (int) $course->id);
         return (int) $course->id;
     }
 
     /**
-     * Add the original PDF as a file in the general section (a failure here does not stop the import, the caller tells the trainer).
+     * Delete the sections (and their activities) created by a failed import, nothing else.
      *
      * @param \stdClass $course Course.
-     * @param string $pdf PDF file.
-     * @param string $filename File name shown.
-     * @param int $userid User whose draft area is used.
-     * @return bool Whether the PDF was added.
+     * @param int[] $sectionids Ids of the sections created by this import.
      */
-    private static function attach_pdf(\stdClass $course, string $pdf, string $filename, int $userid): bool {
+    private static function rollback(\stdClass $course, array $sectionids): void {
         try {
-            $draftid = file_get_unused_draft_itemid();
-            get_file_storage()->create_file_from_pathname([
-                'contextid' => \context_user::instance($userid)->id, 'component' => 'user', 'filearea' => 'draft',
-                'itemid' => $draftid, 'filepath' => '/', 'filename' => $filename], $pdf);
-            create_module((object) [
-                'modulename' => 'resource', 'course' => $course->id, 'section' => 0, 'visible' => 1,
-                'name' => \core_text::substr(preg_replace('/\.pdf$/i', '', $filename), 0, 250),
-                'introeditor' => ['text' => '', 'format' => FORMAT_HTML, 'itemid' => 0], 'files' => $draftid,
-                'display' => RESOURCELIB_DISPLAY_AUTO, 'showsize' => 1, 'showtype' => 1, 'showdate' => 0,
-                'printintro' => 0, 'cmidnumber' => '',
-            ]);
-            return true;
+            rebuild_course_cache($course->id, true);
+            foreach (array_reverse($sectionids) as $id) {
+                $info = get_fast_modinfo($course->id)->get_section_info_by_id($id);
+                if ($info && $info->section > 0) {
+                    course_delete_section($course, $info->section, true, false);
+                }
+            }
         } catch (\Throwable $e) {
-            debugging('PDF import: original PDF not attached: ' . $e->getMessage(), DEBUG_DEVELOPER);
-            return false;
+            debugging('PDF import: rollback failed: ' . $e->getMessage(), DEBUG_DEVELOPER);
         }
     }
 
     /**
-     * Queue the creation in the background (large PDFs).
+     * Queue the import in the background (large PDFs).
      *
      * @param \stdClass $creator Trainer.
      * @param int $userid User who imports.
      * @param string $token Token.
      * @param \stdClass $plan Plan kept.
-     * @param string $fullname Course name.
-     * @param string $shortname Short name.
+     * @param int $courseid Destination course (checked before queueing and again by the task).
+     * @param \stdClass $options See options().
      */
-    public static function queue(\stdClass $creator, int $userid, string $token, \stdClass $plan, string $fullname,
-            string $shortname): void {
+    public static function queue(\stdClass $creator, int $userid, string $token, \stdClass $plan, int $courseid,
+            \stdClass $options): void {
         if (self::is_queued($userid, $token)) {
             throw new \moodle_exception('pdfimport:err:queued', 'local_oriskill');
         }
@@ -627,13 +645,13 @@ class pdf_import_service {
         file_put_contents(self::temp_file($userid, $token, 'queued.json'), json_encode($plan));
         $task = new task\pdf_import();
         $task->set_userid($userid);
-        $task->set_custom_data(['creatorid' => (int) $creator->id, 'token' => $token, 'fullname' => $fullname,
-            'shortname' => $shortname]);
+        $task->set_custom_data(['creatorid' => (int) $creator->id, 'token' => $token, 'courseid' => $courseid,
+            'visible' => (int) $options->visible, 'step' => (int) $options->step, 'start' => (int) $options->start]);
         \core\task\manager::queue_adhoc_task($task);
     }
 
     /**
-     * Tell the user by a Moodle message that the course is ready (or why it is not).
+     * Tell the user by a Moodle message that the modules are added (or why they are not).
      *
      * @param int $userid User.
      * @param string $subjectkey Language string key of the subject.

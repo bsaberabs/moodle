@@ -97,7 +97,7 @@ class hook_callbacks {
     }
 
     /**
-     * Entries of the trainer's menu (a course, with its modules as a sub-menu) for a learner in a course of that trainer.
+     * Entries of the menu of the training being viewed (with its modules as a sub-menu), for a learner of that trainer.
      * What the learner cannot open yet is shown greyed, without link.
      *
      * @param \core\hook\navigation\primary_extend $hook Hook.
@@ -113,25 +113,36 @@ class hook_callbacks {
         if (!$creator) {
             return;
         }
-        foreach (menu_service::for_user($creator, (int) $USER->id) as $index => $entry) {
-            $node = $hook->get_primaryview()->add($entry['label'], null, \navigation_node::TYPE_CUSTOM, null,
+        foreach (menu_service::for_user($creator, (int) $USER->id, (int) $PAGE->course->id) as $index => $entry) {
+            $node = $hook->get_primaryview()->add(self::plain($entry['label']), null, \navigation_node::TYPE_CUSTOM, null,
                 'oriskillmenu' . $index);
             foreach ($entry['children'] as $child) {
                 // The main navigation does not export "classes": the lock is shown in the label, and the link of what
                 // is locked goes nowhere (no redirect loop to an enrolment page).
-                $label = $child['label'] . ($child['locked'] ? ' ' . get_string('menus:locked', 'local_oriskill') : '');
+                $label = self::plain($child['label']) . ($child['locked'] ? ' ' . get_string('menus:locked', 'local_oriskill') : '');
                 $node->add($label, $child['url'] ?? new \moodle_url('#'), \navigation_node::TYPE_CUSTOM);
                 // The main navigation dropdown has two levels: the lessons of a module are shown as a flyout (third
                 // level) built by a small script from the data kept here.
                 if (!empty($child['lessons']) && $child['url']) {
                     $items = [];
                     foreach ($child['lessons'] as $lesson) {
-                        $items[] = ['t' => $lesson['label'], 'u' => $lesson['url']->out(false)];
+                        $items[] = ['t' => self::plain($lesson['label']), 'u' => $lesson['url']->out(false)];
                     }
                     self::$flyouts[$child['url']->out(false)] = $items;
                 }
             }
         }
+    }
+
+    /**
+     * Plain text of a label already made safe by format_string(): the navigation (mustache) and the script (textContent)
+     * escape it again, so it must not stay escaped here ("Test & accents", not "Test &amp; accents").
+     *
+     * @param string $label Label.
+     * @return string Plain text.
+     */
+    private static function plain(string $label): string {
+        return html_entity_decode(strip_tags($label), ENT_QUOTES | ENT_HTML5, 'UTF-8');
     }
 
     /** @var array Lessons of each module of the trainer's menu, by module address. */

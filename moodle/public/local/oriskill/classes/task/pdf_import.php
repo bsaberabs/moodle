@@ -19,9 +19,9 @@ namespace local_oriskill\task;
 use local_oriskill\pdf_import_service as pis;
 
 /**
- * Create the course of a large PDF import in the background, then tell the trainer.
+ * Add the modules of a large PDF import to its course in the background, then tell the trainer.
  *
- * Custom data: creatorid, token, fullname, shortname. The task runs as the user who imported (their temporary folder).
+ * Custom data: creatorid, token, courseid, visible, step, start. The task runs as the user who imported (their temporary folder).
  *
  * @package    local_oriskill
  * @copyright  2026 Advanced TM
@@ -42,15 +42,30 @@ class pdf_import extends \core\task\adhoc_task {
         if (!$creator || !$userid) {
             return;
         }
-        try {
-            $plan = pis::load($userid, $data->token, true);
-            $courseid = pis::create_course($creator, $userid, $data->token, $plan, $data->fullname, $data->shortname);
-            pis::notify($userid, 'pdfimport:done:subject',
-                pis::$pdfnotattached ? 'pdfimport:done:bodywarn' : 'pdfimport:done:body', $data->fullname,
-                new \moodle_url('/course/view.php', ['id' => $courseid]));
-        } catch (\Throwable $e) {
+        $name = '';
+        if (empty($data->courseid)) {
+            // Queued by an older version, before imports went into an existing training: nothing can be added.
             pis::notify($userid, 'pdfimport:failed:subject', 'pdfimport:failed:body',
-                (object) ['name' => $data->fullname, 'error' => $e->getMessage()]);
+                (object) ['name' => '-', 'error' => get_string('pdfimport:err:relaunch', 'local_oriskill')]);
+            if (!empty($data->token)) {
+                pis::discard($userid, (string) $data->token);
+            }
+            return;
+        }
+        try {
+            $course = get_course((int) $data->courseid);
+            $name = format_string($course->fullname);
+            $plan = pis::load($userid, $data->token, true);
+            $options = (object) ['visible' => (int) $data->visible, 'step' => (int) $data->step, 'start' => (int) $data->start];
+            pis::import_modules($creator, $userid, $data->token, $plan, (int) $course->id, $options);
+            pis::notify($userid, 'pdfimport:done:subject', 'pdfimport:done:body', $name,
+                new \moodle_url('/course/view.php', ['id' => $course->id]));
+        } catch (\Throwable $e) {
+            if ($DB->is_transaction_started()) {
+                $DB->force_transaction_rollback();
+            }
+            pis::notify($userid, 'pdfimport:failed:subject', 'pdfimport:failed:body',
+                (object) ['name' => $name, 'error' => $e->getMessage()]);
         }
         pis::discard($userid, $data->token);
     }
