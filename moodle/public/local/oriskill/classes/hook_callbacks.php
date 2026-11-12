@@ -172,23 +172,71 @@ ul.oriskill-flyout .dropdown-item { white-space: normal; color: #1f2937 !importa
 .oriskill-open > ul.oriskill-flyout { display: block !important; }
 @media (hover: hover) and (min-width: 768px) {
     .oriskill-flyout-toggle { display: none; }
-    ul.oriskill-flyout {
-        position: absolute; left: 100%; top: 0; min-width: 16rem; max-width: 22rem; padding: .5rem 0;
+    ul.oriskill-flyout.oriskill-fixed {
+        position: fixed; display: block !important; flex: none; margin: 0; padding: .5rem 0; box-sizing: border-box;
+        min-width: 14rem; max-width: 22rem; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;
         background: #fff; color: #1f2937; border: 1px solid rgba(0, 0, 0, .15); border-radius: .5rem;
-        box-shadow: 0 6px 20px rgba(0, 0, 0, .18); z-index: 1050;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, .18); z-index: 2000;
     }
-    .oriskill-hasflyout:hover > ul.oriskill-flyout, .oriskill-hasflyout:focus-within > ul.oriskill-flyout { display: block !important; }
+    ul.oriskill-flyout.oriskill-fixed .dropdown-item { white-space: normal; overflow-wrap: anywhere; }
 }
+.dropdown-menu.oriskill-menu {
+    overflow-x: hidden; overflow-y: auto; min-width: 16rem; max-width: min(22rem, calc(100vw - 1rem)); max-height: calc(100vh - 6rem);
+}
+.dropdown-menu.oriskill-menu .dropdown-item { white-space: normal; overflow-wrap: anywhere; }
 CSS;
         $js = <<<JS
 (function() {
     var data = $data, label = $toggle;
+    var timer = null, cur = null;
+    function desktop() { return window.matchMedia('(hover: hover) and (min-width: 768px)').matches; }
+    function closeFly() {
+        clearTimeout(timer);
+        if (!cur) { return; }
+        var c = cur;
+        cur = null;
+        c.ul.classList.remove('oriskill-fixed');
+        ['left', 'top', 'maxHeight'].forEach(function(k) { c.ul.style[k] = ''; });
+        c.ul.style.display = 'none';
+        c.li.appendChild(c.ul);
+        c.a.setAttribute('aria-expanded', 'false');
+    }
+    function later() { clearTimeout(timer); timer = setTimeout(closeFly, 150); }
+    function openFly(li, ul, a, focusFirst) {
+        if (!desktop()) { return; }
+        clearTimeout(timer);
+        if (cur && cur.ul === ul) { return; }
+        closeFly();
+        cur = {li: li, ul: ul, a: a};
+        document.body.appendChild(ul);
+        ul.classList.add('oriskill-fixed');
+        ul.style.display = 'block';
+        ul.style.maxHeight = (window.innerHeight - 16) + 'px';
+        var r = li.getBoundingClientRect(), w = ul.offsetWidth, h = ul.offsetHeight;
+        var left = r.right;
+        if (left + w > window.innerWidth - 4 && r.left - w >= 4) { left = r.left - w; }
+        left = Math.max(4, Math.min(left, window.innerWidth - w - 4));
+        var top = Math.max(8, Math.min(r.top, window.innerHeight - 8 - h));
+        ul.style.left = left + 'px';
+        ul.style.top = top + 'px';
+        a.setAttribute('aria-expanded', 'true');
+        if (focusFirst) { var f = ul.querySelector('a'); if (f) { f.focus(); } }
+    }
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && cur) { var a = cur.a; closeFly(); a.focus(); }
+    });
+    window.addEventListener('resize', closeFly);
+    window.addEventListener('scroll', function(e) {
+        if (cur && !(e.target && e.target.nodeType === 1 && cur.ul.contains(e.target))) { closeFly(); }
+    }, true);
+    document.addEventListener('hide.bs.dropdown', closeFly);
     function build() {
         document.querySelectorAll('.primary-navigation .dropdown-menu a[href]').forEach(function(a) {
             var items = data[a.href];
             var menu = a.closest('.dropdown-menu');
             if (!items || !menu || a.hasAttribute('data-oriskill-flyout')) { return; }
             a.setAttribute('data-oriskill-flyout', '1');
+            menu.classList.add('oriskill-menu');
             // Moodle's dropdown items are links straight in the menu (no li): wrap the link, never use the
             // first level li of the navigation bar.
             var li = a.parentElement;
@@ -225,6 +273,21 @@ CSS;
             });
             a.insertAdjacentElement('afterend', btn);
             li.appendChild(ul);
+            a.setAttribute('aria-haspopup', 'true');
+            a.setAttribute('aria-expanded', 'false');
+            li.addEventListener('mouseenter', function() { openFly(li, ul, a, false); });
+            li.addEventListener('mouseleave', later);
+            ul.addEventListener('mouseenter', function() { clearTimeout(timer); });
+            ul.addEventListener('mouseleave', later);
+            a.addEventListener('keydown', function(e) {
+                if (e.key === 'ArrowRight' && desktop()) { e.preventDefault(); openFly(li, ul, a, true); }
+            });
+            ul.addEventListener('keydown', function(e) {
+                var links = Array.prototype.slice.call(ul.querySelectorAll('a')), i = links.indexOf(document.activeElement);
+                if (e.key === 'ArrowLeft') { e.preventDefault(); closeFly(); a.focus(); }
+                else if (e.key === 'ArrowDown' && i < links.length - 1) { e.preventDefault(); links[i + 1].focus(); }
+                else if (e.key === 'ArrowUp' && i > 0) { e.preventDefault(); links[i - 1].focus(); }
+            });
         });
     }
     document.addEventListener('DOMContentLoaded', build);
