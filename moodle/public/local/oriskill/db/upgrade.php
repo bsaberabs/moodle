@@ -766,5 +766,12 @@ function xmldb_local_oriskill_upgrade($oldversion) {
         }
         upgrade_plugin_savepoint(true, 2026111200, 'local', 'oriskill');
     }
+    if ($oldversion < 2026111201) {
+        // Launch date of a training (visible but locked until that day). New table only: nothing existing is changed.
+        if (!$dbman->table_exists('local_oriskill_launch')) {
+            $dbman->install_one_table_from_xmldb_file(__DIR__ . '/install.xml', 'local_oriskill_launch');
+        }
+        upgrade_plugin_savepoint(true, 2026111201, 'local', 'oriskill');
+    }
     return true;
 }

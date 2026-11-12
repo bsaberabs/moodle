@@ -81,4 +81,9 @@ $callbacks = [
         'hook' => \core\hook\navigation\primary_extend::class,
         'callback' => [\local_oriskill\hook_callbacks::class, 'primary_extend'],
     ],
+    [
+        // The launch date of a deleted course goes with it.
+        'hook' => \core_course\hook\before_course_deleted::class,
+        'callback' => [\local_oriskill\launch_service::class, 'before_course_deleted'],
+    ],
 ];

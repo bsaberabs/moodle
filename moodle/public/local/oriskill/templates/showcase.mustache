@@ -35,7 +35,7 @@
         "links": [{"url": "#", "label": "Conditions générales"}],
         "hascourses": true,
         "courses": [{"name": "Excel pour l'analyse", "summary": "Résumé", "image": "", "price": "49,00 €",
-                     "compareprice": "79,00 €", "url": "#",
+                     "compareprice": "79,00 €", "url": "#", "launch": "Ouverture le 01/12/2026",
                      "instalments": {"label": "ou 3 × 33,00 €", "url": "#"} }]
     }
 }}
@@ -79,6 +79,7 @@
                             {{^image}}<div class="oriskill-vitrine-card-placeholder" aria-hidden="true"></div>{{/image}}
                             <div class="oriskill-vitrine-card-body">
                                 <h3><a href="{{url}}">{{name}}</a></h3>
+                                {{#launch}}<p class="oriskill-vitrine-launch">{{launch}}</p>{{/launch}}
                                 <p>{{summary}}</p>
                                 <p class="oriskill-vitrine-price">
                                     <strong>{{price}}</strong>

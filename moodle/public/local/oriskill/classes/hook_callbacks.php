@@ -119,7 +119,9 @@ class hook_callbacks {
             foreach ($entry['children'] as $child) {
                 // The main navigation does not export "classes": the lock is shown in the label, and the link of what
                 // is locked goes nowhere (no redirect loop to an enrolment page).
-                $label = self::plain($child['label']) . ($child['locked'] ? ' ' . get_string('menus:locked', 'local_oriskill') : '');
+                // Before the launch of the training, the opening date instead of "locked".
+                $label = self::plain($child['label']) . (!empty($child['note']) ? ' ' . $child['note']
+                    : ($child['locked'] ? ' ' . get_string('menus:locked', 'local_oriskill') : ''));
                 $node->add($label, $child['url'] ?? new \moodle_url('#'), \navigation_node::TYPE_CUSTOM);
                 // The main navigation dropdown has two levels: the lessons of a module are shown as a flyout (third
                 // level) built by a small script from the data kept here.
@@ -437,7 +439,8 @@ JS;
     }
 
     /**
-     * On the store page of a trainer course sold in instalments, offer to pay that way.
+     * On the store page of a trainer course sold in instalments, offer to pay that way; on one locked until its launch,
+     * say when it opens.
      *
      * The page itself is rendered by Modern Commerce's React application, so the offer comes as a bar above it.
      *
@@ -451,6 +454,10 @@ JS;
         if (during_initial_install() || !$PAGE->has_set_url()
                 || $PAGE->url->get_path() !== (new \moodle_url('/local/moderncommerce/course_details.php'))->get_path()) {
             return;
+        }
+        // A training on sale before its launch: when it opens.
+        if ($opens = launch_service::opens_label((int) $PAGE->url->get_param('id'))) {
+            $hook->add_html(\html_writer::div(\html_writer::span(s($opens)), 'oriskill-instalment-bar oriskill-launch-bar'));
         }
         $offer = instalment_service::buyable_offer((int) $PAGE->url->get_param('id'));
         if ($offer) {

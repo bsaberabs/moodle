@@ -71,6 +71,15 @@ $tasks = [
         'dayofweek' => '*',
     ],
     [
+        'classname' => '\local_oriskill\task\process_launches',
+        'blocking' => 0,
+        'minute' => '*/5',
+        'hour' => '*',
+        'day' => '*',
+        'month' => '*',
+        'dayofweek' => '*',
+    ],
+    [
         'classname' => '\local_oriskill\task\credit_refunds',
         'blocking' => 0,
         'minute' => '13',

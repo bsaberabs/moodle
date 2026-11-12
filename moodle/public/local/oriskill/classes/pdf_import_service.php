@@ -587,7 +587,8 @@ class pdf_import_service {
                         (int) $options->start + $i * (int) $options->step, []);
                 }
                 if (!$options->visible) {
-                    // Hides the section and its activities (kept as 'visible before' so showing the section shows them again).
+                    // Draft: hides the section and its activities (kept as 'visible before' so showing the section shows
+                    // them again), whatever the release rule: the rule is kept and applies once the trainer shows it.
                     set_section_visible($course->id, (int) $section->section, 0);
                 }
             }

@@ -122,7 +122,9 @@ class course_notifications {
      */
     public static function run_course(\stdClass $course, \stdClass $creator, int $now): int {
         $settings = array_filter(self::settings($course), fn($s) => $s->enabled);
-        if (!$settings) {
+        // Before its launch (and until the release dates are moved to it), a training sends nothing: its modules open
+        // and its reminders count from the launch day.
+        if (!$settings || launch_service::is_locked((int) $course->id)) {
             return 0;
         }
         $rules = isset($settings['unlock']) ? learning_service::section_rules($course) : [];

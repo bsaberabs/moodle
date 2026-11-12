@@ -599,6 +599,17 @@
     font-weight: 600;
     color: var(--v-ink);
 }
+/* Formation en prévente : date d'ouverture */
+.oriskill-vitrine-launch {
+    display: inline-block;
+    margin: .25rem 0 .5rem;
+    padding: .2rem .65rem;
+    border-radius: 99px;
+    font-size: .85rem;
+    font-weight: 600;
+    background: var(--v-accent);
+    color: var(--v-on-accent);
+}
 .oriskill-vitrine-empty {
     color: #6b7280;
 }

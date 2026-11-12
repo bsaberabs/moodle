@@ -163,11 +163,13 @@ class menu_service {
     /**
      * Menu as a learner sees it in a training: only the entries of that training, with its modules (in the order of the
      * course), a link only where the learner can open it (enrolled, module visible and unlocked); what is locked has no link.
+     * Before the launch of the training, its modules are listed without link, with their opening date.
      *
      * @param \stdClass $creator Trainer.
      * @param int $userid Learner.
      * @param int $courseid Training being viewed.
-     * @return array of ['label', 'children' => [['label', 'url' (moodle_url|null), 'locked' (bool), 'lessons' => [['label', 'url']]]]]
+     * @return array of ['label', 'children' => [['label', 'url' (moodle_url|null), 'locked' (bool), 'note' (string|null,
+     *               shown instead of "locked"), 'lessons' => [['label', 'url']]]]]
      */
     public static function for_user(\stdClass $creator, int $userid, int $courseid): array {
         $menu = [];
@@ -188,6 +190,9 @@ class menu_service {
                     $children[] = ['label' => $name, 'url' => null, 'locked' => true, 'lessons' => []];
                     continue;
                 }
+                // Locked until its launch: nothing opens, every entry says when it will.
+                $until = launch_service::is_staff($context, $userid) ? null : launch_service::locked_until((int) $courseid);
+                $note = $until ? get_string('launch:menuopens', 'local_oriskill', launch_service::format_date($until, true)) : null;
                 $modinfo = get_fast_modinfo($course, $userid);
                 $shown = 0;
                 foreach ($modinfo->get_section_info_all() as $num => $info) {
@@ -198,7 +203,7 @@ class menu_service {
                     if (++$shown > self::MAXSECTIONS) {
                         break;
                     }
-                    $open = $info->uservisible;
+                    $open = $info->uservisible && !$note;
                     // Lessons of the module, shown as a third level on hover.
                     $lessons = [];
                     if ($open) {
@@ -215,12 +220,12 @@ class menu_service {
                         }
                     }
                     $children[] = ['label' => get_section_name($course, $info), 'locked' => !$open, 'lessons' => $lessons,
-                        'url' => $open ? new \moodle_url('/course/section.php', ['id' => $info->id]) : null];
+                        'url' => $open ? new \moodle_url('/course/section.php', ['id' => $info->id]) : null, 'note' => $note];
                 }
                 if (!$shown) {
                     // No module to show: the course itself is the only thing the entry can lead to.
-                    $children[] = ['label' => $name, 'url' => new \moodle_url('/course/view.php', ['id' => $courseid]),
-                        'locked' => false, 'lessons' => []];
+                    $children[] = ['label' => $name, 'locked' => (bool) $note, 'lessons' => [], 'note' => $note,
+                        'url' => $note ? null : new \moodle_url('/course/view.php', ['id' => $courseid])];
                 }
             }
             if ($children) {

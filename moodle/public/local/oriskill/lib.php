@@ -76,6 +76,23 @@ function local_oriskill_pluginfile($course, $cm, $context, $filearea, $args, $fo
 }
 
 /**
+ * After the access to a course is granted by require_login() (every page of the course, its modules, the files of the
+ * modules, web services): a learner of a training locked until its launch date is sent to the page "Opens on ...".
+ *
+ * Moodle has no hook for this point yet: this is the callback Moodle calls there (as tool_mfa does).
+ *
+ * @param mixed $courseorid Course or course id.
+ * @param bool|null $autologinguest Log in as guest.
+ * @param stdClass|cm_info|null $cm Course module.
+ * @param bool|null $setwantsurltome Remember the address.
+ * @param bool|null $preventredirect No redirect possible (web services, AJAX).
+ */
+function local_oriskill_after_require_login($courseorid = null, $autologinguest = null, $cm = null, $setwantsurltome = null,
+        $preventredirect = null): void {
+    \local_oriskill\launch_service::guard($courseorid, $cm, (bool) $preventredirect);
+}
+
+/**
  * For a visitor who is not logged in: present the page and offer to sign up or log in, then stop.
  *
  * The login is required on the whole site, so without this page the visitor would land on the bare login form

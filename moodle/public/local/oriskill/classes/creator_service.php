@@ -682,6 +682,8 @@ class creator_service {
                     ? pricing_service::format_price($price->regularprice, $price->currency) : '',
                 'url' => self::course_page_url($creator, (int) $course->id)->out(false),
                 'instalments' => instalment_service::buyable_offer((int) $course->id),
+                // On sale before its launch: when it opens.
+                'launch' => launch_service::opens_label((int) $course->id),
             ];
         }
         return $courses;

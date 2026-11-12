@@ -15,7 +15,8 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * The trainer's courses, one line each: content, state (turned on or off here), members, sales, tickets to handle,
+ * The trainer's courses, one line each: content, state (hidden, visible, or visible but locked until a launch date; changed
+ * here), members, sales, tickets to handle,
  * favourites; preview as a learner, edit the content, settings, duplicate, delete.
  *
  * @package    local_oriskill
@@ -29,6 +30,7 @@ use core_course\external\course_summary_exporter;
 use local_moderncommerce\services\pricing_service;
 use local_oriskill\course_list;
 use local_oriskill\creator_service;
+use local_oriskill\launch_service;
 use local_oriskill\stats_service;
 use local_oriskill\team_service;
 
@@ -61,7 +63,21 @@ if (($action = optional_param('action', '', PARAM_ALPHA)) && confirm_sesskey()) 
         switch ($action) {
             case 'show':
             case 'hide':
-                course_list::set_visible($creator, $course, $action === 'show');
+                // Visible right away: without a launch date (if still locked, the pre-sale learners start now; done before
+                // showing it). Hidden: the launch date stays, for when the training is shown again.
+                if ($action === 'show') {
+                    launch_service::clear($creator, $course);
+                }
+                if ((bool) $course->visible !== ($action === 'show')) {
+                    course_list::set_visible($creator, $course, $action === 'show');
+                }
+                break;
+            case 'launch':
+                // Visible (in the showcase, on sale) but locked until the launch date.
+                $launchdate = launch_service::parse_date(required_param('launchdate', PARAM_ALPHANUMEXT));
+                launch_service::set($creator, $course, $launchdate);
+                $message = get_string('courses:launchset', 'local_oriskill', (object) ['name' => format_string($course->fullname),
+                    'date' => launch_service::format_date($launchdate)]);
                 break;
             case 'duplicate':
             case 'duplicatemembers':
@@ -96,13 +112,77 @@ $post = fn(string $action, int $courseid, string $label, string $class, ?string 
         html_writer::tag('button', $label, ['type' => 'submit', 'class' => $class]),
         ['method' => 'post', 'action' => $url->out(false), 'class' => 'd-inline',
          'onsubmit' => $confirm ? 'return confirm(' . json_encode($confirm) . ')' : null]);
+// State of a training (hidden, visible, or visible but locked until its launch) and, for who may change it, the choices:
+// hide it, show it right away, or show it locked until a date.
+$statecell = function(stdClass $row) use ($canchange, $post, $url): string {
+    $course = $row->course;
+    $courseid = (int) $course->id;
+    if (!$course->visible) {
+        [$label, $class] = [get_string('courses:hidden', 'local_oriskill'), ''];
+    } else if ($row->lockeduntil) {
+        [$label, $class] = [get_string('courses:lockeduntil', 'local_oriskill', launch_service::format_date($row->lockeduntil)),
+            'is-warn'];
+    } else {
+        [$label, $class] = [get_string('courses:visible', 'local_oriskill'), 'is-good'];
+    }
+    // A hidden training keeps its launch date, for when it is shown again.
+    $planned = !$course->visible && $row->lockeduntil ? html_writer::div(get_string('courses:hiddenlaunch', 'local_oriskill',
+        launch_service::format_date($row->lockeduntil)), 'small text-muted mt-1') : '';
+    if (!$canchange) {
+        return html_writer::span($label, 'oriskill-badge ' . $class) . $planned;
+    }
+    $items = '';
+    if ($course->visible) {
+        $items .= html_writer::tag('li', $post('hide', $courseid, get_string('courses:hide', 'local_oriskill'), 'dropdown-item'));
+    }
+    if (!$course->visible || $row->lockeduntil) {
+        $items .= html_writer::tag('li', $post('show', $courseid, get_string('courses:shownow', 'local_oriskill'),
+            'dropdown-item'));
+    }
+    $now = time();
+    $fieldid = 'oriskill-launchdate-' . $courseid;
+    $shortcuts = '';
+    foreach (launch_service::SHORTCUTS as $days) {
+        $shortcuts .= html_writer::tag('button', get_string('courses:indays', 'local_oriskill', $days), ['type' => 'button',
+            'class' => 'btn btn-sm btn-outline-secondary',
+            'onclick' => 'this.form.launchdate.value = ' . json_encode(launch_service::field_date($now + $days * DAYSECS))]);
+    }
+    $processed = $row->launch && (int) $row->launch->processed ? html_writer::div(get_string('courses:launchprocessed',
+        'local_oriskill', launch_service::format_date((int) $row->launch->processed)), 'small text-muted mt-2') : '';
+    $form = html_writer::tag('form',
+        html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]) .
+        html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'action', 'value' => 'launch']) .
+        html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'courseid', 'value' => $courseid]) .
+        html_writer::label(get_string('courses:showlocked', 'local_oriskill'), $fieldid, false,
+            ['class' => 'form-label fw-semibold']) .
+        html_writer::empty_tag('input', ['type' => 'date', 'name' => 'launchdate', 'id' => $fieldid, 'required' => 'required',
+            'class' => 'form-control mb-2', 'min' => launch_service::field_date($now + DAYSECS),
+            'value' => launch_service::field_date($row->lockeduntil ?: $now + 7 * DAYSECS)]) .
+        html_writer::div($shortcuts, 'd-flex flex-wrap gap-1 mb-2') .
+        html_writer::tag('button', get_string('courses:launchsubmit', 'local_oriskill'),
+            ['type' => 'submit', 'class' => 'btn btn-sm btn-primary']) .
+        html_writer::div(get_string('courses:launchhelp', 'local_oriskill'), 'small text-muted mt-2') . $processed,
+        ['method' => 'post', 'action' => $url->out(false), 'class' => 'px-3 py-2',
+         // A training already open to its members: they lose the content until the date (their dates do not change).
+         'onsubmit' => $course->visible && !$row->lockeduntil && $row->members ? 'return confirm(' .
+            json_encode(get_string('courses:launchconfirm', 'local_oriskill', $row->members)) . ')' : null]);
+    $items .= html_writer::tag('li', html_writer::empty_tag('hr', ['class' => 'dropdown-divider'])) .
+        html_writer::tag('li', $form);
+    return html_writer::div(
+        html_writer::tag('button', s($label), ['type' => 'button', 'class' => 'oriskill-badge border-0 dropdown-toggle ' . $class,
+            'data-bs-toggle' => 'dropdown', 'data-bs-auto-close' => 'outside', 'aria-expanded' => 'false',
+            'data-bs-popper-config' => '{"strategy":"fixed"}',
+            'title' => get_string('courses:changestate', 'local_oriskill')]) .
+        html_writer::tag('ul', $items, ['class' => 'dropdown-menu', 'style' => 'min-width: 19rem; max-width: 22rem;']),
+        'dropdown d-inline-block') . $planned;
+};
 
 echo $OUTPUT->header();
 echo creator_service::space_start($creator, '/local/oriskill/courses.php', get_string('mycourses', 'local_oriskill'));
 
 // Search, filters, new course.
-$states = ['' => get_string('courses:allstates', 'local_oriskill'), 'on' => get_string('courses:on', 'local_oriskill'),
-    'off' => get_string('courses:off', 'local_oriskill')];
+$states = ['' => get_string('courses:allstates', 'local_oriskill'), 'on' => get_string('courses:visible', 'local_oriskill'),
+    'locked' => get_string('courses:locked', 'local_oriskill'), 'off' => get_string('courses:hidden', 'local_oriskill')];
 echo html_writer::div(
     html_writer::tag('form',
         html_writer::empty_tag('input', ['type' => 'search', 'name' => 'q', 'value' => $filters['q'], 'class' => 'form-control',
@@ -187,11 +267,7 @@ foreach ($rows as $courseid => $row) {
                     'activities' => $row->activities]) . ($row->amount !== null ? ' · ' . pricing_service::format_price($row->amount) : ''),
                     'small text-muted')),
             'd-flex align-items-center gap-2'),
-        $canchange ? $post($course->visible ? 'hide' : 'show', $courseid,
-            get_string($course->visible ? 'courses:on' : 'courses:off', 'local_oriskill'),
-            'oriskill-badge border-0 ' . ($course->visible ? 'is-good' : ''))
-            : html_writer::span(get_string($course->visible ? 'courses:on' : 'courses:off', 'local_oriskill'),
-                'oriskill-badge ' . ($course->visible ? 'is-good' : '')),
+        $statecell($row),
         html_writer::div(html_writer::div($avatars, 'oriskill-avatars') .
             html_writer::div(html_writer::link(new moodle_url('/local/oriskill/learners.php', ['courseid' => $courseid]),
                 get_string('courses:memberscount', 'local_oriskill', $row->members)) . ' · ' .

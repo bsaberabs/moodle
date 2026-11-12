@@ -28,6 +28,7 @@
         "coursename": "Excel pour l'analyse", "summary": "<p>Description.</p>", "image": "",
         "price": "49,00 €", "compareprice": "79,00 €", "instalments": {"label": "ou 3 × 17,00 €", "url": "#"},
         "cta": {"url": "#", "label": "Choisir ma formule"}, "enrolled": false, "facts": "4 modules · 12 activités",
+        "launch": "Ouverture le 01/12/2026",
         "hasprogram": true,
         "program": [{"number": 1, "name": "Bien démarrer", "count": 2, "hasactivities": true,
                      "activities": [{"name": "Bienvenue", "icon": ""}]}],
@@ -52,6 +53,7 @@
             <a href="{{coursesurl}}" class="oriskill-coursepage-back">← {{#str}}creatorcourses, local_oriskill{{/str}}</a>
             <h1>{{coursename}}</h1>
             <p class="oriskill-coursepage-facts">{{facts}}</p>
+            {{#launch}}<p class="oriskill-vitrine-launch">{{launch}}</p>{{/launch}}
         </div>
         <aside class="oriskill-coursepage-buy" aria-label="{{#str}}coursepage:buybox, local_oriskill{{/str}}">
             {{#image}}<img src="{{image}}" alt="">{{/image}}

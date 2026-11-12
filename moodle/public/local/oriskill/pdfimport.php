@@ -234,7 +234,8 @@ if (!$plan) {
                 '14' => get_string('pdfimport:unlock:14', 'local_oriskill'),
                 'custom' => get_string('pdfimport:unlock:custom', 'local_oriskill')], 'unlock', 'none', false,
                 ['class' => 'form-select', 'id' => 'pdfimport-unlock', 'aria-label' => get_string('pdfimport:unlock', 'local_oriskill')]),
-            'mb-2', ['style' => 'max-width: 28rem']) .
+            'mb-1', ['style' => 'max-width: 28rem']) .
+        html_writer::div(get_string('pdfimport:unlocknote', 'local_oriskill'), 'small text-muted mb-2') .
         html_writer::div(
             html_writer::label(get_string('pdfimport:unlockdays', 'local_oriskill'), 'pdfimport-days', true, ['class' => 'form-label']) .
             html_writer::empty_tag('input', ['type' => 'number', 'name' => 'unlockdays', 'id' => 'pdfimport-days', 'min' => 1,

@@ -1397,5 +1397,23 @@
         <INDEX NAME="menucourse" UNIQUE="true" FIELDS="menuid, courseid"/>
       </INDEXES>
     </TABLE>
+    <TABLE NAME="local_oriskill_launch" COMMENT="Launch date of a training: visible and on sale, its content locked for learners until that day">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="launchdate" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Opening of the content; 0 = no launch date"/>
+        <FIELD NAME="lockedsince" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Start of the current lock: only enrolments started since then (pre-sale) are moved to the launch"/>
+        <FIELD NAME="processed" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="When the pre-sale enrolments were moved to the launch; 0 = not yet (a new lock starts again at 0)"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="courseid" TYPE="foreign-unique" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="launchprocessed" UNIQUE="false" FIELDS="launchdate, processed"/>
+      </INDEXES>
+    </TABLE>
   </TABLES>
 </XMLDB>

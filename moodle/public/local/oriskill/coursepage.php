@@ -83,9 +83,11 @@ $enrolled = $loggedin && is_enrolled(context_course::instance($course->id), $USE
 $selling = !seller_service::selling_blocker($creator);
 $form = $selling ? orderform_service::form_for_course($creator, (int) $course->id) : null;
 $instalments = $selling && !$form ? \local_oriskill\instalment_service::buyable_offer((int) $course->id) : null;
+// On sale before its launch: when it opens (a learner already enrolled is shown the opening page).
+$launch = \local_oriskill\launch_service::opens_label((int) $course->id);
 if ($enrolled) {
-    $cta = ['url' => (new moodle_url('/course/view.php', ['id' => $course->id]))->out(false),
-        'label' => get_string('coursepage:access', 'local_oriskill')];
+    $cta = ['url' => (new moodle_url($launch ? '/local/oriskill/launch.php' : '/course/view.php',
+        ['id' => $course->id]))->out(false), 'label' => get_string('coursepage:access', 'local_oriskill')];
 } else if ($form) {
     $cta = ['url' => orderform_service::url($form, $creator)->out(false),
         'label' => get_string('coursepage:choose', 'local_oriskill')];
@@ -120,6 +122,7 @@ echo $OUTPUT->render_from_template('local_oriskill/coursepage', [
     'instalments' => $instalments ? ['label' => $instalments->label, 'url' => $instalments->url] : null,
     'cta' => $cta,
     'enrolled' => $enrolled,
+    'launch' => $launch,
     'facts' => get_string('coursepage:facts', 'local_oriskill', (object) ['modules' => count($program),
         'activities' => $activities]),
     'program' => array_map(fn($module, $i) => $module + ['number' => $i + 1, 'hasactivities' => $module['count'] > 0],

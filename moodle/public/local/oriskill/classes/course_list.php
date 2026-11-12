@@ -36,9 +36,10 @@ class course_list {
      * The courses of a trainer with their figures, favourites first.
      *
      * @param \stdClass $creator Trainer.
-     * @param array $filters q (name), state (on, off), favourites (bool), sort (SORTS), dir (asc, desc).
-     * @return array courseid => row {course, product..., modules, activities, members, latest (users), groups, sales,
-     *               revenue (currency => amount), tickets, favourite}
+     * @param array $filters q (name), state (on: visible and open, locked: visible until its launch, off: hidden),
+     *                       favourites (bool), sort (SORTS), dir (asc, desc).
+     * @return array courseid => row {course, product..., launch (record|null), lockeduntil (launch date|null), modules,
+     *               activities, members, latest (users), groups, sales, revenue (currency => amount), tickets, favourite}
      */
     public static function rows(\stdClass $creator, array $filters = []): array {
         global $DB;
@@ -57,11 +58,15 @@ class course_list {
                                                WHERE status = 'open' AND courseid $insql GROUP BY courseid", $params);
         $comments = comment_service::pending($creator, true);
         $incategory = !empty($filters['category']) ? category_service::ids((int) $filters['category'], 'course') : null;
+        $launches = launch_service::for_courses(array_keys($rows));
         $q = \core_text::strtolower(trim($filters['q'] ?? ''));
         foreach ($rows as $courseid => $row) {
             $on = (bool) $row->course->visible;
+            $row->launch = $launches[$courseid] ?? null;
+            $row->lockeduntil = launch_service::record_locks($row->launch) ? (int) $row->launch->launchdate : null;
+            $state = !$on ? 'off' : ($row->lockeduntil ? 'locked' : 'on');
             if (($q !== '' && !str_contains(\core_text::strtolower($row->course->fullname . ' ' . $row->course->shortname), $q))
-                    || (($filters['state'] ?? '') === 'on' && !$on) || (($filters['state'] ?? '') === 'off' && $on)
+                    || (in_array($filters['state'] ?? '', ['on', 'off', 'locked'], true) && $filters['state'] !== $state)
                     || (!empty($filters['favourites']) && !in_array($courseid, $favourites))
                     || ($incategory !== null && !in_array((int) $courseid, $incategory, true))) {
                 unset($rows[$courseid]);
@@ -271,6 +276,7 @@ class course_list {
         }
         $rc->execute_plan();
         $rc->destroy();
+        // The copy is hidden, without launch date (kept apart from the course, it is not copied).
         $DB->update_record('course', (object) ['id' => $newid, 'fullname' => $name, 'shortname' => $shortname, 'visible' => 0,
             'visibleold' => 0]);
         fulldelete($basepath);
