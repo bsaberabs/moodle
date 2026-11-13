@@ -200,7 +200,7 @@ class callbacks {
         $myaccount->title = get_string('myaccount', 'local_moderncommerce');
         $myaccount->titleidentifier = 'myaccount,local_moderncommerce';
         $myaccount->pix = 'i/dashboard';
-        $hook->add_navitem($myaccount);
+        self::add_user_menu_entry($hook, $myaccount);
 
         // Add My Orders link.
         $myorders = new \stdClass();
@@ -209,12 +209,38 @@ class callbacks {
         $myorders->title = get_string('myorders', 'local_moderncommerce');
         $myorders->titleidentifier = 'myorders,local_moderncommerce';
         $myorders->pix = 'i/report';
-        $hook->add_navitem($myorders);
+        self::add_user_menu_entry($hook, $myorders);
 
         // Add a divider after our links to separate from Preferences.
         $divider = new \stdClass();
         $divider->itemtype = 'divider';
-        $hook->add_navitem($divider);
+        self::add_user_menu_entry($hook, $divider);
+    }
+
+    /**
+     * Add an entry to the user menu: add_menu_item() on Moodle 5.3+, add_navitem() fallback on older versions.
+     *
+     * add_navitem() was deprecated in 5.3 (MDL-88938); this builds the same objects it builds internally.
+     *
+     * @param extend_user_menu $hook The hook instance.
+     * @param \stdClass $entry Legacy description of the entry (itemtype link or divider).
+     */
+    private static function add_user_menu_entry(extend_user_menu $hook, \stdClass $entry): void {
+        if (!method_exists($hook, 'add_menu_item')) {
+            $hook->add_navitem($entry);
+            return;
+        }
+        if ($entry->itemtype === 'divider') {
+            $hook->add_menu_item(new \core_user\output\user_action_menu\divider());
+        } else if ($entry->itemtype === 'link') {
+            $hook->add_menu_item(new \core_user\output\user_action_menu\link(
+                new \core\url($entry->url),
+                $entry->title,
+                $entry->titleattribute ?? null,
+                isset($entry->pixicon) ? new \core\output\pix_icon($entry->pixicon, '') : null,
+                $entry->imgsrc ?? null
+            ));
+        }
     }
 
     /**
