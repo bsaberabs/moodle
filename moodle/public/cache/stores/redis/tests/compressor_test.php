@@ -239,7 +239,7 @@ final class compressor_test extends \advanced_testcase {
      * @param string $rawexpected1
      * @param string $rawexpected2
      */
-    #[\PHPUnit\Framework\Attributes\RequiresExtension('Redis')]
+    #[\PHPUnit\Framework\Attributes\RequiresPhpExtension('Redis')]
     #[\PHPUnit\Framework\Attributes\DataProvider('provider_for_tests_setget')]
     public function test_it_can_use_getset($name, $serializer, $compressor, $rawexpected1, $rawexpected2): void {
         // Create a connection with the desired serialisation.
@@ -264,7 +264,7 @@ final class compressor_test extends \advanced_testcase {
      * @param string $rawexpected1
      * @param string $rawexpected2
      */
-    #[\PHPUnit\Framework\Attributes\RequiresExtension('Redis')]
+    #[\PHPUnit\Framework\Attributes\RequiresPhpExtension('Redis')]
     #[\PHPUnit\Framework\Attributes\DataProvider('provider_for_tests_setget')]
     public function test_it_can_use_getsetmany($name, $serializer, $compressor, $rawexpected1, $rawexpected2): void {
         $many = [
